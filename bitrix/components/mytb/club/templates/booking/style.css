@@ -1,0 +1,41 @@
+#datepicker-user .ui-datepicker .ui-datepicker-title
+{
+    line-height: 1.1em;
+}
+
+#datepicker-user .ui-datepicker .ui-datepicker-prev, .ui-datepicker .ui-datepicker-next{
+    top: 2px !important;
+    height:1.1em !important;
+    width: 1.1em !important;
+    cursor: pointer;
+}
+
+
+#datepicker-user .ui-datepicker-calendar{
+   font-size: 10px !important;
+    }
+
+#datepicker-user .ui-datepicker
+{
+    width:600px !important;
+}
+#plan_div
+{
+    margin-top:20px;
+}
+
+.label_table_free, .label_table_busy
+{
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    margin-right:4px;
+    border-radius: 3px;;
+}
+
+.label_table_free{
+    background: #99cc99;
+}
+.label_table_busy{
+    background: #ff9999;
+}

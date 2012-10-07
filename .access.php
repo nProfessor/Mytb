@@ -1,0 +1,14 @@
+<?
+$PERM["kabinet-menedzhera"]["*"]="D";
+$PERM["kabinet-menedzhera"]["6"]="X";
+$PERM["manager"]["*"]="D";
+$PERM["manager"]["6"]="X";
+$PERM["personal"]["2"]="D";
+$PERM["search"]["5"]="W";
+$PERM["services"]["5"]="W";
+$PERM["news"]["5"]="W";
+$PERM["contacts"]["5"]="W";
+$PERM["about"]["5"]="W";
+$PERM["index.php"]["5"]="W";
+$PERM["/"]["*"]="R";
+?>

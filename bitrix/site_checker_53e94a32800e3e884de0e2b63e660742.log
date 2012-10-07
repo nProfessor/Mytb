@@ -1,0 +1,214 @@
+2012-Oct-06 23:30:14 Наличие необходимых модулей php (check_php_modules): Ok
+Успешно
+2012-Oct-06 23:30:14 Обязательные параметры PHP (check_php_settings): Ok
+Успешно
+2012-Oct-06 23:30:14 Значения переменных сервера (check_server_vars): Ok
+Успешно
+2012-Oct-06 23:30:14 Параметры настройки UTF (mbstring и константа BX_UTF) (check_mbstring): Ok
+Успешно. Сайт работает в UTF кодировке
+2012-Oct-06 23:30:14 Установка параметра pcre.backtrack_limit (check_backtrack_limit): Ok
+Успешно
+2012-Oct-06 23:30:15 Настройки сайтов (check_sites): Fail
+Нет доступа к папке  /var/www/u3016057/data/www/mytb.ru/bitrix
+2012-Oct-06 23:30:15 Работа с сокетами (check_socket): Ok
+Connection to mytb.ru:80
+Успешно
+2012-Oct-06 23:30:16 Лишний вывод в файлах конфигурации (check_dbconn): Ok
+Connection to mytb.ru:80
+Успешно
+2012-Oct-06 23:30:17 Загрузка файла (check_upload): Ok
+Connection to mytb.ru:80
+Успешно
+2012-Oct-06 23:30:17 Загрузка файла больше 4Мб (check_upload_big): Fail
+Connection to mytb.ru:80
+== Request ==
+POST /bitrix/admin/site_checker.php?upload_test=Y&unique_id=3abc23cafbb32d8cfa0787a26233267b&big=1&raw=0 HTTP/1.1
+Host: mytb.ru
+Content-Type: multipart/form-data; boundary=--------10d5ccc8f092dccf3246d60081ed8a10
+Content-Length: 4200195
+== Response ==
+HTTP/1.1 200 OK
+Server: nginx/0.7.67
+Date: Sat, 06 Oct 2012 19:30:17 GMT
+Content-Type: text/html
+Connection: keep-alive
+X-Powered-By: PHP/5.3.3-7+squeeze14
+Vary: Accept-Encoding
+Content-Length: 277
+
+== Body ==
+move_uploaded_file(,/home/www/mytb.ru//bitrix/tmp/site_checker.bin)=false
+$_FILES=
+Array
+(
+    [test_file] => Array
+        (
+            [name] => site_checker.bin
+            [type] => 
+            [tmp_name] => 
+            [error] => 1
+            [size] => 0
+        )
+
+)
+
+==========
+Ошибка
+2012-Oct-06 23:30:18 Загрузка файла через php://input (check_upload_raw): Ok
+Connection to mytb.ru:80
+Успешно
+2012-Oct-06 23:30:18 Передача POST запроса с большим числом параметров (check_post): Ok
+Connection to mytb.ru:80
+Успешно
+2012-Oct-06 23:30:23 Отправка почты (check_mail): Fail
+Отправлено. Время отправки: 5.13 сек.
+2012-Oct-06 23:30:26 Отправка почтового сообщения больше 64Кб (check_mail_big): Fail
+Отправлено. Время отправки: 2.69 сек.
+2012-Oct-06 23:30:26 Проверка на наличие неотправленных сообщений (check_mail_b_event): Ok
+Успешно
+2012-Oct-06 23:30:26 Внутреннее перенаправление (функция LocalRedirect) (check_localredirect): Ok
+50% done
+Connection to mytb.ru:80
+Успешно
+2012-Oct-06 23:30:26 Внутреннее перенаправление (функция LocalRedirect) (check_localredirect): Ok
+Connection to mytb.ru:80
+Успешно
+2012-Oct-06 23:30:26 Фактическое ограничение памяти (check_memory_limit): Ok
+14% done
+Connection to mytb.ru:80
+Успешно
+2012-Oct-06 23:30:27 Фактическое ограничение памяти (check_memory_limit): Ok
+28% done
+Connection to mytb.ru:80
+Успешно
+2012-Oct-06 23:30:27 Фактическое ограничение памяти (check_memory_limit): Ok
+42% done
+Connection to mytb.ru:80
+Успешно
+2012-Oct-06 23:30:27 Фактическое ограничение памяти (check_memory_limit): Ok
+57% done
+Connection to mytb.ru:80
+== Request ==
+GET /bitrix/admin/site_checker.php?memory_test=Y&unique_id=3abc23cafbb32d8cfa0787a26233267b&max=127 HTTP/1.1
+Host: mytb.ru
+
+
+== Response ==
+HTTP/1.1 200 OK
+Server: nginx/0.7.67
+Date: Sat, 06 Oct 2012 19:30:27 GMT
+Content-Type: text/html
+Connection: keep-alive
+X-Powered-By: PHP/5.3.3-7+squeeze14
+Vary: Accept-Encoding
+Content-Length: 172
+
+== Body ==
+
+Fatal error: Allowed memory size of 134217728 bytes exhausted (tried to allocate 1048577 bytes) in /home/www/mytb.ru/bitrix/modules/main/admin/site_checker.php on line 89
+
+==========
+Успешно
+2012-Oct-06 23:30:27 Фактическое ограничение памяти (check_memory_limit): Ok
+71% done
+Connection to mytb.ru:80
+Успешно
+2012-Oct-06 23:30:27 Фактическое ограничение памяти (check_memory_limit): Ok
+85% done
+Connection to mytb.ru:80
+== Request ==
+GET /bitrix/admin/site_checker.php?memory_test=Y&unique_id=3abc23cafbb32d8cfa0787a26233267b&max=191 HTTP/1.1
+Host: mytb.ru
+
+
+== Response ==
+HTTP/1.1 200 OK
+Server: nginx/0.7.67
+Date: Sat, 06 Oct 2012 19:30:27 GMT
+Content-Type: text/html
+Connection: keep-alive
+X-Powered-By: PHP/5.3.3-7+squeeze14
+Vary: Accept-Encoding
+Content-Length: 172
+
+== Body ==
+
+Fatal error: Allowed memory size of 134217728 bytes exhausted (tried to allocate 1048577 bytes) in /home/www/mytb.ru/bitrix/modules/main/admin/site_checker.php on line 89
+
+==========
+Успешно
+2012-Oct-06 23:30:28 Фактическое ограничение памяти (check_memory_limit): Ok
+Connection to mytb.ru:80
+== Request ==
+GET /bitrix/admin/site_checker.php?memory_test=Y&unique_id=3abc23cafbb32d8cfa0787a26233267b&max=143 HTTP/1.1
+Host: mytb.ru
+
+
+== Response ==
+HTTP/1.1 200 OK
+Server: nginx/0.7.67
+Date: Sat, 06 Oct 2012 19:30:28 GMT
+Content-Type: text/html
+Connection: keep-alive
+X-Powered-By: PHP/5.3.3-7+squeeze14
+Vary: Accept-Encoding
+Content-Length: 172
+
+== Body ==
+
+Fatal error: Allowed memory size of 134217728 bytes exhausted (tried to allocate 1048577 bytes) in /home/www/mytb.ru/bitrix/modules/main/admin/site_checker.php on line 89
+
+==========
+Не менее 96 М
+2012-Oct-06 23:30:28 Сохранение сессии (check_session): Ok
+50% done
+Успешно
+2012-Oct-06 23:30:28 Сохранение сессии (check_session): Ok
+Успешно
+2012-Oct-06 23:30:28 Сохранение сессии без UserAgent (check_session_ua): Ok
+50% done
+Connection to mytb.ru:80
+Успешно
+2012-Oct-06 23:30:28 Сохранение сессии без UserAgent (check_session_ua): Ok
+Connection to mytb.ru:80
+Успешно
+2012-Oct-06 23:30:28 Работа с файлами кеша (check_cache): Ok
+Успешно
+2012-Oct-06 23:30:29 Доступ к серверу обновлений (check_update): Ok
+Успешно
+2012-Oct-06 23:30:29 HTTP авторизация (check_http_auth): Ok
+Connection to mytb.ru:80
+Успешно
+2012-Oct-06 23:30:29 Создание и запуск файла (check_exec): Ok
+Connection to mytb.ru:80
+Успешно
+2012-Oct-06 23:30:29 Модуль suhosin отключен (check_suhosin): Warning
+Загружен модуль suhosin, возможны проблемы в работе административной части (suhosin.simulation=0)
+2012-Oct-06 23:30:29 Модуль Apache mod_security отключен (check_security): Ok
+Успешно
+2012-Oct-06 23:30:29 Константа BX_CRONTAB (не должна быть определена) (check_bx_crontab): Ok
+Успешно
+2012-Oct-06 23:30:29 Разделитель дробной части (check_divider): Ok
+Успешно
+2012-Oct-06 23:30:29 Значение параметра precision (не менее 10) (check_precision): Ok
+Успешно
+2012-Oct-06 23:30:29 Передача объектов по ссылке (check_clone): Ok
+Успешно
+2012-Oct-06 23:30:29 Функция getimagesize для swf (check_getimagesize): Ok
+Успешно
+2012-Oct-06 23:30:30 Версия MySQL сервера (check_mysql_bug_version): Ok
+Успешно
+2012-Oct-06 23:30:31 Время на БД и веб сервере (check_mysql_time): Ok
+Успешно
+2012-Oct-06 23:30:31 Режим работы MySQL (check_mysql_mode): Ok
+Успешно
+2012-Oct-06 23:30:32 Значение auto_increment в MySQL (check_mysql_increment): Ok
+Успешно
+2012-Oct-06 23:30:32 Кодировка соединения (check_mysql_connection_charset): Ok
+CHARSET=utf8, COLLATION=utf8_unicode_ci
+Успешно
+2012-Oct-06 23:30:32 Кодировка базы данных (check_mysql_db_charset): Fail
+CHARSET=utf8, COLLATION=utf8_general_ci
+Сравнение для базы (utf8_general_ci) отличается от сравнения для соединения (utf8_unicode_ci). Исправить
+2012-Oct-06 23:30:32 Кодировки таблиц в БД (check_mysql_table_charset): Warning
+Не проверено из за ошибки кодировки базы

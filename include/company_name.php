@@ -1,0 +1,1 @@
+<img src="/img/logo.png" alt="mytb.ru" title="Все о клубах"/>

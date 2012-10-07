@@ -1,0 +1,6 @@
+<?
+
+$arDirProperties = Array(
+
+);
+?>

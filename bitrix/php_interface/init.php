@@ -1,0 +1,45 @@
+<?php
+/**
+ * Created by JetBrains PhpStorm.
+ * User: oleg
+ * Date: 11.08.12
+ * Time: 17:45
+ * To change this template use File | Settings | File Templates.
+ */
+
+if(preg_match("#38\.99\.82\.[0-9]+#i",$_SERVER['REMOTE_ADDR']))
+{
+    die();
+}
+CModule::IncludeModule("iblock");
+
+CModule::AddAutoloadClasses(
+    '',
+    array(
+         'Club'   => '/bitrix/php_interface/inc/class/club/Club.php',
+         'Table'  => '/bitrix/php_interface/inc/class/club/Table.php',
+         'User'   => '/bitrix/php_interface/inc/class/user/User.php',
+         'Errors' => '/bitrix/php_interface/inc/class/errors/Errors.php',
+         'Smsc'   => '/bitrix/php_interface/inc/class/SMS/Smsc.php'
+    )
+);
+
+
+$file = scandir(dirname(__FILE__) . "/inc/events/");
+
+foreach ($file as $var) {
+    if ($var != "." && $var != "..") {
+        require_once(dirname(__FILE__) . "/inc/events/" . $var);
+    }
+}
+
+$fileAgent = scandir($_SERVER["DOCUMENT_ROOT"]. "/bitrix/ui/agent/");
+
+foreach ($fileAgent as $var) {
+    if ($var != "." && $var != "..") {
+        require_once($_SERVER["DOCUMENT_ROOT"] . "/bitrix/ui/agent/" . $var);
+    }
+}
+
+
+include_once(dirname(__FILE__) . "/inc/functions.php");

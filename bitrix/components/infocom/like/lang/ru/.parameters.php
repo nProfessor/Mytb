@@ -1,0 +1,51 @@
+<?
+$MESS ['SHOW'] = "Показывать";
+$MESS ['FACEBOOK'] = "Facebook";
+$MESS ['VKONTAKTE'] = "ВКонтакте";
+
+$MESS ['MM_OK'] = "Кнопки «Нравится» и «Класс»";
+$MESS ['MM_OK_BUTTON'] = "Кнопка";
+$MESS ['MM_OK_SMALL'] = "Текст";
+$MESS ['MM_NR'] = "Нравится";
+$MESS ['MM_POD'] = "Поделиться";
+$MESS ['MM_REK'] = "Рекомендую";
+$MESS ['OK_KL'] = "Класс";
+$MESS ['MM_OK_TYPE'] = "Тип кнопок";
+$MESS ['MM_NAME'] = "Кнопка Моего Мира";
+$MESS ['OK_NAME'] = "Кнопка Одноклассников";
+$MESS ['MM_OK_SH'] = "Счетчики в кнопке";
+$MESS ['MM_OK_TEXT'] = "Текст на кнопке";
+$MESS ['MM_OK_WIDTH'] = "Ширина ";
+
+$MESS ['GOOGLE'] = "Google+";
+$MESS["zn"] = "Китайский";
+$MESS["en"] = "Английский";
+$MESS["ru"] = "Русский";
+$MESS["GOOGLE_LANG"] = "Язык";
+$MESS["GOOGLE_ADD"] = "Добавить счетчик";
+$MESS["VK_FULL"] = "Кнопка с текстовым счётчиком";
+$MESS["VK_BUTTON"] = "Кнопка с миниатюрным счётчиком";
+$MESS["VK_MINI"] = "Миниатюрная кнопка";
+$MESS["VKONTAKTE_TYPE"] = "Варианты кнопки";
+$MESS["APIID"] = "apiID";
+$MESS["FB_STANDART"] = "Стандарт";
+$MESS["FB_BUTTON_COUNT"] = "button_count";
+$MESS["FB_BOX_COUNT"] = "box_count";
+$MESS["FACEBOOK_SEND_BUTTON"] = "Кнопка отправить";
+$MESS["FACEBOOK_SHOW_FACE"] = "Показывать фото";
+$MESS["FACEBOOK_TYPE"] = "Варианты кнопки";
+$MESS['MAIL_TYPE'] = "Варианты кнопки";
+$MESS['MAIL_BUTTON'] = "Кнопка";
+$MESS['MAIL_SMAL'] = "Иконка";
+$MESS['MAIL_WIDTH'] = "Ширина кнопки";
+$MESS['FACEBOOK_WIDTH'] = "Ширина кнопки";
+$MESS['MAIL_TEXT'] = "Текст кнопки";
+$MESS["MAIL_SIMPLE"] = "Нравится";
+$MESS['MAIL_SHOW_COUNT'] = "Добавить счетчик";
+$MESS['TWEETTER'] = "Твиттер";
+$MESS['TWEETTER_TYPE'] = "Варианты кнопки";
+$MESS['TW_NONE'] = "Нет";
+$MESS['TW_HORIZONTAL'] = "Горизонтально";
+$MESS['TW_VERTICAL'] = "Вертикально";
+$MESS['TWEETTER_NAME'] = "Этот пользователь будет @упомянут в данном твите ";
+?> 

@@ -1,0 +1,1 @@
+<img src="/i/home/clubwave.ru-9406.jpg"  />

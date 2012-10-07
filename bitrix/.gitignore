@@ -1,0 +1,11 @@
+upload/*
+tmp/*
+cache/*
+managed_cache/*
+stack_cache/*
+modules/serverfilelog*
+modules/updater.log
+modules/serverfileerrorlog.dat
+bitrix/wizards/*
+backup/*
+bitrix/php_interface/dbconn.php

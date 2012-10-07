@@ -1,0 +1,32 @@
+<?
+$aMenuLinks = Array(
+	Array(
+		"Акции", 
+		"/personal/subscribe/stock/", 
+		Array(), 
+		Array(), 
+		"" 
+	),
+	Array(
+		"События", 
+		"/personal/subscribe/event/", 
+		Array(), 
+		Array(), 
+		"" 
+	),
+	Array(
+		"Новости", 
+		"/personal/subscribe/news/", 
+		Array(), 
+		Array(), 
+		"" 
+	),
+	Array(
+		"Клубы в подписке", 
+		"/personal/subscribe/clulbs/", 
+		Array(), 
+		Array(), 
+		"" 
+	)
+);
+?>
