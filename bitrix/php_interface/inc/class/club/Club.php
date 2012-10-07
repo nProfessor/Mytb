@@ -15,7 +15,7 @@ class Club
     function __construct($clubID)
     {
         //проверяем, естьли такой клуб
-
+//TODO нужно прееделать, так, что бы передавать массив ID клубов
         $arSelect = Array("ID");
         $arFilter = Array("IBLOCK_ID" => IB_CLUB_ID, "ID"=> intval($clubID));
         $res      = CIBlockElement::GetList(Array(), $arFilter, FALSE, FALSE, $arSelect);

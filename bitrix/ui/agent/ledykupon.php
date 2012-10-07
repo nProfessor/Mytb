@@ -43,7 +43,10 @@ function agent_ladykupon()
                     $PROP            = array();
                     $PROP["URL"]     = $var->url; // свойству с кодом 12 присваиваем значение "Белый"
                     $PROP["CLUB_ID"] = $res["ID"]; // свойству с кодом 3 присваиваем значение 38
-
+                    $PROP["PRICE"] = intval($var->price); // свойству с кодом 3 присваиваем значение 38
+                    $PROP["DISCOUNT"] = intval($var->discount); // свойству с кодом 3 присваиваем значение 38
+                    $PROP["DISCOUNTPRICE"] = intval($var->discountprice); // свойству с кодом 3 присваиваем значение 38
+                    $PROP["PRICECOUPON"] = intval($var->pricecoupon); // свойству с кодом 3 присваиваем значение 38
 
                     $arLoadProductArray = Array(
                         "IBLOCK_ID"             => IB_SUB_STOCK_ID,

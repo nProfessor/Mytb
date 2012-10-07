@@ -375,7 +375,7 @@ ul.left-menu {
 }
 
 #banner {
-    height: 300px;
+    height: 250px;
     margin: 0 21px 17px 11px;
     overflow: hidden;
     position: relative;
@@ -573,7 +573,7 @@ table.map-columns ul ul {
 
 /* Schedule */
 #schedule {
-    margin: 0 0 138px 0;
+    margin: 0 0 90px 0;
 }
 
 #schedule div.schedule {
@@ -1078,17 +1078,78 @@ input.errors {
 .time_stok
 {
 
-    margin:10px;
+    margin:15px 0px;
     padding:10px 0px;
 
 }
 .timer{
     font-size:22px;
 }
+
+.carousel-inner
+{
+    background: #eee;
+
+}
+.carousel-inner .timer{
+    font-size:19px;
+    color:red;
+}
+
+.carousel-inner table{
+    margin: 0 auto;
+}
+
 .clock
 {
     display: inline-block;
     width: 57px;
     height: 63px;
     background: url(/img/kalarm.png) no-repeat left bottom;
+}
+
+.carousel-caption{
+    width: 400px !important;
+    padding:0px !important;
+}
+.carousel-caption p{
+    padding:10px;
+}
+.carousel-caption .stock-name{
+    font-size: 16px;
+    line-height: 22px;
+}
+.carousel-inner .item
+{
+    height: 243px;
+}
+
+.carousel-control.left
+{
+    top: 76% !important;
+    left: 415px !important;
+}
+.carousel-control.right
+{
+    top: 76% !important;
+    left: 542px !important;
+}
+
+.tr-back-shadow{
+    box-shadow: -3px 0 20px -1px rgba(0, 0, 0, 0.6) inset;
+    height:233px;
+    width: 186px;
+    padding:10px;
+    text-align: center;;
+}
+
+
+a.stoks{
+    top:200px;
+    right:67px;
+    text-decoration:underline;
+    position: absolute;
+}
+a.stoks:hover{
+    text-decoration:none;
 }

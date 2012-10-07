@@ -107,13 +107,18 @@ function imgurl($path, $size)
 
     $imgFile = "{$NAME_1[1]}{$NAME_1[2]}-resize-{$size["w"]}x{$size["h"]}.{$NAME_1[3]}";
 
+
     if (!file_exists($_SERVER["DOCUMENT_ROOT"] . $imgFile)) {
+
+
 
         try {
             $image = new Imagick($_SERVER["DOCUMENT_ROOT"] . $path);
+
             $image->adaptiveResizeImage($size["w"], $size["h"], TRUE);
             $image->writeImages($_SERVER["DOCUMENT_ROOT"] . $imgFile, TRUE);
         } catch (ImagickException $e) {
+
             echo $e->getMessage();
         }
     }
