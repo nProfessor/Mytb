@@ -1078,12 +1078,22 @@ input.errors {
 .time_stok
 {
 
-    margin:15px 0px;
+    margin:35px 0px;
     padding:10px 0px;
+    width:255px;
+    line-height: 25px;
 
 }
+
+.carousel.slide .time_stok{
+    margin:0px;
+    padding:12px 0px;
+    width:auto;
+}
+
 .timer{
-    font-size:22px;
+    font-size:30px;
+    padding:4px 0px;
 }
 
 .carousel-inner
@@ -1092,7 +1102,7 @@ input.errors {
 
 }
 .carousel-inner .timer{
-    font-size:19px;
+    font-size:22px;
     color:red;
 }
 
@@ -1152,4 +1162,8 @@ a.stoks{
 }
 a.stoks:hover{
     text-decoration:none;
+}
+
+.stock-header h3{
+    line-height:1;
 }

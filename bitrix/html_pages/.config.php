@@ -1,7 +1,7 @@
 <?
 $arHTMLPagesOptions = array(
 	"INCLUDE_MASK" => "*.php;*/",
-	"EXCLUDE_MASK" => "/bitrix/*;/404.php",
+	"EXCLUDE_MASK" => "/bitrix/*;/404.php;/",
 	"FILE_QUOTA" => "100",
 	"~INCLUDE_MASK" => array(
 		"0" => "'^.*?\\.php\$'",
@@ -10,6 +10,7 @@ $arHTMLPagesOptions = array(
 	"~EXCLUDE_MASK" => array(
 		"0" => "'^/bitrix/.*?\$'",
 		"1" => "'^/404\\.php\$'",
+		"2" => "'^/\$'",
 	),
 	"~FILE_QUOTA" => "104857600",
 	"COMPRESS" => "1",

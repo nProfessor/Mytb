@@ -18,12 +18,10 @@
                        </div><div style="display: inline-block;width:190px">
                         <div class="tr-back-shadow">
 
-                        <?
-                        if (intval($var["PROPERTY_PRICECOUPON_VALUE"]) > 0):?>
-                            <h3>Купить скидку <?=$var["PROPERTY_DISCOUNT_VALUE"]?>%</h3>
-                            <? else: ?>
-                            <h3>Купить со скидкой <?=$var["PROPERTY_DISCOUNT_VALUE"]?>%</h3>
-                            <?endif;?>
+
+
+                            <h2>Скидка <?=$var["PROPERTY_DISCOUNT_VALUE"]?>%</h2>
+
                             <a href="/club/<?=$var["PROPERTY_CLUB_ID_VALUE"]?>" title="<?=$arResult['clubList'][$var["PROPERTY_CLUB_ID_VALUE"]]['NAME']?>">«<?=$arResult['clubList'][$var["PROPERTY_CLUB_ID_VALUE"]]['NAME']?>»</a>
                         <div class="time_stok">
                             <div>
@@ -35,7 +33,7 @@
                             </div>
 
                         </div>
-                        <a href="<?=$var["PROPERTY_URL_VALUE"]?>" class="btn btn-success">купить купон
+                        <a href="<?=$var["PROPERTY_URL_VALUE"]?>" class="btn btn-success btn-large">купить купон
                             за <?=$var["PROPERTY_PRICECOUPON_VALUE"]?>р.</a>
                         </div>
         </div>
