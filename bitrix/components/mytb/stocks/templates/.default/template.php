@@ -27,13 +27,15 @@ $APPLICATION->AddHeadScript("/jslibs/jquery/eTextTimer.js");
                         <h3>Купить со скидкой <?=$var["PROPERTY_DISCOUNT_VALUE"]?>%</h3>
                         <?endif;?>
                 </div>
-                <a href="/club/<?=$var["PROPERTY_CLUB_ID_VALUE"]?>" style="font-size:22px;" title="<?=$arResult['clubList'][$var["PROPERTY_CLUB_ID_VALUE"]]['NAME']?>">«<?=$arResult['clubList'][$var["PROPERTY_CLUB_ID_VALUE"]]['NAME']?>»</a>
+                <a href="/club/<?=$var["PROPERTY_CLUB_ID_VALUE"]?>" style="font-size:22px;"  target="_blank"
+title="<?=$arResult['clubList'][$var["PROPERTY_CLUB_ID_VALUE"]]['NAME']?>">«<?=$arResult['clubList'][$var["PROPERTY_CLUB_ID_VALUE"]]['NAME']?>»</a>
 
             </th>
         </tr>
         <tr>
             <td>
-                <a href="<?=$var["PROPERTY_URL_VALUE"]?>" class="pull-left" style="margin:0px 10px 10px 0px">
+                <a href="<?=$var["PROPERTY_URL_VALUE"]?>" class="pull-left" style="margin:0px 10px 10px 0px" target="_blank">
+                    <?=$arFile["SRC"]?>
                     <img class="thumbnail" src="<?=imgurl($arFile["SRC"], array("w"=> 300, "h"=> 200))?>"/>
                 </a>
 
@@ -48,7 +50,7 @@ $APPLICATION->AddHeadScript("/jslibs/jquery/eTextTimer.js");
                     <span class="time<?=$var['ID']?>d">88</span>д: <span class="time<?=$var['ID']?>h">88</span>:<span class="time<?=$var['ID']?>m">88</span>:<span class="time<?=$var['ID']?>s">88</span>
                     </span>
                     </div><br/><br/>
-                    <a href="<?=$var["PROPERTY_URL_VALUE"]?>" class="btn btn-success pull-right btn-large">купить купон
+                    <a href="<?=$var["PROPERTY_URL_VALUE"]?>" class="btn btn-success pull-right btn-large" target="_blank">купить купон
                         за <?=$var["PROPERTY_PRICECOUPON_VALUE"]?>р.</a>
                 </div>
 

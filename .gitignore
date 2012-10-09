@@ -1,4 +1,4 @@
-upload/*
+upload
 tmp/*
 cache/*
 managed_cache/*
@@ -10,3 +10,5 @@ bitrix/wizards/*
 backup/*
 bitrix/php_interface/dbconn.php
 robots.txt
+bitrix/html_pages
+bitrix/sounds
