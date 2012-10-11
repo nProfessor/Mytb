@@ -9,3 +9,40 @@
 .club_info {
     margin-top: 20px;
 }
+.club_info dl{
+    margin: 0 !important;
+}
+.club_info .options img{
+    margin-bottom: 30px;
+}
+
+
+.club_info .options{
+    margin-bottom: 30px;
+}
+
+.club_info_content
+{
+    height: 200px;
+    overflow: hidden;
+}
+
+.club_info_content{
+    position:relative;
+}
+
+.club_info_content div{
+    position:absolute;
+    bottom: 8px;
+    background: #fff;
+    height: 20px;
+    border: 1px gray dashed;
+    text-align: center;
+padding:3px;
+    width: 292px;
+    cursor: pointer;
+    box-shadow:0 0 15px 13px #FFFFFF;
+}
+.club_info_content div:hover{
+    color:#000;
+}

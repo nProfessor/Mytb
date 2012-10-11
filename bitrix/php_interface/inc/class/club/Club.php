@@ -246,7 +246,8 @@ class Club
                  "PROPERTY_CLUB_ID",
                  "DATE_ACTIVE_TO",
                  "PROPERTY_URL",
-                 "PROPERTY_CLUB_ID"
+                 "PROPERTY_CLUB_ID",
+                 "PROPERTY_PRICECOUPON"
             ));
         return $ob;
 

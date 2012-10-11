@@ -51,93 +51,84 @@ $APPLICATION->SetPageProperty('description',strip_tags($clubInfo["~DETAIL_TEXT"]
     <?=$name?>
 </h1>
 <div class="club_info">
-    <div class="span3">
-        <table class="club_dop_info">
-            <tr>
-                <th>
-                    Часы работы
-                </th>
-                <td>
-                    <?=empty($clubInfo["PROPERTY_TIME_WORKING_VALUE"])
-                    ? "—"
-                    : str_replace(",", "<br>", $clubInfo["PROPERTY_TIME_WORKING_VALUE"]);?>
-                </td>
-            </tr>
-            <tr>
-                <th>
-                    Цена коктейля
-                </th>
-                <td><?=empty($clubInfo["PROPERTY_PRICE_COCKTAIL_VALUE"])
-                    ? "—"
-                    : $clubInfo["PROPERTY_PRICE_COCKTAIL_VALUE"];?>
-                </td>
-            </tr>
-            <tr>
-                <th>
-                    Телефон
-                </th>
-                <td>
-                    <?if (is_array($clubInfo["PROPERTY_PHONE_VALUE"]) && count($clubInfo["PROPERTY_PHONE_VALUE"])): ?>
-                    <? foreach ($clubInfo["PROPERTY_PHONE_VALUE"] as $phone): ?>
-                        <?= $phone ?>
-                        <? endforeach; ?>
-                    <? else: ?>
-                    <?=
-                    empty($clubInfo["PROPERTY_PHONE_VALUE"])
-                        ? "нет информации"
-                        : $clubInfo["PROPERTY_PHONE_VALUE"]
-                    ; ?>
-                    <?endif;?>
-                </td>
-            </tr>
-            <tr>
-                <th>
-                    Музыка
-                </th>
-                <td>
-                    <?if (is_array($clubInfo["PROPERTY_MUSIC_VALUE"]) && count($clubInfo["PROPERTY_MUSIC_VALUE"])): ?>
-                    <?= implode(", ", $clubInfo["PROPERTY_MUSIC_VALUE"]) ?>
-                    <? else: ?>
-                    <?=
-                    empty($clubInfo["PROPERTY_MUSIC_VALUE"])
-                        ? "нет информации"
-                        : $clubInfo["PROPERTY_MUSIC_VALUE"]
-                    ; ?>
-                    <?endif;?>
-                </td>
-            </tr>
-            <tr>
-                <th>
-                    Фейсконтроль
-                </th>
-                <td>
-                    <?=empty($clubInfo["PROPERTY_FACE_CONTROL_VALUE"])
-                    ? "нет информации"
-                    : $clubInfo["PROPERTY_FACE_CONTROL_VALUE"];?>
-                </td>
-            </tr>
-            <tr>
-                <th>
-                    Дресс-код
-                </th>
-                <td>
-                    <?=empty($clubInfo["PROPERTY_DRESS_CODE_VALUE"])
-                    ? "нет информации"
-                    : $clubInfo["PROPERTY_DRESS_CODE_VALUE"];?>
-                </td>
-            </tr>
-            <tr>
-                <td colspan=2>
-                    <?if ($USER->IsAuthorized() && 0): ?>
-                    <br>
-                    <a href="/club/booking/<?=$clubInfo["ID"]?>" class="btn btn-success btn-large" style="width: 90%;"
-                       target="_blank">
-                        Забронировать столик
-                    </a>
-                    <? endif?>
-                </td>
-            </tr>
-        </table>
+    <div class="span3 options">
+
+
+        <?if(!empty($clubInfo["PREVIEW_PICTURE"])):?>
+        <img src="<?=$clubInfo["PREVIEW_PICTURE"]?>" width="200px">
+        <?endif;?>
+
+
+
+        <?if(!empty($clubInfo["PROPERTY_TIME_WORKING_VALUE"])):?>
+        <dl>
+            <dt>Часы работы</dt>
+            <dd><?=str_replace(",", "<br>", $clubInfo["PROPERTY_TIME_WORKING_VALUE"]);?></dd>
+        </dl>
+        <?endif;?>
+
+        <?if(!empty($clubInfo["PROPERTY_PRICE_COCKTAIL_VALUE"])):?>
+        <dl>
+            <dt>Цена коктейля</dt>
+            <dd><?=$clubInfo["PROPERTY_PRICE_COCKTAIL_VALUE"];?></dd>
+        </dl>
+        <?endif;?>
+
+        <?if(!empty($clubInfo["PROPERTY_PHONE_VALUE"])):?>
+        <dl>
+            <dt>Телефон</dt>
+            <dd>
+                <?if (is_array($clubInfo["PROPERTY_PHONE_VALUE"]) && count($clubInfo["PROPERTY_PHONE_VALUE"])): ?>
+                <? foreach ($clubInfo["PROPERTY_PHONE_VALUE"] as $phone): ?>
+                    <?= $phone ?><br/>
+                    <? endforeach; ?>
+                <? else: ?>
+                <?=$clubInfo["PROPERTY_PHONE_VALUE"];?>
+                <?endif;?>
+            </dd>
+        </dl>
+        <?endif;?>
+
+
+        <?if(!empty($clubInfo["PROPERTY_MUSIC_VALUE"])):?>
+        <dl>
+            <dt>Музыка</dt>
+            <dd>
+                <?if (is_array($clubInfo["PROPERTY_MUSIC_VALUE"]) && count($clubInfo["PROPERTY_MUSIC_VALUE"])): ?>
+                <?= implode(", ", $clubInfo["PROPERTY_MUSIC_VALUE"]) ?>
+                <? else: ?>
+                <?=$clubInfo["PROPERTY_MUSIC_VALUE"]; ?>
+                <?endif;?>
+            </dd>
+        </dl>
+        <?endif;?>
+
+
+
+        <?if(!empty($clubInfo["PROPERTY_FACE_CONTROL_VALUE"])):?>
+        <dl>
+            <dt>Фейсконтроль</dt>
+            <dd><?=$clubInfo["PROPERTY_FACE_CONTROL_VALUE"];?></dd>
+        </dl>
+        <?endif;?>
+
+
+        <?if(!empty($clubInfo["PROPERTY_DRESS_CODE_VALUE"])):?>
+        <dl>
+            <dt>Дресс-код</dt>
+            <dd><?=$clubInfo["PROPERTY_DRESS_CODE_VALUE"];?></dd>
+        </dl>
+        <?endif;?>
+
+        <?if ($USER->IsAuthorized() && 0): ?>
+        <br>
+        <a href="/club/booking/<?=$clubInfo["ID"]?>" class="btn btn-success btn-large" style="width: 90%;"
+           target="_blank">
+            Забронировать столик
+        </a>
+        <? endif?>
+
+
     </div>
     <div class="span4">
         <div class="club_info_text">
@@ -147,14 +138,24 @@ $APPLICATION->SetPageProperty('description',strip_tags($clubInfo["~DETAIL_TEXT"]
             <!--        </a>-->
 
             <div class="btn-group">
-                <button class="btn btn-info btn-large" id="subs_stock" data-toggle="modal">Акции</button>
-                <button class="btn btn-info btn-large" id="subs_event" data-toggle="modal">События</button>
+                <button class="btn btn-danger  btn-large subsribe-ok" style="width:100%" data-toggle="modal" data-original-title="Вы сможете моментально узнавать о появлении акций проводимых в  <b>«<?=$clubInfo['NAME']?>»</b>" id="subs_ok" data-auth="<?if ($USER->IsAuthorized()) {
+                    echo "yes";
+                } else {
+                    echo "no";
+                }?>">Подписаться на акци<br/>«<?=$clubInfo['NAME']?>»</button>
+<!--                <button class="btn btn-info btn-large" id="subs_event" data-toggle="modal">События</button>-->
                 <!--                <button class="btn btn-info btn-large" id="subs_news" data-toggle="modal">Новости</button>-->
             </div>
             <!--            <div class="clear_both"></div>-->
 
-            <div class="club_info">
+            <a href="/club/<?=$clubInfo['ID']?>/stock/"  id="subs_stock">смотреть акции клуба</a>
+            <div class="club_info_content">
+                <p>
                 <?=$clubInfo["~DETAIL_TEXT"]?>
+                </p>
+                <div>
+                    смотреть полностью
+                </div>
             </div>
 
             <?if (!empty($clubInfo["PROPERTY_SITE_VALUE"])): ?>
@@ -168,7 +169,8 @@ $APPLICATION->SetPageProperty('description',strip_tags($clubInfo["~DETAIL_TEXT"]
         <div class="clear_both"></div>
     </div>
 </div>
-<br/>
+
+    <div style="clear:both;"></div>
 <table>
     <tr>
         <td>рассказать друзьям:</td>
@@ -260,7 +262,7 @@ $APPLICATION->SetPageProperty('description',strip_tags($clubInfo["~DETAIL_TEXT"]
     </div>
     <div class="modal-footer">
         <a href="#" class="btn" id="no_subs">Не сейчас</a>
-        <a href="#" class="btn btn-primary" id="subs_ok" data-auth="<?if ($USER->IsAuthorized()) {
+        <a href="#" class="btn btn-primary"  id="subs_ok_modal" data-auth="<?if ($USER->IsAuthorized()) {
             echo "yes";
         } else {
             echo "no";
@@ -268,5 +270,5 @@ $APPLICATION->SetPageProperty('description',strip_tags($clubInfo["~DETAIL_TEXT"]
     </div>
 </div>
 
-<input id="redirect" type="hidden" value="<?=$_SERVER['REDIRECT_URL']?>">
+<input id="redirect" type="hidden" value="/club/<?=$clubInfo["ID"]?>/stock/?subscribe=ok">
 <? $APPLICATION->IncludeComponent("mytb:auth", "",  array(), FALSE); ?>

@@ -1,10 +1,21 @@
 <?
 $APPLICATION->AddHeadScript("/jslibs/jquery/eTextTimer.js");
 ?>
-<h1>Действующие акции клуба «<?=$arResult['club']['NAME']?>» </h1>
+<h1>Действующие акции «<?=$arResult['club']['NAME']?>» </h1>
 <br/>
-
+<a href="#" class="btn btn-danger pull-right btn-large"  id="subs_ok" data-original-title="Вы сможете моментально узнавать о появлении акций проводимых в  <b>«<?=$arResult['club']['NAME']?>»</b>"
+   data-auth="<?if ($USER->IsAuthorized()) {
+       echo "yes";
+   } else {
+       echo "no";
+   }?>"
+        >Подписаться на акции «<?=$arResult['club']['NAME']?>»</a>
+<a href="/club/<?=$arResult['club']['ID']?>">На страницу «<?=$arResult['club']['NAME']?>»</a>
+<br/>
+<br/>
+<br/>
     <input type="hidden" id="time_now" value="<?=date("d F, Y, H:m:s")?>">
+    <input type="hidden" id="clubID" value="<?=$arResult['club']['ID']?>">
 
 <? if (count($arResult['stockList']) > 0): ?>
 <div id="list">
@@ -26,20 +37,21 @@ $APPLICATION->AddHeadScript("/jslibs/jquery/eTextTimer.js");
                 <a href="<?=$var["PROPERTY_URL_VALUE"]?>" class="pull-left" style="margin:0px 10px 10px 0px">
                     <img class="thumbnail" src="<?=imgurl($arFile["SRC"], array("w"=> 300, "h"=> 200))?>"/>
                 </a>
-                <div class="time_stok">
+                <div class="time_stok pull-right">
 
                     <span class="clock">
 
                     </span>
-                    <div class="pull-right" style="padding-top: 15px;">
+                    <div class="pull-right" style="padding: 8px 0px 15px 0px;">
                     до конца акции:<br/>
-                    <span class="timer" data-active="<?=date("d F, Y, H:m:s",strtotime($var["ACTIVE_TO"]))?>">
-                    <span class="timed">88</span>д: <span class="timeh">88</span>ч: <span class="timem">88</span>м: <span class="times">88</span>c
+                    <span class="timer" data-active="<?=date("d F, Y, H:m:s",strtotime($var["ACTIVE_TO"]))?>" data-id="<?=$var["ID"]?>">
+                    <span class="time<?=$var["ID"]?>d">88</span>д: <span class="time<?=$var["ID"]?>h">88</span>:<span class="time<?=$var["ID"]?>m">88</span>:<span class="time<?=$var["ID"]?>s">88</span>
                     </span>
                     </div>
-                    <a href="<?=$var["PROPERTY_URL_VALUE"]?>" class="pull-right">купить купон</a>
+                    <a href="<?=$var["PROPERTY_URL_VALUE"]?>" class="btn btn-success pull-right btn-large" target="_blank">купить купон
+                        за <?=$var["PROPERTY_PRICECOUPON_VALUE"]?>р.</a>
                 </div>
-                <input type="hidden" id="active_to" ">
+
 
 
                 <p style="font-size: 12px;"> <?=$var["PREVIEW_TEXT"]?></p>
@@ -72,3 +84,5 @@ $APPLICATION->AddHeadScript("/jslibs/jquery/eTextTimer.js");
 <? else: ?>
 На данный момент акций нет
 <?endif; ?>
+<input id="redirect" type="hidden" value="/club/<?=$arResult['club']["ID"]?>/stock/?subscribe=ok">
+<? $APPLICATION->IncludeComponent("mytb:auth", "",  array(), FALSE); ?>
