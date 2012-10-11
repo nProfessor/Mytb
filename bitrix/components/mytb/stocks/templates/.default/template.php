@@ -35,7 +35,7 @@ title="<?=$arResult['clubList'][$var["PROPERTY_CLUB_ID_VALUE"]]['NAME']?>">«<?=
         <tr>
             <td>
                 <a href="<?=$var["PROPERTY_URL_VALUE"]?>" class="pull-left" style="margin:0px 10px 10px 0px" target="_blank">
-                    <?=$arFile["SRC"]?>
+               
                     <img class="thumbnail" src="<?=imgurl($arFile["SRC"], array("w"=> 300, "h"=> 200))?>"/>
                 </a>
 
