@@ -6,12 +6,12 @@
  * Time: 21:06
  * To change this template use File | Settings | File Templates.
  */
-require_once($_SERVER["DOCUMENT_ROOT"] . "/bitrix/modules/main/include/prolog_before.php");
-CModule::IncludeModule("iblock");
+
 function agent_kingcoupon_pars()
 {
 
-
+    require_once($_SERVER["DOCUMENT_ROOT"] . "/bitrix/modules/main/include/prolog_before.php");
+    CModule::IncludeModule("iblock");
     $content = file_get_contents("http://kingcoupon.ru/offer/category/Food/");
     preg_match_all("#kingcoupon\.ru/offer/([0-9]+)/#is", $content, $arr);
 
@@ -23,7 +23,7 @@ function agent_kingcoupon_pars()
         if (in_array($var->id, $arr[1])) {
             echo $var->id;
             /**
-             * добавляем информацию о клубе
+             * пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅ
              */
 
             $R['clubName'] = (string)$var->supplier->name;
@@ -39,7 +39,7 @@ function agent_kingcoupon_pars()
 
 
             /**
-             * Добавляем информацию об акции
+             * пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
              */
             $id  = $var->id;
             $url = preg_replace("#http://#i", "", $var->supplier->url);
@@ -65,9 +65,9 @@ function agent_kingcoupon_pars()
             if (!$res->Fetch()) {
 
                 $PROP            = array();
-                $PROP["PHONE"]   = $R['clubPhone']; // свойству с кодом 12 присваиваем значение "Белый"
-                $PROP["ADDRESS"] = $R['clubAdress']; // свойству с кодом 3 присваиваем значение 38
-                $PROP["SITE"]    = $R['url']; // свойству с кодом 3 присваиваем значение 38
+                $PROP["PHONE"]   = $R['clubPhone']; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅ 12 пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ "пїЅпїЅпїЅпїЅпїЅ"
+                $PROP["ADDRESS"] = $R['clubAdress']; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅ 3 пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ 38
+                $PROP["SITE"]    = $R['url']; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅ 3 пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ 38
 
 
                 $el = new CIBlockElement();
@@ -77,7 +77,8 @@ function agent_kingcoupon_pars()
                     "PROPERTY_VALUES"                  => $PROP,
                     "NAME"                  => $R['clubName'],
                     "TAGS"                  => "kingcoupon",
-                    "ACTIVE"                => "Y"
+                    "ACTIVE"                => "Y",
+                    "SORT"                => "0"
                 );
 
 
@@ -92,6 +93,8 @@ function agent_kingcoupon_pars()
 
 
     }
+
+
+    return "agent_kingcoupon_pars();";
 }
 
-agent_kingcoupon_pars();
