@@ -33,7 +33,25 @@ function agent_sort()
         //    "ACTIVE" => "Y"
     );
 
-    $res = CIBlockElement::GetList(Array("PREVIEW_PICTURE" => "DESC"), $arFilter, FALSE, FALSE, $arSelect);
+
+    $ob = CIBlockElement::GetList(
+        array("IBLOCK_ID" => "DESC"),
+        array("IBLOCK_ID"               => IB_SUB_STOCK_ID,
+              ">DATE_ACTIVE_TO"         => date("d.m.Y h:i:s")),
+        array("PROPERTY_CLUB_ID"),
+        FALSE,
+        array(
+             "PROPERTY_CLUB_ID"
+        ));
+
+    $ar = array();
+    while ($row = $ob->Fetch()) {
+        $ar[$row['PROPERTY_CLUB_ID_VALUE']] = intval($row["CNT"]);
+    }
+
+
+    $arFields = array();
+    $res      = CIBlockElement::GetList(Array("PREVIEW_PICTURE" => "DESC"), $arFilter, FALSE, FALSE, $arSelect);
     while ($ob = $res->GetNext()) {
 
         if (!empty($ob["PREVIEW_PICTURE"])) { // если есть картинка
@@ -69,7 +87,7 @@ function agent_sort()
         }
 
         if (!empty($ob["PROPERTY_PLAN_VALUE"])) { // если план клуба
-            $arFields[$ob["ID"]] += 50;
+            //            $arFields[$ob["ID"]] += 50; TODO пока план есть только у тестовых объектов
         }
 
 
@@ -81,6 +99,11 @@ function agent_sort()
         if (!empty($ob["PROPERTY_PHONE_VALUE"])) { // если
             $arFields[$ob["ID"]] += 15;
         }
+
+        if (isset($ar[$ob['ID']])) {
+            $arFields[$ob["ID"]] += 70 * $ar[$ob['ID']];
+        }
+
 
     }
 
