@@ -9,7 +9,7 @@ $ClubList = $arResult["ClubList"];
     $rating=intval($var["PROPERTY_RATING_VALUE"]);
     ?>
 <div class="club_list_item">
-    <table width="100%">
+    <table width="100%" class="table-list-club">
         <tr>
             <td width="200px">
                 <a href='/club/<?=$var["ID"]?>'>

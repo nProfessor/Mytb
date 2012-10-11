@@ -33,7 +33,7 @@
                             </div>
 
                         </div>
-                        <a href="<?=$var["PROPERTY_URL_VALUE"]?>" class="btn btn-success btn-large">купить купон
+                        <a href="<?=$var["PROPERTY_URL_VALUE"]?>" class="btn btn-success btn-large" target="_blank">купить купон
                             за <?=$var["PROPERTY_PRICECOUPON_VALUE"]?>р.</a>
                         </div>
         </div>

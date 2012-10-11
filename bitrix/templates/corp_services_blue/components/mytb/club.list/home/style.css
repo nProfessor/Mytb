@@ -1,3 +1,7 @@
 .club_list_item .club_info_shot{
     margin:5px;
 }
+
+.club_info_shot td{
+    padding:0px 10px;
+}

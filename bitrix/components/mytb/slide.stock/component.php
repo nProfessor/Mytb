@@ -6,7 +6,7 @@ CModule::IncludeModule("iblock");
 global $USER;
 
 $ob = CIBlockElement::GetList(
-    array("SORT" => "ASC"),
+    array("RAND" => "ASC"),
     array("IBLOCK_ID"               => IB_SUB_STOCK_ID,
           ">DATE_ACTIVE_TO"         => date("d.m.Y h:i:s")),
     FALSE,
