@@ -1,11 +1,5 @@
 <? if (!$USER->IsAuthorized()): ?>
 
-<div class="modal hide fade" id="modal_auth">
-    <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-        <h6>Авторизация на сайте www.MyTB.ru</h6>
-    </div>
-    <div class="modal-body">
         <table width="100%" class="auth_table">
             <tr>
                 <td>
@@ -54,6 +48,5 @@
                 </td>
             </tr>
         </table>
-    </div>
-</div>
+
 <? endif; ?>
