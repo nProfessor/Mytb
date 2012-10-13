@@ -85,4 +85,4 @@ $APPLICATION->AddHeadScript("/jslibs/jquery/eTextTimer.js");
 На данный момент акций нет
 <?endif; ?>
 <input id="redirect" type="hidden" value="/club/<?=$arResult['club']["ID"]?>/stock/?subscribe=ok">
-<? $APPLICATION->IncludeComponent("mytb:auth", "",  array("AUTH_URL"=>"/club/{$arResult['club']["ID"]}/stock/?subscribe=ok"), FALSE); ?>
+<? $APPLICATION->IncludeComponent("mytb:auth", "",  array("AUTH_URL"=>"/club/{$arResult['club']["ID"]}/stock/?subscribe=ok&login=yes"), FALSE); ?>

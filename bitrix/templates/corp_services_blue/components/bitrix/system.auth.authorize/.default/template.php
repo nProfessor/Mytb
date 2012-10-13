@@ -4,7 +4,12 @@ if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== TRUE)
 ?>
 <div>
     <div class="fields">
+
+        <? $APPLICATION->IncludeComponent("mytb:auth", "auth",  array(), FALSE); ?>
+        </div>
+            </div>
         <?
+        return;
         ShowMessage($arParams["~AUTH_RESULT"]);
         ShowMessage($arResult['ERROR_MESSAGE']);
         ?>
@@ -66,7 +71,7 @@ if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== TRUE)
                     $component,
                     array("HIDE_ICONS"=> "N")
                 );
-                ?>
+     ?>
                 <? endif?>
 
             </div>
