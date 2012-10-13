@@ -43,8 +43,6 @@
                             <td><button type="button" class="btn btn-primary right btn-large" id="login">Войти</button></td>
                         </tr>
                     </table>
-
-
                 </td>
             </tr>
         </table>
