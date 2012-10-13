@@ -79,7 +79,7 @@ IncludeTemplateLangFile(__FILE__);
                         <li><a href="/auth/?logout=yes" title="Выход">Выход</a></li>
 
                         <? else: ?>
-                        <li><a href="/auth/" title="Вход/Регистрация">Вход/Регистрация</a> </li>
+                        <li><a href="/auth/" title="Вход/Регистрация" style="font-size:20px;">Вход/Регистрация</a> </li>
                 <?endif;?>
                 </ul>
 

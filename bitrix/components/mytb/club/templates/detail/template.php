@@ -142,7 +142,7 @@ $APPLICATION->SetPageProperty('description',strip_tags($clubInfo["~DETAIL_TEXT"]
                     echo "yes";
                 } else {
                     echo "no";
-                }?>">Подписаться на акци<br/>«<?=$clubInfo['NAME']?>»</button>
+                }?>">Подписаться на акции<br/>«<?=$clubInfo['NAME']?>»</button>
 <!--                <button class="btn btn-info btn-large" id="subs_event" data-toggle="modal">События</button>-->
                 <!--                <button class="btn btn-info btn-large" id="subs_news" data-toggle="modal">Новости</button>-->
             </div>
@@ -255,10 +255,10 @@ $APPLICATION->SetPageProperty('description',strip_tags($clubInfo["~DETAIL_TEXT"]
 <div class="modal hide fade" id="modal_subs">
     <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-        <h6>Подписка на акция, события и новости клуба «<?=$clubInfo["NAME"]?>»</h6>
+        <h6>Подписка на акции, события и новости клуба «<?=$clubInfo["NAME"]?>»</h6>
     </div>
     <div class="modal-body">
-        <b>Хотите узнавать об акция, событиях и новостях клуба «<?=$clubInfo["NAME"]?>»?</b>
+        <b>Хотите узнавать об акциях, событиях и новостях клуба «<?=$clubInfo["NAME"]?>»?</b>
     </div>
     <div class="modal-footer">
         <a href="#" class="btn" id="no_subs">Не сейчас</a>

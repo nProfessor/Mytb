@@ -6,6 +6,20 @@ if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== TRUE)
     <div class="fields">
 
         <? $APPLICATION->IncludeComponent("mytb:auth", "auth",  array(), FALSE); ?>
+        <?if ($arResult["AUTH_SERVICES"]): ?>
+        <?
+        $APPLICATION->IncludeComponent("bitrix:socserv.auth.form", "",
+            array(
+                 "AUTH_SERVICES"  => $arResult["AUTH_SERVICES"],
+                 "CURRENT_SERVICE"=> $arResult["CURRENT_SERVICE"],
+                 "AUTH_URL"       => $arResult["AUTH_URL"],
+                 "POST"           => $arResult["POST"],
+            ),
+            $component,
+            array("HIDE_ICONS"=> "N")
+        );
+        ?>
+        <? endif?>
         </div>
             </div>
         <?
