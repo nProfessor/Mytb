@@ -50,6 +50,19 @@
                         </tr>
                     </table>
 
+                    <?
+                    $APPLICATION->IncludeComponent("bitrix:socserv.auth.form", "",
+                        array(
+                             "AUTH_SERVICES"  => $arResult["AUTH_SERVICES"],
+                             "CURRENT_SERVICE"=> $arResult["CURRENT_SERVICE"],
+                             "AUTH_URL"       => $arParams["AUTH_URL"],
+                             "POST"           => $arResult["POST"],
+                        ),
+                        $component,
+                        array("HIDE_ICONS"=> "N")
+                    );
+                    ?>
+
 
                 </td>
             </tr>

@@ -24,9 +24,9 @@ class CSocServFacebook extends CSocServAuth
 		$fb = new CFacebookInterface($appID, $appSecret);
 		$url = $fb->GetAuthUrl($redirect_uri);
 
-		return '<a href="javascript:void(0)" onclick="BX.util.popup(\''.htmlspecialchars(CUtil::JSEscape($url)).'\', 580, 400)" class="bx-ss-button facebook-button"></a><span class="bx-spacer"></span><span>'.GetMessage("socserv_fb_note").'</span>';
+		return '<a href="javascript:void(0)" onclick="BX.util.popup(\''.htmlspecialchars(CUtil::JSEscape($url)).'\', 580, 400)" class="bx-ss-button facebook-button"></span><span>'.GetMessage("socserv_fb_note").'</span></a>';
 	}
-	
+
 	public function Authorize()
 	{
 		$GLOBALS["APPLICATION"]->RestartBuffer();
@@ -80,7 +80,7 @@ class CFacebookInterface
 	protected $appSecret;
 	protected $code = false;
 	protected $access_token = false;
-	
+
 	public function __construct($appID, $appSecret, $code=false)
 	{
 		$this->appID = $appID;
@@ -92,7 +92,7 @@ class CFacebookInterface
 	{
 		return self::AUTH_URL."?client_id=".$this->appID."&redirect_uri=".urlencode($redirect_uri)."&scope=email&display=popup";
 	}
-	
+
 	public function GetAccessToken($redirect_uri)
 	{
 		if($this->code === false)
@@ -109,14 +109,14 @@ class CFacebookInterface
 		}
 		return false;
 	}
-	
+
 	public function GetCurrentUser()
 	{
 		if($this->access_token === false)
 			return false;
 
 		$result = CHTTP::sGet(self::GRAPH_URL.'/me?access_token='.$this->access_token);
-		
+
 		if(!defined("BX_UTF"))
 			$result = CharsetConverter::ConvertCharset($result, "utf-8", LANG_CHARSET);
 
