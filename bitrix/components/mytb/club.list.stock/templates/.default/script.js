@@ -18,7 +18,7 @@ $(document).ready(function () {
         });
     });
 
-    $('#subs_stock').tooltip();
+    $('#subs_ok').tooltip();
 
 
     $("#subs_ok").live("click", function () {

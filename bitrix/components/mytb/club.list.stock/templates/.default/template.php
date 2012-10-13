@@ -3,13 +3,12 @@ $APPLICATION->AddHeadScript("/jslibs/jquery/eTextTimer.js");
 ?>
 <h1>Действующие акции «<?=$arResult['club']['NAME']?>» </h1>
 <br/>
-<a href="#" class="btn btn-danger pull-right btn-large"  id="subs_ok" data-original-title="Вы сможете моментально узнавать о появлении акций проводимых в  <b>«<?=$arResult['club']['NAME']?>»</b>"
+<a href="#" class="btn btn-danger pull-right btn-large"  id="subs_ok" data-original-title="Вы сможете моментально узнавать о появлении акций проводимых в  <b>«<?=str_replace('"',"",$arResult['club']['NAME'])?>»</b>"
    data-auth="<?if ($USER->IsAuthorized()) {
        echo "yes";
    } else {
        echo "no";
-   }?>"
-        >Подписаться на акции «<?=$arResult['club']['NAME']?>»</a>
+   }?>">Подписаться на акции «<?=$arResult['club']['NAME']?>»</a>
 <a href="/club/<?=$arResult['club']['ID']?>">На страницу «<?=$arResult['club']['NAME']?>»</a>
 <br/>
 <br/>
