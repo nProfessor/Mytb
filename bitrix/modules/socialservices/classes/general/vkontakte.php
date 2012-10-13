@@ -4,7 +4,7 @@ IncludeModuleLangFile(__FILE__);
 class CSocServVKontakte extends CSocServAuth
 {
 	const ID = "VKontakte";
-	
+
 	public function GetSettings()
 	{
 		return array(
@@ -25,10 +25,10 @@ class CSocServVKontakte extends CSocServAuth
 <script type="text/javascript">
 BX.ready(function(){VK.init({apiId: \''.CUtil::JSEscape(self::GetOption("vkontakte_appid")).'\'});});
 
-function BxVKAuthInfo(response) 
+function BxVKAuthInfo(response)
 {
 	var url_err = \''.CUtil::JSEscape($url_err).'\';
-	if(response.session) 
+	if(response.session)
 	{
 		var url_post = \''.CUtil::JSEscape($arParams["~AUTH_URL"]).'\';
 		var url_ok = \''.CUtil::JSEscape($url_ok).'\';
@@ -37,8 +37,8 @@ function BxVKAuthInfo(response)
 			"vk_session": response.session
 		};
 		BX.ajax.post(url_post, data, function(res){window.location = (res == "OK"? url_ok : url_err);});
-	} 
-	else 
+	}
+	else
 	{
 		window.location = url_err;
 	}
@@ -49,14 +49,14 @@ function BxVKAuthInfo(response)
 		$GLOBALS['APPLICATION']->AddHeadString($script, true);
 
 		$s = '
-<a href="javascript:void(0)" onclick="VK.Auth.login(BxVKAuthInfo);" class="bx-ss-button vkontakte-button"></a><span class="bx-spacer"></span><span>'.GetMessage("socserv_vk_note").'</span>';
+<a href="javascript:void(0)" onclick="VK.Auth.login(BxVKAuthInfo);" class="bx-ss-button vkontakte-button"><span>'.GetMessage("socserv_vk_note").'</span></a>';
 		return $s;
 	}
-	
+
 	public function Authorize()
 	{
 		$GLOBALS["APPLICATION"]->RestartBuffer();
-		
+
 		if(isset($_REQUEST["vk_session"]["user"]["id"]))
 		{
 			if(self::CheckUserData($_REQUEST["vk_session"]["sig"]))
@@ -71,42 +71,42 @@ function BxVKAuthInfo(response)
 					'NAME'=> $_REQUEST["vk_session"]["user"]["first_name"],
 					'LAST_NAME'=> $_REQUEST["vk_session"]["user"]["last_name"],
 				);
-				
+
 				if($this->AuthorizeUser($arFields))
 					die("OK");
 			}
 		}
 		die("FAILURE");
 	}
-	
+
 	protected function CheckUserData($control_sign)
 	{
 		$APP_ID = self::GetOption("vkontakte_appid");
 		$APP_SECRET = self::GetOption("vkontakte_appsecret");
 
 		$app_cookie = $_COOKIE['vk_app_'.$APP_ID];
-		if($app_cookie == '') 
+		if($app_cookie == '')
 			return false;
 
 		$session = array();
 		parse_str($app_cookie, $session);
 
 		static $valid_keys = array('expire'=>1, 'mid'=>1, 'secret'=>1, 'sid'=>1, 'sig'=>1);
-		foreach($valid_keys as $key=>$v) 
-			if(!isset($session[$key])) 
+		foreach($valid_keys as $key=>$v)
+			if(!isset($session[$key]))
 				return false;
-    	
+
     	ksort($session);
 
 		$sign = '';
-		foreach($session as $key=>$value) 
-			if($key <> 'sig' && array_key_exists($key, $valid_keys)) 
+		foreach($session as $key=>$value)
+			if($key <> 'sig' && array_key_exists($key, $valid_keys))
 				$sign .= ($key.'='.$value);
 
 		$sign .= $APP_SECRET;
 		$sign = md5($sign);
 
-		if($control_sign === $sign && $control_sign === $session['sig'] && $session['expire'] > time()) 
+		if($control_sign === $sign && $control_sign === $session['sig'] && $session['expire'] > time())
 			return true;
 
   		return false;

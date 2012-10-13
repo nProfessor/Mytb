@@ -13,13 +13,25 @@
 .mymailru {background-position:0px -64px;}
 .google {background-position:0px -112px;}
 
-.bx-ss-button {display:inline-block; background-image:url('icons.png'); width:87px; height:21px; background-repeat:no-repeat; vertical-align:middle;}
+.bx-ss-button {display:inline-block; background-image:url('icons.png'); width:220px; height:46px; background-repeat:no-repeat; vertical-align:middle; text-align: left;;}
 .liveid-button {background-position:0px -318px;}
-.facebook-button {background-position:0px -208px;}
 .twitter-button {background-position:0px -274px;}
-.vkontakte-button {background-position:0px -252px;}
 .mymailru-button {background-position:0px -230px;}
 .google-button {background-position:0px -296px;}
+
+.bx-ss-button span{
+    padding:16px 0px;
+    padding-left:43px;
+    display: block;
+    color:#fff;
+    font-size: 12px;
+    font-weight: bold;
+
+}
+
+
+.facebook-button {display:inline-block; background:url('/images/face_vk_buts.png') no-repeat 0px 0px;}
+.vkontakte-button {display:inline-block; background:url('/images/face_vk_buts.png') no-repeat 0px -46px;}
 
 div.bx-auth {max-width:600px; margin-top:16px; margin-bottom:24px;}
 div.bx-auth form {padding:0; margin:0;}
@@ -35,7 +47,7 @@ div.bx-auth-services a.bx-ss-selected {margin:0px; border:1px solid #D9D9D9; bac
 div.bx-auth-services i {display:inline-block; margin:0px; margin-right:4px; vertical-align:middle; cursor:pointer;}
 div.bx-auth-services b {vertical-align:middle; font-weight:bold; font-size:12px; font-family:Tahoma,Verdana,Arial,sans-serif;}
 
-div.bx-auth-service-form {color:black; background-color:#EEEEEE; border-bottom:solid 1px #D6D6D6; margin-top:1px; padding:16px; vertical-align:middle; font-size:12px;}
+div.bx-auth-service-form {text-align: center;;}
 div.bx-auth-service-form span, div.bx-auth-service-form input { vertical-align:middle;}
 div.bx-auth-service-form input.button {position:relative; left:10px;}
 div.bx-auth-service-form span.openid {display:inline-block; margin-right:6px;}

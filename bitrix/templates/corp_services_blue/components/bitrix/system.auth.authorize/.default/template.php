@@ -24,6 +24,7 @@ if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== TRUE)
             }
             ?>
             <div class="span4" style="width:246px !important;">
+                <div class="bx-auth-title">Логин и пароль</div>
                 <div class="field">
                     <label class="field-title"><?=GetMessage("AUTH_LOGIN")?></label>
 
@@ -55,7 +56,7 @@ if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== TRUE)
             <div class="span4">
                 <?if ($arResult["AUTH_SERVICES"]): ?>
                 <?
-                $APPLICATION->IncludeComponent("bitrix:socserv.auth.form", "icons",
+                $APPLICATION->IncludeComponent("bitrix:socserv.auth.form", "",
                     array(
                          "AUTH_SERVICES"  => $arResult["AUTH_SERVICES"],
                          "CURRENT_SERVICE"=> $arResult["CURRENT_SERVICE"],
@@ -63,10 +64,11 @@ if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== TRUE)
                          "POST"           => $arResult["POST"],
                     ),
                     $component,
-                    array("HIDE_ICONS"=> "Y")
+                    array("HIDE_ICONS"=> "N")
                 );
                 ?>
                 <? endif?>
+
             </div>
 
 
