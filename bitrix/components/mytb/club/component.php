@@ -29,7 +29,8 @@ $arFields=$club->getInfo(array("arSelect"=> array(
     "PROPERTY_SITE",
     "PROPERTY_METRO",
     "PROPERTY_PLAN",
-    "PREVIEW_PICTURE"
+    "PREVIEW_PICTURE",
+    "PROPERTY_TYPE_FACILITY"
 )),true);;
 
 
@@ -47,7 +48,7 @@ $arResult['userInfo'] =$userInfo;
 
 
 
-$APPLICATION->SetTitle(html_entity_decode($arResult['arFields']['NAME']));
+$APPLICATION->SetTitle(html_entity_decode($arResult['arFields']['PROPERTY_TYPE_FACILITY_VALUE'])." ".html_entity_decode($arResult['arFields']['NAME']));
 
 
 $this->IncludeComponentTemplate();

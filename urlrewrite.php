@@ -37,8 +37,8 @@ $arUrlRewrite = array(
 	),
 	array(
 		"CONDITION"	=>	"#^/club/([0-9]+)#",
-		"RULE"	=>	"ID=$1",
-		"ID"	=>	"bitrix:news",
+		"RULE"	=>	"ID=$1&CLUB=true",
+		"ID"	=>	"mytb:club",
 		"PATH"	=>	"/club/index.php",
 	),
 	array(
