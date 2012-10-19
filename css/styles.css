@@ -1167,3 +1167,7 @@ a.stoks:hover{
 .stock-header h3{
     line-height:1;
 }
+
+.text-center{
+    text-align: center;
+}
