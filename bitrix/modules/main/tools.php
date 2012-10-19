@@ -49,7 +49,7 @@ function SelectBox(
 	)
 {
 	if(!isset($strSelectedVal)) $strSelectedVal="";
-	$strReturnBox = "<select $field1 name=\"$strBoxName\" id=\"$strBoxName\" size=\"1\">";
+	$strReturnBox = "<select $field1 name=\"$strBoxName\" id=\"$strBoxName\">";
 	if (strlen($strDetText) > 0)
 		$strReturnBox = $strReturnBox."<option value=\"NOT_REF\">$strDetText</option>";
 	while ($ar = $a->Fetch())
@@ -175,11 +175,11 @@ function SelectBoxFromArray(
 			"}}\n".
 			"</script>\n";
 		$strReturnBox .= '<input type="hidden" name="'.$strBoxName.'_SELECTED" id="'.$strBoxName.'_SELECTED" value="">';
-		$strReturnBox .= '<select '.$field1.' name="'.$strBoxName.'" id="'.$strBoxName.'" size="1" onchange="'.$strBoxName.'LinkUp()" class="typeselect">';
+		$strReturnBox .= '<select '.$field1.' name="'.$strBoxName.'" id="'.$strBoxName.'" onchange="'.$strBoxName.'LinkUp()" class="typeselect">';
 	}
 	else
 	{
-		$strReturnBox = '<select '.$field1.' name="'.$strBoxName.'" id="'.$strBoxName.'" size="1">';
+		$strReturnBox = '<select '.$field1.' name="'.$strBoxName.'" id="'.$strBoxName.'">';
 	}
 
 	$ref = $db_array["reference"];
@@ -2475,13 +2475,15 @@ function bxstrrpos($haystack, $needle)
 
 function Rel2Abs($curdir, $relpath)
 {
-	if(strlen($relpath)<=0)
+	if($relpath == "")
 		return false;
 
 	$relpath = preg_replace("'[\\\/]+'", "/", $relpath);
 
-	if($relpath[0]=="/" || preg_match("#^[a-z]:/#i", $relpath))
+	if($relpath[0] == "/" || preg_match("#^[a-z]:/#i", $relpath))
+	{
 		$res = $relpath;
+	}
 	else
 	{
 		$curdir = preg_replace("'[\\\/]+'", "/", $curdir);
@@ -2492,33 +2494,22 @@ function Rel2Abs($curdir, $relpath)
 		$res = $curdir.$relpath;
 	}
 
-	if(($p = strpos($res, "\0"))!==false)
+	if(($p = strpos($res, "\0")) !== false)
 		$res = substr($res, 0, $p);
 
-	while(strpos($res, "/./")!==false)
-		$res = str_replace("/./", "/", $res);
+	$res = _normalizePath($res);
 
-	while(($pos=strpos($res, "../"))!==false)
-	{
-		$lp = substr($res, 0, $pos-1);
-		$posl = bxstrrpos($lp, "/");
-		if($posl===false)
-			return;
-		$lp = substr($lp, 0, $posl+1);
-		$rp = substr($res, $pos+3);
-		$res = $lp.$rp;
-	}
+	if(substr($res, 0, 1) !== "/" && !preg_match("#^[a-z]:/#i", $res))
+		$res = "/".$res;
 
-	$res = preg_replace("'[\\\/]+'", "/", $res);
-
-	$res = rtrim($res, "\0");
+	$res = rtrim($res, ".\\+ ");
 
 	return $res;
 }
 
 function _normalizePath($strPath)
 {
-	$strResult = "";
+	$strResult = '';
 	if($strPath <> '')
 	{
 		$strPath = str_replace("\\", "/", $strPath);
@@ -2528,17 +2519,22 @@ function _normalizePath($strPath)
 
 		$arPath = explode('/', $strPath);
 		$nPath = count($arPath);
-		for ($i = $nPath-1; $i >= 0; $i--)
+		$pathStack = array();
+
+		for ($i = 0; $i < $nPath; $i++)
 		{
-			if ($arPath[$i] == ".")
-				;
-			elseif ($arPath[$i] == "..")
-				$i--;
-			elseif (($arPath[$i] == '') && ($i != ($nPath-1)) && ($i != 0))
-				;
+			if ($arPath[$i] === ".")
+				continue;
+			if (($arPath[$i] === '') && ($i !== ($nPath - 1)) && ($i !== 0))
+				continue;
+
+			if ($arPath[$i] === "..")
+				array_pop($pathStack);
 			else
-				$strResult = $arPath[$i].($i != ($nPath-1)? '/'.$strResult : '');
+				array_push($pathStack, $arPath[$i]);
 		}
+
+		$strResult = implode("/", $pathStack);
 	}
 	return $strResult;
 }
@@ -3689,6 +3685,10 @@ class CJSCore
 		$ret = '';
 		if ($bNeedCore && !self::$arCurrentlyLoadedExt['core'])
 		{
+			$autoTimeZone = "N";
+			if(is_object($GLOBALS["USER"]))
+				$autoTimeZone = trim($GLOBALS["USER"]->GetParam("AUTO_TIME_ZONE"));
+
 			$arLang = array(
 				'LANGUAGE_ID' => LANGUAGE_ID,
 				'FORMAT_DATE' => FORMAT_DATE,
@@ -3698,6 +3698,7 @@ class CJSCore
 				'SERVER_TIME' => time(),
 				'SERVER_TZ_OFFSET' => date("Z"),
 				'USER_TZ_OFFSET' => CTimeZone::GetOffset(),
+				'USER_TZ_AUTO' => $autoTimeZone == 'N'? 'N': 'Y',
 				'bitrix_sessid' => bitrix_sessid(),
 			);
 			if(!defined("ADMIN_SECTION") || ADMIN_SECTION !== true)
@@ -4465,6 +4466,7 @@ class CHTTP
 		return $uri;
 	}
 
+
 	function Download($url, $file)
 	{
 		CheckDirPath($file);
@@ -4939,8 +4941,59 @@ class CHTTP
 
 		return $url;
 	}
-}
 
+	public static function urnEncode($str, $charset = false)
+	{
+		global $APPLICATION;
+
+		$result = '';
+		$arParts = preg_split("#(://|:\\d+/|/|\\?|=|&)#", $str, -1, PREG_SPLIT_DELIM_CAPTURE);
+
+		if($charset === false)
+		{
+			foreach($arParts as $i => $part)
+			{
+				$result .= ($i % 2) ? $part : rawurlencode($part);
+			}
+		}
+		else
+		{
+			foreach($arParts as $i => $part)
+			{
+				$result .= ($i % 2)
+					? $part
+					: rawurlencode($APPLICATION->ConvertCharset($part, LANG_CHARSET, $charset));
+			}
+		}
+		return $result;
+	}
+
+	public static function urnDecode($str, $charset = false)
+	{
+		global $APPLICATION;
+
+		$result = '';
+		$arParts = preg_split("#(://|:\\d+/|/|\\?|=|&)#", $str, -1, PREG_SPLIT_DELIM_CAPTURE);
+
+		if($charset === false)
+		{
+			foreach($arParts as $i => $part)
+			{
+				$result .= ($i % 2) ? $part : rawurldecode($part);
+			}
+		}
+		else
+		{
+			foreach($arParts as $i => $part)
+			{
+				$result .= ($i % 2)
+					? $part
+					: rawurldecode($APPLICATION->ConvertCharset($part, LANG_CHARSET, $charset));
+			}
+		}
+		return $result;
+	}
+}
 
 function GetMenuTypes($site=false, $default_value=false)
 {

@@ -345,7 +345,7 @@ class CTextParser
 				"&#174;", "&#174;"),
 			$text);
 
-		if ($this->MaxStringLen > 0)
+		if ($this->allow["HTML"] != "Y" && $this->MaxStringLen > 0)
 		{
 			$text = preg_replace(
 				array(

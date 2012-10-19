@@ -124,12 +124,12 @@ window.bxClockLoaders.push("bxShowClock_<?=$arParams['inputId']?>('<?=$arParams[
 					zIndex: <?= isset($arParams['zIndex']) ? intval($arParams['zIndex']) : 0 ?>,
 					AmPmMode: <? echo $arParams['am_pm_mode'] ? 'true' : 'false';?>,
 					MESS: {
-						Insert: '<?=GetMessage('BX_CLOCK_INSERT')?>',
-						Close: '<?=GetMessage('BX_CLOCK_CLOSE')?>',
-						Hours: '<?=GetMessage('BX_CLOCK_HOURS')?>',
-						Minutes: '<?=GetMessage('BX_CLOCK_MINUTES')?>',
-						Up: '<?=GetMessage('BX_CLOCK_UP')?>',
-						Down: '<?=GetMessage('BX_CLOCK_DOWN')?>'
+						Insert: '<?=GetMessageJS('BX_CLOCK_INSERT')?>',
+						Close: '<?=GetMessageJS('BX_CLOCK_CLOSE')?>',
+						Hours: '<?=GetMessageJS('BX_CLOCK_HOURS')?>',
+						Minutes: '<?=GetMessageJS('BX_CLOCK_MINUTES')?>',
+						Up: '<?=GetMessageJS('BX_CLOCK_UP')?>',
+						Down: '<?=GetMessageJS('BX_CLOCK_DOWN')?>'
 					}
 				});
 

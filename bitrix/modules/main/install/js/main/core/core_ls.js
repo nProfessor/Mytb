@@ -53,6 +53,14 @@ BX.localStorage.instance = function()
 			localStorageInstance = new BX.localStorageIE8();
 		else if (support == 'ie7')
 			localStorageInstance = new BX.localStorageIE7();
+		else
+		{
+			localStorageInstance = {
+				'set' : BX.DoNothing,
+				'get' : function(){return null},
+				'remove' : BX.DoNoting
+			};
+		}
 	}
 	return localStorageInstance;
 };

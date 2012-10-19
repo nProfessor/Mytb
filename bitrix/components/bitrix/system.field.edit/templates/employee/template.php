@@ -18,17 +18,16 @@ if (!$arResult['CAN_EDIT_USER'])
 $name = $arParams["arUserField"]["~FIELD_NAME"];
 $namex = preg_replace("/([^a-z0-9])/is", "x", $name);
 ?>
-<table id="table_<?=$name?>" width="88%">
+<table id="table_<?=$name?>" width="100%" cellpadding="0" cellspacing="0">
 <?
-foreach ($arResult["VALUE"] as $ID)
+foreach ($arResult["VALUE"] as $i => $ID)
 {
-	$name_c = $name.'['.$ID.']';
+	$name_c = ($arParams["arUserField"]["MULTIPLE"] == "Y"? $name.'['.$i.']' : $name);
 	$name_x = preg_replace("/([^a-z0-9])/is", "x", $name_c);
 ?>
 	<tr>
 		<td>
 		<input type="text" name="<?=$name_c?>" id="<?echo $name_x?>" value="<?echo intval($ID) > 0 ? intval($ID) : ''?>" size="3" class="typeinput" />
-		&nbsp;&nbsp;
 		<?
 		$GLOBALS['APPLICATION']->IncludeComponent(
 			'bitrix:intranet.user.search',
@@ -80,20 +79,23 @@ foreach ($arResult["VALUE"] as $ID)
 		Ch<?=$name_x?>();
 		//-->
 		</script>
-
-<?
-		echo CAllUserTypeManager::ShowScript();
-?>
 		</td>
 	</tr>
 <?
 }
 ?>
+<?
+if($arParams["arUserField"]["MULTIPLE"] == "Y"):
+?>
 <tr>
 	<td>
+		<?echo CAllUserTypeManager::ShowScript();?>
 		<input type="button" value="<?=GetMessage("USER_TYPE_PROP_ADD")?>" onClick="addNewRow('table_<?=$name?>', /(<?=$name?>|<?=$name?>_old_id|<?=$namex?>)[x\[]([0-9]*)[x\]]/gi, 2)">
 	</td>
 </tr>
+<?
+endif; //multiple
+?>
 <script type="text/javascript">
 	BX.addCustomEvent('onAutoSaveRestore',
 	function(ob, data)

@@ -928,7 +928,7 @@ window.'.$this->name.' = new PopupMenu("'.$this->id.'"'.
 						(isset($action["DEFAULT"]) && $action["DEFAULT"] == true? "'DEFAULT':true,":"").
 						($action["TEXT"]<>""? "'TEXT':'".CUtil::JSEscape($action["TEXT"])."',":"").
 						(isset($action["TITLE"]) && $action["TITLE"]<>""? "'TITLE':'".CUtil::JSEscape($action["TITLE"])."',":"").
-						($action["ACTION"]<>""? "'ONCLICK':'".CUtil::JSEscape($action["ACTION"])."',":"").
+						($action["ACTION"]<>""? "'ONCLICK':'".htmlspecialcharsback(CUtil::JSEscape($action["ACTION"]))."',":"").
 						(isset($action["ONMENUPOPUP"]) && $action["ONMENUPOPUP"]<>""? "'ONMENUPOPUP':'".CUtil::JSEscape($action["ONMENUPOPUP"])."',":"").
 						(isset($action["MENU"]) && is_array($action["MENU"])? "'MENU':".CAdminPopup::PhpToJavaScript($action["MENU"]).",":"");
 					if($sItem <> "")
@@ -1717,15 +1717,21 @@ class CAdminTabControl
 			}
 			else
 			{
-				echo '
-<input'.($aParams["disabled"] === true? " disabled":"").' type="submit" name="save" value="'.GetMessage("admin_lib_edit_save").'" title="'.GetMessage("admin_lib_edit_save_title").$hkInst->GetTitle("Edit_Save_Button").'" />
-<input'.($aParams["disabled"] === true? " disabled":"").' type="submit" name="apply" value="'.GetMessage("admin_lib_edit_apply").'" title="'.GetMessage("admin_lib_edit_apply_title").$hkInst->GetTitle("Edit_Apply_Button").'" />
-'.($aParams["back_url"] <> '' && !preg_match('/(javascript|data)[\s\0-\13]*:/i', $aParams["back_url"])? '<input type="button" value="'.GetMessage("admin_lib_edit_cancel").'" name="cancel" onClick="window.location=\''.htmlspecialcharsbx(CUtil::addslashes($aParams["back_url"])).'\'" title="'.GetMessage("admin_lib_edit_cancel_title").$hkInst->GetTitle("Edit_Cancel_Button").'" />':'');
-
-			echo $hkInst->PrintJSExecs($hkInst->GetCodeByClassName("Edit_Save_Button"));
-			echo $hkInst->PrintJSExecs($hkInst->GetCodeByClassName("Edit_Apply_Button"));
-			echo $hkInst->PrintJSExecs($hkInst->GetCodeByClassName("Edit_Cancel_Button"));
-
+				if($aParams["btnSave"] !== false)
+				{
+					echo '<input'.($aParams["disabled"] === true? " disabled":"").' type="submit" name="save" value="'.GetMessage("admin_lib_edit_save").'" title="'.GetMessage("admin_lib_edit_save_title").$hkInst->GetTitle("Edit_Save_Button").'" />';
+					echo $hkInst->PrintJSExecs($hkInst->GetCodeByClassName("Edit_Save_Button"));
+				}
+				if($aParams["btnApply"] !== false)
+				{
+					echo '<input'.($aParams["disabled"] === true? " disabled":"").' type="submit" name="apply" value="'.GetMessage("admin_lib_edit_apply").'" title="'.GetMessage("admin_lib_edit_apply_title").$hkInst->GetTitle("Edit_Apply_Button").'" />';
+					echo $hkInst->PrintJSExecs($hkInst->GetCodeByClassName("Edit_Apply_Button"));
+				}
+				if($aParams["btnCancel"] !== false && $aParams["back_url"] <> '' && !preg_match('/(javascript|data)[\s\0-\13]*:/i', $aParams["back_url"]))
+				{
+					echo '<input type="button" value="'.GetMessage("admin_lib_edit_cancel").'" name="cancel" onClick="window.location=\''.htmlspecialcharsbx(CUtil::addslashes($aParams["back_url"])).'\'" title="'.GetMessage("admin_lib_edit_cancel_title").$hkInst->GetTitle("Edit_Cancel_Button").'" />';
+					echo $hkInst->PrintJSExecs($hkInst->GetCodeByClassName("Edit_Cancel_Button"));
+				}
 			}
 		}
 	}
@@ -2355,7 +2361,6 @@ class CAdminList
 
 	function ActionRedirect($url)
 	{
-		$url = htmlspecialcharsback($url);
 		if(strpos($url, "lang=")===false)
 		{
 			if(strpos($url, "?")===false)
@@ -3795,6 +3800,7 @@ class CAdminForm extends CAdminTabControl
 {
 	var $arParams = array();
 	var $arFields = array();
+	var $group = "";
 	var $arFieldValues = array();
 	var $sPrologContent = "";
 	var $sEpilogContent = "";
@@ -3923,7 +3929,7 @@ class CAdminForm extends CAdminTabControl
 			"admin_lib_sett_sec_rename" => GetMessage("admin_lib_sett_sec_rename"),
 			"admin_lib_sett_tab_rename" => GetMessage("admin_lib_sett_tab_rename"),
 		);
-		
+
 ?>
 <script>
 var arSystemTabsFields = <?echo CUtil::PhpToJSObject($arSystemTabsFields)?>;
@@ -4266,9 +4272,38 @@ Sync();
 			$action = htmlspecialcharsbx($this->arParams["FORM_ACTION"]);
 		else
 			$action = htmlspecialcharsbx($APPLICATION->GetCurPage());
-		echo '<form method="POST" Action="'.$action.'"  ENCTYPE="multipart/form-data" name="'.$this->name.'_form"'.($this->arParams["FORM_ATTRIBUTES"] <> ''? ' '.$this->arParams["FORM_ATTRIBUTES"]:'').'>';
+		echo '<form method="POST" Action="'.$action.'"  ENCTYPE="multipart/form-data" id="'.$this->name.'_form" name="'.$this->name.'_form"'.($this->arParams["FORM_ATTRIBUTES"] <> ''? ' '.$this->arParams["FORM_ATTRIBUTES"]:'').'>';
 
 		parent::Begin();
+
+		$htmlGroup = "";
+		if($this->group)
+		{
+			foreach($this->tabs as $arTab)
+			{
+				if(is_array($arTab["FIELDS"]))
+				{
+					foreach($arTab["FIELDS"] as $j => $arField)
+					{
+						if(
+							(strlen($this->arFields[$arField["id"]]["custom_html"]) > 0)
+							|| (strlen($this->arFields[$arField["id"]]["html"]) > 0)
+						)
+						{
+							$p = array_search($arField["id"], $this->arFields[$this->group]["group"]);
+							if($p !== false)
+								unset($this->arFields[$this->group]["group"][$p]);
+						}
+					}
+				}
+			}
+			if(!empty($this->arFields[$this->group]["group"]))
+			{
+				$htmlGroup .= '<tr class="heading" id="tr_'.$this->arFields[$this->group]["id"].'">'
+					.$this->arFields[$this->group]["html"].'</tr>'
+					."\n";
+			}
+		}
 
 		while($this->tabIndex < count($this->tabs))
 		{
@@ -4278,7 +4313,22 @@ Sync();
 			{
 				foreach($arTab["FIELDS"] as $j => $arField)
 				{
-					if(strlen($this->arFields[$arField["id"]]["custom_html"]) > 0)
+					if(
+						isset($this->arFields[$arField["id"]]["group"])
+						&& !empty($this->arFields[$arField["id"]]["group"])
+					)
+					{
+						echo $htmlGroup;
+						foreach($this->arFields[$arField["id"]]["group"] as $p)
+						{
+							if($this->arFields[$p]["custom_html"])
+								echo preg_replace("/^\\s*<tr/im", "<tr class=\"bx-in-group\"", $this->arFields[$p]["custom_html"]);
+							elseif($this->arFields[$p]["html"])
+								echo '<tr class="bx-in-group" '.($this->arFields[$p]["valign"] <> ''? ' valign="'.$this->arFields[$p]["valign"].'"':'').' id="tr_'.$p.'">', $this->arFields[$p]["html"], "</tr>\n";
+							unset($arHiddens[$this->arFields[$p]["id"]]);
+						}
+					}
+					elseif(strlen($this->arFields[$arField["id"]]["custom_html"]) > 0)
 					{
 						echo $this->arFields[$arField["id"]]["custom_html"];
 					}
@@ -4298,29 +4348,31 @@ Sync();
 		{
 			if($arField["required"])
 			{
-					if(strlen($this->arFields[$arField["id"]]["custom_html"]) > 0)
-					{
-						echo $this->arFields[$arField["id"]]["custom_html"];
-					}
-					elseif(strlen($this->arFields[$arField["id"]]["html"]) > 0)
-					{
-						if($this->arFields[$arField["id"]]["delimiter"])
-							echo '<tr class="heading">';
-						else
-							echo '<tr>';
-						echo $this->arFields[$arField["id"]]["html"].'</tr>';
-					}
-					unset($arHiddens[$arField["id"]]);
+				if(strlen($this->arFields[$arField["id"]]["custom_html"]) > 0)
+				{
+					echo $this->arFields[$arField["id"]]["custom_html"];
+				}
+				elseif(strlen($this->arFields[$arField["id"]]["html"]) > 0)
+				{
+					if($this->arFields[$arField["id"]]["delimiter"])
+						echo '<tr class="heading">';
+					else
+						echo '<tr>';
+					echo $this->arFields[$arField["id"]]["html"].'</tr>';
+				}
+				unset($arHiddens[$arField["id"]]);
 			}
 		}
 		parent::Buttons($this->arButtonsParams);
 		echo $this->sButtonsContent;
 		$this->End();
 		echo $this->sEpilogContent;
+		echo '<span class="bx-fields-hidden">';
 		foreach($arHiddens as $i => $arField)
 		{
 			echo $arField["hidden"];
 		}
+		echo '</span>';
 		echo '</form>';
 	}
 
@@ -4383,6 +4435,17 @@ Sync();
 	{
 		$this->sEpilogContent = ob_get_contents();
 		ob_end_clean();
+	}
+
+	function AddFieldGroup($id, $content, $arFields)
+	{
+		$this->group = $id;
+		$this->tabs[$this->tabIndex]["FIELDS"][$id] = array(
+			"id" => $id,
+			"content" => $content,
+			"group" => $arFields,
+			"html" => '<td colspan="2">'.$this->GetCustomLabelHTML($id, $content).'</td>',
+		);
 	}
 
 	function AddSection($id, $content, $required = false)

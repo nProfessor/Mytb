@@ -36,16 +36,16 @@
 .feed-add-photo-block {display:inline-block; margin:17px 17px 0 0; min-height:92px; width:102px; padding-right:21px; position:relative; vertical-align:top;}
 .feed-add-photo-block .feed-add-post-del-but {background-position:6px -19px; background-color:#fff; height:22px; top:1px; z-index:0;}
 .feed-add-img-wrap {
-    background:#fff;
-    border:1px solid #e2e6e6;
-    -moz-box-shadow: 0 0 2px rgba(0,0,0,0.3);
-    -webkit-box-shadow: 0 0 2px rgba(0,0,0,0.3);
-    box-shadow: 0 0 2px rgba(137,137,137,0.3);
-    display:block;
-    text-align:center;
-    padding:4px;
-    position:relative;
-    z-index:2;
+	background:#fff;
+	border:1px solid #e2e6e6;
+	-moz-box-shadow: 0 0 2px rgba(0,0,0,0.3);
+	-webkit-box-shadow: 0 0 2px rgba(0,0,0,0.3);
+	box-shadow: 0 0 2px rgba(137,137,137,0.3);
+	display:block;
+	text-align:center;
+	padding:4px;
+	position:relative;
+	z-index:2;
 }
 .feed-add-img-title {color:#2067b0; display:block; font-weight:bold; font-size:12px; margin-top:3px;}
 .feed-add-photo-block .feed-add-close-icon {background-color:#fff; background-position:8px -19px; height:22px; top:1px; right:1px; width:22px;}
@@ -59,21 +59,21 @@
 .feed-add-post-text {color:#bfbfbf; font-size:17px; /*height:75px; padding:10px 7px 0;*/}
 
 .feed-add-post-edit-block {
-    background:linear-gradient(top, #f9fbfb, #f4f8f8);
-    background:-moz-linear-gradient(top, #f9fbfb, #f4f8f8);
-    background:-o-linear-gradient(top, #f9fbfb, #f4f8f8);
-    background:-ms-linear-gradient(top, #f9fbfb, #f4f8f8);
-    background:-webkit-gradient(linear, left top, left bottom, from(#f9fbfb), to(#f4f8f8));
-    box-shadow: 0 2px 2px -2px rgba(229,229,229,0.9);
-    border-bottom:1px solid #e9eaeb;
-    border-left:1px solid #ced1d2;
-    border-right:1px solid #ced1d2;
-    border-top-left-radius:2px;
-    border-top-right-radius:2px;
-    margin:0 -1px;
-    height:25px;
-    padding:6px 0 0 0;
-    position:relative;
+	background:linear-gradient(top, #f9fbfb, #f4f8f8);
+	background:-moz-linear-gradient(top, #f9fbfb, #f4f8f8);
+	background:-o-linear-gradient(top, #f9fbfb, #f4f8f8);
+	background:-ms-linear-gradient(top, #f9fbfb, #f4f8f8);
+	background:-webkit-gradient(linear, left top, left bottom, from(#f9fbfb), to(#f4f8f8));
+	box-shadow: 0 2px 2px -2px rgba(229,229,229,0.9);
+	border-bottom:1px solid #e9eaeb;
+	border-left:1px solid #ced1d2;
+	border-right:1px solid #ced1d2;
+	border-top-left-radius:2px;
+	border-top-right-radius:2px;
+	margin:0 -1px;
+	height:25px;
+	padding:6px 0 0 0;
+	position:relative;
 }
 .feed-add-post-edit-but {background:url("images/log/live_feed_sprite_2.png") no-repeat; border-radius:2px; cursor:pointer; display:inline-block; height:21px; margin-left:6px; vertical-align:top; width:25px;}
 .feed-add-post-edit-but:hover {background-color:#dee1e5;}
@@ -91,14 +91,15 @@
 .feed-add-post-edit-block .feed-add-close-icon {top:3px;}
 
 .feed-add-post-form {
-    border:1px solid #e3e4e5;
-    -webkit-box-shadow: 0 1px 2px rgba(229,229,229,0.5) inset;
-    -moz-box-shadow: 0 1px 2px rgba(229,229,229,0.5) inset;
-    box-shadow: 0 1px 2px rgba(229,229,229,0.5) inset;
-    border-radius:2px;
-    margin-bottom:12px;
-    padding-bottom:7px;
-    zoom:1;
+	border:1px solid #e3e4e5;
+	-webkit-box-shadow: 0 1px 2px rgba(229,229,229,0.5) inset;
+	-moz-box-shadow: 0 1px 2px rgba(229,229,229,0.5) inset;
+	box-shadow: 0 1px 2px rgba(229,229,229,0.5) inset;
+	border-radius:2px;
+	margin-bottom:12px;
+	padding-bottom:7px;
+	position:relative;
+	zoom:1;
 }
 .feed-add-post-edit-form {border-top-color:#ced0d1;}
 .feed-add-post-error-wrap .feed-add-post-form {margin-bottom:0;}
@@ -106,7 +107,7 @@
 .feed-add-close-icon {background:url("images/log/live_feed_sprite_2.png") no-repeat 9px -17px; cursor:pointer; height:25px; right:2px; width:25px; position:absolute;}
 .feed-add-close-icon:hover {background-position:-56px -58px;}
 .feed-add-post-form-but-wrap {padding:0 7px 2px; position:relative;}
-.feed-add-post-form-but {background:url("images/log/live_feed_sprite_2.png") no-repeat; cursor:pointer; display:inline-block; margin-right:15px; height:25px; opacity:0.5; filter: alpha(opacity=50); width:25px;}
+.feed-add-post-form-but {background:url("images/log/live_feed_sprite_2.png") no-repeat; cursor:pointer; display:inline-block; margin-right:15px; height:25px; opacity:0.5; filter: alpha(opacity=50); width:25px;position:relative;}
 .feed-add-post-form-but:hover {opacity:1;}
 .feed-add-file {background-position:-137px -17px;}
 .feed-add-link {background-position:-13px 3px;}

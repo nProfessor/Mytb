@@ -17,6 +17,7 @@ class CAllFile
 					return true;
 				}
 			}
+
 		}
 		unset($arFields[$field]);
 		return false;

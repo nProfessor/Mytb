@@ -126,7 +126,7 @@ $aTabs = array(
 	array("DIV" => "edit1", "TAB" => GetMessage("RATING_RULE_EDIT_TAB_MAIN"), "TITLE"=>GetMessage("RATING_RULE_EDIT_TAB_MAIN_TITLE")),
 );
 
-$tabControl = new CAdminForm("rating_rule", $aTabs);
+$tabControl = new CAdminForm("rating_rule", $aTabs, true, true);
 $tabControl->BeginEpilogContent();
 ?>
 <?=bitrix_sessid_post()?>

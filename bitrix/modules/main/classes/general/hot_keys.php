@@ -814,28 +814,28 @@ class CHotKeys
 			return false;
 
 		global $USER;
-		$htmlOut= "<script type='text/javascript'>
-					BXHotKeys.MesNotAssign = '".GetMessage("HK_NOT_ASSIGN")."';
-					BXHotKeys.MesClToChange = '".GetMessage("HK_CLICK_TO_CHANGE")."';
-					BXHotKeys.MesClean = '".GetMessage("HK_CLEAN")."';
-					BXHotKeys.MesBusy = '".GetMessage("HK_BUSY")."';
-					BXHotKeys.MesClose = '".GetMessage("HK_CLOSE")."';
-					BXHotKeys.MesSave = '".GetMessage("HK_SAVE")."';
-					BXHotKeys.MesSettings = '".GetMessage("HK_SETTINGS")."';
-					BXHotKeys.MesDefault = '".GetMessage("HK_DEFAULT")."';
-					BXHotKeys.MesDelAll = '".GetMessage("HK_DELALL")."';
-					BXHotKeys.MesDelConfirm = '".GetMessage("HK_DEL_CONFIRM")."';
-					BXHotKeys.MesDefaultConfirm = '".GetMessage("HK_DEFAULT_CONFIRM")."';
-					BXHotKeys.MesExport = '".GetMessage("HK_EXPORT")."';
-					BXHotKeys.MesImport = '".GetMessage("HK_IMPORT")."';
-					BXHotKeys.MesExpFalse = '".GetMessage("HK_EXP_FALSE")."';
-					BXHotKeys.MesImpFalse = '".GetMessage("HK_IMP_FALSE")."';
-					BXHotKeys.MesImpSuc = '".GetMessage("HK_IMP_SUCCESS")."';
-					BXHotKeys.MesImpHeader = '".GetMessage("HK_IMP_HEADER")."';
-					BXHotKeys.MesFileEmpty = '".GetMessage("HK_FILENAME_EMPTY")."';
-					BXHotKeys.MesDelete = '".GetMessage("HK_DELETE")."';
-					BXHotKeys.uid = ".$USER->GetID().";
-					</script>";
+		$htmlOut = "<script type='text/javascript'>
+			BXHotKeys.MesNotAssign = '".GetMessageJS("HK_NOT_ASSIGN")."';
+			BXHotKeys.MesClToChange = '".GetMessageJS("HK_CLICK_TO_CHANGE")."';
+			BXHotKeys.MesClean = '".GetMessageJS("HK_CLEAN")."';
+			BXHotKeys.MesBusy = '".GetMessageJS("HK_BUSY")."';
+			BXHotKeys.MesClose = '".GetMessageJS("HK_CLOSE")."';
+			BXHotKeys.MesSave = '".GetMessageJS("HK_SAVE")."';
+			BXHotKeys.MesSettings = '".GetMessageJS("HK_SETTINGS")."';
+			BXHotKeys.MesDefault = '".GetMessageJS("HK_DEFAULT")."';
+			BXHotKeys.MesDelAll = '".GetMessageJS("HK_DELALL")."';
+			BXHotKeys.MesDelConfirm = '".GetMessageJS("HK_DEL_CONFIRM")."';
+			BXHotKeys.MesDefaultConfirm = '".GetMessageJS("HK_DEFAULT_CONFIRM")."';
+			BXHotKeys.MesExport = '".GetMessageJS("HK_EXPORT")."';
+			BXHotKeys.MesImport = '".GetMessageJS("HK_IMPORT")."';
+			BXHotKeys.MesExpFalse = '".GetMessageJS("HK_EXP_FALSE")."';
+			BXHotKeys.MesImpFalse = '".GetMessageJS("HK_IMP_FALSE")."';
+			BXHotKeys.MesImpSuc = '".GetMessageJS("HK_IMP_SUCCESS")."';
+			BXHotKeys.MesImpHeader = '".GetMessageJS("HK_IMP_HEADER")."';
+			BXHotKeys.MesFileEmpty = '".GetMessageJS("HK_FILENAME_EMPTY")."';
+			BXHotKeys.MesDelete = '".GetMessageJS("HK_DELETE")."';
+			BXHotKeys.uid = ".$USER->GetID().";
+			</script>";
 		return $htmlOut;
 	}
 

@@ -1208,7 +1208,14 @@ class CDBResult extends CAllDBResult
 				$this->NavPageCount++;
 
 			//calculate total pages depend on rows count. start with 1
-			$this->NavPageNomer = ($this->PAGEN < 1 || $this->PAGEN > $this->NavPageCount? ($_SESSION[$this->SESS_PAGEN] < 1 || $_SESSION[$this->SESS_PAGEN] > $this->NavPageCount? 1:$_SESSION[$this->SESS_PAGEN]):$this->PAGEN);
+			if($this->PAGEN >= 1 && $this->PAGEN <= $this->NavPageCount)
+				$this->NavPageNomer = $this->PAGEN;
+			elseif($_SESSION[$this->SESS_PAGEN] >= 1 && $_SESSION[$this->SESS_PAGEN] <= $this->NavPageCount)
+				$this->NavPageNomer = $_SESSION[$this->SESS_PAGEN];
+			elseif($arNavStartParams["checkOutOfRange"] !== true)
+				$this->NavPageNomer = 1;
+			else
+				return;
 
 			//rows to skip
 			$NavFirstRecordShow = $this->NavPageSize*($this->NavPageNomer-1);
@@ -1226,11 +1233,6 @@ class CDBResult extends CAllDBResult
 			$res_tmp = $this->DB->Query($strSql);
 		else
 			$res_tmp = $GLOBALS["DB"]->Query($strSql);
-
-		/*
-		for($i=$NavFirstRecordShow; $i<$NavLastRecordShow; $i++)
-			$temp_arrray[] = mysql_fetch_array($res_tmp->result, MYSQL_ASSOC);
-		*/
 
 		if($this->SqlTraceIndex)
 		{

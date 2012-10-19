@@ -11,7 +11,7 @@ require_once($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/prolog_user.php");
 define("HELP_FILE", "users/user_admin.php");
 $entity_id = "USER";
 
-if (!($USER->CanDoOperation('view_subordinate_users') || $USER->CanDoOperation('view_all_users') || $USER->CanDoOperation('edit_subordinate_users')))
+if(!($USER->CanDoOperation('view_subordinate_users') || $USER->CanDoOperation('view_all_users') || $USER->CanDoOperation('edit_all_users') || $USER->CanDoOperation('edit_subordinate_users')))
 	$APPLICATION->AuthForm(GetMessage("ACCESS_DENIED"));
 
 $uid = $USER->GetID();
@@ -29,15 +29,6 @@ if($handle_subord)
 		$arUserSubordinateGroups = array_merge ($arUserSubordinateGroups, $arSubordinateGroups);
 	}
 	$arUserSubordinateGroups = array_unique($arUserSubordinateGroups);
-}
-
-if($USER->CanDoOperation('edit_own_profile') && !($USER->CanDoOperation('view_all_users') || $USER->CanDoOperation('view_subordinate_users') || $USER->CanDoOperation('edit_subordinate_users')))
-{
-	$ID = $USER->GetParam("USER_ID");
-	if(intval($ID)>0)
-		LocalRedirect(BX_ROOT."/admin/user_edit.php?lang=".LANG."&ID=".$ID);
-	else
-		$APPLICATION->AuthForm(GetMessage("ACCESS_DENIED"));
 }
 
 IncludeModuleLangFile(__FILE__);

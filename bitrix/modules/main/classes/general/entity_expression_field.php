@@ -158,13 +158,15 @@ class CExpressionEntityField extends CEntityField
 			));
 		}
 
+		// should remove subqueries from expression here: EXISTS(..(..)..), (SELECT ..(..)..)
+
 		if (preg_match('/(?:^|[^a-z0-9_])EXISTS\s*\(/', $expression))
 		{
 			return false;
 		}
 		else
 		{
-			preg_match_all('/(?:^|[^a-z0-9_])('.join('|', self::$aggrFunctions).')[\s\(]+/i', $expression, $matches);
+			preg_match_all('/(?:^|[^a-z0-9_])(?<!SELECT\s\s)('.join('|', self::$aggrFunctions).')[\s\(]+/i', $expression, $matches);
 
 			return $matches[1];
 		}

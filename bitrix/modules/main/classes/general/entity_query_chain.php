@@ -63,6 +63,19 @@ class CEntityQueryChain
 		$this->size--;
 	}
 
+	public function hasBackReference()
+	{
+		foreach ($this->chain as $element)
+		{
+			if ($element->isBackReference())
+			{
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	public function getSize()
 	{
 		return $this->size;

@@ -79,7 +79,7 @@ if (IsModuleInstalled("fileman"))
 	}
 </script>
 
-		<div style="width:0; height:0; overflow:hidden;"><input type="text" tabindex="3" onFocus="window['<?=$arParams["LHE"]["jsObjName"]?>'].SetFocus()" name="hidden_focus"></div>
+		<div style="display:none;"><input type="text" tabindex="<?=($arParams["TEXT"]["TABINDEX"]++)?>" onFocus="window['<?=$arParams["LHE"]["jsObjName"]?>'].SetFocus()" name="hidden_focus" /></div>
 		</div>
 		<div class="feed-add-post-form-but-wrap" id="post-buttons-bottom"><?=implode("", $arButtonsHTML);
 	if(!empty($arParams["ADDITIONAL"]))
@@ -263,13 +263,13 @@ if (!empty($arParams["TAGS"]))
 			"arrFILTER"	=>	$arParams["TAGS"]["FILTER"],
 			"PAGE_ELEMENTS"	=>	"10",
 			"SORT_BY_CNT"	=>	"Y",
-			"TEXT" => 'size="30" tabindex="4"',
+			"TEXT" => 'size="30" tabindex="'.($arParams["TEXT"]["TABINDEX"]++).'"',
 			"ID" => "TAGS"
 		));
 }
 else
 {
-	?><input type="text" tabindex="4" name="<?=$arParams["TAGS"]["NAME"]?>" size="30" value=""><?
+	?><input type="text" tabindex="<?=($arParams["TEXT"]["TABINDEX"]++)?>" name="<?=$arParams["TAGS"]["NAME"]?>" size="30" value=""><?
 }?>
 </div>
 <script type="text/javascript">

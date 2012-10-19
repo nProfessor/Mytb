@@ -196,6 +196,11 @@ class CEntityQueryChainElement
 		return $sql;
 	}
 
+	public function isBackReference()
+	{
+		return $this->type === 3;
+	}
+
 	public function dump()
 	{
 		echo gettype($this->value).' ';

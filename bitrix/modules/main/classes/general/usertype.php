@@ -1189,9 +1189,9 @@ class CAllUserTypeManager
 					var otv = '';
 					while (otv = re.exec(oCell.innerHTML))
 					{
-						if (otv!='')
+						if (otv[1])
 						{
-							setTimeout(otv[1], 0);
+							BX.evalGlobal(otv[1]);
 						}
 					}
 				}
@@ -2069,6 +2069,31 @@ class CAllSQLWhere
 	var $l_joins = array();
 	var $bDistinctReqired = false;
 
+	static $triple_char = array(
+		"!><"=>"NB", //not between
+		"!=%"=>"NM", //not Identical by like
+		"!%="=>"NM", //not Identical by like
+	);
+
+	static $double_char = array(
+		"!="=>"NI", //not Identical
+		"!%"=>"NS", //not substring
+		"><"=>"B",  //between
+		">="=>"GE", //greater or equal
+		"<="=>"LE", //less or equal
+		"=%"=>"M", //Identical by like
+		"%="=>"M", //Identical by like
+	);
+
+	static $single_char = array(
+		"="=>"I", //Identical
+		"%"=>"S", //substring
+		"?"=>"?", //logical
+		">"=>"G", //greater
+		"<"=>"L", //less
+		"!"=>"N", // not field LIKE val
+	);
+
 	function SetFields($arFields)
 	{
 		$this->fields = array();
@@ -2097,37 +2122,21 @@ class CAllSQLWhere
 
 	function MakeOperation($key)
 	{
-		static $triple_char = array(
-			"!><"=>"NB", //not between
-			"!=%"=>"NM", //not Identical by like
-			"!%="=>"NM", //not Identical by like
-		);
-		static $double_char = array(
-			"!="=>"NI", //not Identical
-			"!%"=>"NS", //not substring
-			"><"=>"B",  //between
-			">="=>"GE", //greater or equal
-			"<="=>"LE", //less or equal
-			"=%"=>"M", //Identical by like
-			"%="=>"M", //Identical by like
-		);
-		static $single_char = array(
-			"="=>"I", //Identical
-			"%"=>"S", //substring
-			"?"=>"?", //logical
-			">"=>"G", //greater
-			"<"=>"L", //less
-			"!"=>"N", // not field LIKE val
-		);
-
-		if(isset($triple_char[$op = substr($key,0,3)]))
-			return Array("FIELD"=>substr($key,3), "OPERATION"=>$triple_char[$op]);
-		elseif(isset($double_char[$op = substr($key,0,2)]))
-			return Array("FIELD"=>substr($key,2), "OPERATION"=>$double_char[$op]);
-		elseif(isset($single_char[$op = substr($key,0,1)]))
-			return Array("FIELD"=>substr($key,1), "OPERATION"=>$single_char[$op]);
+		if(isset(self::$triple_char[$op = substr($key,0,3)]))
+			return Array("FIELD"=>substr($key,3), "OPERATION"=>self::$triple_char[$op]);
+		elseif(isset(self::$double_char[$op = substr($key,0,2)]))
+			return Array("FIELD"=>substr($key,2), "OPERATION"=>self::$double_char[$op]);
+		elseif(isset(self::$single_char[$op = substr($key,0,1)]))
+			return Array("FIELD"=>substr($key,1), "OPERATION"=>self::$single_char[$op]);
 		else
 			return Array("FIELD"=>$key, "OPERATION"=>"E"); // field LIKE val
+	}
+
+	function getOperationByCode($code)
+	{
+		$all_operations = array_flip(self::$single_char + self::$double_char + self::$triple_char);
+
+		return $all_operations[$code];
 	}
 
 	function GetQuery($arFilter)
@@ -2258,6 +2267,10 @@ class CAllSQLWhere
 								foreach($value as $val)
 									$FIELD_VALUE[] = intval($val);
 							}
+							elseif (is_object($value))
+							{
+								$FIELD_VALUE = $value;
+							}
 							else
 								$FIELD_VALUE = intval($value);
 							switch($operation)
@@ -2285,6 +2298,8 @@ class CAllSQLWhere
 										if($this->fields[$key]["MULTIPLE"] === "Y")
 											$this->bDistinctReqired = true;
 									}
+									elseif (is_object($FIELD_VALUE))
+										$result[] = $FIELD_NAME." = ".$FIELD_VALUE->compile();
 									elseif($FIELD_VALUE==0)
 										$result[] = "(".$FIELD_NAME." IS NULL OR ".$FIELD_NAME." = 0)";
 									else

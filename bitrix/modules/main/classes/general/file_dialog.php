@@ -671,41 +671,41 @@ else
 		?>
 var FD_MESS =
 {
-	FD_SAVE_TAB_TITLE : '<?=GetMessage('FD_SAVE_TAB_TITLE')?>',
-	FD_OPEN_DIR : '<?=GetMessage('FD_OPEN_DIR')?>',
-	FD_OPEN_TAB_TITLE : '<?=GetMessage('FD_OPEN_TAB_TITLE')?>',
-	FD_CLOSE : '<?=GetMessage('FD_CLOSE')?>',
-	FD_SORT_SIZE : '<?=GetMessage('FD_SORT_SIZE')?>',
-	FD_SORT_DATE : '<?=GetMessage('FD_SORT_DATE')?>',
-	FD_SORT_NAME : '<?=GetMessage('FD_SORT_NAME')?>',
-	FD_SORT_TYPE : '<?=GetMessage('FD_SORT_TYPE')?>',
-	FD_BUT_OPEN : '<?=GetMessage('FD_BUT_OPEN')?>',
-	FD_BUT_SAVE : '<?=GetMessage('FD_BUT_SAVE')?>',
-	FD_ALL_FILES : '<?=GetMessage('FD_ALL_FILES')?>',
-	FD_ALL_IMAGES : '<?=GetMessage('FD_ALL_IMAGES')?>',
-	FD_BYTE : '<?=GetMessage('FD_BYTE')?>',
-	FD_EMPTY_FILENAME : '<?=GetMessage('FD_EMPTY_FILENAME')?>',
-	FD_INPUT_NEW_PUNKT_NAME : '<?=GetMessage('FD_INPUT_NEW_PUNKT_NAME')?>',
-	FD_LAST_POINT : '<?=GetMessage('FD_LAST_POINT')?>',
-	FD_NEWFOLDER_EXISTS : '<?=GetMessage('FD_NEWFOLDER_EXISTS')?>',
-	FD_NEWFILE_EXISTS : '<?=GetMessage('FD_NEWFILE_EXISTS')?>',
-	FD_RENAME : '<?=GetMessage('FD_RENAME')?>',
-	FD_DELETE : '<?=GetMessage('FD_DELETE')?>',
-	FD_RENAME_TITLE : '<?=GetMessage('FD_RENAME_TITLE')?>',
-	FD_DELETE_TITLE : '<?=GetMessage('FD_DELETE_TITLE')?>',
-	FD_CONFIRM_DEL_DIR : '<?=GetMessage('FD_CONFIRM_DEL_DIR')?>',
-	FD_CONFIRM_DEL_FILE : '<?=GetMessage('FD_CONFIRM_DEL_FILE')?>',
-	FD_EMPTY_NAME : '<?=GetMessage('FD_EMPTY_NAME')?>',
-	FD_INCORRECT_NAME : '<?=GetMessage('FD_INCORRECT_NAME')?>',
-	FD_LOADIND : '<?=GetMessage('FD_LOADING')?>...',
-	FD_EMPTY_NAME : '<?=GetMessage('FD_EMPTY_NAME')?>',
-	FD_INCORRECT_EXT : '<?=GetMessage('FD_INCORRECT_EXT')?>',
-	FD_LOAD_EXIST_CONFIRM : '<?=GetMessage('FD_LOAD_EXIST_CONFIRM')?>',
-	FD_SESS_EXPIRED : '<?=GetMessage('BX_FD_ERROR').': '.GetMessage('BX_FD_SESS_EXPIRED')?>',
-	FD_ERROR : '<?=GetMessage('BX_FD_ERROR')?>',
-	FD_FILE : '<?=GetMessage('FD_FILE')?>',
-	FD_FOLDER : '<?=GetMessage('FD_FOLDER')?>',
-	FD_IMAGE : '<?=GetMessage('FD_IMAGE')?>'
+	FD_SAVE_TAB_TITLE : '<?=GetMessageJS('FD_SAVE_TAB_TITLE')?>',
+	FD_OPEN_DIR : '<?=GetMessageJS('FD_OPEN_DIR')?>',
+	FD_OPEN_TAB_TITLE : '<?=GetMessageJS('FD_OPEN_TAB_TITLE')?>',
+	FD_CLOSE : '<?=GetMessageJS('FD_CLOSE')?>',
+	FD_SORT_SIZE : '<?=GetMessageJS('FD_SORT_SIZE')?>',
+	FD_SORT_DATE : '<?=GetMessageJS('FD_SORT_DATE')?>',
+	FD_SORT_NAME : '<?=GetMessageJS('FD_SORT_NAME')?>',
+	FD_SORT_TYPE : '<?=GetMessageJS('FD_SORT_TYPE')?>',
+	FD_BUT_OPEN : '<?=GetMessageJS('FD_BUT_OPEN')?>',
+	FD_BUT_SAVE : '<?=GetMessageJS('FD_BUT_SAVE')?>',
+	FD_ALL_FILES : '<?=GetMessageJS('FD_ALL_FILES')?>',
+	FD_ALL_IMAGES : '<?=GetMessageJS('FD_ALL_IMAGES')?>',
+	FD_BYTE : '<?=GetMessageJS('FD_BYTE')?>',
+	FD_EMPTY_FILENAME : '<?=GetMessageJS('FD_EMPTY_FILENAME')?>',
+	FD_INPUT_NEW_PUNKT_NAME : '<?=GetMessageJS('FD_INPUT_NEW_PUNKT_NAME')?>',
+	FD_LAST_POINT : '<?=GetMessageJS('FD_LAST_POINT')?>',
+	FD_NEWFOLDER_EXISTS : '<?=GetMessageJS('FD_NEWFOLDER_EXISTS')?>',
+	FD_NEWFILE_EXISTS : '<?=GetMessageJS('FD_NEWFILE_EXISTS')?>',
+	FD_RENAME : '<?=GetMessageJS('FD_RENAME')?>',
+	FD_DELETE : '<?=GetMessageJS('FD_DELETE')?>',
+	FD_RENAME_TITLE : '<?=GetMessageJS('FD_RENAME_TITLE')?>',
+	FD_DELETE_TITLE : '<?=GetMessageJS('FD_DELETE_TITLE')?>',
+	FD_CONFIRM_DEL_DIR : '<?=GetMessageJS('FD_CONFIRM_DEL_DIR')?>',
+	FD_CONFIRM_DEL_FILE : '<?=GetMessageJS('FD_CONFIRM_DEL_FILE')?>',
+	FD_EMPTY_NAME : '<?=GetMessageJS('FD_EMPTY_NAME')?>',
+	FD_INCORRECT_NAME : '<?=GetMessageJS('FD_INCORRECT_NAME')?>',
+	FD_LOADIND : '<?=GetMessageJS('FD_LOADING')?>...',
+	FD_EMPTY_NAME : '<?=GetMessageJS('FD_EMPTY_NAME')?>',
+	FD_INCORRECT_EXT : '<?=GetMessageJS('FD_INCORRECT_EXT')?>',
+	FD_LOAD_EXIST_CONFIRM : '<?=GetMessageJS('FD_LOAD_EXIST_CONFIRM')?>',
+	FD_SESS_EXPIRED : '<?=GetMessageJS('BX_FD_ERROR').': '.GetMessageJS('BX_FD_SESS_EXPIRED')?>',
+	FD_ERROR : '<?=GetMessageJS('BX_FD_ERROR')?>',
+	FD_FILE : '<?=GetMessageJS('FD_FILE')?>',
+	FD_FOLDER : '<?=GetMessageJS('FD_FOLDER')?>',
+	FD_IMAGE : '<?=GetMessageJS('FD_IMAGE')?>'
 };
 <?
 	}
@@ -1338,14 +1338,14 @@ arFDPermission['<?=$path_js?>'] = {
 		{
 			global $APPLICATION, $USER;
 			$strWarning = '';
-			$filename = urldecode($Params['filename']);
-			$path = urldecode($Params['path']);
+			$filename = $Params['filename'];
+			$path = $Params['path'];
 			$site = $Params['site'];
 			$upload_and_open = $Params['upload_and_open'];
 			$rewrite = $Params['rewrite'];
 			$rootPath = CSite::GetSiteDocRoot($site);
 
-			if(strlen($filename) == 0)
+			if($filename == '')
 				$filename = $F["name"];
 
 			$pathto = Rel2Abs($path, $filename);

@@ -1,4 +1,8 @@
 <?
+/**
+ * @global CMain $APPLICATION
+ * @global CUser $USER
+ */
 if (!array_key_exists("component_name", $_GET))
 {
 	require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/public/component_props.php");
@@ -47,6 +51,11 @@ $strWarning = "";
 $arValues = array();
 $arTemplate = false;
 $arComponent = false;
+$arComponentDescription = false;
+$arParameterGroups = array();
+$filesrc = "";
+$abs_path = "";
+$curTemplate = "";
 
 if(!CComponentEngine::CheckComponentName($_GET["component_name"]))
 	$strWarning .= GetMessage("comp_prop_error_name")."<br>";
@@ -56,7 +65,9 @@ if($strWarning == "")
 	// try to read parameters from script file
 	/* Try to open script containing the component call */
 	if(!$src_path || $src_line <= 0)
+	{
 		$strWarning .= GetMessage("comp_prop_err_param")."<br>";
+	}
 	else
 	{
 		$abs_path = $io->RelativeToAbsolutePath($src_path);
@@ -91,7 +102,6 @@ if($strWarning == "")
 	$arComponentParameters = CComponentUtil::GetComponentProps($_GET["component_name"], $arValues);
 	$arTemplateParameters = CComponentUtil::GetTemplateProps($_GET["component_name"], $curTemplate, $_GET["template_id"], $arValues);
 
-	$arParameterGroups = array();
 	if (isset($arComponentParameters["GROUPS"]) && is_array($arComponentParameters["GROUPS"]))
 		$arParameterGroups = $arParameterGroups + $arComponentParameters["GROUPS"];
 
@@ -211,6 +221,7 @@ if(isset($_POST["__closed_sections"]) && $_POST["__closed_sections"]<>"")
 window.__closed_sections = [<?echo $sSectArr?>];
 window.ShowSection = function(el)
 {
+	var i;
 	var bShow = (el.className == "bx-popup-sign bx-popup-plus");
 	el.className = (bShow? "bx-popup-sign bx-popup-minus":"bx-popup-sign bx-popup-plus");
 	var tr = jsUtils.FindParentObject(jsUtils.FindParentObject(el, "table"), "tr");
@@ -229,25 +240,27 @@ window.ShowSection = function(el)
 	}
 	if(bShow)
 	{
-		for(var i in window.__closed_sections)
+		for(i in window.__closed_sections)
+		{
 			if(window.__closed_sections[i] == id)
 			{
 				delete window.__closed_sections[i];
 				break;
 			}
+		}
 	}
 	else
 		window.__closed_sections[window.__closed_sections.length] = id;
 
 	var form = jsUtils.FindParentObject(el, "form");
 	form.__closed_sections.value = '';
-	for(var i in window.__closed_sections)
+	for(i in window.__closed_sections)
 		if(window.__closed_sections[i])
 			form.__closed_sections.value += (form.__closed_sections.value!=''? ',':'') + window.__closed_sections[i];
 
 	if(bShow && id == "sect_SEF_MODE")
-		ShowSefUrls(form.SEF_MODE);
-}
+		ShowSefUrls(form["SEF_MODE"]);
+};
 
 window.ShowSefUrls = function(el)
 {
@@ -266,7 +279,7 @@ window.ShowSefUrls = function(el)
 		else
 			tr.style.display = 'none';
 	}
-}
+};
 
 window.addElement = function(arNodes, arElements)
 {
@@ -302,6 +315,7 @@ window.getCompParamvals = function()
 </script>
 <table cellspacing="0" class="bx-width100">
 <?
+$bHidden = false;
 if(!empty($arComponentTemplates)):
 	$bHidden = in_array("__template_sect", $aClosedSections);
 ?>
@@ -318,7 +332,7 @@ if(!empty($arComponentTemplates)):
 	<tr<?if($bHidden) echo ' style="display:none"'?>>
 		<td class="bx-popup-label bx-width50"><?= GetMessage("comp_prop_template") ?>:</td>
 		<td>
-			<select name="NEW_COMPONENT_TEMPLATE" onchange="<?=$obJSPopup->jsPopup?>.PostParameters('<?=PageParams()?>&amp;action=refresh&amp;scroll='+<?=$obJSPopup->jsPopup?>.GetContent().scrollTop);">
+			<select name="NEW_COMPONENT_TEMPLATE" onchange="<?=$obJSPopup->jsPopup.".PostParameters('".PageParams()."&amp;action=refresh&amp;scroll='+".$obJSPopup->jsPopup.".GetContent().scrollTop);"?>">
 <?
 $arTemplateID = array();
 foreach($arComponentTemplates as $template)
@@ -488,12 +502,15 @@ switch(strtoupper($prop["TYPE"]))
 		if(!is_array($prop["VALUES"]))
 			$prop["VALUES"] = Array();
 
-		$tmp = ''; $bFound = false;
+		$tmp = '';
+		$bFound = false;
 		foreach($prop["VALUES"] as $v_id=>$v_name)
 		{
-			$key = array_search($v_id, $val);
-			if($key===FALSE || $key===NULL)
+			$key = array_search(strval($v_id), $val, true);
+			if($key === false || $key === null)
+			{
 				$tmp .= '<option value="'.htmlspecialcharsbx($v_id).'">'.htmlspecialcharsbx($v_name).'</option>';
+			}
 			else
 			{
 				unset($val[$key]);
@@ -778,7 +795,7 @@ endif; //!empty($arTemplate["PARAMS"])
 ?>
 <?if(($scroll = intval($_GET["scroll"])) > 0):?>
 <script>
-var content = <?=$obJSPopup->jsPopup?>.GetContent();
+var content = <?=$obJSPopup->jsPopup.".GetContent()"?>;
 if(content)
 	content.scrollTop = <?echo $scroll?>;
 </script>

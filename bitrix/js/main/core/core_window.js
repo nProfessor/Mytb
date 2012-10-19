@@ -6,7 +6,7 @@ if (BX.WindowManager) return;
 BX.WindowManager = {
 	_stack: [],
 	_runtime_resize: {},
-	_delta: 5,
+	_delta: 2,
 	_delta_start: 1000,
 	currently_loaded: null,
 

@@ -14,22 +14,23 @@ $strRedirect = BX_ROOT."/admin/user_edit.php?lang=".LANG;
 
 ClearVars();
 
-if (!($USER->CanDoOperation('view_own_profile') || $USER->CanDoOperation('edit_own_profile') || $USER->CanDoOperation('view_subordinate_users') || $USER->CanDoOperation('view_all_users')))
+$canViewUserList = ($USER->CanDoOperation('view_subordinate_users') || $USER->CanDoOperation('view_all_users') || $USER->CanDoOperation('edit_all_users') || $USER->CanDoOperation('edit_subordinate_users'));
+
+if(!($USER->CanDoOperation('view_own_profile') || $USER->CanDoOperation('edit_own_profile') || $canViewUserList))
 	$APPLICATION->AuthForm(GetMessage("ACCESS_DENIED"));
+
+if($USER->CanDoOperation('edit_own_profile') && !$canViewUserList)
+{
+	$ID = $USER->GetID();
+	if(intval($ID) <= 0)
+		$APPLICATION->AuthForm(GetMessage("ACCESS_DENIED"));
+	$COPY_ID = 0;
+}
+
+IncludeModuleLangFile(__FILE__);
 
 $PROPERTY_ID = "USER";
 
-if($USER->CanDoOperation('edit_own_profile') && !($USER->CanDoOperation('view_subordinate_users') || $USER->CanDoOperation('view_all_users') || $USER->CanDoOperation('edit_all_users') || $USER->CanDoOperation('edit_subordinate_users')))
-{
-	$ID = $USER->GetID();
-	if (intval($ID)<=0) $APPLICATION->AuthForm(GetMessage("ACCESS_DENIED"));
-	$COPY_ID = 0;
-}
-IncludeModuleLangFile(__FILE__);
-
-/***************************************************************************
-			GET | POST handle
-****************************************************************************/
 $message = null;
 $strError = '';
 $res = true;
@@ -423,7 +424,7 @@ else
 require_once ($DOCUMENT_ROOT.BX_ROOT."/modules/main/include/prolog_admin_after.php");
 
 $aMenu = array();
-if($USER->CanDoOperation('view_all_users'))
+if($canViewUserList)
 {
 	$aMenu[] = array(
 		"TEXT"	=> GetMessage("RECORD_LIST"),
@@ -914,7 +915,10 @@ if(
 	$tabControl->ShowUserFields($PROPERTY_ID, $ID, ($strError <> '' || !$res));
 }
 
-$tabControl->Buttons(array("disabled" => (!$editable), "back_url"=>"user_admin.php?lang=".LANGUAGE_ID));
+if($canViewUserList)
+	$tabControl->Buttons(array("disabled"=>!$editable, "back_url"=>"user_admin.php?lang=".LANGUAGE_ID));
+else
+	$tabControl->Buttons(array("btnSave"=>false, "btnCancel"=>false, "disabled"=>!$editable));
 
 $tabControl->Show();
 

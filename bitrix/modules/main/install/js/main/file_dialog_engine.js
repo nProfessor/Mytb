@@ -2710,9 +2710,9 @@ __Uploader.prototype =
 		}
 
 		//4. Set file name in hidden input
-		this.pFrameDoc.getElementById('__bx_fd_upload_fname').value = jsUtils.urlencode(fileName);
+		this.pFrameDoc.getElementById('__bx_fd_upload_fname').value = fileName;
 		//5. Set path in hidden input
-		this.pFrameDoc.getElementById('__bx_fd_upload_path').value = jsUtils.urlencode(path);
+		this.pFrameDoc.getElementById('__bx_fd_upload_path').value = path;
 		oWaitWindow.Show();
 	},
 

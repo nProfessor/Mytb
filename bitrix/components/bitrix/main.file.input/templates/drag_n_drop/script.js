@@ -1,4 +1,8 @@
-function BlogBFileDialog(arParams)
+(function() {
+if (window.BlogBFileDialog)
+	return;
+window.BlogBFileDialogUniqueID = [];
+window.BlogBFileDialog = function(arParams)
 {
 	this.dialogName = 'AttachFileDialog';
 	this.agent = false;
@@ -35,18 +39,18 @@ function BlogBFileDialog(arParams)
 	}, this));
 }
 
-BlogBFileDialog.prototype.getID = function() {
-    return '' + new Date().getTime();
+window.BlogBFileDialog.prototype.getID = function() {
+	return '' + new Date().getTime();
 }
 
-BlogBFileDialog.prototype.InitAgent = function(agent)
+window.BlogBFileDialog.prototype.InitAgent = function(agent)
 {
 	if (this.controller) {
 		agent.placeholder = BX.findChild(this.controller, {'className': 'file-placeholder-tbody'}, true);
 	}
 }
 
-BlogBFileDialog.prototype.ShowUploadedFile = function(agent) // event
+window.BlogBFileDialog.prototype.ShowUploadedFile = function(agent) // event
 {
 	this.agent = agent;
 	var uploadResult = agent.uploadResult;
@@ -77,7 +81,7 @@ BlogBFileDialog.prototype.ShowUploadedFile = function(agent) // event
 	}
 }
 
-BlogBFileDialog.prototype.CreateFileRow = function(result)
+window.BlogBFileDialog.prototype.CreateFileRow = function(result)
 {
 	var res = result;
 	var mode = 'file';
@@ -118,12 +122,12 @@ BlogBFileDialog.prototype.CreateFileRow = function(result)
 	return newNode;
 }
 
-BlogBFileDialog.prototype.GetUploadDialog = function(agent)
+window.BlogBFileDialog.prototype.GetUploadDialog = function(agent)
 {
 	return new BlogBFileDialogUploader(this, agent);
 }
 
-BlogBFileDialog.prototype.tplFileRow = function(nodes, res)
+window.BlogBFileDialog.prototype.tplFileRow = function(nodes, res)
 {
 	for (id in nodes)
 	{
@@ -145,7 +149,7 @@ BlogBFileDialog.prototype.tplFileRow = function(nodes, res)
 	}
 }
 
-BlogBFileDialog.prototype._addUrlParam = function(url, param)
+window.BlogBFileDialog.prototype._addUrlParam = function(url, param)
 {
 	if (!url)
 		return null;
@@ -154,7 +158,7 @@ BlogBFileDialog.prototype._addUrlParam = function(url, param)
 	return url;
 }
 
-BlogBFileDialog.prototype.LoadDialogs = function(dialogs)
+window.BlogBFileDialog.prototype.LoadDialogs = function(dialogs)
 {
 	if (!!this.agent)
 		this.agent.LoadDialogs(dialogs);
@@ -164,7 +168,7 @@ BlogBFileDialog.prototype.LoadDialogs = function(dialogs)
 	}
 }
 
-BlogBFileDialog.prototype.StopUpload = function(agent, parent)
+window.BlogBFileDialog.prototype.StopUpload = function(agent, parent)
 {
 	this.agent = agent;
 	id = false;
@@ -185,7 +189,7 @@ BlogBFileDialog.prototype.StopUpload = function(agent, parent)
 	BX.ajax.post(this.uploadFileUrl, data);
 }
 
-function BlogBFileDialogDispatcher(controller)
+window.BlogBFileDialogDispatcher = function(controller)
 {
 	this.id = this.getID();
 	this.controller = controller;
@@ -204,23 +208,23 @@ function BlogBFileDialogDispatcher(controller)
 	}, this));
 }
 
-BlogBFileDialogDispatcher.prototype.getID = function() {
-    return '' + new Date().getTime();
+window.BlogBFileDialogDispatcher.prototype.getID = function() {
+	return '' + new Date().getTime();
 }
 
-BlogBFileDialogDispatcher.prototype.ExpandUploader = function()
+window.BlogBFileDialogDispatcher.prototype.ExpandUploader = function()
 {
 	BX.onCustomEvent(BX(this.controller.parentNode), "BFileDLoadFormController");
 	this.Unbind();
 }
 
-BlogBFileDialogDispatcher.prototype.Unbind = function()
+window.BlogBFileDialogDispatcher.prototype.Unbind = function()
 {
 	BX.removeCustomEvent(this.dropbox, 'dragEnter', this.hExpandUploader);
 }
 
 // upoader section
-BlogBFileDialogUploader = function(arParams, agent)
+window.BlogBFileDialogUploader = function(arParams, agent)
 {
 	this.WDUploaded = false;
 	this.WDUploadInProgress = false;
@@ -255,7 +259,7 @@ BlogBFileDialogUploader = function(arParams, agent)
 		}, this));
 }
 
-BlogBFileDialogUploader.prototype.CreateElements = function()
+window.BlogBFileDialogUploader.prototype.CreateElements = function()
 {
 	var uniqueID;
 	do {
@@ -272,6 +276,7 @@ BlogBFileDialogUploader.prototype.CreateElements = function()
 
 	var form = BX.create("FORM", {
 		props: {
+			id: "form-" + uniqueID,
 			method: "POST",
 			action: this.uploadFileUrl,
 			enctype: "multipart/form-data",
@@ -316,7 +321,7 @@ BlogBFileDialogUploader.prototype.CreateElements = function()
 	window['FILE_UPLOADER_CALLBACK_' + uniqueID] = BX.proxy(this.Callback, this);
 }
 
-BlogBFileDialogUploader.prototype.GetUploadFileName = function(not_customized)
+window.BlogBFileDialogUploader.prototype.GetUploadFileName = function(not_customized)
 {
 	custom = !not_customized;
 	fileName = '';
@@ -332,7 +337,7 @@ BlogBFileDialogUploader.prototype.GetUploadFileName = function(not_customized)
 	return fileName;
 }
 
-BlogBFileDialogUploader.prototype.Callback = function(files, uniqueID)
+window.BlogBFileDialogUploader.prototype.Callback = function(files, uniqueID)
 {
 	if (files.length > 0) {
 		for(var i = 0; i < files.length; i++) {
@@ -356,9 +361,11 @@ BlogBFileDialogUploader.prototype.Callback = function(files, uniqueID)
 	}
 	window['FILE_UPLOADER_CALLBACK_' + uniqueID] = BX.DoNothing;
 	BX.cleanNode(BX("iframe-" + uniqueID), true);
+	BX.cleanNode(BX("form-" + uniqueID), true);
+	this.agent.uploadDialog = null;
 }
 
-BlogBFileDialogUploader.prototype.UploadResponse = function(evt, responseJSONStr)
+window.BlogBFileDialogUploader.prototype.UploadResponse = function(evt, responseJSONStr)
 {
 	this.WDUploadInProgress = false;
 	BX.unbind(window, 'beforeunload', BX.proxy(this.UploadLeave, this));
@@ -370,13 +377,13 @@ BlogBFileDialogUploader.prototype.UploadResponse = function(evt, responseJSONStr
 	}
 }
 
-BlogBFileDialogUploader.prototype.UploadResponseIframe = function(evt, responseJSONStr)
+window.BlogBFileDialogUploader.prototype.UploadResponseIframe = function(evt, responseJSONStr)
 {
 	this.WDUploadInProgress = false;
 	BX.unbind(window, 'beforeunload', BX.proxy(this.UploadLeave, this));
 }
 
-BlogBFileDialogUploader.prototype.UploadLeave = function(e)
+window.BlogBFileDialogUploader.prototype.UploadLeave = function(e)
 {
 	var e = e || window.event;
 	var msg = '';
@@ -393,7 +400,7 @@ BlogBFileDialogUploader.prototype.UploadLeave = function(e)
 	return;
 }
 
-BlogBFileDialogUploader.prototype.UpdateListFiles = function(files)
+window.BlogBFileDialogUploader.prototype.UpdateListFiles = function(files)
 {
 	if (this && files)
 	{
@@ -410,7 +417,7 @@ BlogBFileDialogUploader.prototype.UpdateListFiles = function(files)
 	}
 }
 
-BlogBFileDialogUploader.prototype.GetInputData = function(parentNode)
+window.BlogBFileDialogUploader.prototype.GetInputData = function(parentNode)
 {
 	var elements = [];
 	var data = {};
@@ -454,16 +461,20 @@ BlogBFileDialogUploader.prototype.GetInputData = function(parentNode)
 	return data;
 }
 
-BlogBFileDialogUploader.prototype.SetFileInput = function(fileInput)
+window.BlogBFileDialogUploader.prototype.SetFileInput = function(fileInput)
 {
+	if (!! this.__form.mfi_save)
+		return;
 	if (this.fileInput && this.fileInput != fileInput)
 		BX.remove(this.fileInput);
 	this.__form.appendChild(fileInput);
 	this.fileInput = fileInput;
 }
 
-BlogBFileDialogUploader.prototype.CallSubmit = function()
+window.BlogBFileDialogUploader.prototype.CallSubmit = function()
 {
+	if (!! this.__form.mfi_save)
+		return;
 	BX.onCustomEvent(this, 'uploadStart', [this]);
 
 	BX.bind(window, 'beforeunload', BX.proxy(this.UploadLeave, this));
@@ -524,14 +535,20 @@ BlogBFileDialogUploader.prototype.CallSubmit = function()
 	}
 }
 
-BlogBFileDialogUploader.prototype.onProgress = function(percent)
+window.BlogBFileDialogUploader.prototype.onProgress = function(percent)
 {
 	if (isNaN(percent))
 		return;
 	BX.onCustomEvent(this, 'progress', [percent]);
 }
 
-BlogBFileDialogUploader.prototype.onError = function()
+window.BlogBFileDialogUploader.prototype.onError = function()
 {
 	BX.onCustomEvent(this, 'uploadFinish', [{success: false, messages: this.msg.upload_error}]);
 }
+
+top.BlogBFileDialog = window.BlogBFileDialog;
+top.BlogBFileDialogUploader = window.BlogBFileDialogUploader;
+top.BlogBFileDialogDispatcher = window.BlogBFileDialogDispatcher;
+
+})(window);

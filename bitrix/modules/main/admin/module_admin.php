@@ -133,7 +133,7 @@ require($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/include/prolog_admin_af
 <script>
 function DoAction(oEvent, action, module_id)
 {
-	if (oEvent.ctrlKey)
+	if (oEvent.ctrlKey || BX.browser.IsMac() && oEvent.altKey)
 	{
 		BX('version_for_' + module_id).className = 'no-select';
 		if(action == 'version_down')

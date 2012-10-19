@@ -16,14 +16,13 @@ if(!function_exists('CustomizeLightEditor'))
 <script>
 	CustomizeLightEditor('<?=$id?>', {
 		path: '<?= CUtil::JSEscape($sTemplateFolder)?>',
-		imageLinkText: '<?=GetMessage("MPF_IMAGE_LINK")?>',
-		spoilerText: '<?=GetMessage("MPF_SPOILER")?>',
-		videoText: '<?=GetMessage("FPF_VIDEO")?>',
-		videoUploadText: '<?= GetMessage('BPC_VIDEO_P')?>',
-		videoUploadText1: '<?= GetMessage('BPC_VIDEO_PATH_EXAMPLE')?>',
-		videoUploadText2: '<?= GetMessage('FPF_VIDEO')?>',
-		videoUploadText3: '<?=GetMessage("MPF_VIDEO_SIZE")?>'
-
+		imageLinkText: '<?=GetMessageJS("MPF_IMAGE_LINK")?>',
+		spoilerText: '<?=GetMessageJS("MPF_SPOILER")?>',
+		videoText: '<?=GetMessageJS("FPF_VIDEO")?>',
+		videoUploadText: '<?= GetMessageJS("BPC_VIDEO_P")?>',
+		videoUploadText1: '<?= GetMessageJS("BPC_VIDEO_PATH_EXAMPLE")?>',
+		videoUploadText2: '<?= GetMessageJS("FPF_VIDEO")?>',
+		videoUploadText3: '<?=GetMessageJS("MPF_VIDEO_SIZE")?>'
 	});
 </script>
 		<?

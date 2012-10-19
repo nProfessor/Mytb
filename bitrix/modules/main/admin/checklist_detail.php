@@ -435,7 +435,7 @@ if($_REQUEST["TEST_ID"] && $arPoints[$_REQUEST["TEST_ID"]]):?>
 		var text='';
 		if (_this.value.length>0)
 		{
-			text = jsUtils.htmlspecialcharsbx(_this.value);
+			text = jsUtils.htmlspecialchars(_this.value);
 			text=text.replace(/\r\n|\r|\n/g,'<br>');
 			toDiv.style.color="black";
 			toDiv.style.fontWeight="normal";

@@ -1048,6 +1048,9 @@ BX.submit = function(obForm, action_name, action_value, onAfterSubmit)
 			}
 		}));
 	}
+	
+	if (obForm.sessid)
+		obForm.sessid.value = BX.bitrix_sessid(); 
 
 	setTimeout(BX.delegate(function() {BX.fireEvent(this, 'click'); if (onAfterSubmit) onAfterSubmit();}, obForm['BXFormSubmit_' + action_name]), 10);
 }

@@ -694,5 +694,5 @@ endif;
 BX.ready(function(){bxGrid_<?=$arParams["GRID_ID"]?>.InitFilter()});
 <?endif?>
 
-phpVars.messLoading = '<?=GetMessage("interface_grid_loading")?>';
+phpVars.messLoading = '<?=GetMessageJS("interface_grid_loading")?>';
 </script>

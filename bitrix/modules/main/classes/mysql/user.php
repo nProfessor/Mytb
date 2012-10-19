@@ -440,12 +440,13 @@ class CUser extends CAllUser
 			}
 		}
 
+		$userFieldsSelect = $obUserFieldsSql->GetSelect();
 		$arSqlSearch[] = $obUserFieldsSql->GetFilter();
 		$strSqlSearch = GetFilterSqlSearch($arSqlSearch);
 
 		$sSelect = ($obUserFieldsSql->GetDistinct()? "DISTINCT " : "")
 			.implode(', ',$arSelectFields)."
-			".$obUserFieldsSql->GetSelect()."
+			".$userFieldsSelect."
 		";
 
 		if (is_array($arParams['SELECT']))
@@ -465,9 +466,9 @@ class CUser extends CAllUser
 						$sSelect .= ", RR".$ratingId.".CURRENT_POSITION as RATING_".$ratingId."_CURRENT_POSITION";
 						$sSelect .= ", RR".$ratingId.".PREVIOUS_POSITION as RATING_".$ratingId."_PREVIOUS_POSITION";
 						$strJoin .=	" LEFT JOIN  b_rating_results RR".$ratingId."
-										ON RR".$ratingId.".RATING_ID=".$ratingId."
-										and RR".$ratingId.".ENTITY_TYPE_ID = 'USER'
-										and RR".$ratingId.".ENTITY_ID = U.ID ";
+							ON RR".$ratingId.".RATING_ID=".$ratingId."
+							and RR".$ratingId.".ENTITY_TYPE_ID = 'USER'
+							and RR".$ratingId.".ENTITY_ID = U.ID ";
 						$arRatingInSelect[] = $ratingId;
 					}
 				}
@@ -495,21 +496,24 @@ class CUser extends CAllUser
 			{
 				$strSql = $DB->TopSql($strSql, $nTopCount);
 				$res = $DB->Query($strSql, false, $err_mess.__LINE__);
-				$res->SetUserFields($USER_FIELD_MANAGER->GetUserFields("USER"));
+				if($userFieldsSelect <> '')
+					$res->SetUserFields($USER_FIELD_MANAGER->GetUserFields("USER"));
 			}
 			else
 			{
 				$res_cnt = $DB->Query("SELECT COUNT(".($obUserFieldsSql->GetDistinct()? "DISTINCT ":"")."U.ID) as C ".$strFrom);
 				$res_cnt = $res_cnt->Fetch();
 				$res = new CDBResult();
-				$res->SetUserFields($USER_FIELD_MANAGER->GetUserFields("USER"));
+				if($userFieldsSelect <> '')
+					$res->SetUserFields($USER_FIELD_MANAGER->GetUserFields("USER"));
 				$res->NavQuery($strSql, $res_cnt["C"], $arParams["NAV_PARAMS"]);
 			}
 		}
 		else
 		{
 			$res = $DB->Query($strSql, false, $err_mess.__LINE__);
-			$res->SetUserFields($USER_FIELD_MANAGER->GetUserFields("USER"));
+			if($userFieldsSelect <> '')
+				$res->SetUserFields($USER_FIELD_MANAGER->GetUserFields("USER"));
 		}
 
 		$res->is_filtered = IsFiltered($strSqlSearch);

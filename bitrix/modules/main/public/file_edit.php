@@ -54,6 +54,9 @@ if(!$site)
 $DOC_ROOT = CSite::GetSiteDocRoot($site);
 $abs_path = $DOC_ROOT.$path;
 
+if(GetFileType($abs_path) == "IMAGE")
+	$strWarning = GetMessage("PUBLIC_EDIT_FILE_IMAGE_ERROR");
+
 $arPath = Array($site, $path);
 
 if(!$io->FileExists($abs_path) && !$io->DirectoryExists($abs_path))
@@ -96,7 +99,7 @@ if(
 {
 	$strWarning = GetMessage("ACCESS_DENIED");
 }
-else
+elseif(strlen($strWarning) <= 0)
 {
 	if(!$USER->IsAdmin() && substr(CFileman::GetFileName($abs_path), 0, 1)==".")
 	{

@@ -73,6 +73,7 @@ html* .file-placeholder .files-list {
 	margin-top:-10px;
 	table-layout:fixed;
 	width:100%;
+	position:relative;
 }
 .file-placeholder .files-list td {
 	box-shadow:0 -2px 0 -1px #FFFFFF inset;
@@ -84,6 +85,8 @@ html* .file-placeholder .files-list {
 	white-space:nowrap;
 	overflow:hidden;
 	text-overflow:ellipsis;
+	position: relative;
+	zoom:1;
 }
 .file-placeholder .file-edit,
 .file-placeholder .file-section {
@@ -111,6 +114,7 @@ html* .file-placeholder .files-list {
 	display:block;
 	font-weight:bold;
 	position:relative;
+	zoom:1;
 }
 .file-placeholder .error-load .files-text {
 	color:#bb0000;
@@ -122,6 +126,8 @@ html* .file-placeholder .files-list {
 	overflow:hidden;
 	white-space:nowrap;
 	text-overflow: ellipsis;
+	position:relative;
+	zoom:1;
 }
 .file-placeholder .del-but {
     background: url("images/live_feed_sprite.png") no-repeat scroll 0 0 transparent;

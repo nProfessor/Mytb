@@ -1326,7 +1326,7 @@ BX.JCCalendar.prototype.Show = function(params)
 	var bHideTime = !!this.params.bHideTime;
 	if (this.params.value)
 	{
-		this.SetValue(this.value);
+		this.SetValue(this.params.value);
 		bHideTime = this.value.getUTCHours() <= 0 && this.value.getUTCMinutes() <= 0;
 	}
 	else if (this.params.field)

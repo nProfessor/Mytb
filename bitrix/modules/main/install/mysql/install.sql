@@ -120,7 +120,7 @@ CREATE TABLE b_user
 	ACTIVE char(1) not null default 'Y',
 	NAME varchar(50),
 	LAST_NAME varchar(50),
-	EMAIL varchar(255) not null,
+	EMAIL varchar(255),
 	LAST_LOGIN datetime,
 	DATE_REGISTER datetime not null,
 	LID char(2),

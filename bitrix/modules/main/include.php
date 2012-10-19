@@ -356,25 +356,11 @@ if(!defined("NOT_CHECK_PERMISSIONS") || NOT_CHECK_PERMISSIONS!==true)
 
 	$arAuthResult = false;
 
-	$arAuth = CHTTP::ParseAuthRequest();
-
-	if(isset($arAuth["basic"]) && $arAuth["basic"]["username"] <> '' && $arAuth["basic"]["password"] <> '')
+	//http basic and digest authorization
+	if(($httpAuth = $GLOBALS["USER"]->LoginByHttpAuth()) !== null)
 	{
-		// Authorize user, if it is http basic authorization, with no remembering
-		if(!$GLOBALS["USER"]->IsAuthorized() || $GLOBALS["USER"]->GetLogin() <> $arAuth["basic"]["username"])
-		{
-			$arAuthResult = $GLOBALS["USER"]->Login($arAuth["basic"]["username"], $arAuth["basic"]["password"], "N");
-			$GLOBALS["APPLICATION"]->SetAuthResult($arAuthResult);
-		}
-	}
-	elseif(isset($arAuth["digest"]) && $arAuth["digest"]["username"] <> '' && COption::GetOptionString('main', 'use_digest_auth', 'N') == 'Y')
-	{
-		// Authorize user by http digest authorization
-		if(!$GLOBALS["USER"]->IsAuthorized() || $GLOBALS["USER"]->GetLogin() <> $arAuth["digest"]["username"])
-		{
-			$arAuthResult = $GLOBALS["USER"]->LoginByDigest($arAuth["digest"]);
-			$GLOBALS["APPLICATION"]->SetAuthResult($arAuthResult);
-		}
+		$arAuthResult = $httpAuth;
+		$GLOBALS["APPLICATION"]->SetAuthResult($arAuthResult);
 	}
 
 	//Authorize user from authorization html form

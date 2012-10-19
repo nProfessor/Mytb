@@ -40,7 +40,7 @@ window.LHEPostForm.prototype = {
 					'click',
 					function(){
 						BX.onCustomEvent(
-							BX.findParent(BX.findChild(BX(formID), {'attr' : {'class': 'file-selectdialog'}}, true, false)),
+							BX.findParent(BX.findChild(BX(formID), {'className': 'file-selectdialog'}, true, false)),
 							'BFileDLoadFormController'
 						);
 					}
@@ -50,19 +50,19 @@ window.LHEPostForm.prototype = {
 					'click',
 					function(){
 						BX.onCustomEvent(
-							BX.findParent(BX.findChild(BX(formID), {'attr': {'class': 'file-selectdialog'}}, true, false)),
+							BX.findParent(BX.findChild(BX(formID), {'className': 'file-selectdialog'}, true, false)),
 							params['LoadFormController']);}
 				);
 			}
 		);
 
 		BX.addCustomEvent(
-			BX.findParent(BX.findChild(BX(formID), {'attr': {'class': 'file-selectdialog'}}, true, false)),
+			BX.findParent(BX.findChild(BX(formID), {'className': 'file-selectdialog'}, true, false)),
 			'OnFileUploadSuccess',
 			function(result, obj){window['PlEditor' + formID]['OnFileUploadSuccess'](result, obj);}
 		);
 		BX.addCustomEvent(
-			BX.findParent(BX.findChild(BX(formID), {'attr': {'class': 'file-selectdialog'}}, true, false)),
+			BX.findParent(BX.findChild(BX(formID), {'className': 'file-selectdialog'}, true, false)),
 			'OnFileUploadRemove',
 			function(result, obj){window['PlEditor' + formID]['OnFileUploadRemove'](result, obj);}
 		);
@@ -221,7 +221,7 @@ window.LHEPostForm.prototype = {
 			BX.ajax.get(url, function(data){});
 		}
 		window[this.eID].SaveContent();
-		content = window[this.eID].GetContent();
+		var content = window[this.eID].GetContent();
 		content = content.
 			replace(new RegExp('\\[IMG ID='+ id +'\\]','g'), '').
 			replace(new RegExp('\\[FILE ID='+ id +'\\]','g'), '');

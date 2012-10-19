@@ -303,7 +303,7 @@ class CComponentAjax
 		$link_offset = 0;
 
 		$regexp_links = '/(<a[^>]*?>.*?<\/a>)/i'.BX_UTF_PCRE_MODIFIER;
-		$regexp_params = '/([\w]+)=\"([^\"]*)\"/i'.BX_UTF_PCRE_MODIFIER;
+		$regexp_params = '/([\w]+)\s*=\s*([\"\'])(.*?)\2/is'.BX_UTF_PCRE_MODIFIER;
 
 		$this->_checkPcreLimit($data);
 		$arData = preg_split($regexp_links, $data, -1, PREG_SPLIT_DELIM_CAPTURE);
@@ -356,7 +356,7 @@ class CComponentAjax
 
 			if ($url_key >= 0 && !$bIgnoreLink)
 			{
-				$url = str_replace('&amp;', '&', $arLinkParams[2][$url_key]);
+				$url = str_replace('&amp;', '&', $arLinkParams[3][$url_key]);
 				$url = str_replace($arSearch, '', $url);
 
 				if ($this->__isAjaxURL($url))

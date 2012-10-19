@@ -234,6 +234,30 @@ class CAllUser extends CDBResult
 		return $arParams["RESULT_MESSAGE"];
 	}
 
+	function LoginByHttpAuth()
+	{
+		$arAuth = CHTTP::ParseAuthRequest();
+	
+		if(isset($arAuth["basic"]) && $arAuth["basic"]["username"] <> '' && $arAuth["basic"]["password"] <> '')
+		{
+			// Authorize user, if it is http basic authorization, with no remembering
+			if(!$GLOBALS["USER"]->IsAuthorized() || $GLOBALS["USER"]->GetLogin() <> $arAuth["basic"]["username"])
+			{
+				return $GLOBALS["USER"]->Login($arAuth["basic"]["username"], $arAuth["basic"]["password"], "N");
+			}
+		}
+		elseif(isset($arAuth["digest"]) && $arAuth["digest"]["username"] <> '' && COption::GetOptionString('main', 'use_digest_auth', 'N') == 'Y')
+		{
+			// Authorize user by http digest authorization
+			if(!$GLOBALS["USER"]->IsAuthorized() || $GLOBALS["USER"]->GetLogin() <> $arAuth["digest"]["username"])
+			{
+				return $GLOBALS["USER"]->LoginByDigest($arAuth["digest"]);
+			}
+		}
+
+		return null;
+	}
+
 	function LoginByDigest($arDigest)
 	{
 		//array("username"=>"", "nonce"=>"", "uri"=>"", "response"=>"")
@@ -307,16 +331,12 @@ class CAllUser extends CDBResult
 
 	function LoginHitByHash()
 	{
-		global $USER, $DB, $APPLICATION;
-
-		if ($USER->IsAuthorized())
-			return true;
+		global $DB, $APPLICATION;
 
 		$hash = trim($_REQUEST["bx_hit_hash"]);
 		if (strlen($hash) <= 0)
 			return false;
 
-		$result_message = true;
 		$user_id = 0;
 
 		$APPLICATION->ResetException();

@@ -19,7 +19,7 @@ BX.ready(function() {
 				'<?=IntVal($arResult['ENTITY_ID'])?>', 
 				'<?=CUtil::JSEscape(htmlspecialcharsbx($arResult['VOTE_AVAILABLE']))?>',
 				'<?=$USER->GetId()?>',
-				{'PLUS' : '<?=GetMessage("RATING_COMPONENT_PLUS")?>', 'MINUS' : '<?=GetMessage("RATING_COMPONENT_MINUS")?>', 'CANCEL' : '<?=GetMessage("RATING_COMPONENT_CANCEL")?>'},
+				{'PLUS' : '<?=GetMessageJS("RATING_COMPONENT_PLUS")?>', 'MINUS' : '<?=GetMessageJS("RATING_COMPONENT_MINUS")?>', 'CANCEL' : '<?=GetMessageJS("RATING_COMPONENT_CANCEL")?>'},
 				'light',
 				'<?=CUtil::JSEscape(htmlspecialcharsbx($arResult['PATH_TO_USER_PROFILE']))?>'
 			);

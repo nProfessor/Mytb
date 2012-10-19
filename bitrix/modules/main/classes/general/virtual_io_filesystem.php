@@ -7,7 +7,7 @@ class CBXVirtualIoFileSystem
 
 	const directionEncode = 1;
 	const directionDecode = 2;
-	const invalidChars = "\\\/:*?\"\'<>|~\\0";
+	const invalidChars = "\\\\/:*?\"'<>|~\\0";
 
 	private $arErrors = array();
 
@@ -44,7 +44,6 @@ class CBXVirtualIoFileSystem
 		if (self::$serverEncoding == self::$systemEncoding)
 			return $string;
 
-		$result = $string;
 		include_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/classes/general/charset_converter.php");
 		if ($direction == self::directionEncode)
 			$result = CharsetConverter::ConvertCharset($string, self::$serverEncoding, self::$systemEncoding);
@@ -177,41 +176,54 @@ class CBXVirtualIoFileSystem
 
 	private function FormatPath($path)
 	{
-		if (empty($path))
+		if ($path == "")
 			return null;
 
-		$path = preg_replace("'[\\\/]+'", "/", $path);
+		$res = preg_replace("'[\\\\/]+'", "/", $path);
 
-		if (($p = strpos($path, "\0")) !== false)
-			$path = substr($path, 0, $p);
+		if (($p = strpos($res, "\0")) !== false)
+			$res = substr($res, 0, $p);
 
-		while (strpos($path, "/./") !== false)
-			$path = str_replace("/./", "/", $path);
+		while(strpos($res, ".../") !== false)
+			$res = str_replace(".../", "../", $res);
 
-		while (($pos = strpos($path, "../")) !== false)
+		$arPath = explode('/', $res);
+		$nPath = count($arPath);
+		$pathStack = array();
+
+		for ($i = 0; $i < $nPath; $i++)
 		{
-			$lp = substr($path, 0, $pos - 1);
-			$posl = bxstrrpos($lp, "/");
-			if ($posl === false)
-				return null;
-			$lp = substr($lp, 0, $posl + 1);
-			$rp = substr($path, $pos + 3);
-			$path = $lp.$rp;
+			if ($arPath[$i] === ".")
+				continue;
+			if (($arPath[$i] === '') && ($i !== ($nPath - 1)) && ($i !== 0))
+				continue;
+
+			if ($arPath[$i] === "..")
+				array_pop($pathStack);
+			else
+				array_push($pathStack, $arPath[$i]);
 		}
 
-		$path = preg_replace("'[\\\/]+'", "/", $path);
+		$res = implode("/", $pathStack);
 
-		$path = rtrim($path, "\0/.");
-		if ($path === "")
-			$path = "/";
+		$res = rtrim($res, "\0.\\/+ ");
 
-		return $path;
+		if(substr($path, 0, 1) === "/" && substr($res, 0, 1) !== "/")
+			$res = "/".$res;
+
+		if ($res === "")
+			$res = "/";
+
+		return $res;
 	}
 
 	function ValidatePathString($path)
 	{
+		if(strlen($path) > 4096)
+			return false;
+
 		$p = trim($path);
-		if (empty($p))
+		if ($p == '')
 			return false;
 
 		if (strpos($path, "\0") !== false)
@@ -223,7 +235,7 @@ class CBXVirtualIoFileSystem
 	function ValidateFilenameString($filename)
 	{
 		$fn = trim($filename);
-		if (empty($fn))
+		if ($fn == '')
 			return false;
 
 		if (strpos($filename, "\0") !== false)

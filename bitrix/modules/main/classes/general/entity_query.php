@@ -21,6 +21,9 @@ class CEntityQuery
 		$group_chains = array(),
 		$order_chains = array();
 
+	/**
+	 * @var CEntityQueryChain[]
+	 */
 	protected
 		$filter_chains = array(),
 		$where_chains = array(),
@@ -41,6 +44,17 @@ class CEntityQuery
 	 * @var CEntityQueryChain[]
 	 */
 	protected $global_chains = array(); // keying by both def and alias
+
+	protected $query_build_parts;
+
+	/**
+	 * Enable or Disable data doubling for 1:N relations in query filter
+	 * If disabled, 1:N entity fields in filter will be trasnformed to exists() subquery
+	 * @var bool
+	 */
+	protected $data_doubling = true;
+
+	protected $table_alias_postfix = '';
 
 	protected
 		$join_map = array();
@@ -165,6 +179,16 @@ class CEntityQuery
 		$this->limit = $limit;
 	}
 
+	public function enableDataDoubling()
+	{
+		$this->data_doubling = true;
+	}
+
+	public function disableDataDoubling()
+	{
+		$this->data_doubling = false;
+	}
+
 	public function getOptions()
 	{
 		return $this->options;
@@ -192,40 +216,24 @@ class CEntityQuery
 		$this->registerChain('runtime', $chain);
 	}
 
+	public function setTableAliasPostfix($postfix)
+	{
+		$this->table_alias_postfix = $postfix;
+		return $this;
+	}
+
+	public function getTableAliasPostfix()
+	{
+		return $this->table_alias_postfix;
+	}
+
 	public function exec()
 	{
 		$this->is_executing = true;
 
-		foreach ($this->select as $key => $value)
-		{
-			$this->addToSelectChain($value, is_numeric($key) ? '' : $key);
-		}
+		$build_parts = $this->buildQuery(true);
 
-		$this->setFilterChains($this->filter);
-		$this->divideFilter($this->filter);
-
-		foreach ($this->group as $value)
-		{
-			$this->addToGroupChain($value);
-		}
-
-		foreach ($this->order as $key => $value)
-		{
-			$this->addToOrderChain($key);
-		}
-
-		$this->buildJoinMap();
-
-		// ------------------
-
-		$sqlSelect = $this->buildSelect();
-		$sqlJoin = $this->buildJoin();
-		$sqlWhere = $this->buildWhere();
-		$sqlGroup = $this->buildGroup();
-		$sqlHaving = $this->buildHaving();
-		$sqlOrder = $this->buildOrder();
-
-		$result = $this->query($sqlSelect, $sqlJoin, $sqlWhere, $sqlGroup, $sqlHaving, $sqlOrder);
+		$result = $this->query($build_parts);
 
 		$this->is_executing = false;
 
@@ -473,6 +481,20 @@ class CEntityQuery
 				continue;
 			}
 
+			// in NO_DOUBLING mode skip 1:N relations that presented in filter only
+			if (!$this->data_doubling && $chain->hasBackReference())
+			{
+				$alias = $chain->getAlias();
+
+				if (isset($this->filter_chains[$alias])
+					&& !isset($this->select_chains[$alias]) && !isset($this->select_expr_chains[$alias])
+					&& !isset($this->group_chains[$alias]) && !isset($this->order_chains[$alias])
+				)
+				{
+					continue;
+				}
+			}
+
 			$prev_entity = $this->init_entity;
 			$prev_alias = CBaseEntity::camel2snake($this->init_entity->getName());
 
@@ -511,7 +533,7 @@ class CEntityQuery
 				else
 				{
 					// scalar field
-					$element->setParameter('talias', $prev_alias);
+					$element->setParameter('talias', $prev_alias.$this->table_alias_postfix);
 					continue;
 				}
 
@@ -540,9 +562,9 @@ class CEntityQuery
 						{
 							$table_alias = $prev_alias.'_'.strtolower($ref_field->getName());
 
-							if (strlen($table_alias) > $this->DB->alias_length)
+							if (strlen($table_alias.$this->table_alias_postfix) > $this->DB->alias_length)
 							{
-								$table_alias = 'TALIAS_' . (++$talias_count);
+								$table_alias = 'TALIAS'.$this->table_alias_postfix.'_' . (++$talias_count);
 							}
 						}
 
@@ -556,9 +578,9 @@ class CEntityQuery
 							$table_alias = CBaseEntity::camel2snake($dst_entity->getName()) . '_' . strtolower($ref_field->getName());
 							$table_alias = $prev_alias.'_'.$table_alias;
 
-							if (strlen($table_alias) > $this->DB->alias_length)
+							if (strlen($table_alias.$this->table_alias_postfix) > $this->DB->alias_length)
 							{
-								$table_alias = 'TALIAS_' . (++$talias_count);
+								$table_alias = 'TALIAS'.$this->table_alias_postfix.'_' . (++$talias_count);
 							}
 						}
 
@@ -578,12 +600,14 @@ class CEntityQuery
 					// replace this. and ref. to real definition -- not supported yet
 					// instead it we set $alias_this and $alias_ref
 
-					$csw_reference = $this->prepareJoinReference($reference, $alias_this, $alias_ref);
+					$csw_reference = $this->prepareJoinReference(
+						$reference, $alias_this.$this->table_alias_postfix, $alias_ref.$this->table_alias_postfix
+					);
 
 					$join = array(
 						'type' => $ref_field->getJoinType(),
 						'table' => $dst_entity->getDbTableName(),
-						'alias' => $table_alias,
+						'alias' => $table_alias.$this->table_alias_postfix,
 						'reference' => $csw_reference
 					);
 
@@ -593,7 +617,7 @@ class CEntityQuery
 				}
 
 				// set alias for each element
-				$element->setParameter('talias', $table_alias);
+				$element->setParameter('talias', $table_alias.$this->table_alias_postfix);
 
 				$prev_entity = $dst_entity;
 				$prev_alias = $table_alias;
@@ -608,6 +632,11 @@ class CEntityQuery
 		foreach ($this->select_chains as $chain)
 		{
 			$sql[] = $chain->getSqlDefinition(true);
+		}
+
+		if (empty($sql))
+		{
+			$sql[] = 1;
 		}
 
 		return "\t".join(",\n\t", $sql);
@@ -661,10 +690,12 @@ class CEntityQuery
 			{
 				$alias = $chain->getAlias();
 
-				if (isset($this->select_chains[$alias]) || isset($this->select_expr_chains[$alias]) || isset($this->order_chains[$alias])
-					|| isset($this->having_chains[$alias]) || isset($this->having_expr_chains[$alias]))
+//				if (isset($this->select_chains[$alias]) || isset($this->select_expr_chains[$alias]) || isset($this->order_chains[$alias])
+//					|| isset($this->having_chains[$alias]) || isset($this->having_expr_chains[$alias]))
+				if (isset($this->select_chains[$alias]) || isset($this->order_chains[$alias]) || isset($this->having_chains[$alias]))
 				{
-					if (!($chain->getLastElement()->getValue() instanceof CExpressionEntityField) && !$chain->hasAggregation())
+					//if (!($chain->getLastElement()->getValue() instanceof CExpressionEntityField) && !$chain->hasAggregation())
+					if (!$chain->hasAggregation())
 					{
 						// skip expressions (need only buildFrom from it) and buildFrom from aggregations
 						$this->registerChain('group', $chain);
@@ -703,6 +734,94 @@ class CEntityQuery
 		}
 
 		return join(', ', $sql);
+	}
+
+	protected function buildQuery($returnBuildParts = false)
+	{
+		if ($this->query_build_parts === null)
+		{
+			foreach ($this->select as $key => $value)
+			{
+				$this->addToSelectChain($value, is_numeric($key) ? '' : $key);
+			}
+
+			$this->setFilterChains($this->filter);
+			$this->divideFilter($this->filter);
+
+			foreach ($this->group as $value)
+			{
+				$this->addToGroupChain($value);
+			}
+
+			foreach ($this->order as $key => $value)
+			{
+				$this->addToOrderChain($key);
+			}
+
+			$this->buildJoinMap();
+
+			// ------------------
+
+			$sqlSelect = $this->buildSelect();
+			$sqlJoin = $this->buildJoin();
+			$sqlWhere = $this->buildWhere();
+			$sqlGroup = $this->buildGroup();
+			$sqlHaving = $this->buildHaving();
+			$sqlOrder = $this->buildOrder();
+
+			$sqlFrom = $this->init_entity->GetDBTableName();
+			$sqlFrom .= ' '.$this->DB->escL . CBaseEntity::camel2snake($this->init_entity->getName()) . $this->table_alias_postfix . $this->DB->escR;
+			$sqlFrom .= ' '.$sqlJoin;
+
+			$this->query_build_parts = array_filter(array(
+				'SELECT' => $sqlSelect, 'FROM' => $sqlFrom,
+				'WHERE' => $sqlWhere, 'GROUP BY' => $sqlGroup,
+				'HAVING' => $sqlHaving, 'ORDER BY' => $sqlOrder
+			));
+		}
+
+		if ($returnBuildParts)
+		{
+			return $this->query_build_parts;
+		}
+
+		$build_parts = $this->query_build_parts;
+
+		foreach ($build_parts as $k => &$v)
+		{
+			if (strlen($v))
+			{
+				$v = $k . ' ' . $v;
+			}
+		}
+
+		$query = join("\n", $build_parts);
+
+		list($query, ) = $this->replaceSelectAliases($query);
+
+		if (!empty($this->options))
+		{
+			foreach ($this->options as $opt => $value)
+			{
+				$query = str_replace('%'.$opt.'%', $value, $query);
+			}
+		}
+
+		if (empty($this->limit))
+		{
+			return $query;
+		}
+		elseif (array_key_exists('nPageTop', $this->limit))
+		{
+			$query = $this->DB->TopSql($query, intval($this->limit['nPageTop']));
+			return $query;
+		}
+		else
+		{
+			// can't get "paginated" query through DB, return base query
+			// yes, it is BUG
+			return $query;
+		}
 	}
 
 	protected function getFilterCswFields(&$filter)
@@ -747,12 +866,50 @@ class CEntityQuery
 
 				//$is_having = $last->getValue() instanceof CExpressionEntityField && $last->getValue()->IsAggregated();
 
+				// if back-reference found (Entity:REF)
+				// if NO_DOUBLING mode enabled, then change getSQLDefinition to subquery exists(...)
+				// and those chains should not be in joins if it is possible
+
+				$callback = null;
+
+				/*if (!$this->data_doubling && $chain->hasBackReference())
+				{
+					$field_type = 'callback';
+					$init_query = $this;
+
+					$callback = function ($field, $operation, $value) use ($init_query, $chain)
+					{
+						$init_entity = $init_query->getEntity();
+						$init_table_alias = CBaseEntity::camel2snake($init_entity->getName()).$init_query->getTableAliasPostfix();
+
+						$filter = array();
+
+						// add primary linking with main query
+						foreach ($init_entity->GetPrimaryArray() as $primary)
+						{
+							$filter['='.$primary] = new CSQLWhereExpression('?#', $init_table_alias.'.'.$primary);
+						}
+
+						// add value filter
+						$filter[CSQLWhere::getOperationByCode($operation).$chain->getDefinition()] = $value;
+
+						// build subquery
+						$query_class = __CLASS__;
+						$sub_query = new $query_class($init_entity);
+						$sub_query->setFilter($filter);
+						$sub_query->setTableAliasPostfix('_sub');
+
+						return 'EXISTS(' . $sub_query->getQuery() . ')';
+					};
+				}*/
+
 				$fields[$definition] = array(
 					'TABLE_ALIAS' => 'table',
-					'FIELD_NAME' => $chain->getSQLDefinition(),
+					'FIELD_NAME' => $chain->getSqlDefinition(),
 					'FIELD_TYPE' => $field_type,
 					'MULTIPLE' => '',
-					'JOIN' => ''
+					'JOIN' => '',
+					'CALLBACK' => $callback
 				);
 			}
 
@@ -977,19 +1134,9 @@ class CEntityQuery
 		return false;
 	}
 
-	protected function query($sqlSelect, $sqlJoin, $sqlWhere, $sqlGroup, $sqlHaving, $sqlOrder)
+	protected function query($build_parts)
 	{
-		$sqlFrom = $this->init_entity->GetDBTableName();
-		$sqlFrom .= ' '.$this->DB->escL . CBaseEntity::camel2snake($this->init_entity->getName()) . $this->DB->escR;
-		$sqlFrom .= ' '.$sqlJoin;
-
-		$body_elements = array_filter(array(
-			'SELECT' => $sqlSelect, 'FROM' => $sqlFrom,
-			'WHERE' => $sqlWhere, 'GROUP BY' => $sqlGroup,
-			'HAVING' => $sqlHaving, 'ORDER BY' => $sqlOrder
-		));
-
-		foreach ($body_elements as $k => &$v)
+		foreach ($build_parts as $k => &$v)
 		{
 			if (strlen($v))
 			{
@@ -997,7 +1144,7 @@ class CEntityQuery
 			}
 		}
 
-		$query = join("\n", $body_elements);
+		$query = join("\n", $build_parts);
 
 		list($query, $replaced_aliases) = $this->replaceSelectAliases($query);
 
@@ -1023,7 +1170,7 @@ class CEntityQuery
 		else
 		{
 			// count rows
-			$cnt_body_elements = $body_elements;
+			$cnt_body_elements = $build_parts;
 
 			// rewrite select
 			if (empty($sqlGroup))
@@ -1091,9 +1238,19 @@ class CEntityQuery
 		return array($query, $replaced);
 	}
 
+	public function getQuery()
+	{
+		return $this->buildQuery(false);
+	}
+
 	public function getLastQuery()
 	{
 		return $this->last_query;
+	}
+
+	public function getEntity()
+	{
+		return $this->init_entity;
 	}
 
 	public function dump()
