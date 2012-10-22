@@ -28,7 +28,7 @@ $arResult['club']      = $club->getInfo(array("arSelect"=> array("NAME")));
 
 $this->IncludeComponentTemplate();
 
-$APPLICATION->SetTitle("Акции клуба  {$arResult['club']['NAME']}");
+
 
 
 

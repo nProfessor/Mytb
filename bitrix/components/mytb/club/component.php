@@ -31,7 +31,7 @@ $arFields=$club->getInfo(array("arSelect"=> array(
     "PROPERTY_PLAN",
     "PREVIEW_PICTURE",
     "PROPERTY_TYPE_FACILITY"
-)),true);;
+)),true);
 
 
 $arFile = CFile::GetFileArray($arFields["PREVIEW_PICTURE"]);
@@ -39,18 +39,10 @@ $arFields["PREVIEW_PICTURE"]=$arFile["SRC"];
 $arResult['arFields'] = $arFields;
 
 
-
-
 $arResult['userInfo'] =$userInfo;
 
 
-//print_r($userInfo);
-
-
-
 $APPLICATION->SetTitle(html_entity_decode($arResult['arFields']['PROPERTY_TYPE_FACILITY_VALUE'])." ".html_entity_decode($arResult['arFields']['NAME']));
-
-
 $this->IncludeComponentTemplate();
 
 

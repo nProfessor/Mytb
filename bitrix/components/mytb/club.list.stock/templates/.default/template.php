@@ -1,4 +1,5 @@
 <?
+$APPLICATION->SetTitle("Акции клуба  {$arResult['club']['NAME']}");
 $APPLICATION->AddHeadScript("/jslibs/jquery/eTextTimer.js");
 ?>
 <h1>Действующие акции «<?=$arResult['club']['NAME']?>» </h1>
