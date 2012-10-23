@@ -29,7 +29,7 @@ function agent_ladykupon()
             "ID",
             "NAME"
         );
-        if ($url != "" && $url != "vkontakte.ru" && $url != "facebook.ru") {
+        if ($url != "" && $url != "vkontakte.ru" && $url != "facebook.ru"&& $url != "vk.com") {
             $arFilter = Array(
                 "IBLOCK_ID"    => IB_CLUB_ID,
                 "PROPERTY_SITE"=> "%" . $url . "%");
