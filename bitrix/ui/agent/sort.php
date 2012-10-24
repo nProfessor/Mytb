@@ -30,14 +30,16 @@ function agent_sort()
     $arFilter = Array(
         "IBLOCK_ID" => IB_CLUB_ID,
         //    "ACTIVE_DATE" => "Y",
-        //    "ACTIVE" => "Y"
+            "ACTIVE" => "Y"
     );
 
 
     $ob = CIBlockElement::GetList(
         array("IBLOCK_ID" => "DESC"),
         array("IBLOCK_ID"               => IB_SUB_STOCK_ID,
-              ">DATE_ACTIVE_TO"         => date("d.m.Y h:i:s")),
+              ">DATE_ACTIVE_TO"         => date("d.m.Y h:i:s"),
+              "ACTIVE"=>"Y",
+        ),
         array("PROPERTY_CLUB_ID"),
         FALSE,
         array(
@@ -101,7 +103,7 @@ function agent_sort()
         }
 
         if (isset($ar[$ob['ID']])) {
-            $arFields[$ob["ID"]] += 70 * $ar[$ob['ID']];
+            $arFields[$ob["ID"]] += 300 * $ar[$ob['ID']];
         }
 
 
