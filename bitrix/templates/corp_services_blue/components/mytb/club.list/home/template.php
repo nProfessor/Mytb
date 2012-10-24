@@ -18,18 +18,17 @@ $ClubList = $arResult["ClubList"];
             <td>
                 <strong>
                     <span class="label label-info right"><?=$rating?> <?=declOfNum($rating,array("голос","голоса","голосов"))?></span>
+                    <span class="right">&nbsp;</span>
+                    <?if(isset($arResult["stocksCount"][$var["ID"]])&&$arResult["stocksCount"][$var["ID"]]>0):?>
+                    <div class="right">
+                        <a href="/club/<?=$var["ID"]?>/stock/"  class="label label-success" style="color:#FFF"><?=$arResult["stocksCount"][$var["ID"]]?> <?=declOfNum($arResult["stocksCount"][$var["ID"]],array("акция","акции","акций"))?></a></span>
+                    </div>
+                    <?endif;?>
 
-                    <a href='/club/<?=$var["ID"]?>'><?=html_entity_decode($var["NAME"])?></a></strong>
+
+                    <a href='/club/<?=$var["ID"]?>'><?=html_entity_decode($var["NAME"])?></a>
+                </strong>
                 <table class="club_info_shot">
-                    <?if (!empty($var["PROPERTY_RATING_VALUE"])): ?>
-                    <tr>
-                        <th>
-                            Рейтинг
-                        </th>
-                        <td><?=$var["PROPERTY_RATING_VALUE"]?>
-                        </td>
-                    </tr>
-                    <? endif;?>
                     <?if (!empty($var["PROPERTY_METRO_VALUE"])): ?>
                     <tr>
                         <th>
@@ -66,6 +65,7 @@ $ClubList = $arResult["ClubList"];
                         </td>
                     </tr>
                     <? endif;?>
+
 
                 </table>
             </td>

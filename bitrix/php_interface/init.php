@@ -17,6 +17,7 @@ CModule::AddAutoloadClasses(
     '',
     array(
          'Club'   => '/bitrix/php_interface/inc/class/club/Club.php',
+         'Stocks'   => '/bitrix/php_interface/inc/class/club/Stocks.php',
          'Table'  => '/bitrix/php_interface/inc/class/club/Table.php',
          'User'   => '/bitrix/php_interface/inc/class/user/User.php',
          'Errors' => '/bitrix/php_interface/inc/class/errors/Errors.php',

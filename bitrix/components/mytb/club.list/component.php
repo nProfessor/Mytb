@@ -43,6 +43,12 @@ while ($ob = $res->GetNextElement()) {
     );
 }
 
+$stocksRes = new Stocks(1);
+$stocksCount=$stocksRes->getCount();
+
+
+
+$arResult["stocksCount"]=$stocksCount;
 $arResult["ClubList"]=$arFields;
 $arResult["res"]=$res;
 
