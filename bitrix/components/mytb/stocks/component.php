@@ -30,6 +30,12 @@ $ob = CIBlockElement::GetList(
 $clubListID = array();
 $clubList = array();
 while ($row = $ob->Fetch()) {
+//    if(strtotime($row['ACTIVE_TO'])>strtotime("+5 day")){
+////        echo $row['ACTIVE_TO']."|".(strtotime($row['ACTIVE_TO'])/86400)."<br>";
+////        $row['ACTIVE_TO']=date("d.m.Y 23:59:59",strtotime(." day"));
+//
+//    }
+
     $arResult['stockList'][] = $row;
     $clubListID[]            = intval($row['PROPERTY_CLUB_ID_VALUE']);
 }
