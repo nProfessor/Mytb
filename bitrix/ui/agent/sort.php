@@ -73,7 +73,7 @@ function agent_sort()
         }
 
         if ($ob["PROPERTY_RATING_VALUE"] > 0) { // если есть рейтинг
-            $arFields[$ob["ID"]] += 10;
+            $arFields[$ob["ID"]] += 5*intval($ob["PROPERTY_RATING_VALUE"]);
         }
 
         if (!empty($ob["PROPERTY_TIME_WORKING_VALUE"])) { // если есть время работы

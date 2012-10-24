@@ -26,7 +26,7 @@ function myfant()
             "ID",
             "NAME"
         );
-        if ($url != "" && $url != "vkontakte.ru" && $url != "facebook.ru"&& $url != "vk.com") {
+        if ($url != "" && $url != "vkontakte.ru" && $url != "facebook.ru" && $url != "vk.com"&&!preg_match("#(vkontakte|facebook)#is",$url)) {
             $arFilter = Array(
                 "IBLOCK_ID"    => IB_CLUB_ID,
                 "PROPERTY_SITE"=> "%" . $url . "%");
