@@ -133,7 +133,7 @@ endif;
             </td>
             <td width="220px;">
                 <a class="thumbnail" href="#">
-                    <img  src="<?=imgurl("/upload/profile/{$userInfo["ID"]}/{$userInfo["PERSONAL_PHOTO"]['ORIGINAL_NAME']}",array("w"=>160,"h"=>120))?>">
+                    <img  src="<?=imgurl(empty($userInfo["PERSONAL_PHOTO"]['ORIGINAL_NAME'])?DEFAULT_USER_PHOTO_PATH:"/upload/profile/{$userInfo["ID"]}/{$userInfo["PERSONAL_PHOTO"]['ORIGINAL_NAME']}",array("w"=>160,"h"=>120))?>">
                 </a>
                 <div class="button_upload">
                 <a href="#"  class="btn btn-inverse upload_avatar" id="upload_avatar_button">Изменить</a>

@@ -9,6 +9,8 @@ define("IB_PRICE_GROUP", 14); // ID ценовых групп
 //Группы
 define("GROUP_MANAGER", 6); // Группа менеджеры
 
+define("DEFAULT_USER_PHOTO_PATH", "/upload/user_photo/people.png"); // Группа менеджеры
+
 
 define("IB_USER_PROPS", 11); // Группа менеджеры
 
