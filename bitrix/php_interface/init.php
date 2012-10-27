@@ -7,10 +7,10 @@
  * To change this template use File | Settings | File Templates.
  */
 
-if(preg_match("#38\.99\.82\.[0-9]+#i",$_SERVER['REMOTE_ADDR']))
-{
-    die();
-}
+//if(preg_match("#38\.99\.82\.[0-9]+#i",$_SERVER['REMOTE_ADDR']))
+//{
+//    die();
+//}
 CModule::IncludeModule("iblock");
 
 CModule::AddAutoloadClasses(
@@ -21,7 +21,19 @@ CModule::AddAutoloadClasses(
          'Table'  => '/bitrix/php_interface/inc/class/club/Table.php',
          'User'   => '/bitrix/php_interface/inc/class/user/User.php',
          'Errors' => '/bitrix/php_interface/inc/class/errors/Errors.php',
-         'Smsc'   => '/bitrix/php_interface/inc/class/SMS/Smsc.php'
+         'Smsc'   => '/bitrix/php_interface/inc/class/SMS/Smsc.php',
+
+
+        // Купонные сервисы
+        'Kupon'   => '/bitrix/php_interface/inc/class/kupon/Kupon.php',
+        'CityCoupon'   => '/bitrix/php_interface/inc/class/kupon/CityCoupon.php',
+        'KingCoupon'   => '/bitrix/php_interface/inc/class/kupon/KingCoupon.php',
+        'KuponAuktsion'   => '/bitrix/php_interface/inc/class/kupon/KuponAuktsion.php',
+        'LedyKupon'   => '/bitrix/php_interface/inc/class/kupon/LedyKupon.php',
+        'MyFant'   => '/bitrix/php_interface/inc/class/kupon/MyFant.php',
+        'Vigoda'   => '/bitrix/php_interface/inc/class/kupon/Vigoda.php',
+        'MegaKupon'   => '/bitrix/php_interface/inc/class/kupon/MegaKupon.php',
+
     )
 );
 
