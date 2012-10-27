@@ -9,10 +9,10 @@ define("IB_PRICE_GROUP", 14); // ID ценовых групп
 //Группы
 define("GROUP_MANAGER", 6); // Группа менеджеры
 
-define("DEFAULT_USER_PHOTO_PATH", "/upload/user_photo/people.png"); // Группа менеджеры
+define("DEFAULT_USER_PHOTO_PATH", "/upload/user_photo/people.png"); // Ссылка на заглушку аватарки
 
 
-define("IB_USER_PROPS", 11); // Группа менеджеры
+define("IB_USER_PROPS", 11); // свойства пользователей
 
 
 //Брони
@@ -24,3 +24,6 @@ define("BOOKING_TYPE_CLUB", 35); // Бронь от клуба
 define("IB_SUB_NEWS_ID", 15); //
 define("IB_SUB_STOCK_ID", 16); //
 define("IB_SUB_EVENT_ID", 17);//
+
+
+define("PROPS_ID_CLUB_STOCKS", 61);//
