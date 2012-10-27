@@ -6,7 +6,8 @@ $APPLICATION->SetTitle("MyTb.ru - Первыми узнаем об акциях,
 ?>
 
 <?$APPLICATION->IncludeComponent("mytb:club.list", "home", array(
-        "CACHE_TIME"=>600
+        "CACHE_TIME"=>600,
+        "PAGEN_1"=>intval($_GET['PAGEN_1'])
     ),
     false
 );?>
