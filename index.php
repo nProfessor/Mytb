@@ -5,7 +5,9 @@ $APPLICATION->SetPageProperty("description", "MyTb.ru - Первыми узна�
 $APPLICATION->SetTitle("MyTb.ru - Первыми узнаем об акциях, событиях и новостях клубов, баров, ресторанов.");
 ?>
 
-<?$APPLICATION->IncludeComponent("mytb:club.list", "home", array(),
+<?$APPLICATION->IncludeComponent("mytb:club.list", "home", array(
+        "CACHE_TIME"=>600
+    ),
     false
 );?>
 

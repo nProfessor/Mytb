@@ -7,7 +7,7 @@ $APPLICATION->AddHeadScript("/jslibs/jqueryui/js/jquery-ui-1.8.21.custom.min.js"
 
 
 $clubID = (int)$arParams['ID'];
-
+if ($this->StartResultCache()) {
 global $USER;
 $userInfo=CUser::GetByID($USER::GetID())->Fetch();
 
@@ -44,6 +44,7 @@ $arResult['userInfo'] =$userInfo;
 
 $APPLICATION->SetTitle(html_entity_decode($arResult['arFields']['PROPERTY_TYPE_FACILITY_VALUE'])." ".html_entity_decode($arResult['arFields']['NAME']));
 $this->IncludeComponentTemplate();
+}
 
 
 
