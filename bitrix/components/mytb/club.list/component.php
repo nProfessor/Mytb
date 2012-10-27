@@ -7,6 +7,9 @@
 if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== true) die();
 CModule::IncludeModule("iblock");
 
+
+
+if ($this->StartResultCache()) {
 $arSelect = Array(
     "ID",
     "NAME",
@@ -24,10 +27,9 @@ $arFilter = Array(
     "ACTIVE" => "Y");
 
 $res = CIBlockElement::GetList(Array("SORT"=>"DESC"), $arFilter, false, Array("nPageSize" => 50), $arSelect);
-while ($ob = $res->GetNextElement()) {
-    $arField = $ob->GetFields();
-    $arFile = CFile::GetFileArray($arField["PREVIEW_PICTURE"]);
+while ($arField = $res->Fetch()) {
 
+    $arFile = CFile::GetFileArray($arField["PREVIEW_PICTURE"]);
 
     $arFields[]=array(
         "ID"=>$arField["ID"],
@@ -54,3 +56,4 @@ $arResult["res"]=$res;
 
 
 $this->IncludeComponentTemplate();
+}

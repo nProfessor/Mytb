@@ -3,12 +3,15 @@ require($_SERVER["DOCUMENT_ROOT"] . "/bitrix/header.php");
 
 if (intval($_GET['ID']) != 0):
     $APPLICATION->IncludeComponent("mytb:club", "detail", array(
-            "ID" => $_GET['ID']
+            "ID" => $_GET['ID'],
+            "CACHE_TIME"=>600
         ),
         false
     ); else:
     $APPLICATION->SetTitle("Список клубов, боров ресторанов");
-    $APPLICATION->IncludeComponent("mytb:club.list", "home", array(),
+    $APPLICATION->IncludeComponent("mytb:club.list", "home", array(
+            "CACHE_TIME"=>600
+        ),
         false
     );
 endif;
