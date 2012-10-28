@@ -1,6 +1,5 @@
 <?
-
-$APPLICATION->AddHeadScript('http://api-maps.yandex.ru/2.0/?load=package.full&mode=debug&lang=ru-RU');
+//$APPLICATION->AddHeadScript('http://api-maps.yandex.ru/2.0/?load=package.full&mode=debug&lang=ru-RU');
 $APPLICATION->AddHeadScript('/jslibs/script/rating.js');
 ?>
 <?
@@ -21,34 +20,13 @@ $APPLICATION->SetPageProperty('description',strip_tags($clubInfo["~DETAIL_TEXT"]
 
 ?>
 <input type="hidden" value="<?=$clubInfo['ID']?>" id="clubID">
-<div class="popover bottom" id="rating-like">
-    <div class="arrow"></div>
-    <h3 class="popover-title">Рейтинг клуба</h3>
-
-    <div class="popover-content">
-        <table>
-            <tr>
-                <td style="width: 100px;">Голосовать:</td>
-                <td><?$APPLICATION->IncludeComponent(
-                    "infocom:like",
-                    "",
-                    Array(
-                         "VKONTAKTE"       => "Y",
-                         //            "FACEBOOK"=>"Y",
-                         //            "FACEBOOK_TYPE"=>"button_count",
-                         "VKONTAKTE_TYPE"  => "mini ",
-                         "VKONTAKTE_APIID" => "3009096",
-                    )
-                );?></td>
-            </tr>
-        </table>
-    </div>
-</div>
-<div id="rating" data-placement="left">
-    <a id="rating-a" class="btn btn-small" href="#"><i class="icon-star"></i>
-        <?=$rating?> <?=declOfNum($rating, array("голос", "голоса", "голосов"))?>
-    </a>
-</div>
+<?$APPLICATION->IncludeComponent(
+    "mytb:club.rating",
+    "",
+    Array(
+        "CLUB_ID"  => $clubInfo['ID'],
+    )
+);?>
 <h1>
     <?=$name?>
 </h1>
@@ -191,13 +169,21 @@ $APPLICATION->SetPageProperty('description',strip_tags($clubInfo["~DETAIL_TEXT"]
     ? ""
     : $clubInfo["PROPERTY_ADDRESS_VALUE"];?>
 </div>
+
+<script src="http://api-maps.yandex.ru/2.0-stable/?load=package.full&lang=ru-RU&onload=init"type="text/javascript"></script>
+
+<!--$arResult['arFields']-->
+
+<div id="YMapsID" style="height: 400px"></div>
+
 <script type="text/javascript">
-    /* При успешной загрузке API выполняется
-  соответствующая функция */
-    ymaps.ready(function () {
-        /* Создание экземпляра карты и его привязка
-    к контейнеру с id="YMapsID" */
-        // Поиск координат центра Нижнего Новгорода
+
+    var myMap;
+    function init() {
+
+
+
+
         ymaps.geocode('<?=$searh?>', { results:1 }).then(function (res) {
             // Выбираем первый результат геокодирования
             var firstGeoObject = res.geoObjects.get(0);
@@ -223,26 +209,20 @@ $APPLICATION->SetPageProperty('description',strip_tags($clubInfo["~DETAIL_TEXT"]
                     .add('typeSelector')
                 // Стандартный набор кнопок
                     .add('mapTools');
+        },function (err) {
+          console.log(err);
+                });
 
-
-        });
-
-    })
-    ;
+    }
 </script>
 
-<!--$arResult['arFields']-->
-
-<div id="YMapsID" style="height: 400px">
-
-</div>
 <br/>
 <h2>Обсуждение:</h2>
 <?$APPLICATION->IncludeComponent(
     "prmedia:vkontakte.comments",
     "",
     Array(
-         "APP_ID"         => "3009096",
+         "APP_ID"         => SOC_API_ID_VK,
          "COUNT"          => "20",
          "ALLOW_GRAFFITI" => "Y",
          "ALLOW_PHOTOS"   => "Y",
