@@ -1172,9 +1172,9 @@ a.stoks:hover{
     text-align: center;
 }
 
-#list  a{
+#sidebar #list  a{
     font-size: 11px !important;
 }
-#list  .item{
+#sidebar #list  .item{
     clear:both;
 }
