@@ -16,23 +16,24 @@ CModule::IncludeModule("iblock");
 CModule::AddAutoloadClasses(
     '',
     array(
-         'Club'   => '/bitrix/php_interface/inc/class/club/Club.php',
-         'Stocks'   => '/bitrix/php_interface/inc/class/club/Stocks.php',
-         'Table'  => '/bitrix/php_interface/inc/class/club/Table.php',
-         'User'   => '/bitrix/php_interface/inc/class/user/User.php',
-         'Errors' => '/bitrix/php_interface/inc/class/errors/Errors.php',
-         'Smsc'   => '/bitrix/php_interface/inc/class/SMS/Smsc.php',
+        'Club' => '/bitrix/php_interface/inc/class/club/Club.php',
+        'Stocks' => '/bitrix/php_interface/inc/class/club/Stocks.php',
+        'Table' => '/bitrix/php_interface/inc/class/club/Table.php',
+        'User' => '/bitrix/php_interface/inc/class/user/User.php',
+        'Errors' => '/bitrix/php_interface/inc/class/errors/Errors.php',
+        'Smsc' => '/bitrix/php_interface/inc/class/SMS/Smsc.php',
 
 
-        // Êóïîííûå ñåðâèñû
-        'Kupon'   => '/bitrix/php_interface/inc/class/kupon/Kupon.php',
-        'CityCoupon'   => '/bitrix/php_interface/inc/class/kupon/CityCoupon.php',
-        'KingCoupon'   => '/bitrix/php_interface/inc/class/kupon/KingCoupon.php',
-        'KuponAuktsion'   => '/bitrix/php_interface/inc/class/kupon/KuponAuktsion.php',
-        'LedyKupon'   => '/bitrix/php_interface/inc/class/kupon/LedyKupon.php',
-        'MyFant'   => '/bitrix/php_interface/inc/class/kupon/MyFant.php',
-        'Vigoda'   => '/bitrix/php_interface/inc/class/kupon/Vigoda.php',
-        'MegaKupon'   => '/bitrix/php_interface/inc/class/kupon/MegaKupon.php',
+        // ÐºÑƒÐ¿Ð¾Ð½Ð½Ñ‹Ðµ ÑÐµÑ€Ð²Ð¸ÑÑ‹
+        'Kupon' => '/bitrix/php_interface/inc/class/kupon/Kupon.php',
+        'CityCoupon' => '/bitrix/php_interface/inc/class/kupon/CityCoupon.php',
+        'KingCoupon' => '/bitrix/php_interface/inc/class/kupon/KingCoupon.php',
+        'KuponAuktsion' => '/bitrix/php_interface/inc/class/kupon/KuponAuktsion.php',
+        'LedyKupon' => '/bitrix/php_interface/inc/class/kupon/LedyKupon.php',
+        'MyFant' => '/bitrix/php_interface/inc/class/kupon/MyFant.php',
+        'Vigoda' => '/bitrix/php_interface/inc/class/kupon/Vigoda.php',
+        'MegaKupon' => '/bitrix/php_interface/inc/class/kupon/MegaKupon.php',
+        'BigCoupon' => '/bitrix/php_interface/inc/class/kupon/BigCoupon.php',
 
     )
 );
