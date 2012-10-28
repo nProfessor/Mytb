@@ -9,7 +9,7 @@ $(document).ready(function(){
     $('#rating-a').click(function(){
 
         var top=$('#rating-a').offset().top+35;
-        var left=$('#rating-a').offset().left-263;
+        var left=$('#rating-a').offset().left-203;
         $('#rating-like').toggle();
         $('#rating-like').offset({left:left,top:top});
 

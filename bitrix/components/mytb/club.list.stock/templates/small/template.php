@@ -10,7 +10,7 @@ $APPLICATION->AddHeadScript("/jslibs/jquery/eTextTimer.js");
 <div id="list">
 
         <?foreach ($arResult['stockList'] as $val=> $var): ?>
-<div>
+<div class="item">
         <?
         $arFile = CFile::GetFileArray($var["DETAIL_PICTURE"]);
         ?>

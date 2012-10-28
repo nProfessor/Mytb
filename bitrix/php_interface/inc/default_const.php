@@ -26,4 +26,7 @@ define("IB_SUB_STOCK_ID", 16); //
 define("IB_SUB_EVENT_ID", 17);//
 
 
+define("SOC_API_ID_VK", 3009096);//
+
+
 define("PROPS_ID_CLUB_STOCKS", 61);//

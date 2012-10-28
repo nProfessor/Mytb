@@ -994,7 +994,7 @@ input.errors {
 }
  .popover-content
  {
-     overflow: hidden;
+     /*overflow: hidden;*/
  }
 
 #rating-like.popover {
@@ -1004,7 +1004,7 @@ input.errors {
     border-radius: 6px 6px 6px 6px;
     box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
     padding: 0px !important;
-    width: 350px;
+    width: 250px;
 }
 #rating-like.popover .arrow{
     right: -6px !important;
@@ -1170,4 +1170,11 @@ a.stoks:hover{
 
 .text-center{
     text-align: center;
+}
+
+#list  a{
+    font-size: 11px !important;
+}
+#list  .item{
+    clear:both;
 }

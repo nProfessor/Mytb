@@ -19,7 +19,11 @@ else
 }
 
 $arResult['CODE'] = '<div id="vk_comments"></div>
-<script type="text/javascript">VK.Widgets.Comments("vk_comments", {limit: '.intval($arParams['COUNT']).', width: "'.intval($arParams['WIDTH']).'", attach: '.$attach.'});</script>';
+<script type="text/javascript">
+$(document).ready(function () {
+VK.Widgets.Comments("vk_comments", {limit: '.intval($arParams['COUNT']).', width: "'.intval($arParams['WIDTH']).'", attach: '.$attach.'});
+});
+</script>';
 
 $this->IncludeComponentTemplate();
 ?>
