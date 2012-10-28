@@ -23,28 +23,7 @@
 </script>
 <div id="vk_like"></div>
 <script type="text/javascript">
-
 VK.Widgets.Like("vk_like", {type: "<?=$arParams['VKONTAKTE_TYPE']?>"});
-
-VK.Observer.subscribe('widgets.like.liked',function(data){
-    var element=document.getElementById('clubID');
-    if(element){
-        var clubID=$("#clubID").val();
-        $.post("/bitrix/ui/ajax/club/rating.php",{clubID:clubID,count:data},function(data){
-            $("#rating-a").html(data);
-        });
-
-     }
-});
-VK.Observer.subscribe('widgets.like.unliked',function(data){
-    var element=document.getElementById('clubID');
-    if(element){
-        var clubID=$("#clubID").val();
-        $.post("/bitrix/ui/ajax/club/rating.php",{clubID:clubID,count:data},function(data){
-            $("#rating-a").html(data);
-        });
-    }
-});
 </script>
 </div>
 <? endif?>
@@ -53,7 +32,7 @@ VK.Observer.subscribe('widgets.like.unliked',function(data){
 
 <? if($arParams['MM_OK'] == "Y"):?>
 <div class="like_item">
-<a target="_blank" class="mrc__plugin_uber_like_button" href="http://connect.mail.ru/share?share_url=http://<?=$_SERVER['HTTP_HOST'].$APPLICATION->GetCurPage()?>" data-mrc-config="{'type' : '<?=$arParams['MM_OK_TYPE']?>', 'caption-mm' : '<?=$arParams['MM_NAME']?>', 'caption-ok' : '<?=$arParams['OK_NAME']?>', <?=($arParams['MM_OK_SH'] == "Y")?"'counter' : 'true'":"'nc' : '1'"?>, <?=($arParams['MM_OK_SH'] == "Y")?"'text' : 'true'":"'nt' : '1'"?>, 'width' : '<?=$arParams['MM_OK_WIDTH']?>'}">пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ</a>
+<a target="_blank" class="mrc__plugin_uber_like_button" href="http://connect.mail.ru/share?share_url=http://<?=$_SERVER['HTTP_HOST'].$APPLICATION->GetCurPage()?>" data-mrc-config="{'type' : '<?=$arParams['MM_OK_TYPE']?>', 'caption-mm' : '<?=$arParams['MM_NAME']?>', 'caption-ok' : '<?=$arParams['OK_NAME']?>', <?=($arParams['MM_OK_SH'] == "Y")?"'counter' : 'true'":"'nc' : '1'"?>, <?=($arParams['MM_OK_SH'] == "Y")?"'text' : 'true'":"'nt' : '1'"?>, 'width' : '<?=$arParams['MM_OK_WIDTH']?>'}">Нравится</a>
 <script src="http://cdn.connect.mail.ru/js/loader.js" type="text/javascript" charset="<?=SITE_CHARSET?>"></script>
 </div>
 <? endif?>
@@ -63,7 +42,7 @@ VK.Observer.subscribe('widgets.like.unliked',function(data){
 <? $APPLICATION->AddHeadScript("//platform.twitter.com/widgets.js");?>
     <div>
       
-<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://<?=$_SERVER['HTTP_HOST'].$APPLICATION->GetCurPage()?>" data-count="<?=$arParams['TWEETTER_TYPE']?>" data-via="<?=$arParams['TWEETTER_NAME']?>" data-lang="ru">пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ</a>
+<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://<?=$_SERVER['HTTP_HOST'].$APPLICATION->GetCurPage()?>" data-count="<?=$arParams['TWEETTER_TYPE']?>" data-via="<?=$arParams['TWEETTER_NAME']?>" data-lang="ru">Твитнуть</a>
     </div>
 </div>
 <? endif?>

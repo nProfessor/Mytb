@@ -38,7 +38,7 @@ $arComponentParameters = array(
 			"PARENT" => "VKONTAKTE",
 			"NAME" => GetMessage("SHOW"),
 			"TYPE" => "CHECKBOX",
-			"DEFAULT" => "Y",
+			"DEFAULT" => "N",
 			"REFRESH" => 'Y',
 		),
 		"GOOGLE" => Array(
