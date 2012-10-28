@@ -22,12 +22,8 @@
 								);?>
 						</div></div>
 
+                       <?if(isset($_GET["CLUB"])&&$_GET["CLUB"]=="true"):?>
 
-
-
-
-
-                        <?if(isset($_GET["CLUB"])&&$_GET["CLUB"]=="true"):?>
                         <?$APPLICATION->IncludeComponent(
 						"mytb:club.list.stock",
                         "small",

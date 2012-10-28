@@ -41,11 +41,10 @@ $arResult['arFields'] = $arFields;
 
 $arResult['userInfo'] =$userInfo;
 
-
-$APPLICATION->SetTitle(html_entity_decode($arResult['arFields']['PROPERTY_TYPE_FACILITY_VALUE'])." ".html_entity_decode($arResult['arFields']['NAME']));
 $this->IncludeComponentTemplate();
 }
 
+$APPLICATION->SetTitle(html_entity_decode($arResult['arFields']['PROPERTY_TYPE_FACILITY_VALUE'])." ".html_entity_decode($arResult['arFields']['NAME']));
 
 
 
