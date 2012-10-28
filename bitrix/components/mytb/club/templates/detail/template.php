@@ -118,11 +118,7 @@ $APPLICATION->SetPageProperty('description',strip_tags($clubInfo["~DETAIL_TEXT"]
             <!--        </a>-->
 
             <div class="btn-group">
-                <button class="btn btn-danger  btn-large subsribe-ok" style="width:100%" data-toggle="modal" data-original-title="Вы сможете моментально узнавать о появлении акций проводимых в  <b>«<?=$clubInfo['NAME']?>»</b>" id="subs_ok" data-auth="<?if ($USER->IsAuthorized()) {
-                    echo "yes";
-                } else {
-                    echo "no";
-                }?>">Подписаться на акции<br/>«<?=$clubInfo['NAME']?>»</button>
+                <button class="btn btn-danger  btn-large subsribe-ok" style="width:100%" data-toggle="modal" data-original-title="Вы сможете моментально узнавать о появлении акций проводимых в  <b>«<?=$clubInfo['NAME']?>»</b>" id="subs_ok" data-auth="<?=$USER->IsAuthorized()?"yes":"no";?>">Подписаться на акции<br/>«<?=$clubInfo['NAME']?>»</button>
 <!--                <button class="btn btn-info btn-large" id="subs_event" data-toggle="modal">События</button>-->
                 <!--                <button class="btn btn-info btn-large" id="subs_news" data-toggle="modal">Новости</button>-->
             </div>
@@ -244,11 +240,7 @@ $APPLICATION->SetPageProperty('description',strip_tags($clubInfo["~DETAIL_TEXT"]
     </div>
     <div class="modal-footer">
         <a href="#" class="btn" id="no_subs">Не сейчас</a>
-        <a href="#" class="btn btn-primary"  id="subs_ok_modal" data-auth="<?if ($USER->IsAuthorized()) {
-            echo "yes";
-        } else {
-            echo "no";
-        }?>">Да, хочу</a>
+        <a href="#" class="btn btn-primary"  id="subs_ok_modal" data-auth="<<?=$USER->IsAuthorized()?"yes":"no";?>">Да, хочу</a>
     </div>
 </div>
 
