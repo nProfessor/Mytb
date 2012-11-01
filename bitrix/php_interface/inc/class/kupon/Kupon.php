@@ -43,8 +43,8 @@ class Kupon
                     ), FALSE, FALSE, $arSelect)->Fetch()
                     ) {
                         $PROP            = array();
-                        $PROP["URL"]     = $var->url; // свойству с кодом 12 присваиваем значение "Белый"
-                        $PROP["CLUB_ID"] = $res["ID"]; // свойству с кодом 3 присваиваем значение 38
+                        $PROP["URL"]     = trim($var->url); // свойству с кодом 12 присваиваем значение "Белый"
+                        $PROP["CLUB_ID"] = trim($res["ID"]); // свойству с кодом 3 присваиваем значение 38
                         $PROP["PRICE"] = intval($var->price); // свойству с кодом 3 присваиваем значение 38
                         $PROP["DISCOUNT"] = intval($var->discount); // свойству с кодом 3 присваиваем значение 38
                         $PROP["DISCOUNTPRICE"] = intval($var->discountprice); // свойству с кодом 3 присваиваем значение 38
@@ -54,13 +54,13 @@ class Kupon
                         $arLoadProductArray = Array(
                             "IBLOCK_ID"             => IB_SUB_STOCK_ID,
                             "PROPERTY_VALUES"       => $PROP,
-                            "NAME"                  => $var->name,
+                            "NAME"                  => trim($var->name),
                             "ACTIVE_FROM"           => date("d.m.Y H:m:s", strtotime($var->beginsell)),
                             "ACTIVE_TO"             => date("d.m.Y H:m:s", strtotime($var->endsell)),
                             "CODE"                  => $id,
-                            "TAGS"                  =>  $this->tags,
+                            "TAGS"                  =>  trim($this->tags),
                             "ACTIVE"                => "Y", // активен
-                            "PREVIEW_TEXT"          => strip_tags($var->description),
+                            "PREVIEW_TEXT"          => trim(strip_tags($var->description)),
                             "DETAIL_PICTURE"        => CFile::MakeFileArray($var->picture)
                         );
 

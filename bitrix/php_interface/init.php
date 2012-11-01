@@ -34,6 +34,8 @@ CModule::AddAutoloadClasses(
         'Vigoda' => '/bitrix/php_interface/inc/class/kupon/Vigoda.php',
         'MegaKupon' => '/bitrix/php_interface/inc/class/kupon/MegaKupon.php',
         'BigCoupon' => '/bitrix/php_interface/inc/class/kupon/BigCoupon.php',
+        'SKuponom' => '/bitrix/php_interface/inc/class/kupon/SKuponom.php',
+        'SkidkaCoupon' => '/bitrix/php_interface/inc/class/kupon/SkidkaCoupon.php',
 
     )
 );
