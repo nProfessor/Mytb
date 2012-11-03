@@ -64,6 +64,21 @@ class Club
     }
 
     /**
+     * Возвраща количество клубов
+     * @return mixed
+     */
+    static function count()
+    {
+        $arSelect = Array("IBLOCK_ID");
+        $arFilter = Array("IBLOCK_ID" => IB_CLUB_ID, "ACTIVE" => "Y");
+        $res      = CIBlockElement::GetList(Array(), $arFilter, array("IBLOCK_ID"), FALSE, $arSelect);
+        $arField  = $res->Fetch();
+
+        return $arField['CNT'];
+    }
+
+
+    /**
      * Возвращаем объект запроса к списку столиков
      * @param $arData
      *

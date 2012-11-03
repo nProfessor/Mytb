@@ -104,7 +104,7 @@ IncludeTemplateLangFile(__FILE__);
                     //                        FALSE
                     //                    );
 
-                    $APPLICATION->IncludeComponent("mytb:slide.stock", "", array(), FALSE);
+                    $APPLICATION->IncludeComponent("mytb:baner.home", "", array(), FALSE);
                     ?>
 
                 </div>
