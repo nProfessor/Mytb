@@ -54,7 +54,7 @@ class Kupon
                         $arLoadProductArray = Array(
                             "IBLOCK_ID"             => IB_SUB_STOCK_ID,
                             "PROPERTY_VALUES"       => $PROP,
-                            "NAME"                  => str_replace(array(' "','" '),array(" «","» "),trim($var->name),
+                            "NAME"                  => str_replace(array(' "','" '),array(" «","» "),trim($var->name)),
                             "ACTIVE_FROM"           => date("d.m.Y H:m:s", strtotime($var->beginsell)),
                             "ACTIVE_TO"             => date("d.m.Y H:m:s", strtotime($var->endsell)),
                             "CODE"                  => $id,
