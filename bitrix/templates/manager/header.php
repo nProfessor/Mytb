@@ -54,6 +54,7 @@ global $USER;
             <a href="/" class="brand">Бронирование Online</a>
 
             <ul class="nav">
+                <?if(0):?>
                 <li class="dropdown">
                     <a href="#"
                        class="dropdown-toggle"
@@ -77,6 +78,16 @@ global $USER;
                         <li><a href="#">информация о клубе</a></li>
                         <li><a href="/kabinet-menedzhera/club_temp/">редактор клуба</a></li>
                     </ul>
+                </li>
+            <?endif;?>
+                <li><a href="/personal/">Кабинет пользователя</a></li>
+                <li class="dropdown">
+                    <a href="#"
+                       class="dropdown-toggle"
+                       data-toggle="dropdown">
+                        Клуб
+                        <b class="caret"></b>
+                    </a>
                 </li>
             </ul>
 
