@@ -22,6 +22,7 @@ CModule::AddAutoloadClasses(
         'User' => '/bitrix/php_interface/inc/class/user/User.php',
         'Errors' => '/bitrix/php_interface/inc/class/errors/Errors.php',
         'Smsc' => '/bitrix/php_interface/inc/class/SMS/Smsc.php',
+        'News' => '/bitrix/php_interface/inc/class/club/News.php',
 
 
         // купонные сервисы

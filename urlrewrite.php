@@ -6,6 +6,11 @@ $arUrlRewrite = array(
 		"PATH"	=>	"/kabinet-menedzhera/club_temp/table/index.php",
 	),
 	array(
+		"CONDITION"	=>	"#^/kabinet-menedzhera/club_news_edite/edite/([0-9]+)#",
+		"RULE"	=>	"ID=$1",
+		"PATH"	=>	"/kabinet-menedzhera/club_news_edite/edite/index.php",
+	),
+	array(
 		"CONDITION"	=>	"#^/club/([0-9]+)/booking/([0-9]+)/payment/#",
 		"RULE"	=>	"CLUB_ID=$1&TABLE_ID=$2",
 		"ID"	=>	"bitrix:news",

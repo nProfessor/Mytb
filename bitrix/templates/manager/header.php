@@ -85,9 +85,15 @@ global $USER;
                     <a href="#"
                        class="dropdown-toggle"
                        data-toggle="dropdown">
-                        Клуб
+                        Профайл заведения
                         <b class="caret"></b>
                     </a>
+                    <ul class="dropdown-menu">
+                        <li><a href="/kabinet-menedzhera/club_edite/">Информация</a></li>
+                        <li><a href="/kabinet-menedzhera/club_news_edite/">Новости</a></li>
+                        <li><a href="/kabinet-menedzhera/club_stocks_edite/">Акции</a></li>
+                        <li><a href="/kabinet-menedzhera/club_event_edite/">События</a></li>
+                    </ul>
                 </li>
             </ul>
 
