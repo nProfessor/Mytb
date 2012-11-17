@@ -35,8 +35,8 @@ IncludeTemplateLangFile(__FILE__);
             var s = document.getElementsByTagName('script')[0];
             s.parentNode.insertBefore(ga, s);
         })();
-
     </script>
+    <script type="text/javascript" src="/jslibs/script/ajaxupload.js"></script>
 
 </head>
 <body>
