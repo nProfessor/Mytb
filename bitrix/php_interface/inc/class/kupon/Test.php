@@ -35,6 +35,8 @@ class Test extends Kupon
         );
 
         $data[] = $arLoadProductArray;
+        $data[] = $arLoadProductArray;
+
 
         return $data;
     }

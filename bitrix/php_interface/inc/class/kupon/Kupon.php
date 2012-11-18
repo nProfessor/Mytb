@@ -93,7 +93,7 @@ class Kupon
             $clubList[$var['PROPERTY_VALUES']['CLUB_ID']][] = $var;
         }
 
-        $this->sendNotice($clubList);
+//        $this->sendNotice($clubList);
 
     }
 
@@ -122,7 +122,7 @@ class Kupon
         global $DB;
         $usrListID = array();
         $arUserList = array();
-        $res = CIBlockElement::GetList(Array("SORT" => "DESC"), array( "IBLOCK_ID" => IB_USER_PROPS), false, false, array("PROPERTY_USER", "PROPERTY_LINK_STOK", "PROPERTY_NOTICE_VALUE"));
+        $res = CIBlockElement::GetList(Array("SORT" => "DESC"), array("IBLOCK_ID" => IB_USER_PROPS, "PROPERTY_LINK_STOK" => $clubListID), false, false, array("ID", "PROPERTY_USER", "PROPERTY_LINK_STOK", "PROPERTY_LINK_NEWS", "PROPERTY_LINK_EVENT", "PROPERTY_NOTICE_VALUE"));
 
 
         /*
@@ -130,8 +130,9 @@ class Kupon
          * Всех этих людей нужно будет уведомить
          *
          */
-        while ($obj=$res->Fetch()) {
+        while ($obj = $res->Fetch()) {
             printAr($obj);
+
             $arUserList[$obj['PROPERTY_USER_VALUE']]["CLUB_LIST"] = $obj['PROPERTY_LINK_STOK_VALUE']; // список клубов для рассылки
             $PROPERTY_NOTICE_VALUE = unserialize($obj['PROPERTY_NOTICE_VALUE']); // настройки рассылки
             $arUserList[$obj['PROPERTY_USER_VALUE']]["SETTINGS"] = $PROPERTY_NOTICE_VALUE['stock']; // настройки рассылки
@@ -142,13 +143,22 @@ class Kupon
         $arUserInfo = User::getList($usrListID);
 
         foreach ($arUserList as $userID => $var) { // перебираем всех пользователей
-
+            $user = $arUserInfo[$userID];
             foreach ($var["CLUB_LIST"] as $clubID) { // Перебираем все клубы на которые он подписан
-                $user = $arUserInfo[$userID];
-                $stok = $clubList[$clubID];
-                $sql = "INSERT INTO a_send_notice (USER_ID,TYPE,EVENT_ID,EMAIL,PHONE,ACTIVE,TIME) VALUES ('{$userID}','stoks','{$stok['ID']}',{$user['EMAIL']},'{$user['PERSONAL_PHONE']}','Y',NOW())";
-                echo $sql."<br/>";
+                $stoks = $clubList[$clubID];
+                if (count($stoks)) {
+                    $arStokID = array();
+                    foreach ($stoks as $stok) {
+                        $stockID=intval($stok['ID']);
+
+                    }
+                    $varStok = implode("|", $arStokID);
+
+                }
             }
+
+            $sql = "INSERT INTO a_send_notice (USER_ID,TYPE,EVENT_ID,EMAIL,PHONE,ACTIVE,TIME) VALUES ('{$userID}','stoks','{$varStok}',{$user['EMAIL']},'{$user['PERSONAL_PHONE']}','Y',NOW())";
+            echo $sql . "<br/>";
         }
 
 

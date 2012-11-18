@@ -247,7 +247,7 @@ class Club
             array("SORT" => "ASC"),
             array("PROPERTY_CLUB_ID"        => $this->clubID,
                   "IBLOCK_ID"               => IB_SUB_STOCK_ID,
-                  ">DATE_ACTIVE_TO"        => date("d.m.Y")),
+                  ">=DATE_ACTIVE_TO"        => date("d.m.Y")),
             FALSE,
             FALSE,
             array(
