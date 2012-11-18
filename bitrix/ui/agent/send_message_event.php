@@ -12,18 +12,42 @@ function send_message_event()
 
     require_once($_SERVER["DOCUMENT_ROOT"] . "/bitrix/modules/main/include/prolog_before.php");
     CModule::IncludeModule("iblock");
+    global $DB;
+
+
     $clubListID = array();
     $userListID = array();
-    // собираем все действующие акции всех клубов
-    $resStock = CIBlockElement::GetList(Array("SORT" => "DESC"), array("IBLOCK_ID" => IB_SUB_STOCK_ID, ">=DATE_ACTIVE_TO" => date("d.m.Y")), false, false, array("ID", "PROPERTY_CLUB_ID"));
 
+    $stokAll=array();
+    $stokAllUser=array();
+
+
+    $resStoskListNoSend=$DB->Query("SELECT * FROM a_send_notice");
+
+    while($row=$resStoskListNoSend->Fetch()){
+        $stokAll=array_merge((array)$stokAll,(array)explode("|",$row['EVENT_ID']));
+        $stokAllUser[]=$row['USER_ID'];
+    }
+
+
+    if(!count($stokAll)){
+        return "send_message_event();";
+    }
+
+    // собираем все действующие акции всех клубов
+    $resStock = CIBlockElement::GetList(Array("SORT" => "DESC"), array("IBLOCK_ID" => IB_SUB_STOCK_ID, ">=DATE_ACTIVE_TO" => date("d.m.Y"),"ID"=>$stokAll), false, false, array("ID", "PROPERTY_CLUB_ID"));
+
+
+    $idl=array();
     while ($obj = $resStock->Fetch()) {
         $clubID = intval($obj['PROPERTY_CLUB_ID_VALUE']);
         $clubListID[$clubID] = $clubID;
+        $idl[]=$obj['ID'];
     }
 
+
     // Собираем всех пользователей которые подписанны на действующие акции
-    $res = CIBlockElement::GetList(Array("SORT" => "DESC"), array("IBLOCK_ID" => IB_USER_PROPS, "PROPERTY_LINK_STOK" => $clubListID), false, false, array("ID", "PROPERTY_USER", "PROPERTY_LINK_STOK", "PROPERTY_LINK_NEWS", "PROPERTY_LINK_EVENT", "PROPERTY_NOTICE", "PROPERTY_DATE_SEND"));
+    $res = CIBlockElement::GetList(Array("SORT" => "DESC"), array("IBLOCK_ID" => IB_USER_PROPS, "PROPERTY_LINK_STOK" => $clubListID,"PROPERTY_USER"=>$stokAllUser), false, false, array("ID", "PROPERTY_USER", "PROPERTY_LINK_STOK", "PROPERTY_LINK_NEWS", "PROPERTY_LINK_EVENT", "PROPERTY_NOTICE", "PROPERTY_DATE_SEND"));
 
     while ($obj = $res->Fetch()) {
         $PROPERTY_NOTICE_VALUE = unserialize($obj['PROPERTY_NOTICE_VALUE']);
@@ -71,6 +95,7 @@ function send_message_event()
 
             if($send){
                 CIBlockElement::SetPropertyValueCode(intval($var["PROPS_ID"]), "DATE_SEND", date("d.m.Y H:i:s") );
+                $DB->Query("DELETE FROM a_send_notice WHERE USER_ID='{$var['USER_ID']}'");
             }
 
         }

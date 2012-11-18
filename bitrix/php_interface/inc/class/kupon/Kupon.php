@@ -93,7 +93,7 @@ class Kupon
             $clubList[$var['PROPERTY_VALUES']['CLUB_ID']][] = $var;
         }
 
-//        $this->sendNotice($clubList);
+        $this->sendNotice($clubList);
 
     }
 
@@ -149,18 +149,16 @@ class Kupon
                 if (count($stoks)) {
                     $arStokID = array();
                     foreach ($stoks as $stok) {
-                        $stockID=intval($stok['ID']);
+                        $arStokID[]=intval($stok['ID']);
 
                     }
                     $varStok = implode("|", $arStokID);
-
                 }
             }
 
-            $sql = "INSERT INTO a_send_notice (USER_ID,TYPE,EVENT_ID,EMAIL,PHONE,ACTIVE,TIME) VALUES ('{$userID}','stoks','{$varStok}',{$user['EMAIL']},'{$user['PERSONAL_PHONE']}','Y',NOW())";
-            echo $sql . "<br/>";
+            $sql = "INSERT INTO a_send_notice (USER_ID,TYPE,EVENT_ID,EMAIL,PHONE,ACTIVE) VALUES ('{$userID}','stoks','{$varStok}','{$user['EMAIL']}','{$user['PERSONAL_PHONE']}','1')";
+            $DB->Query($sql);
         }
-
 
     }
 
