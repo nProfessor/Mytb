@@ -39,6 +39,7 @@ CModule::AddAutoloadClasses(
         'DariKupon' => '/bitrix/php_interface/inc/class/kupon/DariKupon.php',
         'SkidkaBum' => '/bitrix/php_interface/inc/class/kupon/SkidkaBum.php',
         'ZoomBonus' => '/bitrix/php_interface/inc/class/kupon/ZoomBonus.php',
+        'Test' => '/bitrix/php_interface/inc/class/kupon/Test.php',
 
     )
 );
