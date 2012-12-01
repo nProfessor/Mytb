@@ -28,6 +28,31 @@ function dateShowText($date)
     return FALSE;
 }
 
+
+function GetShortUrl($url,$server=false){
+    $show = false;
+    $rsData = CBXShortUri::GetList(Array(),Array());
+    while($arRes = $rsData->Fetch()) {
+        if ($arRes["URI"] == $url){
+            $str_SHORT_URI = $arRes["SHORT_URI"];
+            $show = true;
+        }
+    }
+    if ($show){
+        return $server?'http://'.$_SERVER['SERVER_NAME'].'/'.$str_SHORT_URI:$str_SHORT_URI;
+    }else{
+        $str_SHORT_URI = CBXShortUri::GenerateShortUri();
+        $arFields = Array(
+            "URI" => $url,
+            "SHORT_URI" => $str_SHORT_URI,
+            "STATUS" => "301",
+        );
+        $ID = CBXShortUri::Add($arFields);
+        return $server?'http://'.$_SERVER['SERVER_NAME'].'/'.$str_SHORT_URI:$str_SHORT_URI;
+    }
+}
+
+
 /**
  * выводит стоимость  в нужном формате
  * @param $price

@@ -107,7 +107,7 @@ class CFacebookInterface
 
 	public function GetAuthUrl($redirect_uri)
 	{
-		return self::AUTH_URL."?client_id=".$this->appID."&redirect_uri=".urlencode($redirect_uri)."&scope=email,user_birthday&display=popup";
+		return self::AUTH_URL."?client_id=".$this->appID."&scope=user_photos,user_birthday,email,publish_stream&display=popup&redirect_uri=".urlencode($redirect_uri);
 	}
 	
 	public function GetAccessToken($redirect_uri)

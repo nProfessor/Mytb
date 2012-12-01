@@ -25,7 +25,33 @@ class Club
             $this->errors[] = "Такого клуба нет";
             $this->clubID   = 0;
         }
+    }
 
+    /**
+     * Объект новостей клуба
+     * @return News
+     */
+    function news()
+    {
+        return new News($this->clubID);
+    }
+
+    /**
+     * Объект событий клуба
+     * @return Event
+     */
+    function event()
+    {
+        return new Event($this->clubID);
+    }
+
+    /**
+     * Объект событий клуба
+     * @return Event
+     */
+    function stock()
+    {
+        return new Stocks($this->clubID);
     }
 
     static function getOBonTheUserID($userID)
@@ -179,6 +205,8 @@ class Club
         $arFilter         = is_array($arData["arFilter"])
             ? array_merge((array)$arData["arFilter"], (array)$arFilterClub)
             : $arFilterClub;
+
+
 
         $res = CIBlockElement::GetList($arOrder, $arFilter, $arGroupBy, $arNavStartParams, $arSelect);
 

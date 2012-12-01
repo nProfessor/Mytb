@@ -42,4 +42,34 @@ $(document).ready(function () {
 
         return false;
     });
+
+
+
+//        window.vkAsyncInit = function() {
+//        VK.init({
+//            apiId: $("#apiVK").val()
+//        });
+//    };
+//
+//    setTimeout(function() {
+//        var el = document.createElement("script");
+//        el.type = "text/javascript";
+//        el.src = "http://vkontakte.ru/js/api/openapi.js";
+//        el.async = true;
+//        document.getElementById("vk_api_transport").appendChild(el);
+//    }, 0);
+//
+//    $("#auth_vk").click(function(){
+//        VK.Auth.login(function(response) {
+//            if (response.session) {
+//
+//                console.log(response);
+//            } else {
+//                alert('not auth');
+//            }
+//        },8199);
+//    });
+
+
+
 });

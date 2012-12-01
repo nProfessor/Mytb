@@ -245,5 +245,5 @@ $APPLICATION->SetPageProperty('description',strip_tags($clubInfo["~DETAIL_TEXT"]
 </div>
 
 <input id="redirect" type="hidden" value="/club/<?=$clubInfo["ID"]?>/stock/?subscribe=ok">
-<? $APPLICATION->IncludeComponent("mytb:auth", "",  array("AUTH_URL"=>"/stock/?subscribe=ok&login=yes"),false); ?>
+<? $APPLICATION->IncludeComponent("mytb:auth", "",  array("AUTH_URL"=>"/club/".$clubInfo["ID"]."/stock/?subscribe=ok"),false); ?>
 
