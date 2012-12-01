@@ -547,3 +547,69 @@
 2012-11-13 19:59:55 -  - exec CUpdateClientPartner::GetHTTPPage
 2012-11-13 19:59:56 -  - TIME GetUpdatesList(request) 0.625 sec
 2012-11-13 19:59:56 -  - exec CUpdateClientPartner::ParseServerData
+2012-11-20 20:42:20 -  - exec CUpdateClientPartner::GetUpdatesList
+2012-11-20 20:42:20 -  - exec CUpdateClientPartner::__CollectRequestData
+2012-11-20 20:42:20 -  - utf=Y&lang=ru&stable=Y&CANGZIP=Y&SUPD_DBS=MYSQL&XE=N&CLIENT_SITE=mytb.ru&LICENSE_KEY=X&SUPD_STS=1&SUPD_URS=0&SUPD_URSA=23&TYPENC=F&CLIENT_PHPVER=5.3.3-7%2Bsqueeze14&dbv=5.1.49&instm=main%2C12.0.3%2CN%3Bsocialservices%2C12.0.1%2CN%3Bbitrixcloud%2C12.0.2%2CN%3Bperfmon%2C12.0.2%2CN%3Bbitrix.sitecorporate%2C11.5.2%2CN%3Bfileman%2C12.0.1%2CN%3Bcompression%2C11.0.0%2CN%3Binside.summ2string%2C1.1.1%2CN%3Brefreshlab.err404%2C1.1.0%2CN%3Bseo%2C11.5.0%2CN%3Binfocom.like%2C1.1.1%2CN%3Biblock%2C12.0.2%2CN%3Bclouds%2C12.0.2%2CN%3Baltasib.qrcode%2C1.1.0%2CN%3Bprmedia.vkontaktecomments%2C1.0.1%2CN%3Bsearch%2C12.0.0%2CN&reqm=bitrix.sitecorporate%2Cinside.summ2string%2Crefreshlab.err404%2Cinfocom.like%2Caltasib.qrcode%2Cprmedia.vkontaktecomments%2Cbitrix.liveapi
+2012-11-20 20:42:20 -  - exec CUpdateClientPartner::GetHTTPPage
+2012-11-20 20:42:20 -  - TIME GetUpdatesList(request) 0.559 sec
+2012-11-20 20:42:20 -  - exec CUpdateClientPartner::ParseServerData
+2012-11-20 20:42:24 -  - exec CUpdateClientPartner::GetUpdatesList
+2012-11-20 20:42:24 -  - exec CUpdateClientPartner::__CollectRequestData
+2012-11-20 20:42:24 -  - utf=Y&lang=ru&stable=Y&CANGZIP=Y&SUPD_DBS=MYSQL&XE=N&CLIENT_SITE=mytb.ru&LICENSE_KEY=X&SUPD_STS=1&SUPD_URS=0&SUPD_URSA=23&TYPENC=F&CLIENT_PHPVER=5.3.3-7%2Bsqueeze14&dbv=5.1.49&instm=main%2C12.0.3%2CN%3Bsocialservices%2C12.0.1%2CN%3Bbitrixcloud%2C12.0.2%2CN%3Bperfmon%2C12.0.2%2CN%3Bbitrix.sitecorporate%2C11.5.2%2CN%3Bfileman%2C12.0.1%2CN%3Bcompression%2C11.0.0%2CN%3Binside.summ2string%2C1.1.1%2CN%3Brefreshlab.err404%2C1.1.0%2CN%3Bseo%2C11.5.0%2CN%3Binfocom.like%2C1.1.1%2CN%3Biblock%2C12.0.2%2CN%3Bclouds%2C12.0.2%2CN%3Baltasib.qrcode%2C1.1.0%2CN%3Bprmedia.vkontaktecomments%2C1.0.1%2CN%3Bsearch%2C12.0.0%2CN&reqm=bitrix.sitecorporate%2Cinside.summ2string%2Crefreshlab.err404%2Cinfocom.like%2Caltasib.qrcode%2Cprmedia.vkontaktecomments%2Cinformunity.feedback
+2012-11-20 20:42:24 -  - exec CUpdateClientPartner::GetHTTPPage
+2012-11-20 20:42:24 -  - TIME GetUpdatesList(request) 0.525 sec
+2012-11-20 20:42:24 -  - exec CUpdateClientPartner::ParseServerData
+2012-11-20 20:42:35 -  - exec CUpdateClientPartner::LoadModulesUpdates
+2012-11-20 20:42:35 -  - exec CUpdateClientPartner::__CollectRequestData
+2012-11-20 20:42:35 -  - utf=Y&lang=ru&stable=Y&CANGZIP=Y&SUPD_DBS=MYSQL&XE=N&CLIENT_SITE=mytb.ru&LICENSE_KEY=X&SUPD_STS=1&SUPD_URS=0&SUPD_URSA=23&TYPENC=F&CLIENT_PHPVER=5.3.3-7%2Bsqueeze14&dbv=5.1.49&instm=main%2C12.0.3%2CN%3Bsocialservices%2C12.0.1%2CN%3Bbitrixcloud%2C12.0.2%2CN%3Bperfmon%2C12.0.2%2CN%3Bbitrix.sitecorporate%2C11.5.2%2CN%3Bfileman%2C12.0.1%2CN%3Bcompression%2C11.0.0%2CN%3Binside.summ2string%2C1.1.1%2CN%3Brefreshlab.err404%2C1.1.0%2CN%3Bseo%2C11.5.0%2CN%3Binfocom.like%2C1.1.1%2CN%3Biblock%2C12.0.2%2CN%3Bclouds%2C12.0.2%2CN%3Baltasib.qrcode%2C1.1.0%2CN%3Bprmedia.vkontaktecomments%2C1.0.1%2CN%3Bsearch%2C12.0.0%2CN&reqm=bitrix.liveapi&lim=Y
+2012-11-20 20:42:35 -  - exec CUpdateClientPartner::GetHTTPPage
+2012-11-20 20:42:35 -  - TIME LoadModulesUpdates(request) 0.487 sec
+2012-11-20 20:42:35 -  - exec CUpdateClientPartner::ParseServerData
+2012-11-20 20:42:35 - LMU01 - LoadModulesUpdates-Step
+2012-11-20 20:42:35 -  - exec CUpdateClientPartner::LoadModulesUpdates
+2012-11-20 20:42:35 -  - exec CUpdateClientPartner::__CollectRequestData
+2012-11-20 20:42:35 -  - exec CUpdateClientPartner::ParseServerData
+2012-11-20 20:42:36 - DOWNLOAD - Time - 0.30956602096558 sec
+2012-11-20 20:42:36 -  - exec CUpdateClientPartner::UnGzipArchive
+2012-11-20 20:42:36 -  - TIME UnGzipArchive 0.003 sec
+2012-11-20 20:42:36 -  - TIME UpdateStepModules 0.004 sec
+2012-11-20 20:42:36 - UPD_SUCCESS - Updated: bitrix.liveapi
+2012-11-20 20:42:36 -  - exec CUpdateClientPartner::LoadModulesUpdates
+2012-11-20 20:42:36 -  - exec CUpdateClientPartner::__CollectRequestData
+2012-11-20 20:42:36 -  - utf=Y&lang=ru&stable=Y&CANGZIP=Y&SUPD_DBS=MYSQL&XE=N&CLIENT_SITE=mytb.ru&LICENSE_KEY=X&SUPD_STS=1&SUPD_URS=0&SUPD_URSA=23&TYPENC=F&CLIENT_PHPVER=5.3.3-7%2Bsqueeze14&dbv=5.1.49&instm=main%2C12.0.3%2CN%3Bsocialservices%2C12.0.1%2CN%3Bbitrixcloud%2C12.0.2%2CN%3Bperfmon%2C12.0.2%2CN%3Bbitrix.sitecorporate%2C11.5.2%2CN%3Bfileman%2C12.0.1%2CN%3Bcompression%2C11.0.0%2CN%3Binside.summ2string%2C1.1.1%2CN%3Brefreshlab.err404%2C1.1.0%2CN%3Bseo%2C11.5.0%2CN%3Binfocom.like%2C1.1.1%2CN%3Biblock%2C12.0.2%2CN%3Bclouds%2C12.0.2%2CN%3Baltasib.qrcode%2C1.1.0%2CN%3Bbitrix.liveapi%2C1.0.9%2CN%3Bprmedia.vkontaktecomments%2C1.0.1%2CN%3Bsearch%2C12.0.0%2CN&reqm=bitrix.liveapi&lim=Y
+2012-11-20 20:42:36 -  - exec CUpdateClientPartner::GetHTTPPage
+2012-11-20 20:42:37 -  - TIME LoadModulesUpdates(request) 0.672 sec
+2012-11-20 20:42:37 -  - exec CUpdateClientPartner::ParseServerData
+2012-11-20 20:42:37 - STEP - Finish - NOUPDATES
+2012-11-20 20:42:37 - STEP - Finish - NOUPDATES
+2012-11-20 20:43:04 -  - exec CUpdateClientPartner::GetUpdatesList
+2012-11-20 20:43:04 -  - exec CUpdateClientPartner::__CollectRequestData
+2012-11-20 20:43:04 -  - utf=Y&lang=ru&stable=Y&CANGZIP=Y&SUPD_DBS=MYSQL&XE=N&CLIENT_SITE=mytb.ru&LICENSE_KEY=X&SUPD_STS=1&SUPD_URS=0&SUPD_URSA=23&TYPENC=F&CLIENT_PHPVER=5.3.3-7%2Bsqueeze14&dbv=5.1.49&instm=main%2C12.0.3%2CN%3Bsocialservices%2C12.0.1%2CN%3Bbitrixcloud%2C12.0.2%2CN%3Bperfmon%2C12.0.2%2CN%3Bbitrix.sitecorporate%2C11.5.2%2CN%3Bfileman%2C12.0.1%2CN%3Bcompression%2C11.0.0%2CN%3Binside.summ2string%2C1.1.1%2CN%3Brefreshlab.err404%2C1.1.0%2CN%3Bseo%2C11.5.0%2CN%3Binfocom.like%2C1.1.1%2CN%3Biblock%2C12.0.2%2CN%3Bclouds%2C12.0.2%2CN%3Baltasib.qrcode%2C1.1.0%2CN%3Bbitrix.liveapi%2C1.0.9%2CN%3Bprmedia.vkontaktecomments%2C1.0.1%2CN%3Bsearch%2C12.0.0%2CN&reqm=bitrix.sitecorporate%2Cinside.summ2string%2Crefreshlab.err404%2Cinfocom.like%2Caltasib.qrcode%2Cbitrix.liveapi%2Cprmedia.vkontaktecomments%2Cinformunity.feedback
+2012-11-20 20:43:04 -  - exec CUpdateClientPartner::GetHTTPPage
+2012-11-20 20:43:05 -  - TIME GetUpdatesList(request) 0.683 sec
+2012-11-20 20:43:05 -  - exec CUpdateClientPartner::ParseServerData
+2012-11-20 20:43:10 -  - exec CUpdateClientPartner::LoadModulesUpdates
+2012-11-20 20:43:10 -  - exec CUpdateClientPartner::__CollectRequestData
+2012-11-20 20:43:10 -  - utf=Y&lang=ru&stable=Y&CANGZIP=Y&SUPD_DBS=MYSQL&XE=N&CLIENT_SITE=mytb.ru&LICENSE_KEY=X&SUPD_STS=1&SUPD_URS=0&SUPD_URSA=23&TYPENC=F&CLIENT_PHPVER=5.3.3-7%2Bsqueeze14&dbv=5.1.49&instm=main%2C12.0.3%2CN%3Bsocialservices%2C12.0.1%2CN%3Bbitrixcloud%2C12.0.2%2CN%3Bperfmon%2C12.0.2%2CN%3Bbitrix.sitecorporate%2C11.5.2%2CN%3Bfileman%2C12.0.1%2CN%3Bcompression%2C11.0.0%2CN%3Binside.summ2string%2C1.1.1%2CN%3Brefreshlab.err404%2C1.1.0%2CN%3Bseo%2C11.5.0%2CN%3Binfocom.like%2C1.1.1%2CN%3Biblock%2C12.0.2%2CN%3Bclouds%2C12.0.2%2CN%3Baltasib.qrcode%2C1.1.0%2CN%3Bbitrix.liveapi%2C1.0.9%2CN%3Bprmedia.vkontaktecomments%2C1.0.1%2CN%3Bsearch%2C12.0.0%2CN&reqm=informunity.feedback&lim=Y
+2012-11-20 20:43:10 -  - exec CUpdateClientPartner::GetHTTPPage
+2012-11-20 20:43:11 -  - TIME LoadModulesUpdates(request) 0.836 sec
+2012-11-20 20:43:11 -  - exec CUpdateClientPartner::ParseServerData
+2012-11-20 20:43:11 - LMU01 - LoadModulesUpdates-Step
+2012-11-20 20:43:11 -  - exec CUpdateClientPartner::GetUpdatesList
+2012-11-20 20:43:11 -  - exec CUpdateClientPartner::__CollectRequestData
+2012-11-20 20:43:11 -  - utf=Y&lang=ru&stable=Y&CANGZIP=Y&SUPD_DBS=MYSQL&XE=N&CLIENT_SITE=mytb.ru&LICENSE_KEY=X&SUPD_STS=1&SUPD_URS=0&SUPD_URSA=23&TYPENC=F&CLIENT_PHPVER=5.3.3-7%2Bsqueeze14&dbv=5.1.49&instm=main%2C12.0.3%2CN%3Bsocialservices%2C12.0.1%2CN%3Bbitrixcloud%2C12.0.2%2CN%3Bperfmon%2C12.0.2%2CN%3Bbitrix.sitecorporate%2C11.5.2%2CN%3Bfileman%2C12.0.1%2CN%3Bcompression%2C11.0.0%2CN%3Binside.summ2string%2C1.1.1%2CN%3Brefreshlab.err404%2C1.1.0%2CN%3Bseo%2C11.5.0%2CN%3Binfocom.like%2C1.1.1%2CN%3Biblock%2C12.0.2%2CN%3Bclouds%2C12.0.2%2CN%3Baltasib.qrcode%2C1.1.0%2CN%3Bbitrix.liveapi%2C1.0.9%2CN%3Bprmedia.vkontaktecomments%2C1.0.1%2CN%3Bsearch%2C12.0.0%2CN&reqm=bitrix.sitecorporate%2Cinside.summ2string%2Crefreshlab.err404%2Cinfocom.like%2Caltasib.qrcode%2Cbitrix.liveapi%2Cprmedia.vkontaktecomments
+2012-11-20 20:43:11 -  - exec CUpdateClientPartner::GetHTTPPage
+2012-11-20 20:43:11 -  - TIME GetUpdatesList(request) 0.298 sec
+2012-11-20 20:43:11 -  - exec CUpdateClientPartner::ParseServerData
+2012-11-20 20:43:26 -  - exec CUpdateClientPartner::GetUpdatesList
+2012-11-20 20:43:26 -  - exec CUpdateClientPartner::__CollectRequestData
+2012-11-20 20:43:26 -  - utf=Y&lang=ru&stable=Y&CANGZIP=Y&SUPD_DBS=MYSQL&XE=N&CLIENT_SITE=mytb.ru&LICENSE_KEY=X&SUPD_STS=1&SUPD_URS=0&SUPD_URSA=23&TYPENC=F&CLIENT_PHPVER=5.3.3-7%2Bsqueeze14&dbv=5.1.49&instm=main%2C12.0.3%2CN%3Bsocialservices%2C12.0.1%2CN%3Bbitrixcloud%2C12.0.2%2CN%3Bperfmon%2C12.0.2%2CN%3Bbitrix.sitecorporate%2C11.5.2%2CN%3Bfileman%2C12.0.1%2CN%3Bcompression%2C11.0.0%2CN%3Binside.summ2string%2C1.1.1%2CN%3Brefreshlab.err404%2C1.1.0%2CN%3Bseo%2C11.5.0%2CN%3Binfocom.like%2C1.1.1%2CN%3Biblock%2C12.0.2%2CN%3Bclouds%2C12.0.2%2CN%3Baltasib.qrcode%2C1.1.0%2CN%3Bbitrix.liveapi%2C1.0.9%2CN%3Bprmedia.vkontaktecomments%2C1.0.1%2CN%3Bsearch%2C12.0.0%2CN&reqm=bitrix.sitecorporate%2Cinside.summ2string%2Crefreshlab.err404%2Cinfocom.like%2Caltasib.qrcode%2Cbitrix.liveapi%2Cprmedia.vkontaktecomments&fullmoduleinfo=Y
+2012-11-20 20:43:26 -  - exec CUpdateClientPartner::GetHTTPPage
+2012-11-20 20:43:26 -  - TIME GetUpdatesList(request) 0.579 sec
+2012-11-20 20:43:26 -  - exec CUpdateClientPartner::ParseServerData
+2012-11-20 20:46:20 -  - exec CUpdateClientPartner::GetUpdatesList
+2012-11-20 20:46:20 -  - exec CUpdateClientPartner::__CollectRequestData
+2012-11-20 20:46:20 -  - utf=Y&lang=ru&stable=Y&CANGZIP=Y&SUPD_DBS=MYSQL&XE=N&CLIENT_SITE=mytb.ru&LICENSE_KEY=X&SUPD_STS=1&SUPD_URS=0&SUPD_URSA=23&TYPENC=F&CLIENT_PHPVER=5.3.3-7%2Bsqueeze14&dbv=5.1.49&instm=main%2C12.0.3%2CN%3Bsocialservices%2C12.0.1%2CN%3Bbitrixcloud%2C12.0.2%2CN%3Bperfmon%2C12.0.2%2CN%3Bbitrix.sitecorporate%2C11.5.2%2CN%3Bfileman%2C12.0.1%2CN%3Bcompression%2C11.0.0%2CN%3Binside.summ2string%2C1.1.1%2CN%3Brefreshlab.err404%2C1.1.0%2CN%3Bseo%2C11.5.0%2CN%3Binfocom.like%2C1.1.1%2CN%3Biblock%2C12.0.2%2CN%3Bclouds%2C12.0.2%2CN%3Baltasib.qrcode%2C1.1.0%2CN%3Bbitrix.liveapi%2C1.0.9%2CN%3Bprmedia.vkontaktecomments%2C1.0.1%2CN%3Bsearch%2C12.0.0%2CN&reqm=bitrix.sitecorporate%2Cinside.summ2string%2Crefreshlab.err404%2Cinfocom.like%2Caltasib.qrcode%2Cbitrix.liveapi%2Cprmedia.vkontaktecomments&fullmoduleinfo=Y
+2012-11-20 20:46:20 -  - exec CUpdateClientPartner::GetHTTPPage
+2012-11-20 20:46:21 -  - TIME GetUpdatesList(request) 0.63 sec
+2012-11-20 20:46:21 -  - exec CUpdateClientPartner::ParseServerData

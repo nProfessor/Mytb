@@ -60,7 +60,7 @@ else
 				else if($io->FileExists($DOC_ROOT.$pathto))
 				{
 					$strWarning .= GetMessage("FILEMAN_FILEUPLOAD_FILE_EXISTS1")." \"".$pathto."\" ".GetMessage("FILEMAN_FILEUPLOAD_FILE_EXISTS2").".\n";
-				}				
+				}
 				elseif(!$USER->IsAdmin() && (HasScriptExtension($pathto) || substr(CFileman::GetFileName($pathto), 0, 1)=="."))
 				{
 					$strWarning .= GetMessage("FILEMAN_FILEUPLOAD_PHPERROR")." \"".$pathto."\".\n";
@@ -77,7 +77,7 @@ else
 						if ($quota->checkDiskQuota(array("FILE_SIZE" => $size)))
 							$bQuota = true;
 					}
-					
+
 					if ($bQuota)
 					{
 						if(!$io->Copy($arFile["tmp_name"], $DOC_ROOT.$pathto))
@@ -88,8 +88,8 @@ else
 						$f->MarkWritable();
 						$module_id = 'fileman';
 						if(COption::GetOptionString($module_id, "log_page", "Y")=="Y")
-						{	
-							$res_log['path'] = substr($pathto, 1);		
+						{
+							$res_log['path'] = substr($pathto, 1);
 							CEventLog::Log(
 								"content",
 								"FILE_ADD",
@@ -135,10 +135,12 @@ require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_aft
 	<script>
 	function NewFileName(ob)
 	{
-		var str_filename;
-		var filename;
-		var str_file = ob.value;
-		var num = ob.name;
+		var
+			str_filename,
+			filename,
+			str_file = ob.value,
+			num = ob.name;
+
 		num  = num.substr(num.lastIndexOf("_")+1);
 		str_file = str_file.replace(/\\/g, '/');
 		filename = str_file.substr(str_file.lastIndexOf("/")+1);
@@ -146,24 +148,24 @@ require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_aft
 		if(document.ffilemanupload.nums.value==num)
 		{
 			num++;
-			var tbl = document.getElementById("t");
+			var tbl = BX("bx-upload-tbl");
 			var cnt = tbl.rows.length;
 			var oRow = tbl.insertRow(cnt);
 			var oCell = oRow.insertCell(0);
-			oCell.align = 'center';
-			oCell.className = 'tablebody1';
-			oCell.innerHTML = '<font class="tablebodytext"><input type="text" class="typeinput" name="filename_'+num+'" size="30" maxlength="255" value="">';
+			oCell.className = "adm-detail-content-cell-l";
+			oCell.innerHTML = '<input type="text" name="filename_'+num+'" size="30" maxlength="255" value="">';
 			var oCell = oRow.insertCell(1);
-			oCell.align = 'center';
-			oCell.className = 'tablebody3';
-			oCell.innerHTML = '<font class="tablebodytext"><input type="file" class="typeinput" name="file_'+num+'" size="30" maxlength="255" value="" onChange="NewFileName(this)">';
+			oCell.className = "adm-detail-content-cell-r";
+			oCell.innerHTML = '<input type="file" name="file_'+num+'" size="30" maxlength="255" value="" onChange="NewFileName(this)">';
 
 			document.ffilemanupload.nums.value = num;
 		}
+
+		BX.adminPanel.modifyFormElements(BX("bx-upload-tbl"));
 	}
 	</script>
 	<form method="POST" action="<?echo $APPLICATION->GetCurPage()."?".$addUrl."&site=".$site."&path=".UrlEncode($path);?>" name="ffilemanupload" enctype="multipart/form-data">
-	<input type="hidden" name="logical" value="<?=htmlspecialchars($logical)?>">
+	<input type="hidden" name="logical" value="<?=htmlspecialcharsbx($logical)?>">
 	<?echo GetFilterHiddens("filter_");?>
 	<input type="hidden" name="save" value="Y">
 	<?=bitrix_sessid_post()?>
@@ -178,20 +180,22 @@ require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_aft
 	?>
 
 	<tr><td colspan="2" align="left">
-		<table id="t"><tr><td>
-			<?echo GetMessage("FILEMAN_FILEUPLOAD_NAME")?>
-		</td>
-		<td>
-			<?echo GetMessage("FILEMAN_FILEUPLOAD_FILE")?>
-		</td>
-		</tr>
 		<input type="hidden" name="nums" value="5">
+		<table id="bx-upload-tbl">
+			<tr class="heading">
+				<td style="text-align: right!important;">
+					<span style="display: inline-block; width: 200px; text-align: left;"><?= GetMessage("FILEMAN_FILEUPLOAD_NAME")?></span>
+				</td>
+				<td style="text-align: left!important;">
+					<?= GetMessage("FILEMAN_FILEUPLOAD_FILE")?>
+				</td class="adm-detail-content-cell-r">
+			</tr>
 		<?for($i=1; $i<=5; $i++):?>
 			<tr>
-			<td>
+			<td class="adm-detail-content-cell-l">
 				<input type="text" name="filename_<?echo $i?>" size="30" maxlength="255" value="">
 			</td>
-			<td>
+			<td class="adm-detail-content-cell-r">
 				<input type="file" name="file_<?echo $i?>" size="30" maxlength="255" value="" onChange="NewFileName(this)">
 			</td>
 			</tr>

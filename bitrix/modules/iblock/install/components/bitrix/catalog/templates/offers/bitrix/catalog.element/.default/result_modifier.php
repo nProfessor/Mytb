@@ -109,7 +109,7 @@ if($arParams["LINK_IBLOCK_ID"] && $arParams["LINK_PROPERTY_SID"] && count($arRes
 			{
 				$arItem["PRICE_MATRIX"] = CatalogGetPriceTableEx($arElement["ID"], 0, $arPriceTypeID, 'Y', $arResult['CONVERT_CURRENCY']);
 				foreach($arItem["PRICE_MATRIX"]["COLS"] as $keyColumn=>$arColumn)
-					$arItem["PRICE_MATRIX"]["COLS"][$keyColumn]["NAME_LANG"] = htmlspecialchars($arColumn["NAME_LANG"]);
+					$arItem["PRICE_MATRIX"]["COLS"][$keyColumn]["NAME_LANG"] = htmlspecialcharsbx($arColumn["NAME_LANG"]);
 			}
 			else
 			{
@@ -124,8 +124,8 @@ if($arParams["LINK_IBLOCK_ID"] && $arParams["LINK_PROPERTY_SID"] && count($arRes
 		}
 		$arItem["CAN_BUY"] = CIBlockPriceTools::CanBuy($arParams["LINK_IBLOCK_ID"], $arResult["CAT_PRICES"], $arElement);
 
-		$arItem["BUY_URL"] = htmlspecialchars($GLOBALS["APPLICATION"]->GetCurPageParam($arParams["ACTION_VARIABLE"]."=BUY&".$arParams["PRODUCT_ID_VARIABLE"]."=".$arItem["ID"], array($arParams["PRODUCT_ID_VARIABLE"], $arParams["ACTION_VARIABLE"])));
-		$arItem["ADD_URL"] = htmlspecialchars($GLOBALS["APPLICATION"]->GetCurPageParam($arParams["ACTION_VARIABLE"]."=ADD2BASKET&".$arParams["PRODUCT_ID_VARIABLE"]."=".$arItem["ID"], array($arParams["PRODUCT_ID_VARIABLE"], $arParams["ACTION_VARIABLE"])));
+		$arItem["BUY_URL"] = htmlspecialcharsbx($GLOBALS["APPLICATION"]->GetCurPageParam($arParams["ACTION_VARIABLE"]."=BUY&".$arParams["PRODUCT_ID_VARIABLE"]."=".$arItem["ID"], array($arParams["PRODUCT_ID_VARIABLE"], $arParams["ACTION_VARIABLE"])));
+		$arItem["ADD_URL"] = htmlspecialcharsbx($GLOBALS["APPLICATION"]->GetCurPageParam($arParams["ACTION_VARIABLE"]."=ADD2BASKET&".$arParams["PRODUCT_ID_VARIABLE"]."=".$arItem["ID"], array($arParams["PRODUCT_ID_VARIABLE"], $arParams["ACTION_VARIABLE"])));
 
 		if ('Y' == $arParams['CONVERT_CURRENCY'])
 		{

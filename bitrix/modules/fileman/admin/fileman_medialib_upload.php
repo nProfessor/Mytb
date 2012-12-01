@@ -312,9 +312,7 @@ elseif(isset($_GET['action']) && $_GET['action'] == 'postsave' && check_bitrix_s
 }
 else // ***************************** Show upploader  **************************
 {
-	?><script type="text/javascript" src="/bitrix/image_uploader/iuembed.js"></script><?
-	include_once($_SERVER['DOCUMENT_ROOT']."/bitrix/image_uploader/version.php");
-	include_once($_SERVER['DOCUMENT_ROOT']."/bitrix/image_uploader/localization.php");
+	$APPLICATION->AddHeadScript('/bitrix/image_uploader/iuembed.js');
 
 	$APPLICATION->SetTitle(GetMessage('FM_ML_UPL_TITLE1'));
 	require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_after.php");
@@ -353,6 +351,11 @@ else // ***************************** Show upploader  **************************
 </div>
 </form>
 
+<?
+include_once($_SERVER['DOCUMENT_ROOT']."/bitrix/image_uploader/version.php");
+include_once($_SERVER['DOCUMENT_ROOT']."/bitrix/image_uploader/localization.php");
+?>
+
 <?= BeginNote().GetMessage('FM_ML_UPL_NOTICE').EndNote();?>
 
 <div style="border: 1px solid #94918C; float: left; padding: 5px;">
@@ -369,7 +372,7 @@ function itemColsSelChange2(pEl, e)
 $strFileMask = '';
 $arExt = CMedialib::GetMediaExtentions(false);
 for ($i = 0, $l = count($arExt); $i < $l; $i++)
-	$strFileMask .= '*.'.CUtil::JSEscape(strtolower($arExt[$i])).';';	
+	$strFileMask .= '*.'.CUtil::JSEscape(strtolower($arExt[$i])).';';
 $strFileMask = trim($strFileMask, ' ;');
 
 $str = '';

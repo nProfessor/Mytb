@@ -243,10 +243,10 @@ function GetIBlockTypeID($IBLOCK_ID)
 	if(!array_key_exists($IBLOCK_ID, $cache))
 	{
 		$rsIBlock = CIBlock::GetByID($IBLOCK_ID);
-		if(!($cache[$ID] = $rsIBlock->GetNext()))
-			$cache[$ID] = array("IBLOCK_TYPE_ID"=>"");
+		if(!($cache[$IBLOCK_ID] = $rsIBlock->GetNext()))
+			$cache[$IBLOCK_ID] = array("IBLOCK_TYPE_ID"=>"");
 	}
-	return $cache[$ID]["IBLOCK_TYPE_ID"];
+	return $cache[$IBLOCK_ID]["IBLOCK_TYPE_ID"];
 }
 
 if($IBLOCK_ID <= 0)
@@ -269,14 +269,14 @@ while($arRes = $rsData->GetNext())
 
 	$row =& $lAdmin->AddRow($arRes["ID"], $arRes);
 
-	$row->AddViewField("NAME", $arRes["NAME"]."<input type=hidden name='n".$arRes["ID"]."' id='name_".$arRes["ID"]."' value='".CUtil::JSEscape(htmlspecialchars($arRes["NAME"]))."'>");
+	$row->AddViewField("NAME", $arRes["NAME"]."<input type=hidden name='n".$arRes["ID"]."' id='name_".$arRes["ID"]."' value='".CUtil::JSEscape(htmlspecialcharsbx($arRes["NAME"]))."'>");
 	$row->AddViewField("USER_NAME", "[<a target=\"_blank\" href=\"user_edit.php?lang=".LANGUAGE_ID."&ID=".$arRes["MODIFIED_BY"]."\">".$arRes["MODIFIED_BY"]."</a>]&nbsp;".$arRes["USER_NAME"]);
 	$row->AddCheckField("ACTIVE");
 	$row->AddViewField("CREATED_USER_NAME", "[<a target=\"_blank\" href=\"user_edit.php?lang=".LANGUAGE_ID."&ID=".$arRes["CREATED_BY"]."\">".$arRes["CREATED_BY"]."</a>]&nbsp;".$arRes["CREATED_USER_NAME"]);
 	$row->AddViewField("PREVIEW_PICTURE", CFile::ShowFile($arRes["PREVIEW_PICTURE"], 100000, 50, 50, true));
 	$row->AddViewField("DETAIL_PICTURE", CFile::ShowFile($arRes["DETAIL_PICTURE"], 100000, 50, 50, true));
 
-	$row->AddViewField("WF_STATUS_ID", htmlspecialchars(CIBlockElement::WF_GetStatusTitle($arRes["WF_STATUS_ID"]))."<input type=hidden name='n".$arRes["ID"]."' value='".CUtil::JSEscape($arRes["NAME"])."'>");
+	$row->AddViewField("WF_STATUS_ID", htmlspecialcharsbx(CIBlockElement::WF_GetStatusTitle($arRes["WF_STATUS_ID"]))."<input type=hidden name='n".$arRes["ID"]."' value='".CUtil::JSEscape($arRes["NAME"])."'>");
 	$row->AddViewField("LOCKED_USER_NAME", '&nbsp;<a href="user_edit.php?lang='.LANG.'&ID='.$arRes["WF_LOCKED_BY"].'" title="'.GetMessage("IBLOCK_ELSEARCH_USERINFO").'">'.$arRes["LOCKED_USER_NAME"].'</a>');
 
 	foreach($arSelectedProps as $aProp)
@@ -298,7 +298,7 @@ while($arRes = $rsData->GetNext())
 					$dbPropEl = CIBlockSection::GetList(Array(), Array("ID"=>$arRes["PROPERTY_".$aProp['ID']]));
 					if($arPropEl = $dbPropEl->GetNext())
 					{
-						$PropV = $arPropEl['NAME'].' [<a href="iblock_section_edit.php?type='.GetIBlockTypeID($arPropEl['IBLOCK_ID']).'&IBLOCK_ID='.$arPropEl['IBLOCK_ID'].'&ID='.$arPropEl['ID'].'&amp;lang='.$lang.'" title="'.GetMessage("IBLOCK_ELSEARCH_SECTION_EDIT").'">'.$arPropEl['ID'].'</a>]';
+						$PropV = $arPropEl['NAME'].' [<a href="'.htmlspecialcharsbx(CIBlock::GetAdminSectionEditLink($arPropEl['IBLOCK_ID'], $arPropEl['ID'])).'" title="'.GetMessage("IBLOCK_ELSEARCH_SECTION_EDIT").'">'.$arPropEl['ID'].'</a>]';
 					}
 				}
 				$row->AddViewField("PROPERTY_".$aProp['ID'], $PropV);
@@ -307,7 +307,7 @@ while($arRes = $rsData->GetNext())
 			{
 				if($t = GetElementName($arRes["PROPERTY_".$aProp['ID']]))
 				{
-					$row->AddViewField("PROPERTY_".$aProp['ID'], $t['NAME'].' [<a href="iblock_element_edit.php?type='.GetIBlockTypeID($t['IBLOCK_ID']).'&IBLOCK_ID='.$t['IBLOCK_ID'].'&ID='.$t['ID'].'&amp;lang='.$lang.'" title="'.GetMessage("IBLOCK_ELSEARCH_ELEMENT_EDIT").'">'.$t['ID'].'</a>]');
+					$row->AddViewField("PROPERTY_".$aProp['ID'], $t['NAME'].' [<a href="'.htmlspecialcharsbx(CIBlock::GetAdminElementEditLink($t['IBLOCK_ID'], $t['ID'])).'" title="'.GetMessage("IBLOCK_ELSEARCH_ELEMENT_EDIT").'">'.$t['ID'].'</a>]');
 				}
 			}
 		}
@@ -326,13 +326,13 @@ while($arRes = $rsData->GetNext())
 				{
 					$t = CIBlockSection::GetByID($arPVals['VALUE']);
 					if($t = $t->GetNext())
-						$res = $t['NAME'].' [<a href="iblock_section_edit.php?type='.GetIBlockTypeID($t['IBLOCK_ID']).'&IBLOCK_ID='.$t['IBLOCK_ID'].'&ID='.$t['ID'].'&amp;lang='.$lang.'" title="'.GetMessage("IBLOCK_ELSEARCH_SECTION_EDIT").'">'.$t['ID'].'</a>]';
+						$res = $t['NAME'].' [<a href="'.htmlspecialcharsbx(CIBlock::GetAdminSectionEditLink($t['IBLOCK_ID'], $t['ID'])).'" title="'.GetMessage("IBLOCK_ELSEARCH_SECTION_EDIT").'">'.$t['ID'].'</a>]';
 				}
 				elseif($aProp['PROPERTY_TYPE']=='E')
 				{
 					if($t = GetElementName($arPVals['VALUE']))
 					{
-						$res = $t['NAME'].' [<a href="iblock_element_edit.php?type='.GetIBlockTypeID($t['IBLOCK_ID']).'&IBLOCK_ID='.$t['IBLOCK_ID'].'&ID='.$t['ID'].'&amp;lang='.$lang.'" title="'.GetMessage("IBLOCK_ELSEARCH_ELEMENT_EDIT").'">'.$t['ID'].'</a>]';
+						$res = $t['NAME'].' [<a href="'.htmlspecialcharsbx(CIBlock::GetAdminElementEditLink($t['IBLOCK_ID'], $t['ID'])).'" title="'.GetMessage("IBLOCK_ELSEARCH_ELEMENT_EDIT").'">'.$t['ID'].'</a>]';
 					}
 				}
 				else
@@ -435,28 +435,27 @@ $oFilter = new CAdminFilter($sTableID."_filter", $arFindFields);
 $oFilter->Begin();
 
 ?>
-<script language="JavaScript">
-<!--
+<script type="text/javascript">
 function SelEl(id, name)
 {
-<?php
+<?
 	if ('' != $lookup)
 	{
 		if ('' != $m)
 		{
-			?>window.opener.<?php echo $lookup; ?>.AddValue(id);<?php
+			?>window.opener.<? echo $lookup; ?>.AddValue(id);<?
 		}
 		else
 		{
 			?>
-	window.opener.<?php echo $lookup; ?>.AddValue(id);
-	window.close();<?php
+	window.opener.<? echo $lookup; ?>.AddValue(id);
+	window.close();<?
 		}
 	}
 	else
 	{
 		?><?if($m):?>
-	window.opener.InS<?echo md5($n)?>(id, name);
+	window.opener.InS<? echo md5($n)?>(id, name);
 	<?else:?>
 	el = window.opener.document.getElementById('<?echo $n?>[<?echo $k?>]');
 	if(!el)
@@ -470,10 +469,12 @@ function SelEl(id, name)
 	el = window.opener.document.getElementById('sp_<?echo md5($n)?>_<?echo $k?>');
 	if(!el)
 		el = window.opener.document.getElementById('sp_<?echo $n?>');
+	if(!el)
+		el = window.opener.document.getElementById('<?echo $n?>_link');
 	if(el)
 		el.innerHTML = name;
 	window.close();
-		<?endif;?><?php
+		<?endif;?><?
 	}
 	?>
 }
@@ -507,8 +508,6 @@ function SelAll()
 		window.close();
 	}
 }
-
-//-->
 </script>
 	<tr>
 		<td><b><?echo GetMessage("IBLOCK_ELSEARCH_IBLOCK")?></b></td>
@@ -527,7 +526,7 @@ function SelAll()
 	</tr>
 
 	<tr>
-		<td  nowrap><? echo GetMessage("IBLOCK_FIELD_TIMESTAMP_X")." (".CLang::GetDateFormat("SHORT")."):"?></td>
+		<td  nowrap><? echo GetMessage("IBLOCK_FIELD_TIMESTAMP_X").":"?></td>
 		<td nowrap><? echo CalendarPeriod("filter_timestamp_from", htmlspecialcharsex($filter_timestamp_from), "filter_timestamp_to", htmlspecialcharsex($filter_timestamp_to), "form1")?></td>
 	</tr>
 

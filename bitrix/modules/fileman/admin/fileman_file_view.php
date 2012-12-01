@@ -134,7 +134,7 @@ $fileTypeParent = $arFilemanPredifinedFileTypes[CFileMan::GetFileTypeEx($path)][
 	?>
 	<tr>
 		<td><?=GetMessage("FILEMAN_FILEVIEW_NAME")?></td>
-		<td><?=htmlspecialchars($arParsedPath["LAST"])?></td>
+		<td><?=htmlspecialcharsbx($arParsedPath["LAST"])?></td>
 	</tr>
 	<tr>
 		<td><?=GetMessage("FILEMAN_FILEVIEW_TYPE")?></td>
@@ -209,7 +209,7 @@ $fileTypeParent = $arFilemanPredifinedFileTypes[CFileMan::GetFileTypeEx($path)][
 	<?elseif($fileTypeParent=="image"):?>
 		<?
 			$rsSite = CSite::GetByID($LID); //http://jabber.bx/view.php?id=7726
-			$arSite = $rsSite->GetNext();	
+			$arSite = $rsSite->GetNext();
 
 			if(isset($arSite['SITE_URL']))
 				$path = $arSite['SITE_URL'].$path;

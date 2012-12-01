@@ -27,7 +27,7 @@ $MESS["CLO_STORAGE_LIST_MOVE_IN_PROGRESS"] = "Files are now being moved to the s
 $MESS["CLO_STORAGE_LIST_MOVE_DONE"] = "Files has been moved to the storage.";
 $MESS["CLO_STORAGE_LIST_MOVE_PROGRESS"] = "
 Total files processed: <b>#total#</b>.<br>
-Moved files: <b>#moved# (#bytes#)</b>, skipped files: <b>#skiped#<b>.
+Moved files: <b>#moved# (#bytes#)</b>, skipped files: <b>#skiped#</b>.
 ";
 $MESS["CLO_STORAGE_LIST_STOP"] = "Stop";
 $MESS["CLO_STORAGE_LIST_DOWNLOAD_IN_PROGRESS"] = "Files are now being downloaded from the storage.";

@@ -8,6 +8,8 @@ if (!check_bitrix_sessid())
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/fileman/include.php");
 IncludeModuleLangFile(__FILE__);
 
+CJSCore::Init(array("admin_interface"));
+
 define("FROMDIALOGS", true);
 ?>
 <script>
@@ -148,6 +150,9 @@ function OnLoad()
 		pAnchorSelect.options.add(new Option('<?= GetMessage("FILEMAN_ED_NOANCHORS")?>', '', true, true));
 		pAnchorSelect.disabled = true;
 	}
+
+	if (BX.browser.IsIE())
+		pAnchorSelect.style.width = "220px";
 
 	var tip = pObj.pMainObj._dialogLinkTip || "t1";
 	var selectedText = false;
@@ -509,7 +514,7 @@ function SetUrl(filename, path, site)
 	<tr class="bx-link-t3">
 		<td class="bx-par-title"><label for="bx_url_3"><?= GetMessage("FILEMAN_ED_LINK_ACH")?></label></td>
 		<td class="bx-par-val">
-			<select id="bx_url_3"></select>
+			<select id="bx_url_3" style="max-width: 240px;"></select>
 		</td>
 	</tr>
 
@@ -1212,13 +1217,13 @@ function OnSave()
 		<td><?= GetMessage("FILEMAN_ED_FF")?> "<?= GetMessage("FILEMAN_ED_SAVE")?>":</td>
 	</tr>
 	<tr>
-		<td><iframe id="bx_word_text" src="javascript:void(0)" style="width:100%; height:150px; border:1px solid #CCCCCC;"></iframe></td>
+		<td><iframe id="bx_word_text" src="javascript:void(0)" style="width:98%; height:150px; border:1px solid #CCCCCC;"></iframe></td>
 	</tr>
 	<tr>
 		<td><?= GetMessage("FILEMAN_ED_HTML_AFTER_CLEANING")?></td>
 	</tr>
 	<tr>
-		<td><textarea id="bx_word_sourse" style="width:100%; height:100px; border:1px solid #CCCCCC;" readonly="true"></textarea></td>
+		<td><textarea id="bx_word_sourse" style="width:96%; height:100px; border:1px solid #CCCCCC;" readonly="true"></textarea></td>
 	</tr>
 	<tr>
 		<td>
@@ -1240,11 +1245,11 @@ var finput = false;
 function OnLoad()
 {
 	window.oBXEditorDialog.SetTitle('<?=GetMessage("FILEMAN_ED_EDITOR_PAGE_PROP")?>');
-	BX.addClass(window.oBXEditorDialog.PARTS.CONTENT, "bxed-dialog-props");
+	BX.addClass(window.oBXEditorDialog.PARTS.CONTENT_DATA, "bxed-dialog-props");
 
 	BX('BX_dialog_title').value = BX('title').value;
 	BX("BX_more_prop_but").onclick = function(e) {AppendRow('', '');};
-	var tag_property = "<? if(CModule::IncludeModule("search")){echo htmlspecialchars(COption::GetOptionString("search", "page_tag_property"));}?>";
+	var tag_property = "<? if(CModule::IncludeModule("search")){echo htmlspecialcharsbx(COption::GetOptionString("search", "page_tag_property"));}?>";
 
 	var i, code, val, name, cnt = parseInt(BX("maxind").value)+1;
 	for(i=0; i<cnt; i++)
@@ -1521,6 +1526,7 @@ function OnLoad()
 <script>
 function OnLoad()
 {
+	window.oBXEditorDialog.PARTS.CONTENT_DATA.style.height = 'auto';
 	window.oBXEditorDialog.SetTitle('<?=GetMessage("FILEMAN_ED_SETTINGS")?>');
 	if (!pObj.params.lightMode)
 	{
@@ -1817,7 +1823,7 @@ function OnSave()
 
 	$arTabs[] = array("DIV" => "__bx_set_3_add_props", "TAB" => GetMessage("FILEMAN_ED_ADDITIONAL_PROPS"), "ICON" => "", "TITLE" => GetMessage("FILEMAN_ED_ADDITIONAL_PROPS"), "ONSELECT" => "window.oBXEditorDialog.adjustSizeEx();");
 
-$tabControlDialog = new CAdmintabControl("tabControlDialog", $arTabs, false, true);
+$tabControlDialog = new CAdmintabControl("tabControlDialog_opt", $arTabs, false, true);
 $tabControlDialog->Begin();
 $tabControlDialog->BeginNextTab();?>
 <tr><td></td></tr>
@@ -1833,6 +1839,7 @@ $tabControlDialog->BeginNextTab();?>
 // F L A S H
 function OnLoad()
 {
+	window.oBXEditorDialog.PARTS.CONTENT_DATA.style.height = 'auto';
 	// ************************ TAB #1: Base params *************************************
 	var oDiv = BX("__bx_base_params");
 	oDiv.style.padding = "5px";
@@ -2149,7 +2156,7 @@ CAdminFileDialog::ShowScript(Array
 	)
 );
 
-$tabControlDialog = new CAdminTabControl("tabControlDialog", array(
+$tabControlDialog = new CAdminTabControl("tabControlDialog_flash", array(
 	array("DIV" => "__bx_base_params", "TAB" => GetMessage("FILEMAN_ED_BASE_PARAMS"), "ICON" => "", "TITLE" => GetMessage("FILEMAN_ED_BASE_PARAMS"), "ONSELECT" => "window.oBXEditorDialog.adjustSizeEx();"),
 	array("DIV" => "__bx_additional_params", "TAB" => GetMessage("FILEMAN_ED_ADD_PARAMS"), "ICON" => "", "TITLE" => GetMessage("FILEMAN_ED_ADD_PARAMS"), "ONSELECT" => "window.oBXEditorDialog.adjustSizeEx();"),
 	array("DIV" => "__bx_code", "TAB" => GetMessage("FILEMAN_ED_HTML_CODE"), "ICON" => "", "TITLE" => GetMessage("FILEMAN_ED_SWF_HTML_CODE"), "ONSELECT" => "window.oBXEditorDialog.adjustSizeEx();")
@@ -2169,6 +2176,7 @@ $tabControlDialog->Begin();?>
 <script>
 function OnLoad()
 {
+	window.oBXEditorDialog.PARTS.CONTENT_DATA.style.height = 'auto';
 	window.oBXEditorDialog.SetTitle(pObj.params.mode == 'add' ? '<?=GetMessage("FILEMAN_ED_ADD_SNIPPET")?>' : '<?=GetMessage("FILEMAN_ED_EDIT_SNIPPET")?>');
 
 	window.arBXSnippetsTaskbars = [];
@@ -2622,7 +2630,7 @@ CAdminFileDialog::ShowScript(Array
 	)
 );
 
-$tabControlDialog = new CAdmintabControl("tabControlDialog", array(
+$tabControlDialog = new CAdmintabControl("tabControlDialog_sn", array(
 	array("DIV" => "__bx_sn_base_params", "TAB"=>GetMessage("FILEMAN_ED_BASE_PARAMS"), "ICON" => "", "ONSELECT" => "window.oBXEditorDialog.adjustSizeEx();"),
 	array("DIV" => "__bx_sn_location", "TAB"=>GetMessage("FILEMAN_ED_LOCATION"), "ICON" => "", "ONSELECT" => "window.oBXEditorDialog.adjustSizeEx();"),
 	array("DIV" => "__bx_sn_additional_params", "TAB"=>GetMessage("FILEMAN_ED_ADD_PARAMS"), "ICON" => "", "ONSELECT" => "window.oBXEditorDialog.adjustSizeEx();"),
@@ -2639,11 +2647,11 @@ $tabControlDialog->BeginNextTab();?>
 
 <table id="__bx_temp_sn_base_params" class="add_snippet">
 	<tr>
-		<td align="right" style="width: 40%;"><?=GetMessage("FILEMAN_ED_TITLE")?>:<span class="required">*</span></td>
+		<td align="right" style="width: 40%;"><?=GetMessage("FILEMAN_ED_TITLE")?>:</td>
 		<td style="width: 60%;"><input id="__snippet_title" type="text" /></td>
 	</tr>
 	<tr>
-		<td align="right" valign="top"><?=GetMessage("FILEMAN_ED_CODE")?>:<span class="required">*</span></td>
+		<td align="right" valign="top"><?=GetMessage("FILEMAN_ED_CODE")?>:</td>
 		<td><textarea id="__snippet_code" rows="10"></textarea></td>
 	</tr>
 </table>
@@ -2706,29 +2714,18 @@ $tabControlDialog->BeginNextTab();?>
 <script>
 function OnLoad()
 {
-	window.oBXEditorDialog.SetTitle('<?=GetMessage("FILEMAN_ED_EDIT_HBF")?>');
+	window.oBXEditorDialog.SetTitle('<?= GetMessageJS("FILEMAN_ED_EDIT_HBF")?>');
 	// TAB #1: HEAD
+	BX.addClass(window.oBXEditorDialog.PARTS.CONTENT_DATA, "bxed-dialog");
 
 	var oDiv = BX("__bx_head");
-	BX.findChild(oDiv, {tag: 'TABLE', className: 'edit-tab-title'}, true).style.display = BX.browser.IsIE() ? "inline" : "table";
-
-	oDiv.style.padding = "5px";
-	// Insert default HEAD
-	oDiv.getElementsByTagName("TABLE")[0].rows[1].cells[0].appendChild(BX.create("DIV", {props: {title: '<?=GetMessage("FILEMAN_ED_INSERT_DEF")?>', className: "iconkit_c bx-insert-hbf"}})).onclick = insertDefault_head;
-
-	// Textarea
 	oDiv.appendChild(BX.create("TEXTAREA", {props: {id: "__bx_head_ta", value: pObj.pMainObj._head + pObj.pMainObj._body}, style: {width: "99%", height: "280px"}}));
+	oDiv.appendChild(BX.create("A", {props: {href: 'javascript: void("")', title: '<?= GetMessageJS("FILEMAN_ED_INSERT_DEF")?>'}, text: '<?= GetMessageJS("FILEMAN_ED_INSERT_DEF")?>', style: {marginTop: '13px', display: 'inline-block'}})).onclick = insertDefault_head;
 
-	// TAB #3: Footer
-	var oDiv = BX("__bx_footer");
-	BX.findChild(oDiv, {tag: 'TABLE', className: 'edit-tab-title'}, true).style.display = BX.browser.IsIE() ? "inline" : "table";
-	oDiv.style.padding = "5px";
-
-	// Insert default FOOTER
-	oDiv.getElementsByTagName("TABLE")[0].rows[1].cells[0].appendChild(BX.create("DIV", {props: {title: '<?=GetMessage("FILEMAN_ED_INSERT_DEF")?>', className: "iconkit_c bx-insert-hbf"}})).onclick = insertDefault_footer;
-
-	// Textarea
-	var oTA = oDiv.appendChild(BX.create("TEXTAREA", {props: {id: "__bx_footer_ta", value: pObj.pMainObj._footer}, style:{width: "99%", height: "280px"}}));
+	// TAB #2: Footer
+	oDiv = BX("__bx_footer");
+	oDiv.appendChild(BX.create("TEXTAREA", {props: {id: "__bx_footer_ta", value: pObj.pMainObj._footer}, style:{width: "99%", height: "280px"}}));
+	oDiv.appendChild(BX.create("A", {props: {href: 'javascript: void("")', title: '<?= GetMessageJS("FILEMAN_ED_INSERT_DEF")?>'}, text: '<?= GetMessageJS("FILEMAN_ED_INSERT_DEF")?>', style: {marginTop: '13px', display: 'inline-block'}})).onclick = insertDefault_footer;
 
 	window.oBXEditorDialog.adjustSizeEx();
 }
@@ -2778,7 +2775,7 @@ $aTabs_dialog = array(
 array("DIV" => "__bx_head", "TAB" => GetMessage("FILEMAN_ED_TOP_AREA"), "ICON" => "", "TITLE" => GetMessage("FILEMAN_ED_EDIT_HEAD"), "ONSELECT" => "window.oBXEditorDialog.adjustSizeEx();"),
 array("DIV" => "__bx_footer", "TAB" => GetMessage("FILEMAN_ED_BOTTOM_AREA"), "ICON" => "", "TITLE" => GetMessage("FILEMAN_ED_EDIT_FOOTER"), "ONSELECT" => "window.oBXEditorDialog.adjustSizeEx();")
 );
-$tabControlDialog = new CAdminTabControl("tabControlDialog", $aTabs_dialog, false, true);
+$tabControlDialog = new CAdminTabControl("tabControlDialog_templ", $aTabs_dialog, false, true);
 
 $tabControlDialog->Begin();?>
 <?$tabControlDialog->BeginNextTab();?>
@@ -2800,7 +2797,8 @@ $tabControlDialog->Begin();?>
 		CloseWaitWindow();
 		OnLoad();
 	}
-	BX.addClass(window.oBXEditorDialog.PARTS.CONTENT, "bxed-dialog");
+	BX.addClass(window.oBXEditorDialog.PARTS.CONTENT_DATA, "bxed-dialog");
+	window.oBXEditorDialog.PARTS.CONTENT_DATA.style.height = 'auto';
 
 	BX.addCustomEvent(window.oBXEditorDialog, 'onWindowUnRegister', function()
 	{

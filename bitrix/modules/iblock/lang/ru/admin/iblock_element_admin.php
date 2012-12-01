@@ -92,4 +92,7 @@ $MESS["IBEL_A_ACCESS_DENIED_STATUS"] = "У вас нет прав на реда�
 $MESS["IBEL_A_OFFERS"] = "Торговые предложения";
 $MESS["IBEL_A_DEACTIVATE"] = "Деактивировать";
 $MESS["IBEL_A_ACTIVATE"] = "Активировать";
+$MESS["IBEL_DEFAULT_VALUE"] = "по умолчанию";
+$MESS["IBEL_YES_VALUE"] = "да";
+$MESS["IBEL_NO_VALUE"] = "нет";
 ?>

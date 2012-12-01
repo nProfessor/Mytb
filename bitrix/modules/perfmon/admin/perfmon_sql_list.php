@@ -158,7 +158,7 @@ while($arRes = $rsData->NavNext(true, "f_")):
 		$html = str_replace(
 			array(" ", "\n"),
 			array(" &nbsp;", "<br>"),
-			htmlspecialchars($arRes["SQL_TEXT"])
+			htmlspecialcharsbx($arRes["SQL_TEXT"])
 		);
 	}
 
@@ -266,7 +266,7 @@ function removeTimer(p_href)
 <tr>
 	<td><b><?=GetMessage("PERFMON_SQL_FIND")?>:</b></td>
 	<td>
-		<input type="text" size="25" name="find" value="<?echo htmlspecialchars($find)?>" title="<?=GetMessage("PERFMON_SQL_FIND")?>">
+		<input type="text" size="25" name="find" value="<?echo htmlspecialcharsbx($find)?>" title="<?=GetMessage("PERFMON_SQL_FIND")?>">
 		<?
 		$arr = array(
 			"reference" => array(
@@ -284,15 +284,15 @@ function removeTimer(p_href)
 </tr>
 <tr>
 	<td><?=GetMessage("PERFMON_SQL_HIT_ID")?></td>
-	<td><input type="text" name="find_hit_id" size="47" value="<?echo htmlspecialchars($find_hit_id)?>"></td>
+	<td><input type="text" name="find_hit_id" size="47" value="<?echo htmlspecialcharsbx($find_hit_id)?>"></td>
 </tr>
 <tr>
 	<td><?=GetMessage("PERFMON_SQL_COMPONENT_ID")?></td>
-	<td><input type="text" name="find_component_id" size="47" value="<?echo htmlspecialchars($find_component_id)?>"></td>
+	<td><input type="text" name="find_component_id" size="47" value="<?echo htmlspecialcharsbx($find_component_id)?>"></td>
 </tr>
 <tr>
 	<td><?=GetMessage("PERFMON_SQL_QUERY_TIME")?></td>
-	<td><input type="text" name="find_query_time" size="7" value="<?echo htmlspecialchars($find_query_time)?>"></td>
+	<td><input type="text" name="find_query_time" size="7" value="<?echo htmlspecialcharsbx($find_query_time)?>"></td>
 </tr>
 <?
 $oFilter->Buttons(array("table_id"=>$sTableID, "url"=>$APPLICATION->GetCurPage(), "form"=>"find_form"));

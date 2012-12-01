@@ -118,7 +118,7 @@ class CUserTypeString
 		else
 			$value = "";
 		$result .= '
-		<tr valign="top">
+		<tr>
 			<td>'.GetMessage("USER_TYPE_STRING_DEFAULT_VALUE").':</td>
 			<td>
 				<input type="text" name="'.$arHtmlControl["NAME"].'[DEFAULT_VALUE]" size="20"  maxlength="225" value="'.$value.'">
@@ -132,7 +132,7 @@ class CUserTypeString
 		else
 			$value = 20;
 		$result .= '
-		<tr valign="top">
+		<tr>
 			<td>'.GetMessage("USER_TYPE_STRING_SIZE").':</td>
 			<td>
 				<input type="text" name="'.$arHtmlControl["NAME"].'[SIZE]" size="20"  maxlength="20" value="'.$value.'">
@@ -147,7 +147,7 @@ class CUserTypeString
 			$value = 1;
 		if($value < 1) $value = 1;
 		$result .= '
-		<tr valign="top">
+		<tr>
 			<td>'.GetMessage("USER_TYPE_STRING_ROWS").':</td>
 			<td>
 				<input type="text" name="'.$arHtmlControl["NAME"].'[ROWS]" size="20"  maxlength="20" value="'.$value.'">
@@ -161,7 +161,7 @@ class CUserTypeString
 		else
 			$value = 0;
 		$result .= '
-		<tr valign="top">
+		<tr>
 			<td>'.GetMessage("USER_TYPE_STRING_MIN_LEGTH").':</td>
 			<td>
 				<input type="text" name="'.$arHtmlControl["NAME"].'[MIN_LENGTH]" size="20"  maxlength="20" value="'.$value.'">
@@ -175,7 +175,7 @@ class CUserTypeString
 		else
 			$value = 0;
 		$result .= '
-		<tr valign="top">
+		<tr>
 			<td>'.GetMessage("USER_TYPE_STRING_MAX_LENGTH").':</td>
 			<td>
 				<input type="text" name="'.$arHtmlControl["NAME"].'[MAX_LENGTH]" size="20"  maxlength="20" value="'.$value.'">
@@ -189,7 +189,7 @@ class CUserTypeString
 		else
 			$value = "";
 		$result .= '
-		<tr valign="top">
+		<tr>
 			<td>'.GetMessage("USER_TYPE_STRING_REGEXP").':</td>
 			<td>
 				<input type="text" name="'.$arHtmlControl["NAME"].'[REGEXP]" size="20"  maxlength="200" value="'.$value.'">
@@ -215,6 +215,8 @@ class CUserTypeString
 		if($arUserField["ENTITY_VALUE_ID"]<1 && strlen($arUserField["SETTINGS"]["DEFAULT_VALUE"])>0)
 			$arHtmlControl["VALUE"] = htmlspecialcharsbx($arUserField["SETTINGS"]["DEFAULT_VALUE"]);
 		if($arUserField["SETTINGS"]["ROWS"] < 2)
+		{
+			$arHtmlControl["VALIGN"] = "middle";
 			return '<input type="text" '.
 				'name="'.$arHtmlControl["NAME"].'" '.
 				'size="'.$arUserField["SETTINGS"]["SIZE"].'" '.
@@ -222,7 +224,9 @@ class CUserTypeString
 				'value="'.$arHtmlControl["VALUE"].'" '.
 				($arUserField["EDIT_IN_LIST"]!="Y"? 'disabled="disabled" ': '').
 				'>';
+		}
 		else
+		{
 			return '<textarea '.
 				'name="'.$arHtmlControl["NAME"].'" '.
 				'cols="'.$arUserField["SETTINGS"]["SIZE"].'" '.
@@ -230,6 +234,7 @@ class CUserTypeString
 				($arUserField["SETTINGS"]["MAX_LENGTH"]>0? 'maxlength="'.$arUserField["SETTINGS"]["MAX_LENGTH"].'" ': '').
 				($arUserField["EDIT_IN_LIST"]!="Y"? 'disabled="disabled" ': '').
 				'>'.$arHtmlControl["VALUE"].'</textarea>';
+		}
 	}
 
 	/**

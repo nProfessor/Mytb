@@ -17,6 +17,7 @@ CREATE TABLE b_lang
 	SERVER_NAME varchar(255),
 	SITE_NAME varchar(255),
 	EMAIL varchar(255),
+	CULTURE_ID int,
 	PRIMARY KEY (LID)
 );
 
@@ -33,7 +34,22 @@ CREATE TABLE b_language
 	WEEK_START int(1) null default 1,
 	CHARSET varchar(255),
 	DIRECTION char(1) not null default 'Y',
+	CULTURE_ID int,
 	PRIMARY KEY (LID)
+);
+
+create table b_culture
+(
+	ID int not null auto_increment,
+	CODE varchar(255),
+	NAME varchar(255),
+	FORMAT_DATE varchar(255),
+	FORMAT_DATETIME varchar(255),
+	FORMAT_NAME varchar(255),
+	WEEK_START int(1) null default 1,
+	CHARSET varchar(255),
+	DIRECTION char(1) null default 'Y',
+	primary key (ID)
 );
 
 CREATE TABLE b_lang_domain
@@ -217,6 +233,7 @@ CREATE TABLE b_module_to_module
 	TO_CLASS VARCHAR(50),
 	TO_METHOD VARCHAR(50),
 	TO_METHOD_ARG varchar(255),
+	VERSION int(18) null,
 	PRIMARY KEY (ID),
 	INDEX ix_module_to_module(FROM_MODULE_ID, MESSAGE_ID, TO_MODULE_ID, TO_CLASS, TO_METHOD)
 );
@@ -283,6 +300,7 @@ CREATE TABLE b_favorite
 	USER_ID int null,
 	CODE_ID int(18),
 	COMMON char(1) not null default 'Y',
+	MENU_ID varchar(255),
 	PRIMARY KEY (ID)
 );
 
@@ -834,6 +852,10 @@ CREATE TABLE b_checklist
 	STATE longtext,
 	REPORT_COMMENT text,
 	REPORT char(1) default 'Y',
+	EMAIL varchar(50),
+	PHONE varchar(50),
+	SENDED_TO_BITRIX char(1) null default 'N',
+	HIDDEN char(1) null default 'N',
 	PRIMARY KEY (ID)
 );
 
@@ -1011,4 +1033,31 @@ CREATE TABLE b_admin_notify
 	ENABLE_CLOSE char(1) NULL default 'Y',
 	PRIMARY KEY (ID),
 	KEY IX_AD_TAG (TAG)
+);
+
+CREATE TABLE b_admin_notify_lang
+(
+	ID int(18) not null AUTO_INCREMENT,
+	NOTIFY_ID int(18) not null,
+	LID char(2) not null,
+	MESSAGE text,
+	primary key (ID),
+	index IX_ADM_NTFY_LID (LID),
+	unique IX_ADM_NTFY_LANG(NOTIFY_ID, LID)
+);
+
+CREATE TABLE b_filters
+(
+	ID int(18) not null auto_increment,
+	USER_ID int(18),
+	FILTER_ID varchar(255) not null,
+	NAME varchar(255) not null,
+	FIELDS text not null,
+	COMMON char(1),
+	PRESET char(1),
+	LANGUAGE_ID char(2),
+	PRESET_ID varchar(255) null,
+	SORT int(18) null,
+	SORT_FIELD varchar(255) null,
+	PRIMARY KEY (ID)
 );

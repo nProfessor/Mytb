@@ -223,7 +223,7 @@ class CIBlock extends CAllIBlock
 
 		if(defined("MYSQL_TABLE_TYPE") && strlen(MYSQL_TABLE_TYPE) > 0)
 		{
-			$DB->Query("SET table_type = '".MYSQL_TABLE_TYPE."'", true);
+			$DB->Query("SET storage_engine = '".MYSQL_TABLE_TYPE."'", true);
 		}
 		$strSql = "
 			CREATE TABLE IF NOT EXISTS b_iblock_element_prop_s".$ID." (

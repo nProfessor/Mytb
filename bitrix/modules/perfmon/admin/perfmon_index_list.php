@@ -154,7 +154,7 @@ if(
 			"MESSAGE"=>GetMessage("PERFMON_INDEX_IN_PROGRESS"),
 			"DETAILS"=>GetMessage("PERFMON_INDEX_QUERIES_ANALYZED", array("#QUERIES#" => "<b>".intval($_SESSION["queries"])."</b>"))."<br>",
 			"HTML"=>true,
-			"TYPE"=>"OK",
+			"TYPE"=>"PROGRESS",
 		));
 		?>
 		<script>
@@ -260,11 +260,11 @@ while($arRes = $rsData->NavNext(true, "f_")):
 	$row->AddViewField("SQL_COUNT", '<a href="perfmon_sql_list.php?lang='.LANGUAGE_ID.'&amp;set_filter=Y&amp;find_suggest_id='.$f_ID.'">'.$f_SQL_COUNT.'</a>');
 	$row->AddViewField("COLUMN_NAMES", str_replace(",", "<br>", $f_COLUMN_NAMES));
 	if($f_BANNED == "N")
-		$row->AddViewField("BANNED", '<img src="/bitrix/images/perfmon/green.gif" hspace="4" alt="'.htmlspecialchars(GetMessage("PERFMON_INDEX_GREEN_ALT")).'" title="'.htmlspecialchars(GetMessage("PERFMON_INDEX_GREEN_ALT")).'" />');
+		$row->AddViewField("BANNED",  '<span class="adm-lamp adm-lamp-in-list adm-lamp-green" title="'.htmlspecialcharsbx(GetMessage("PERFMON_INDEX_GREEN_ALT")).'"></span>');
 	elseif($f_BANNED == "Y")
-		$row->AddViewField("BANNED", '<img src="/bitrix/images/perfmon/red.gif" hspace="4" alt="'.htmlspecialchars(GetMessage("PERFMON_INDEX_RED_ALT")).'" title="'.htmlspecialchars(GetMessage("PERFMON_INDEX_RED_ALT")).'" />');
+		$row->AddViewField("BANNED",  '<span class="adm-lamp adm-lamp-in-list adm-lamp-red" title="'.htmlspecialcharsbx(GetMessage("PERFMON_INDEX_RED_ALT")).'"></span>');
 	else
-		$row->AddViewField("BANNED", '<img src="/bitrix/images/perfmon/yellow.gif" hspace="4" alt="'.htmlspecialchars(GetMessage("PERFMON_INDEX_YELLOW_ALT")).'" title="'.htmlspecialchars(GetMessage("PERFMON_INDEX_YELLOW_ALT")).'" />');
+		$row->AddViewField("BANNED",  '<span class="adm-lamp adm-lamp-in-list adm-lamp-yellow" title="'.htmlspecialcharsbx(GetMessage("PERFMON_INDEX_YELLOW_ALT")).'"></span>');
 
 	$rsQueries = CPerfomanceSQL::GetList(
 		array("ID"),
@@ -288,7 +288,7 @@ while($arRes = $rsData->NavNext(true, "f_")):
 		$html = str_replace(
 			array(" ", "\n"),
 			array(" &nbsp;", "<br>"),
-			htmlspecialchars($arRes["SQL_TEXT"])
+			htmlspecialcharsbx($arRes["SQL_TEXT"])
 		);
 	}
 	$html = '<span onmouseover="addTimer(this)" onmouseout="removeTimer(this)" id="'.$f_SQL_ID.'_sql_backtrace">'.$html.'</span>';
@@ -325,7 +325,6 @@ if($go || !CPerfomanceKeeper::IsActive())
 {
 	$aContext[] = array(
 		"TEXT" => GetMessage("PERFMON_INDEX_ANALYZE"),
-		"ICON" => "btn_list",
 		"LINK" => "javascript:".$lAdmin->ActionDoGroup(0, "analyze_start", bitrix_sessid_get()),
 	);
 }

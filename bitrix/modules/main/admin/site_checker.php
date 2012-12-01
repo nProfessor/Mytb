@@ -1016,7 +1016,11 @@ class CSiteCheckerTest
 		list($this->function, $this->strCurrentTestName) = each($this->arTest[$this->step]);
 		$this->strNextTestName = $this->strCurrentTestName;
 
-		include($_SERVER['DOCUMENT_ROOT'].BX_ROOT.'/license_key.php');
+		if (file_exists($file = $_SERVER['DOCUMENT_ROOT'].BX_ROOT.'/license_key.php'))
+			include($file);
+
+		if (!$LICENSE_KEY)
+			$LICENSE_KEY = 'DEMO';
 		$this->LogFile = BX_ROOT.'/site_checker_'.md5('SITE_CHECKER'.$LICENSE_KEY).'.log';
 	}
 
@@ -1742,7 +1746,7 @@ class CSiteCheckerTest
 		$arRequiredParams = array(
 			'safe_mode' => 0,
 			'magic_quotes_sybase' => 0,
-			'allow_call_time_pass_reference' => 1,
+//			'allow_call_time_pass_reference' => 1,
 			'file_uploads' => 1,
 			'session.cookie_httponly' => 0,
 			'file_uploads' => 1,

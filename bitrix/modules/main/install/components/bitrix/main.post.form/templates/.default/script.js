@@ -893,6 +893,12 @@ window.__LHE_OnInit = function(pEditor)
 	if (BX.util.in_array("Quote", window[pEditor.id + 'Settings']['buttons']))
 		window[objName]['makeButton']('lhe_btn_quote', 'bx-b-quote');
 
+	if (BX.util.in_array("SmileListHide", window[pEditor.id + 'Settings']['buttons']))
+	{
+		if(el = BX.findChild(BX(formID), {'attr': {id: 'lhe_btn_smilelist'}}, true, false))
+			BX.remove(BX.findParent(el), true);
+	}
+
 	var el = BX.findChild(BX(formID), {'attr': {id: 'bx-panel-close'}}, true, false);
 	if (el)
 	{

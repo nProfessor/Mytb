@@ -23,28 +23,36 @@ if (!defined("BX_FILE_PERMISSIONS"))
 
 IncludeModuleLangFile(__FILE__);
 
+require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/classes/general/backup.php");
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/fileman/fileman.php");
+$bMcrypt = function_exists('mcrypt_encrypt');
+$bBitrixCloud = $bMcrypt && CModule::IncludeModule('bitrixcloud') && CModule::IncludeModule('clouds');
 
 if (function_exists('mb_internal_encoding'))
 	mb_internal_encoding('ISO-8859-1');
 
 define('DOCUMENT_ROOT', rtrim(str_replace('\\','/',$_SERVER['DOCUMENT_ROOT']),'/'));
 
-$com_marker = "--";
-$filr_id = "";
 $sTableID = "tbl_dump";
-
 $oSort = new CAdminSorting($sTableID, "timestamp", "desc");
 $lAdmin = new CAdminList($sTableID, $oSort);
 
 $path = BX_ROOT."/backup";
-if($_REQUEST['process'] == "Y" && check_bitrix_sessid())
-{
-	require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_js.php");
 
+// define('DUMP_DEBUG_MODE', true);
+// xdebug_start_trace();
+$strBXError = '';
+
+$arAllBucket = CBackup::GetBucketList();
+if($_REQUEST['process'] == "Y")
+{
+	if (!check_bitrix_sessid())
+		die(GetMessage("DUMP_MAIN_SESISON_ERROR"));
+
+	require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_js.php");
 	if($_REQUEST['action'] == 'start')
 	{
-		$NS = Array();
+		$bFull = $_REQUEST['dump_all'] == 'Y';
 
 		if(!file_exists(DOCUMENT_ROOT.BX_ROOT."/backup"))
 			mkdir(DOCUMENT_ROOT.BX_ROOT."/backup", BX_DIR_PERMISSIONS);
@@ -61,58 +69,129 @@ if($_REQUEST['process'] == "Y" && check_bitrix_sessid())
 
 		DeleteDirFilesEx(BX_ROOT.'/backup/clouds');
 
-		$bUseCompression = $_REQUEST['dump_disable_gzip'] != 'Y';
-		if(!extension_loaded('zlib') || !function_exists("gzcompress"))
-			$bUseCompression = False;
-
-		$arc_name = DOCUMENT_ROOT.BX_ROOT."/backup/".date("Y-m-d.H-i-s.");
-		if ($_REQUEST['dump_site_id'])
-			$arc_name.= ($NS['dump_site_id'] = $_REQUEST['dump_site_id']).'.';
-		$arc_name .= substr(md5(uniqid(rand(), true)), 0, 8);
-		$NS['dump_name'] = $arc_name.".sql";
-		$NS['st_row'] = -1;
-		$arc_name .= ".tar";
-		if ($bUseCompression)
-			$arc_name .=".gz";
-		$NS['arc_name'] = $arc_name;
-
-		COption::SetOptionInt("main", "dump_use_compression", $bUseCompression);
-		COption::SetOptionInt("main", "dump_max_exec_time", intval($_REQUEST['dump_max_exec_time']) < 5 ? 5 : $_REQUEST['dump_max_exec_time']);
-		COption::SetOptionInt("main", "dump_max_exec_time_sleep", $_REQUEST['dump_max_exec_time_sleep']);
-		COption::SetOptionInt("main", "dump_integrity_check", $_REQUEST['dump_integrity_check'] == 'Y');
-
+		$NS = Array();
 		$NS['BUCKET_ID'] = intval($_REQUEST['dump_bucket_id']);
-		COption::SetOptionInt("main", "dump_bucket_id", $_REQUEST['dump_bucket_id']);
+		COption::SetOptionInt("main", "dump_bucket_id", $NS['BUCKET_ID']);
 
-		COption::SetOptionInt("main", "dump_max_file_size", $_REQUEST['max_file_size']);
-		COption::SetOptionInt("main", "dump_file_public", $_REQUEST['dump_file_public'] == 'Y');
-		COption::SetOptionInt("main", "dump_file_kernel", $_REQUEST['dump_file_kernel'] == 'Y');
-		COption::SetOptionInt("main", "dump_base", $DB->type == 'MYSQL' ? ($_REQUEST['dump_base'] == 'Y') : 0);
-		COption::SetOptionInt("main", "dump_base_skip_stat", $_REQUEST['dump_base_skip_stat'] == 'Y');
-		COption::SetOptionInt("main", "dump_base_skip_search", $_REQUEST['dump_base_skip_search'] == 'Y');
-		COption::SetOptionInt("main", "dump_base_skip_log", $_REQUEST['dump_base_skip_log'] == 'Y');
-		COption::SetOptionInt("main", "skip_symlinks", $_REQUEST['skip_symlinks'] == 'Y');
-
-		if ($arAllBucket = GetBucketList())
-			foreach($arAllBucket as $arBucket)
-				COption::SetOptionInt('main', 'dump_cloud_'.$arBucket['ID'], $_REQUEST['dump_cloud'][$arBucket['ID']] == 'Y');
-
-		$skip_mask = $_REQUEST['skip_mask'] == 'Y';
-		COption::SetOptionInt("main", "skip_mask", $skip_mask);
-
-		$skip_mask_array = array();
-		if ($skip_mask && is_array($_REQUEST['arMask']))
+		if ($bMcrypt && $_REQUEST['dump_encrypt_key'])
 		{
-			$arMask = array_unique($_REQUEST['arMask']);
-			foreach($arMask as $mask)
-				if (trim($mask))
-				{
-					$mask = rtrim(str_replace('\\','/',trim($mask)),'/');
-					$skip_mask_array[] = $mask;
-				}
-			COption::SetOptionString("main", "skip_mask_array", serialize($skip_mask_array));
+			$NS['dump_encrypt_key'] =  $_REQUEST['dump_encrypt_key'];
+//			if (!defined('BX_UTF') || !BX_UTF)
+//				$NS['dump_encrypt_key'] = $APPLICATION->ConvertCharset('windows-1251','utf-8',$NS['dump_encrypt_key']);
+			COption::SetOptionInt("main", "dump_encrypt", 1);
 		}
+		else
+			COption::SetOptionInt("main", "dump_encrypt", 0);
+
+		if ($NS['BUCKET_ID'] == -1 && !$NS['dump_encrypt_key'])
+			RaiseErrorAndDie('Archive must be encrypted');
+
+
+		$bUseCompression = extension_loaded('zlib') && function_exists("gzcompress") && ($_REQUEST['dump_disable_gzip'] != 'Y' || $bFull);
+		COption::SetOptionInt("main", "dump_use_compression", $bUseCompression);
+
+		if ($bFull)
+		{
+			COption::SetOptionInt("main", "dump_max_exec_time", 20);
+			COption::SetOptionInt("main", "dump_max_exec_time_sleep", 3);
+			COption::SetOptionInt("main", "dump_archive_size_limit", 1024 * 1024 * 1024);
+			COption::SetOptionInt("main", "dump_integrity_check", 1);
+			COption::SetOptionInt("main", "dump_max_file_size", 0);
+
+			COption::SetOptionInt("main", "dump_file_public", 1);
+			COption::SetOptionInt("main", "dump_file_kernel", 1);
+			COption::SetOptionInt("main", "dump_base", $DB->type == 'MYSQL' ? 1 : 0);
+			COption::SetOptionInt("main", "dump_base_skip_stat", 0);
+			COption::SetOptionInt("main", "dump_base_skip_search", 0);
+			COption::SetOptionInt("main", "dump_base_skip_log", 0);
+			COption::SetOptionInt("main", "skip_symlinks", 0);
+
+			if ($arAllBucket)
+			{
+				$bDumpCloud = 1;
+				COption::SetOptionInt("main", "dump_do_clouds", 1);
+				foreach($arAllBucket as $arBucket)
+					COption::SetOptionInt('main', 'dump_cloud_'.$arBucket['ID'], 1);
+			}
+
+			COption::SetOptionInt("main", "skip_mask", 0);
+		}
+		else
+		{
+			COption::SetOptionInt("main", "dump_max_exec_time", intval($_REQUEST['dump_max_exec_time']) < 5 ? 5 : $_REQUEST['dump_max_exec_time']);
+			COption::SetOptionInt("main", "dump_max_exec_time_sleep", $_REQUEST['dump_max_exec_time_sleep']);
+
+			$dump_archive_size_limit = intval($_REQUEST['dump_archive_size_limit']);
+			if ($dump_archive_size_limit > 2048)
+				$dump_archive_size_limit = 2048;
+			if ($dump_archive_size_limit == 0)
+				$dump_archive_size_limit = 1024;
+			COption::SetOptionInt("main", "dump_archive_size_limit", $dump_archive_size_limit * 1024 * 1024);
+			COption::SetOptionInt("main", "dump_integrity_check", $_REQUEST['dump_integrity_check'] == 'Y');
+
+			COption::SetOptionInt("main", "dump_max_file_size", $_REQUEST['max_file_size']);
+			COption::SetOptionInt("main", "dump_file_public", $_REQUEST['dump_file_public'] == 'Y');
+			COption::SetOptionInt("main", "dump_file_kernel", $_REQUEST['dump_file_kernel'] == 'Y');
+			COption::SetOptionInt("main", "dump_base", $DB->type == 'MYSQL' ? ($_REQUEST['dump_base'] == 'Y') : 0);
+			COption::SetOptionInt("main", "dump_base_skip_stat", $_REQUEST['dump_base_skip_stat'] == 'Y');
+			COption::SetOptionInt("main", "dump_base_skip_search", $_REQUEST['dump_base_skip_search'] == 'Y');
+			COption::SetOptionInt("main", "dump_base_skip_log", $_REQUEST['dump_base_skip_log'] == 'Y');
+			COption::SetOptionInt("main", "skip_symlinks", $_REQUEST['skip_symlinks'] == 'Y');
+
+			$bDumpCloud = false;
+			if ($arAllBucket)
+			{
+				foreach($arAllBucket as $arBucket)
+				{
+					if ($res = $_REQUEST['dump_cloud'][$arBucket['ID']] == 'Y')
+						$bDumpCloud = true;
+					COption::SetOptionInt('main', 'dump_cloud_'.$arBucket['ID'], $res);
+				}
+			}
+			COption::SetOptionInt("main", "dump_do_clouds", $bDumpCloud);
+
+			$skip_mask = $_REQUEST['skip_mask'] == 'Y';
+			COption::SetOptionInt("main", "skip_mask", $skip_mask);
+
+			$skip_mask_array = array();
+			if ($skip_mask && is_array($_REQUEST['arMask']))
+			{
+				$arMask = array_unique($_REQUEST['arMask']);
+				foreach($arMask as $mask)
+					if (trim($mask))
+					{
+						$mask = rtrim(str_replace('\\','/',trim($mask)),'/');
+						$skip_mask_array[] = $mask;
+					}
+				COption::SetOptionString("main", "skip_mask_array", serialize($skip_mask_array));
+			}
+		}
+
 		$NS["step"] = 1;
+		$NS['st_row'] = -1;
+
+		if ($NS['BUCKET_ID'] == -1) // Bitrixcloud
+		{
+			$name = DOCUMENT_ROOT.BX_ROOT."/backup/".date('Ymd_His_').rand(11111111,99999999);
+			$NS['arc_name'] = $name.'.enc'.($bUseCompression ? ".gz" : '');
+			$NS['dump_name'] = $name.'.sql';
+		}
+		else
+		{
+			$prefix = '';
+			if ($_REQUEST['dump_site_id'])
+			{
+				$NS['dump_site_id'] = $_REQUEST['dump_site_id'];
+				$prefix .= '_'.$NS['dump_site_id'];
+			}
+			if ($bDumpCloud)
+				$prefix .= '_cloud';
+
+			$arc_name = CBackup::GetArcName($prefix);
+
+			$NS['dump_name'] = $arc_name.".sql";
+			$NS['arc_name'] = $arc_name.($NS['dump_encrypt_key'] ? ".enc" : ".tar").($bUseCompression ? ".gz" : '');
+		}	
 	}
 	elseif($_REQUEST['action'] == 'cloud_send')
 	{
@@ -124,6 +203,13 @@ if($_REQUEST['process'] == "Y" && check_bitrix_sessid())
 		while(file_exists($name = CTar::getNextName($name)))
 			$NS['arc_size'] += filesize($name);
 		$NS['step'] = 6;
+	}
+	elseif($_REQUEST['action'] == 'check_archive')
+	{
+		$NS = Array();
+		$NS['arc_name'] = $name = DOCUMENT_ROOT.BX_ROOT.'/backup/'.str_replace(array('..','/','\\'),'',$_REQUEST['f_id']);
+		$NS['step'] = 5;
+		$NS['dump_encrypt_key'] = '111111';
 	}
 	else
 	{
@@ -139,7 +225,7 @@ if($_REQUEST['process'] == "Y" && check_bitrix_sessid())
 	{
 		if (IntOption('dump_base'))
 		{
-			$bres = BaseDump($NS["dump_name"], intval($NS["num"]), intval($NS["st_row"]));
+			$bres = CBackup::BaseDump($NS["dump_name"], intval($NS["num"]), intval($NS["st_row"]));
 			$NS["ptab"] = $bres["ptab"];
 			$NS["num"] = $bres["num"];
 			$NS["st_row"] = $bres["st_row"];
@@ -148,15 +234,13 @@ if($_REQUEST['process'] == "Y" && check_bitrix_sessid())
 			{
 				$rs = $DB->Query('SHOW VARIABLES LIKE "character_set_results"');
 				if (($f = $rs->Fetch()) && array_key_exists ('Value', $f))
-				{
-					$charset = $f['Value'];
-					$rs = fopen($after_file,'wb');
-					fwrite($rs,"SET NAMES '$charset';\n");
-					fclose($rs);
-				}
+					file_put_contents($after_file, "SET NAMES '".$f['Value']."';\n");
+
+				$rs = $DB->Query('SHOW VARIABLES LIKE "collation_database"');
+				if (($f = $rs->Fetch()) && array_key_exists ('Value', $f))
+					file_put_contents($after_file, "ALTER DATABASE `<DATABASE>` COLLATE ".$f['Value'].";\n",8);
 
 				$NS["step"]++;
-
 			}
 		}
 		else
@@ -171,7 +255,8 @@ if($_REQUEST['process'] == "Y" && check_bitrix_sessid())
 			if (haveTime())
 			{
 				$tar = new CTar;
-				$tar->ArchiveSizeMax = COption::GetOptionString('main', 'dump_archive_size_max', 1024 * 1024 * 1024);
+				$tar->EncryptKey = $NS['dump_encrypt_key'];
+				$tar->ArchiveSizeLimit = IntOption('dump_archive_size_limit');
 				$tar->gzip = IntOption('dump_use_compression');
 				$tar->path = DOCUMENT_ROOT;
 				$tar->ReadBlockCurrent = intval($NS['ReadBlockCurrent']);
@@ -219,7 +304,7 @@ if($_REQUEST['process'] == "Y" && check_bitrix_sessid())
 	// Step 3: Download Cloud Files 
 	if($NS["step"] == 3)
 	{
-		if ($arDumpClouds = CheckDumpClouds())
+		if ($arDumpClouds = CBackup::CheckDumpClouds())
 		{
 			if (haveTime())
 			{
@@ -255,7 +340,7 @@ if($_REQUEST['process'] == "Y" && check_bitrix_sessid())
 	// Step 4: Tar Files
 	if($NS["step"] == 4)
 	{
-		if (CheckDumpFiles() || CheckDumpClouds())
+		if (CBackup::CheckDumpFiles() || CBackup::CheckDumpClouds())
 		{
 			if (haveTime())
 			{
@@ -273,7 +358,8 @@ if($_REQUEST['process'] == "Y" && check_bitrix_sessid())
 					define('DOCUMENT_ROOT_SITE', $DOCUMENT_ROOT_SITE);
 
 				$tar = new CTar;
-				$tar->ArchiveSizeMax = COption::GetOptionString('main', 'dump_archive_size_max', 1024 * 1024 * 1024);
+				$tar->EncryptKey = $NS['dump_encrypt_key'];
+				$tar->ArchiveSizeLimit = IntOption('dump_archive_size_limit');
 				$tar->gzip = IntOption('dump_use_compression');
 				$tar->path = DOCUMENT_ROOT_SITE;
 				$tar->ReadBlockCurrent = intval($NS['ReadBlockCurrent']);
@@ -297,7 +383,7 @@ if($_REQUEST['process'] == "Y" && check_bitrix_sessid())
 				$tar->close();
 
 				if ($r === false)
-					RaiseErrorAndDie(implode('<br>',array_merge($DirScan->err,$tar->err)));
+					RaiseErrorAndDie(implode('<br>',$DirScan->err));
 
 				$NS["ReadBlockCurrent"] = $tar->ReadBlockCurrent;
 				$NS["startPath"] = $DirScan->nextPath;
@@ -327,19 +413,19 @@ if($_REQUEST['process'] == "Y" && check_bitrix_sessid())
 	// Step 5: Integrity check
 	if($NS["step"] == 5)
 	{
-		if (IntOption('dump_integrity_check'))
+		if (IntOption('dump_integrity_check') || $NS['check_archive'])
 		{
 			if (haveTime())
 			{
 				$tar = new CTarCheck;
+				$tar->EncryptKey = $NS['dump_encrypt_key'];
 
 				if (!$tar->openRead($NS["arc_name"]))
-					RaiseErrorAndDie(GetMessage('DUMP_NO_PERMS_READ'));
+					RaiseErrorAndDie(GetMessage('DUMP_NO_PERMS_READ').'<br>'.implode('<br>',$tar->err));
 				else
 				{
-					if($Block = intval($NS['Block']))
-						$tar->Skip($Block);
-
+					if(($Block = intval($NS['Block'])) && !$tar->SkipTo($Block))
+						RaiseErrorAndDie(implode('<br>',$tar->err));
 					while(($r = $tar->extractFile()) && haveTime());
 
 					$NS["Block"] = $tar->Block;
@@ -367,10 +453,44 @@ if($_REQUEST['process'] == "Y" && check_bitrix_sessid())
 					RaiseErrorAndDie(GetMessage("MAIN_DUMP_NO_CLOUDS_MODULE"));
 
 				$file_size = filesize($NS["arc_name"]);
-				$obUpload = new CCloudStorageUpload(substr($NS['arc_name'],strlen(DOCUMENT_ROOT)));
+				$file_name = $NS['BUCKET_ID'] == -1 ? basename($NS['arc_name']) : substr($NS['arc_name'],strlen(DOCUMENT_ROOT));
+				$obUpload = new CCloudStorageUpload($file_name);
+
+				if ($NS['BUCKET_ID'] == -1)
+				{
+					if (!$bBitrixCloud)
+						RaiseErrorAndDie(getMessage('DUMP_BXCLOUD_NA'));
+
+					if (!$NS['obBucket'])
+					{
+						try {
+							$backup = CBitrixCloudBackup::getInstance();
+							$obBucket = $backup->getBucketToWriteFile(CTar::getCheckword($NS['dump_encrypt_key']), basename($NS['arc_name']));
+						}
+						catch (Exception $e) {
+							RaiseErrorAndDie($e->getMessage());
+						}
+					}
+					else
+						$obBucket = $NS['obBucket'];
+
+					$obBucket->Init();
+					$obBucket->GetService()->setPublic(false);
+
+					$bucket_id = $obBucket;
+				}
+				else
+				{
+					$obBucket = null;
+					$bucket_id = $NS['BUCKET_ID'];
+				}
+
 				if (!$obUpload->isStarted())
 				{
-					if (!$obUpload->Start(intval($NS['BUCKET_ID']), $file_size))
+					if (is_object($obBucket))
+						$obBucket->setCheckWordHeader();
+
+					if (!$obUpload->Start($bucket_id, $file_size))
 					{
 						if ($e = $APPLICATION->GetException())
 							$strError = $e->GetString();
@@ -379,21 +499,30 @@ if($_REQUEST['process'] == "Y" && check_bitrix_sessid())
 						RaiseErrorAndDie($strError);
 					}
 				}
+				elseif (is_object($obBucket))
+						$obBucket->unsetCheckWordHeader();
+
 
 				if ($fp = fopen($NS['arc_name'],'rb'))
 				{
 					fseek($fp, $obUpload->getPos());
 					$part = fread($fp, $obUpload->getPartSize());
 					fclose($fp);
+					$fails = 0;
 					while($obUpload->hasRetries())
-						if($res = $obUpload->Next($part))
+					{
+						if($res = $obUpload->Next($part, $obBucket))
 							break;
+						elseif (++$fails >= 10)
+							RaiseErrorAndDie('Internal Error: could not init upload for '.$fails.' times');
+					}
+
 					if ($res)
 					{
 						$pos = $obUpload->getPos();
 						if ($pos >= $file_size) // file ended
 						{
-							if($obUpload->Finish())
+							if($obUpload->Finish($obBucket))
 							{
 								$NS['pos'] += $file_size;
 								$oBucket = new CCloudStorageBucket($NS['BUCKET_ID']);
@@ -452,9 +581,12 @@ if($_REQUEST['process'] == "Y" && check_bitrix_sessid())
 		if ($NS["cnt"])
 			$status_msg .= GetMessage("MAIN_DUMP_FILE_CNT")." <b>".$NS["cnt"]."</b><br>";
 		if ($NS["data_size"])
-			$status_msg .= GetMessage("MAIN_DUMP_FILE_SIZE")." <b>".HumanSize($NS["data_size"])."</b><br>";
+			$status_msg .= GetMessage("MAIN_DUMP_FILE_SIZE")." <b>".CFile::FormatSize($NS["data_size"])."</b><br>";
 		if ($NS["arc_size"])
-			$status_msg .= GetMessage("MAIN_DUMP_ARC_SIZE")." <b>".HumanSize($NS["arc_size"])."</b><br>";
+		{
+			$status_msg .= GetMessage("MAIN_DUMP_ARC_NAME").": <b>".basename(CTar::getFirstName($NS["arc_name"]))."</b><br>";
+			$status_msg .= GetMessage("MAIN_DUMP_ARC_SIZE")." <b>".CFile::FormatSize($NS["arc_size"])."</b><br>";
+		}
 
 		$status_msg .= GetMessage('TIME_SPENT').' <b>'.HumanTime($NS["time"]).'</b>';
 
@@ -485,13 +617,13 @@ if($_REQUEST['process'] == "Y" && check_bitrix_sessid())
 				$arc_size = file_exists($NS['arc_name']) ? filesize($NS['arc_name']) : 0;
 				$status_title = GetMessage("MAIN_DUMP_DB_PROC");
 				$status_msg = 
-				GetMessage('CURRENT_POS').' <b>'.HumanSize($arc_size) .'</b>  (<b>'.round(100 * $arc_size / filesize($NS['dump_name'])).'%</b>) '
+				GetMessage('CURRENT_POS').' <b>'.CFile::FormatSize($arc_size) .'</b>  (<b>'.round(100 * $arc_size / filesize($NS['dump_name'])).'%</b>) '
 					.'<br>'.GetMessage('TIME_SPENT').' <b>'.HumanTime($NS["time"]).'</b>';
 			break;
 			case 3:
 				$status_title = GetMessage("MAIN_DUMP_CLOUDS_DOWNLOAD");
 				$status_msg = GetMessage("MAIN_DUMP_FILES_DOWNLOADED").": <b>".intval($NS["download_cnt"])."</b><br>".
-				GetMessage("MAIN_DUMP_FILES_SIZE").": <b>".HumanSize($NS["download_size"])."</b><br>";
+				GetMessage("MAIN_DUMP_FILES_SIZE").": <b>".CFile::FormatSize($NS["download_size"])."</b><br>";
 				if ($NS['download_skipped'])
 					$status_msg .= GetMessage("MAIN_DUMP_DOWN_ERR_CNT").': <b>'.$NS['download_skipped'].'</b><br>';
 				$status_msg .= GetMessage('TIME_SPENT').' <b>'.HumanTime($NS["time"]).'</b>';
@@ -499,7 +631,7 @@ if($_REQUEST['process'] == "Y" && check_bitrix_sessid())
 			case 4:
 				$status_title = GetMessage("MAIN_DUMP_SITE_PROC");
 				$status_msg = GetMessage("MAIN_DUMP_FILE_CNT")." <b>".intval($NS["cnt"])."</b><br>".
-				GetMessage("MAIN_DUMP_FILE_SIZE")." <b>".HumanSize($NS["data_size"])."</b> ";
+				GetMessage("MAIN_DUMP_FILE_SIZE")." <b>".CFile::FormatSize($NS["data_size"])."</b> ";
 
 				if (is_object($DirScan))
 					$status_msg.= '<br>'.GetMessage('DUMP_CUR_PATH').' <b>'.substr($DirScan->nextPath,strlen(DOCUMENT_ROOT_SITE)).'</b>';
@@ -508,14 +640,14 @@ if($_REQUEST['process'] == "Y" && check_bitrix_sessid())
 			break;
 			case 5:
 				$status_title = GetMessage('INTEGRITY_CHECK');
-				$status_msg = GetMessage("MAIN_DUMP_FILE_SIZE")." <b>".HumanSize($NS["arc_size"])."</b><br>".
-				GetMessage('CURRENT_POS').' <b>'.HumanSize($NS['Block'] * 512).'</b>  (<b>'.round(100 * $NS['Block'] * 512 / $NS['data_size']).'%</b>) '
+				$status_msg = GetMessage("MAIN_DUMP_FILE_SIZE")." <b>".CFile::FormatSize($NS["arc_size"])."</b><br>".
+				GetMessage('CURRENT_POS').' <b>'.CFile::FormatSize($NS['Block'] * 512).'</b>  '.($NS['data_size'] ? '(<b>'.round(100 * $NS['Block'] * 512 / $NS['data_size']).'%</b>) ' : '')
 					.'<br>'.GetMessage('TIME_SPENT').' <b>'.HumanTime($NS["time"]).'</b>';
 			break;
 			case 6:
 				$status_title = GetMessage("MAIN_DUMP_FILE_SENDING");
-				$status_msg = GetMessage("MAIN_DUMP_FILE_SIZE")." <b>".HumanSize($NS["arc_size"])."</b><br>".
-				GetMessage('CURRENT_POS').' <b>'.HumanSize($pos).'</b>  (<b>'.round(100 * $pos / $NS['arc_size']).'%</b>) '
+				$status_msg = GetMessage("MAIN_DUMP_FILE_SIZE")." <b>".CFile::FormatSize($NS["data_size"])."</b><br>".
+				GetMessage('CURRENT_POS').' <b>'.CFile::FormatSize($pos).'</b>  (<b>'.round(100 * $pos / $NS['data_size']).'%</b>) '
 					.'<br>'.GetMessage('TIME_SPENT').' <b>'.HumanTime($NS["time"]).'</b>';
 		}
 
@@ -536,9 +668,31 @@ if($_REQUEST['process'] == "Y" && check_bitrix_sessid())
 	die();
 }
 
-if ($_REQUEST['action'] && check_bitrix_sessid())
+if ($_REQUEST['action'])
 {
-	if ($_REQUEST['action'] == 'download')
+	if (!check_bitrix_sessid())
+		die(GetMessage("DUMP_MAIN_SESISON_ERROR"));
+
+	if ($_REQUEST['action'] == 'key_info')
+	{
+		require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/classes/general/update_client.php");
+		$arUpdateList = CUpdateClient::GetUpdatesList($errorMessage, LANGUAGE_ID, $stableVersionsOnly);
+		if (is_array($ar = &$arUpdateList['ERROR'][0]))
+			echo '<div style="color:red">'.GetMessage("DUMP_MAIN_ERROR").$ar['#'].'</div>';
+		elseif (is_array($ar = &$arUpdateList['CLIENT'][0]['@']))
+		{
+			echo '<table style="margin:4px;padding:2px;border:1px solid #ccc">'.
+			'<tr><td>'.GetMessage("DUMP_MAIN_REGISTERED").':</td><td>'.htmlspecialcharsbx($ar['NAME']).'</td></tr>'.
+			'<tr><td>'.GetMessage("DUMP_MAIN_EDITION").':</td><td>'.htmlspecialcharsbx($ar['LICENSE']).'</td></tr>'.
+			'<tr><td>'.GetMessage("DUMP_MAIN_ACTIVE_FROM").':</td><td>'.$ar['DATE_FROM'].'</td></tr>'.
+			'<tr><td>'.GetMessage("DUMP_MAIN_ACTIVE_TO").':</td><td>'.$ar['DATE_TO'].'</td></tr>'.
+			'</table>';
+		}
+		else
+			echo '<div style="color:red">'.GetMessage("DUMP_MAIN_ERR_GET_INFO").'</div>';
+		die();
+	}
+	elseif ($_REQUEST['action'] == 'download')
 	{
 		$name = $path.'/'.$_REQUEST['f_id'];
 		echo '<script>';
@@ -607,7 +761,10 @@ if ($_REQUEST['action'] && check_bitrix_sessid())
 
 		$url = '';
 		$name = $path.'/'.$_REQUEST['f_id'];
-		if ($BUCKET_ID = intval($_REQUEST['BUCKET_ID']))
+		$BUCKET_ID = intval($_REQUEST['BUCKET_ID']);
+		if ($BUCKET_ID == -1)
+				$url = 'bitrixcloud_backup='.htmlspecialcharsbx($name);
+		elseif ($BUCKET_ID > 0)
 		{
 			if (CModule::IncludeModule('clouds'))
 			{
@@ -623,7 +780,11 @@ if ($_REQUEST['action'] && check_bitrix_sessid())
 		echo '<script>EndDump();</script>';
 		die();
 	}
+//	else
+//		die('Unknown action');
 }
+
+// in case of error
 $DB->Query("UNLOCK TABLES",true);
 
 ######### Admin list #######
@@ -687,7 +848,7 @@ if ($arID = $lAdmin->GroupAction())
 				}
 			break;
 			case "rename":
-				if (preg_match('#^[a-z0-9\-\.]+$#i',$_REQUEST['name']))
+				if (preg_match('#^[a-z0-9\-\._]+$#i',$_REQUEST['name']))
 				{
 					$arName = ParseFileName($_REQUEST['ID']);
 					$new_name = $_REQUEST['name'].'.'.$arName['ext'];
@@ -717,21 +878,40 @@ if ($arID = $lAdmin->GroupAction())
 		}
 	}
 }
-InitSorting();
 
+InitSorting();
 $arDirs = array();
 $arFiles = array();
 $arTmpFiles = array();
 $arFilter = array();
+GetDirList(Array($site, $path), $arDir, $arTmpFiles, $arFilter, Array($by => $order), "F");
 
-GetDirList(Array($site, $path), $arDir, $arTmpFiles, $arFilter, Array($by=>$order), "F");
+if ($bBitrixCloud)
+{
+	$backup = CBitrixCloudBackup::getInstance();
+	try {
+		foreach($backup->listFiles() as $ar)
+		{
+			$arTmpFiles[] = array(
+				'NAME' => $ar['FILE_NAME'],
+				'SIZE' => $ar['FILE_SIZE'],
+				'DATE' => '',
+				'BUCKET_ID' => -1,
+				'PLACE' => GetMessage('DUMP_MAIN_BITRIX_CLOUD') 
+			);
+		}
+	} catch (Exception $e) {
+		$bBitrixCloud = false;
+		$strBXError = $e->getMessage();
+	}
+}
 
-// Clouds
-if (($arAllBucket = GetBucketList()) && $_REQUEST['mode'])
+// ajax query
+if ($arAllBucket && $_REQUEST['mode'])
 {
 	foreach($arAllBucket as $arBucket)
 	{
-		if ($arCloudFiles = GetBucketFileList($arBucket['ID'], BX_ROOT.'/backup/'))
+		if ($arCloudFiles = CBackup::GetBucketFileList($arBucket['ID'], BX_ROOT.'/backup/'))
 		{
 			foreach($arCloudFiles['file'] as $k=>$v)
 			{
@@ -739,123 +919,149 @@ if (($arAllBucket = GetBucketList()) && $_REQUEST['mode'])
 					'NAME' => $v,
 					'SIZE' => $arCloudFiles['file_size'][$k],
 					'DATE' => '',
-					'PERMISSION' => 'X',
 					'BUCKET_ID' => $arBucket['ID'],
 					'PLACE' => htmlspecialcharsbx($arBucket['BUCKET'].' ('.$arBucket['SERVICE_ID'].')')
-
 				);
 			}
 		}
 	}
 }
-$arWriteBucket = GetBucketList($arFilter = array('READ_ONLY' => 'Y'));
+$arWriteBucket = CBackup::GetBucketList($arFilter = array('READ_ONLY' => 'Y'));
 
 $arParts = array();
 $arSize = array();
+$i=0;
 foreach($arTmpFiles as $k=>$ar)
 {
-	if (preg_match('#^(.*\.(tar|gz))(\.[0-9]+)?$#',$ar['NAME'],$regs))
+	if (preg_match('#^(.*\.(enc|tar|gz))(\.[0-9]+)?$#',$ar['NAME'],$regs))
 	{
+		$i++;
 		$arParts[intval($ar['BUCKET_ID']).$regs[1]]++;
 		$arSize[$regs[1]] += $ar['SIZE'];
 		if (!$regs[3])
-			$arFiles[] = $ar;
+		{
+			if ($by == 'size')
+				$key = $arSize[$regs[1]];
+			elseif ($by == 'timestamp')
+				$key = MakeTimeStamp($ar['DATE']);
+			elseif ($by == 'location')
+				$key = $ar['PLACE'];
+			else
+				$key = $regs[1];
+			$key .= '_'.$i;
+			if (!$ar['PLACE'])
+				$ar['PLACE'] = GetMessage("MAIN_DUMP_LOCAL");
+			$arFiles[$key] = $ar;
+		}
 	}
 }
 
+if ($order == 'desc')
+	krsort($arFiles);
+else
+	ksort($arFiles);
+
 $rsDirContent = new CDBResult;
 $rsDirContent->InitFromArray($arFiles);
-$rsDirContent->sSessInitAdd = $path;
-$rsDirContent = new CAdminResult($rsDirContent, $sTableID);
+//$rsDirContent->sSessInitAdd = $path;
+//$rsDirContent = new CAdminResult($rsDirContent, $sTableID);
 $rsDirContent->NavStart(20);
 
-// установка строки навигации
 $lAdmin->NavText($rsDirContent->GetNavPrint(GetMessage("MAIN_DUMP_FILE_PAGES")));
 $lAdmin->AddHeaders(array(
 		array("id"=>"NAME", "content"=>GetMessage("MAIN_DUMP_FILE_NAME"), "sort"=>"name", "default"=>true),
 		array("id"=>"SIZE","content"=>GetMessage("MAIN_DUMP_FILE_SIZE1"), "sort"=>"size", "default"=>true),
-		$arAllBucket ? array("id"=>"PLACE","content"=>GetMessage("MAIN_DUMP_LOCATION"), "default"=>true) : null,
+		array("id"=>"PLACE","content"=>GetMessage("MAIN_DUMP_LOCATION"), "sort"=>"location", "default"=>true),
 		array("id"=>"DATE", "content"=>GetMessage('MAIN_DUMP_FILE_TIMESTAMP'), "sort"=>"timestamp", "default"=>true)
 ));
 
-while($Elem = $rsDirContent->NavNext(true, "f_"))
+while($f = $rsDirContent->NavNext(true, "f_"))
 {
-	$BUCKET_ID = intval($f_BUCKET_ID);
-	$row =& $lAdmin->AddRow($BUCKET_ID.'_'.$f_NAME, $Elem);
+	$BUCKET_ID = intval($f['BUCKET_ID']);
+	$row =& $lAdmin->AddRow($BUCKET_ID.'_'.$f['NAME'], $f);
 
-	$c = $arParts[$BUCKET_ID.$f_NAME];
+	$c = $arParts[$BUCKET_ID.$f['NAME']];
 	if ($c > 1)
 	{
 		$parts = ' ('.GetMessage("MAIN_DUMP_PARTS").$c.')';
-		$size = $arSize[$f_NAME];
+		$size = $arSize[$f['NAME']];
 	}
 	else
 	{
 		$parts = '';
-		$size = $f_SIZE;
+		$size = $f['SIZE'];
 	}
 
-	$row->AddField("NAME", '<img src="/bitrix/images/fileman/types/'.CFileMan::GetFileTypeEx($f_NAME).'.gif" width="16" height="16" border=0 alt="">&nbsp;'.$f_NAME.$parts);
-	$row->AddField("SIZE", HumanSize($size));
-	$row->AddField("PLACE", $f_PLACE ? $f_PLACE : GetMessage("MAIN_DUMP_LOCAL"));
-	$row->AddField("DATE", $f_DATE);
+	$row->AddField("NAME", $f['NAME'].$parts);
+	$row->AddField("SIZE", CFile::FormatSize($size));
+	$row->AddField("PLACE", $f['PLACE']);
+	$row->AddField("DATE", $f['DATE']);
 
 	$arActions = Array();
 
-	if ($f_PERMISSION >= "R")
+	if (defined('DUMP_DEBUG_MODE'))
+	{
+		$arActions[] = array(
+			"ICON" => "archive",
+			"TEXT" => 'DEBUG - '.GetMessage("INTEGRITY_CHECK"),
+			"ACTION" => "AjaxSend('?f_id=".urlencode($f['NAME'])."&process=Y&action=check_archive&".bitrix_sessid_get()."')"
+		);
+	}
+
+	if ($BUCKET_ID != -1)
 	{
 		$arActions[] = array(
 			"ICON" => "download",
 			"DEFAULT" => true,
 			"TEXT" => GetMessage("MAIN_DUMP_ACTION_DOWNLOAD"),
-			"ACTION" => "AjaxSend('?action=download&f_id=".$f_NAME."&BUCKET_ID=".$BUCKET_ID."&".bitrix_sessid_get()."')"
+			"ACTION" => "AjaxSend('?action=download&f_id=".$f['NAME']."&BUCKET_ID=".$BUCKET_ID."&".bitrix_sessid_get()."')"
 		);
 		$arActions[] = array(
 			"ICON" => "link",
 			"TEXT" => GetMessage("MAIN_DUMP_GET_LINK"),
-			"ACTION" => "AjaxSend('?action=copy&f_id=".$f_NAME."&BUCKET_ID=".$BUCKET_ID."&".bitrix_sessid_get()."')"
+			"ACTION" => "AjaxSend('?action=copy&f_id=".$f['NAME']."&BUCKET_ID=".$BUCKET_ID."&".bitrix_sessid_get()."')"
 		);
-		$arActions[] = array(
-			"ICON" => "restore",
-			"TEXT" => GetMessage("MAIN_DUMP_RESTORE"),
-			"ACTION" => "if(confirm('".GetMessage("MAIN_RIGHT_CONFIRM_EXECUTE")."')) AjaxSend('?action=restore&f_id=".$f_NAME."&BUCKET_ID=".$BUCKET_ID."&".bitrix_sessid_get()."')"
-		);
+	}
 
-		if ($f_PERMISSION >= 'W')
+	$arActions[] = array(
+		"ICON" => "restore",
+		"TEXT" => GetMessage("MAIN_DUMP_RESTORE"),
+		"ACTION" => "if(confirm('".GetMessage("MAIN_RIGHT_CONFIRM_EXECUTE")."')) AjaxSend('?action=restore&f_id=".$f['NAME']."&BUCKET_ID=".$BUCKET_ID."&".bitrix_sessid_get()."')"
+	);
+
+	if ($BUCKET_ID == 0)
+	{
+		if ($arWriteBucket)
 		{
-			if ($arWriteBucket && !$BUCKET_ID)
-			{
-				$arActions[] = array("SEPARATOR" => true);
-
-				foreach($arWriteBucket as $f)
-					$arActions[] = array(
-						"ICON" => "clouds",
-						"TEXT" => GetMessage("MAIN_DUMP_SEND_CLOUD").htmlspecialcharsbx('"'.$f['BUCKET'].'"'),
-						"ACTION" => "if(confirm('".GetMessage("MAIN_DUMP_SEND_FILE_CLOUD")."?')) AjaxSend('?f_id=".Urlencode($f_NAME)."&process=Y&action=cloud_send&dump_bucket_id=".$f['ID']."&".bitrix_sessid_get()."')"
-					);
-			}
-
 			$arActions[] = array("SEPARATOR" => true);
-			if (!$BUCKET_ID)
-			{
-				$arName = ParseFileName($f_NAME);
+			foreach($arWriteBucket as $arBucket)
 				$arActions[] = array(
-					"ICON" => "rename",
-					"TEXT" => GetMessage("MAIN_DUMP_RENAME"),
-					"ACTION" => "if(name=prompt('".GetMessage("MAIN_DUMP_ARC_NAME_W_O_EXT")."','".htmlspecialcharsbx($arName['name'])."')) tbl_dump.GetAdminList('/bitrix/admin/dump.php?ID=".Urlencode($f_NAME)."&action=rename&lang=".LANG."&".bitrix_sessid_get()."&BUCKET_ID=".$BUCKET_ID."&name='+name);"
+					"ICON" => "clouds",
+					"TEXT" => GetMessage("MAIN_DUMP_SEND_CLOUD").htmlspecialcharsbx('"'.$arBucket['BUCKET'].'"'),
+					"ACTION" => "if(confirm('".GetMessage("MAIN_DUMP_SEND_FILE_CLOUD")."?')) AjaxSend('?f_id=".urlencode($f['NAME'])."&process=Y&action=cloud_send&dump_bucket_id=".$arBucket['ID']."&".bitrix_sessid_get()."')"
 				);
-			}
-			$arActions[] = array(
-				"ICON" => "delete",
-				"TEXT" => GetMessage("MAIN_DUMP_DELETE"),
-				"ACTION" => "if(confirm('".GetMessage('MAIN_DUMP_ALERT_DELETE')."')) ".$lAdmin->ActionDoGroup($BUCKET_ID.'_'.$f_NAME, "delete")
-			);
 		}
+
+		$arActions[] = array("SEPARATOR" => true);
+		$arName = ParseFileName($f['NAME']);
+		$arActions[] = array(
+			"ICON" => "rename",
+			"TEXT" => GetMessage("MAIN_DUMP_RENAME"),
+			"ACTION" => "if(name=prompt('".GetMessage("MAIN_DUMP_ARC_NAME_W_O_EXT")."','".htmlspecialcharsbx($arName['name'])."')) tbl_dump.GetAdminList('/bitrix/admin/dump.php?ID=".urlencode($f['NAME'])."&action=rename&lang=".LANGUAGE_ID."&".bitrix_sessid_get()."&BUCKET_ID=".$BUCKET_ID."&name='+name);"
+		);
+	}
+
+	if ($BUCKET_ID > -1)
+	{
+		$arActions[] = array(
+			"ICON" => "delete",
+			"TEXT" => GetMessage("MAIN_DUMP_DELETE"),
+			"ACTION" => "if(confirm('".GetMessage('MAIN_DUMP_ALERT_DELETE')."')) ".$lAdmin->ActionDoGroup($BUCKET_ID.'_'.$f['NAME'], "delete")
+		);
 	}
 	$row->AddActions($arActions);
 }
 
-// "подвал" списка
 $lAdmin->AddFooter(
 	array(
 		array(
@@ -882,19 +1088,35 @@ $lAdmin->CheckListMode();
 $APPLICATION->SetTitle(GetMessage("MAIN_DUMP_PAGE_TITLE"));
 require($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/include/prolog_admin_after.php");
 
-$aTabs = array(
-	array("DIV"=>"tab1", "TAB"=>GetMessage("TAB_STANDARD"), "ICON"=>"main_user_edit", "TITLE"=>GetMessage("TAB_STANDARD_DESC")),
-	array("DIV"=>"tab2", "TAB"=>GetMessage("TAB_ADVANCED"), "ICON"=>"main_user_edit", "TITLE"=>GetMessage("TAB_ADVANCED_DESC")),
-);
+$aTabs = array();
+$aTabs[] = array("DIV"=>"std", "TAB"=>GetMessage("DUMP_MAIN_MAKE_ARC"), "ICON"=>"main_user_edit", "TITLE"=>GetMessage("MAKE_DUMP_FULL"));
+$aTabs[] = array("DIV"=>"expert", "TAB"=>GetMessage("DUMP_MAIN_PARAMETERS"), "ICON"=>"main_user_edit", "TITLE"=>GetMessage("DUMP_MAIN_EXPERT_SETTINGS"));
+
 $editTab = new CAdminTabControl("editTab", $aTabs, true, true);
 
-?>
+if ($DB->type != 'MYSQL')
+	echo BeginNote().GetMessage('MAIN_DUMP_MYSQL_ONLY').EndNote();
+if (!$bMcrypt)
+{
+	CAdminMessage::ShowMessage(array(
+		"MESSAGE" => GetMessage("MAIN_DUMP_NOT_INSTALLED"),
+		"DETAILS" => GetMessage("MAIN_DUMP_NO_ENC_FUNCTIONS"),
+		"TYPE" => "ERROR",
+		"HTML" => true));
+}
 
-<div id="dump_result_div"></div>
-<? 
-echo BeginNote();
-echo GetMessage("MAIN_DUMP_HEADER_MSG");
-echo EndNote();
+echo '<div id="empty_error" style="display:none">';
+CAdminMessage::ShowMessage(array(
+	"MESSAGE" => GetMessage("MAIN_DUMP_ERROR"),
+	"DETAILS" => GetMessage("ERR_EMPTY_RESPONSE", array('#DATE#' => date('Y-m-d H:i'))),
+	"TYPE" => "ERROR",
+	"HTML" => true));
+echo '</div>';
+
+if (defined('DUMP_DEBUG_MODE'))
+	echo '<div style="color:red">DEBUG MODE</div><input type=button value=Next onclick="AjaxSend(\'?process=Y&'.bitrix_sessid_get().'\')">';
+
+?><div id="dump_result_div"></div><?
 
 CAdminFileDialog::ShowScript(
 	Array
@@ -912,14 +1134,25 @@ CAdminFileDialog::ShowScript(
 );		
 ?>
 <script language="JavaScript">
+function GetLicenseInfo()
+{
+	ShowWaitWindow();
+	CHttpRequest.Action = function(result)
+	{
+		CloseWaitWindow();
+		BX('license_info').innerHTML = result;
+	}
+	CHttpRequest.Send('?action=key_info&lang=<?=LANGUAGE_ID?>&<?=bitrix_sessid_get()?>');
+}
+
 var numRows=0;
 function AddTableRow()
 {
-	oTable = document.getElementById('skip_mask_table');
+	oTable = BX('skip_mask_table');
 	numRows = oTable.rows.length;
 	oRow = oTable.insertRow(-1);
 	oCell = oRow.insertCell(0);
-	oCell.innerHTML = '<input name="arMask[]" id="mnu_FILES_' + numRows  +'" size=30><input type="button" id="mnu_FILES_btn_' + numRows  + '" value="..." onclick="showMenu(this, '+ numRows  +')">';
+	oCell.innerHTML = '<input type="text" name="arMask[]" id="mnu_FILES_' + numRows  +'" size=30><input type="button" id="mnu_FILES_btn_' + numRows  + '" value="..." onclick="showMenu(this, '+ numRows  +')">';
 }
 
 var currentID;
@@ -932,301 +1165,315 @@ function showMenu(div, id)
 
 function mnu_SelectValue(filename, path, site, title, menu)
 {
-	document.getElementById('mnu_FILES_' + currentID).value = path + (path == '/' ? '' : '/') + filename;
+	BX('mnu_FILES_' + currentID).value = path + (path == '/' ? '' : '/') + filename;
+}
+
+function CheckExpert()
+{
+	ob = document.fd1.dump_expert;
+
+	table = BX('tr_dump_expert').parentNode.parentNode;
+	found = false;
+	for(i=0;i<table.rows.length;i++)
+	{
+		if (found)
+			table.rows[i].style.display = ob.checked ? '' : 'none';
+		if (table.rows[i].id == 'tr_dump_expert')
+			found = true;
+	}
+	CheckActiveStart();
 }
 
 function CheckActiveStart()
 {
-	if (ob = document.fd1.dump_base)
+	start = true;
+	if (document.fd1.dump_expert.checked)
 	{
-		document.fd1.dump_base_skip_stat.disabled = !ob.checked;
-		document.fd1.dump_base_skip_search.disabled = !ob.checked;
-		document.fd1.dump_base_skip_log.disabled = !ob.checked;
+		start = document.fd1.dump_file_public.checked || document.fd1.dump_file_kernel.checked;
+
+		document.fd1.max_file_size.disabled = !start;
+		document.fd1.skip_symlinks.disabled = !start;
+		document.fd1.skip_mask.disabled = !start;
+
+		mask = start && document.fd1.skip_mask.checked;
+		BX('more_button').disabled = !mask;
+
+		oTable = BX('skip_mask_table');
+		numRows = oTable.rows.length;
+		for(i=0;i<numRows;i++)
+		{
+			BX('mnu_FILES_'+i).disabled = !mask;
+			BX('mnu_FILES_btn_'+i).disabled = !mask;
+		}
+
+		<?
+		if ($arAllBucket)
+		{
+			foreach($arAllBucket as $arBucket)
+				echo 'start = start || BX("dump_cloud_'.$arBucket['ID'].'").checked;'."\n";
+		}
+		?>
+
+		if (ob = document.fd1.dump_base)
+		{
+			document.fd1.dump_base_skip_stat.disabled = !ob.checked;
+			document.fd1.dump_base_skip_search.disabled = !ob.checked;
+			document.fd1.dump_base_skip_log.disabled = !ob.checked;
+
+			start = start || ob.checked;
+		}
 	}
 
-	noFiles = !document.fd1.dump_file_public.checked && !document.fd1.dump_file_kernel.checked;
-	document.fd1.max_file_size.disabled = noFiles;
-	document.fd1.skip_symlinks.disabled = noFiles;
-	document.fd1.skip_mask.disabled = noFiles;
-
-	if (ob = document.fd1.dump_site_id)
-		ob.disabled = !document.fd1.dump_file_public.checked;
-
-	noMask = noFiles || !document.fd1.skip_mask.checked;
-
-	oTable = document.getElementById('skip_mask_table');
-	numRows = oTable.rows.length;
-	for(i=0;i<numRows;i++)
-	{
-		document.getElementById('mnu_FILES_'+i).disabled = noMask;
-		document.getElementById('mnu_FILES_btn_'+i).disabled = noMask;
-	}
-
-	<?
-	if ($arAllBucket)
-	{
-		foreach($arAllBucket as $arBucket)
-			echo 'noFiles = noFiles && !document.getElementById("dump_cloud_'.$arBucket['ID'].'").checked'."\n";
-	}
-	?>
-
-	document.getElementById('more_button').disabled = noMask;
-	document.getElementById('start_button').disabled = noFiles && !document.fd1.dump_base.checked;
+	BX('start_button').disabled = !start;
 }
 
-function CheckActiveMode()
+function CheckEncrypt(ob)
 {
-	standard = document.fd1.dump_file_public.checked && document.fd1.dump_file_kernel.checked && (document.fd1.max_file_size.value == 0) && !document.fd1.skip_symlinks.checked && !document.fd1.skip_mask.checked && document.fd1.dump_integrity_check.checked;
-
-	if (standard && (ob_dump = document.fd1.dump_base))
-		standard = ob_dump.checked && !document.fd1.dump_base_skip_stat.checked && !document.fd1.dump_base_skip_search.checked && !document.fd1.dump_base_skip_log.checked;
-
-	if (!standard)
-		return;
-
-	if (document.fd1.dump_max_exec_time.value == 20 && document.fd1.dump_max_exec_time_sleep.value == 3 && !document.fd1.dump_disable_gzip.checked)
-		document.getElementById('shared_profile').checked = true;
-	else if (document.fd1.dump_max_exec_time.value == 45 && document.fd1.dump_max_exec_time_sleep.value == 0 && !document.fd1.dump_disable_gzip.checked)
-		document.getElementById('vps_profile').checked = true;
-	else if (document.fd1.dump_max_exec_time.value == 15 && document.fd1.dump_max_exec_time_sleep.value == 10 && document.fd1.dump_disable_gzip.checked)
-		document.getElementById('slow_profile').checked = true;
-
-	CheckActiveStart();
+	if(enc = document.fd1.dump_encrypt)
+	{
+		enc.disabled = (ob.value == -1);
+	}
 }
 
-BX.ready(function()
+BX.ready(
+	function()
 	{
-		CheckActiveMode();
-		<?=$arAllBucket ? 'RefreshList();' : ''?>
+		CheckExpert();
+		<?=$arAllBucket ? 'RefreshList();' : '' ?>
 	}
 );
 
-function SetMode(ob)
-{
-	document.fd1.dump_file_public.checked = true;
-	document.fd1.dump_file_kernel.checked = true;
-	document.fd1.max_file_size.value = 0;
-	document.fd1.skip_symlinks.checked = false;
-	document.fd1.skip_mask.checked = false;
-
-	if (ob_dump = document.fd1.dump_base)
-	{
-		ob_dump.checked = true;
-		document.fd1.dump_base_skip_stat.checked = false;
-		document.fd1.dump_base_skip_search.checked = false;
-		document.fd1.dump_base_skip_log.checked = false;
-	}
-
-
-	switch (ob.value)
-	{
-		case 'shared':
-			document.fd1.dump_max_exec_time.value = 20;
-			document.fd1.dump_max_exec_time_sleep.value = 3;
-			document.fd1.dump_disable_gzip.checked = false;
-			document.fd1.dump_integrity_check.checked = true;
-		break;
-		case 'vps':
-			document.fd1.dump_max_exec_time.value = 45;
-			document.fd1.dump_max_exec_time_sleep.value = 0;
-			document.fd1.dump_disable_gzip.checked = false;
-			document.fd1.dump_integrity_check.checked = true;
-		break;
-		case 'slow':
-		default:
-			document.fd1.dump_max_exec_time.value = 15;
-			document.fd1.dump_max_exec_time_sleep.value = 10;
-			document.fd1.dump_disable_gzip.checked = true;
-			document.fd1.dump_integrity_check.checked = true;
-		break;
-	}
-	CheckActiveStart();
-}
-
 var stop;
+var dump_encrypt_key;
+var PasswordDialog;
 function StartDump()
 {
-	queryString='?lang=<?echo htmlspecialcharsbx(LANG)?>';
-	queryString+='&process=Y';
-	queryString+='&action=start';
-
-	queryString+='&dump_max_exec_time=' + document.fd1.dump_max_exec_time.value;
-	queryString+='&dump_max_exec_time_sleep=' + document.fd1.dump_max_exec_time_sleep.value;
-
-	if (document.fd1.dump_disable_gzip.checked)
-		queryString += '&dump_disable_gzip=Y';
-
-	if (document.fd1.dump_integrity_check.checked)
-		queryString += '&dump_integrity_check=Y';
-	
-	if (ob = document.fd1.dump_bucket_id)
-		queryString += '&dump_bucket_id=' + ob.value;
-
-	if(document.fd1.dump_file_public.checked)
-		queryString +='&dump_file_public=Y';
-
-	if(document.fd1.dump_file_kernel.checked)
-			queryString+='&dump_file_kernel=Y';
-
-	if(document.fd1.skip_symlinks.checked)
-			queryString+='&skip_symlinks=Y';
-
-	if(document.fd1.skip_mask.checked)
+	if (BX('bitrixcloud').checked || (document.fd1.dump_expert.checked && (ob = document.fd1.dump_encrypt) && ob.checked))
 	{
-		queryString+='&skip_mask=Y';
+		if (!PasswordDialog)
+		{
+			PasswordDialog = new BX.CDialog({
+				title: '<?=GetMessage("DUMP_MAIN_ENC_ARC")?>',
+				content: '<? 
+					echo '<div style="color:red" id=password_error></div>';
+					echo CUtil::JSEscape(BeginNote().GetMessage('MAIN_DUMP_SAVE_PASS').EndNote());
+					echo '<table>';
+					echo '<tr><td>'.GetMessage('MAIN_DUMP_ENC_PASS').'</td><td><input type="password" value="" id="dump_encrypt_key" onkeyup="if(event.keyCode==13) {BX(&quot;dump_encrypt_key_confirm&quot;).focus()}"/></td></tr>';
+					echo '<tr><td>'.GetMessage('DUMP_MAIN_PASSWORD_CONFIRM').'</td><td><input type="password" value="" id="dump_encrypt_key_confirm"  onkeyup="if(event.keyCode==13) {SavePassword()}"/></td></tr>';
+					echo '</table>';
+				?>',
+				height: 300,
+				width: 600,
+				resizable: false,
+				buttons: [ {
+					title: '<?=GetMessage("MAIN_DUMP_FILE_DUMP_BUTTON")?>',
+	//				id: 'my_save',
+	//				name: 'my_save',
+					className: 'adm-btn-save',
+					action: SavePassword
 
-		oTable = document.getElementById('skip_mask_table');
-		numRows = oTable.rows.length;
-
-		for(i=0;i<numRows;i++)
-			queryString+='&arMask[]=' + document.getElementById('mnu_FILES_'+i).value;
+				}, BX.CAdminDialog.btnCancel ]
+			})
+		}
+		PasswordDialog.Show()
+		BX('dump_encrypt_key').focus();
 	}
-
-	if(document.fd1.dump_file_public.checked || document.fd1.dump_file_kernel.checked)
-		queryString+='&max_file_size=' + document.fd1.max_file_size.value;
-
-	if(document.fd1.dump_base.checked)
+	else
 	{
-		queryString +='&dump_base=Y';
-
-		if(document.fd1.dump_base_skip_stat.checked)
-			queryString +='&dump_base_skip_stat=Y';
-		if(document.fd1.dump_base_skip_search.checked)
-			queryString +='&dump_base_skip_search=Y';
-		if(document.fd1.dump_base_skip_log.checked)
-			queryString +='&dump_base_skip_log=Y';
+		dump_encrypt_key = '';
+		DoDump();
 	}
+}
+
+function SavePassword()
+{
+	key = BX('dump_encrypt_key').value;
+	l = key.length;
+
+	strError = '';
+	if (!l)
+		strError = "<?=GetMessage("MAIN_DUMP_EMPTY_PASS")?>";
+	else if (!/^[\040-\176]*$/.test(key))
+		strError = "<?=GetMessage('DUMP_ERR_NON_ASCII')?>";
+	else if (l < 6)
+		strError = "<?=GetMessage("MAIN_DUMP_ENC_PASS_DESC")?>";
+	else if (key != BX('dump_encrypt_key_confirm').value)
+		strError = "<?=GetMessage("DUMP_MAIN_ERR_PASS_CONFIRM")?>";
+
+	if (strError)
+	{
+		BX('password_error').innerHTML = strError;
+		BX('dump_encrypt_key').focus();
+	}
+	else
+	{
+		BX('password_error').innerHTML = '';
+		dump_encrypt_key = key;
+		BX.WindowManager.Get().Close();
+		DoDump();
+	}
+}
+
+function DoDump()
+{
+	queryString='lang=<?echo htmlspecialcharsbx(LANGUAGE_ID)?>&process=Y&action=start';
+
+	ob = document.fd1.dump_bucket_id;
+	for (i = 0; i<ob.length; i++)
+		if (ob[i].checked)
+			queryString += '&dump_bucket_id=' + ob[i].value;
 
 	if (ob = document.fd1.dump_site_id)
 		queryString += '&dump_site_id=' + ob.value;
 
-	<?
-	if ($arAllBucket)
+	if (dump_encrypt_key)
+		queryString += '&dump_encrypt_key=' + encodeURIComponent(dump_encrypt_key);
+
+	if (document.fd1.dump_expert.checked)
 	{
-		foreach($arAllBucket as $arBucket)
+		queryString+='&dump_max_exec_time=' + encodeURIComponent(document.fd1.dump_max_exec_time.value);
+		queryString+='&dump_max_exec_time_sleep=' + encodeURIComponent(document.fd1.dump_max_exec_time_sleep.value);
+		queryString+='&dump_archive_size_limit=' + encodeURIComponent(document.fd1.dump_archive_size_limit.value);
+
+		if (document.fd1.dump_disable_gzip.checked)
+			queryString += '&dump_disable_gzip=Y';
+
+		if (document.fd1.dump_integrity_check.checked)
+			queryString += '&dump_integrity_check=Y';
+		
+		if(document.fd1.dump_file_public.checked)
+			queryString +='&dump_file_public=Y';
+
+		if(document.fd1.dump_file_kernel.checked)
+			queryString+='&dump_file_kernel=Y';
+
+		if(document.fd1.skip_symlinks.checked)
+			queryString+='&skip_symlinks=Y';
+
+		if(document.fd1.skip_mask.checked)
 		{
-		?>
-			if (document.getElementById('dump_cloud_<?=$arBucket['ID']?>').checked)
-				queryString += '&dump_cloud[<?=$arBucket['ID']?>]=Y';
-		<?
+			queryString+='&skip_mask=Y';
+
+			oTable = BX('skip_mask_table');
+			numRows = oTable.rows.length;
+
+			for(i=0;i<numRows;i++)
+				queryString+='&arMask[]=' + BX('mnu_FILES_'+i).value;
+		}
+
+		if(document.fd1.dump_file_public.checked || document.fd1.dump_file_kernel.checked)
+			queryString+='&max_file_size=' + document.fd1.max_file_size.value;
+
+		if((ob = document.fd1.dump_base) && ob.checked)
+		{
+			queryString +='&dump_base=Y';
+
+			if(document.fd1.dump_base_skip_stat.checked)
+				queryString +='&dump_base_skip_stat=Y';
+			if(document.fd1.dump_base_skip_search.checked)
+				queryString +='&dump_base_skip_search=Y';
+			if(document.fd1.dump_base_skip_log.checked)
+				queryString +='&dump_base_skip_log=Y';
 		}
 	}
-	?>
+	else
+		queryString += '&dump_all=Y';
 
 	queryString += '&<?=bitrix_sessid_get()?>';
 
-	document.getElementById('dump_result_div').innerHTML='';
-	AjaxSend(queryString);
+	BX('dump_result_div').innerHTML='';
+	AjaxSend('dump.php', queryString);
 }
 
-function EndDump()
+function EndDump(delay)
 {
 	stop = true;
-	document.getElementById('stop_button').disabled = true;
-	document.getElementById('start_button').disabled = false;
+	BX('stop_button').disabled = true;
+	if (!delay)
+		BX('start_button').disabled = false;
 }
 
-function AjaxSend(url)
+function AjaxSend(url, data)
 {
 	stop = false;
-	document.getElementById('stop_button').disabled=false;
-	document.getElementById('start_button').disabled=true;
+	BX('stop_button').disabled=false;
+	BX('start_button').disabled=true;
 
 	ShowWaitWindow();
 	CHttpRequest.Action = function(result)
 	{
 		CloseWaitWindow();
 		if (stop)
+		{
+			EndDump();
 			RefreshList();
+		}
+		else if (!result)
+		{
+			BX('empty_error').style.display = '';
+		}
 		else
-			document.getElementById('dump_result_div').innerHTML = result;
+		{
+			BX('dump_result_div').innerHTML = result;
+		}
 	}
-	CHttpRequest.Send(url);
+	if (data)
+		CHttpRequest.Post(url, data);
+	else
+		CHttpRequest.Send(url);
 }
 
 function RefreshList()
 {
-	tbl_dump.GetAdminList('/bitrix/admin/dump.php?lang=<?=LANG?>');
+	tbl_dump.GetAdminList('/bitrix/admin/dump.php?lang=<?=LANGUAGE_ID?>');
 }
 </script>
 
 
-	<form name="fd1" action="<?echo $APPLICATION->GetCurPage()?>?lang=<?=LANG?>" method="GET">
+	<form name="fd1" action="<?echo $APPLICATION->GetCurPage()?>?lang=<?=LANGUAGE_ID?>" method="GET">
 	<?
 	$editTab->Begin();
 	$editTab->BeginNextTab();
-	?>
 
-	<tr>
-		<td colspan=2 align=center><? 
-		echo BeginNote();
-		echo GetMessage('MODE_DESC');
-		echo EndNote();
-		?></td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td>
-		<td><label><input type="radio" name=arc_profile value=shared id='shared_profile' onclick="SetMode(this)"> <?=GetMessage('MODE_SHARED')?></label></td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td>
-		<td><label><input type="radio" name=arc_profile value=vps id='vps_profile' onclick="SetMode(this)"> <?=GetMessage('MODE_VPS')?></label></td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td>
-		<td><label><input type="radio" name=arc_profile value=slow id='slow_profile' onclick="SetMode(this)"> <?=GetMessage('MODE_SLOW')?></label></td>
-	</tr>
-	<?
-	$editTab->BeginNextTab();
-
-	if ($arWriteBucket)
+	if ($bBitrixCloud)
 	{
 	?>
-		<tr class="heading">
-			<td colspan="2"><?=GetMessage("MAIN_DUMP_CLOUD_STORAGES")?></td>
-		</tr>
-		<tr>
-			<td><?=GetMessage("MAIN_DUMP_ARC_LOCATION")?></td>
-			<td>
-				<select name=dump_bucket_id>
-				<?
-					echo '<option value="0">'.GetMessage("MAIN_DUMP_LOCAL_DISK").'</option>';
-					foreach($arWriteBucket as $f)
-						echo '<option value="'.$f['ID'].'" '.(IntOption("dump_bucket_id") == $f['ID'] ? "selected" : "").'>'.htmlspecialcharsbx($f['BUCKET'].' ('.$f['SERVICE_ID'].')').'</option>';
-				?>
-				</select>
-			</td>
-		</tr>
-	<?
-	}
-
-	if ($arAllBucket)
-	{
-	?>
-		<tr>
-			<td valign=top><?=GetMessage("MAIN_DUMP_ARC_FROM_CLOUD")?></td>
-			<td>
-				<?
-					foreach($arAllBucket as $arBucket)
-						echo '<div><label><input type="checkbox" id="dump_cloud_'.$arBucket['ID'].'" OnClick="CheckActiveStart()" '.(IntOption("dump_cloud_".$arBucket['ID']) ? "checked" : "").'> '.htmlspecialcharsbx($arBucket['BUCKET'].' ('.$arBucket['SERVICE_ID'].')').'</label></div>';
-				?>
-			</td>
-		</tr>
+	<tr>
+		<td class="adm-detail-valign-top" width="40%"><?=GetMessage('DUMP_MAIN_BITRIX_CLOUD_DESC')?><span class="required"><sup>1</sup></span>:</td>
+		<td width="60%">
+		<?
+			$backup = CBitrixCloudBackup::getInstance();
+			CAdminMessage::ShowMessage(array(
+				"TYPE" => "PROGRESS",
+				"DETAILS" => GetMessage("BCL_BACKUP_USAGE", array(
+					"#QUOTA#" => CFile::FormatSize($quota = $backup->getQuota()),
+					"#USAGE#" => CFile::FormatSize($usage = $backup->getUsage()),
+				)).'#PROGRESS_BAR#',
+				"HTML" => false,
+				"PROGRESS_TOTAL" => $quota,
+				"PROGRESS_VALUE" => $usage,
+			));
+		?>
+		</td>
+	</tr>
 	<?
 	}
 	?>
-	<tr class="heading">
-		<td colspan="2"><?echo GetMessage("MAIN_DUMP_FILE_TITLE")?></td>
-	</tr>
 	<tr>
-		<td style="width:50%"><?echo GetMessage("MAIN_DUMP_FILE_KERNEL")?></td>
-		<td><input type="checkbox" name="dump_file_kernel" value="Y" OnClick="CheckActiveStart()" <?=IntOption("dump_file_kernel") ? "checked" : ''?>></td>
+		<td class="adm-detail-valign-top" width=40%><?=GetMessage('MAIN_DUMP_ARC_LOCATION')?></td>
+		<td>
+			<div><label><input type=radio name=dump_bucket_id value="-1" <?=$bBitrixCloud ? "checked" : ""?> id="bitrixcloud" <?=$bBitrixCloud ? '' : 'disabled'?> onclick="CheckEncrypt(this)"> <?=GetMessage('DUMP_MAIN_IN_THE_BXCLOUD')?></label><?=$strBXError ? ' ('.$strBXError.')' : ''?></div>
+			<div><label><input type=radio name=dump_bucket_id value="0"  <?=!$bBitrixCloud ? "checked" : ""?> onclick="CheckEncrypt(this)"> <?=GetMessage('MAIN_DUMP_LOCAL_DISK')?></label></div>
+			<? 
+			if ($arWriteBucket) 
+			{ 
+				foreach($arWriteBucket as $f)
+					echo '<div><label><input type=radio name=dump_bucket_id value="'.$f['ID'].'" onclick="CheckEncrypt(this)"> '.GetMessage('DUMP_MAIN_IN_THE_CLOUD').' '.htmlspecialcharsbx($f['BUCKET'].' ('.$f['SERVICE_ID'].')').'</label></div>';
+			}
+			?>
+		</td>
 	</tr>
-	<tr>
-		<td><?echo GetMessage("MAIN_DUMP_FILE_PUBLIC")?></td>
-		<td><input type="checkbox" name="dump_file_public" value="Y" OnClick="CheckActiveStart()" <?=IntOption("dump_file_public") ? "checked" : ''?>></td>
-	</tr>
-	<?
+<?
 	$arSitePath = array();
 	$res = CSite::GetList($by='sort', $order='asc', array('ACTIVE'=>'Y'));
 	while($f = $res->Fetch())
@@ -1234,14 +1481,13 @@ function RefreshList()
 		$root = rtrim($f['ABS_DOC_ROOT'],'/');
 		if (is_dir($root))
 			$arSitePath[$root] = array($f['ID'] => '['.$f['ID'].'] '.$f['NAME']);
-//		$arSitePath[$f['ABS_DOC_ROOT'].rtrim($f['DIR'],'/')] = array($f['ID'] => '['.$f['ID'].'] '.$f['NAME']);
 	}
 
 	if (count($arSitePath) > 1)
 	{
 	?>
 	<tr>
-		<td><?=GetMessage('PUBLIC_PART')?></td>
+		<td><?=GetMessage("DUMP_MAIN_SITE")?><span class="required"><sup>2</sup></span></td>
 		<td>
 			<select name=dump_site_id>
 			<?
@@ -1258,26 +1504,75 @@ function RefreshList()
 	<?
 	}
 	?>
-	<?
-		$bNoFiles = !CheckDumpFiles();
+		<?
+
+
+	$editTab->BeginNextTab();
 	?>
 	<tr>
-		<td><?echo GetMessage("MAIN_DUMP_FILE_MAX_SIZE")?></td>
-		<td><input type="text" name="max_file_size" size="10" value="<?=IntOption("dump_max_file_size")?>" <?=CheckDumpFiles() ? '' : "disabled"?>>
-		<?echo GetMessage("MAIN_DUMP_FILE_MAX_SIZE_kb")?></td>
+		<td width=40%><?=GetMessage("DUMP_MAIN_ENABLE_EXPERT")?>:</td>
+		<td><input type="checkbox" name="dump_expert" onclick="CheckExpert()"></td>
 	</tr>
-	<tr>
-		<td><?echo GetMessage("MAIN_DUMP_SKIP_SYMLINKS")?></td>
-		<td><input type="checkbox" name="skip_symlinks" <?=$bNoFiles?'disabled':''?> value="Y" <?=IntOption("skip_symlinks") ? "checked" : ''?>></td>
+	<tr id="tr_dump_expert">
+		<td colspan=2><? 
+		echo BeginNote();
+		echo GetMessage("DUMP_MAIN_CHANGE_SETTINGS");
+		echo EndNote();
+		?></td>
 	</tr>
-	<? $bMask = IntOption("skip_mask"); ?>
-	<tr>
-		<td><?echo GetMessage("MAIN_DUMP_MASK")?><span class="required"><sup>1</sup></span></td>
-		<td><input type="checkbox" name="skip_mask" <?=$bNoFiles?'disabled':''?> value="Y" <?=$bMask?" checked":'';?> onclick="CheckActiveStart()">
+
+
+
+	<tr class="heading">
+		<td colspan="2"><?=GetMessage("DUMP_MAIN_ARC_CONTENTS")?></td>
 	</tr>
+<?
+if ($arAllBucket)
+{
+?>
 	<tr>
-		<td>&nbsp;</td>
+		<td class="adm-detail-valign-top"><?=GetMessage("DUMP_MAIN_DOWNLOAD_CLOUDS")?></td>
 		<td>
+			<?
+			foreach($arAllBucket as $arBucket)
+				echo '<div><label><input type="checkbox" id="dump_cloud_'.$arBucket['ID'].'" OnClick="CheckActiveStart()" '.(IntOption("dump_cloud_".$arBucket['ID']) ? "checked" : "").'> '.htmlspecialcharsbx($arBucket['BUCKET'].' ('.$arBucket['SERVICE_ID'].')').'</label></div>';
+			?>
+		</td>
+	</tr>
+<?
+}
+?>
+	<?
+	if ($DB->type == 'MYSQL') 
+	{
+		?>
+		<tr>
+			<td><?=GetMessage("DUMP_MAIN_ARC_DATABASE")?> (<?=getTableSize("")?> <?=GetMessage("MAIN_DUMP_BASE_SIZE")?>):</td>
+			<td><input type="checkbox" name="dump_base" OnClick="CheckActiveStart()" <?=IntOption("dump_base") ? "checked" : "" ?>></td>
+		</tr>
+		<tr>
+			<td class="adm-detail-valign-top"><?=GetMessage("DUMP_MAIN_DB_EXCLUDE")?></td>
+			<td>
+				<div><label><input type="checkbox" name="dump_base_skip_stat" <?=IntOption("dump_base_skip_stat") ? "checked" : "" ?>> <? echo GetMessage("MAIN_DUMP_BASE_STAT")." (".getTableSize("b_stat")." ".GetMessage("MAIN_DUMP_BASE_SIZE").")" ?></label></div>
+				<div><label><input type="checkbox" name="dump_base_skip_search" value="Y" <?=IntOption("dump_base_skip_search") ? "checked" : "" ?>> <? echo GetMessage("MAIN_DUMP_BASE_SINDEX")." (".getTableSize("b_search")." ".GetMessage("MAIN_DUMP_BASE_SIZE").")" ?></label></div>
+				<div><label><input type="checkbox" name="dump_base_skip_log" value="Y"<?=IntOption("dump_base_skip_log") ? "checked" : "" ?>> <? echo GetMessage("MAIN_DUMP_EVENT_LOG")." (".getTableSize("b_event_log")." ".GetMessage("MAIN_DUMP_BASE_SIZE").")" ?></label></div>
+			</td>
+		</tr>
+		<?
+	}
+	?>
+	<tr>
+		<td><?echo GetMessage("MAIN_DUMP_FILE_KERNEL")?></td>
+		<td><input type="checkbox" name="dump_file_kernel" value="Y" OnClick="CheckActiveStart()" <?=IntOption("dump_file_kernel") ? "checked" : ''?>></td>
+	</tr>
+	<tr>
+		<td><?echo GetMessage("MAIN_DUMP_FILE_PUBLIC")?></td>
+		<td><input type="checkbox" name="dump_file_public" value="Y" OnClick="CheckActiveStart()" <?=IntOption("dump_file_public") ? "checked" : ''?>></td>
+	</tr>
+	<tr>
+		<td class="adm-detail-valign-top"><?echo GetMessage("MAIN_DUMP_MASK")?><span class="required"><sup>3</sup></span></td>
+		<td>
+			<input type="checkbox" name="skip_mask" value="Y" <?=IntOption('skip_mask')?" checked":'';?> onclick="CheckActiveStart()">
 			<table id="skip_mask_table" cellspacing=0 cellpadding=0>
 			<?
 			$i=-1;
@@ -1290,67 +1585,47 @@ function RefreshList()
 				$i++;
 				echo
 				'<tr><td>
-					<input name="arMask[]" id="mnu_FILES_'.$i.'" value="'.htmlspecialcharsbx($mask).'" '.(!$bMask||$bNoFiles?'disabled':'').' size=30>'.
-					'<input type="button" id="mnu_FILES_btn_'.$i.'" '.(!$bMask||$bNoFiles?'disabled':'').' value="..." onclick="showMenu(this, \''.$i.'\')">'.
+					<input type="text" name="arMask[]" id="mnu_FILES_'.$i.'" value="'.htmlspecialcharsbx($mask).'" size=30>'.
+					'<input type="button" id="mnu_FILES_btn_'.$i.'" value="..." onclick="showMenu(this, \''.$i.'\')">'.
 				'</tr>';
 			}
 			$i++;
 			?>
-				<tr><td><input name="arMask[]" id="mnu_FILES_<?=$i?>" size=30 <?=!$bMask||$bNoFiles?'disabled':'';?>><input type="button" id="mnu_FILES_btn_<?=$i?>" value="..." onclick="showMenu(this, '<?=$i?>')" <?=!$bMask||$bNoFiles?'disabled':'';?>></tr>
+				<tr><td><input type="text" name="arMask[]" id="mnu_FILES_<?=$i?>" size=30><input type="button" id="mnu_FILES_btn_<?=$i?>" value="..." onclick="showMenu(this, '<?=$i?>')"></tr>
 			</table>
-			<input type=button id="more_button" value="<?=GetMessage('MAIN_DUMP_MORE')?>" onclick="AddTableRow()" <?=(!$bMask||$bNoFiles?'disabled':'')?>>
+			<input type=button id="more_button" value="<?=GetMessage('MAIN_DUMP_MORE')?>" onclick="AddTableRow()">
 		</td>
 	</tr>
-	<tr class="heading">
-		<td colspan="2"><?echo GetMessage("MAIN_DUMP_BASE_TITLE")?></td>
-	</tr>
-	<?
-	if ($DB->type != 'MYSQL') 
-	{
-		$strDisableNotMysql = 'disabled';
-	?>
 	<tr>
-		<td colspan=2 align=center><? 
-		echo BeginNote();
-		echo GetMessage('MAIN_DUMP_MYSQL_ONLY');
-		echo EndNote();
-		?></td>
+		<td><?echo GetMessage("MAIN_DUMP_FILE_MAX_SIZE")?></td>
+		<td><input type="text" name="max_file_size" size="10" value="<?=IntOption("dump_max_file_size")?>" <?=CBackup::CheckDumpFiles() ? '' : "disabled"?>>
+		<?echo GetMessage("MAIN_DUMP_FILE_MAX_SIZE_kb")?></td>
 	</tr>
-	<? 
-	} else 
-		$strDisableNotMysql = '';
-	?>
 	<tr>
-		<td><?echo GetMessage("MAIN_DUMP_BASE_TRUE")?></td>
-		<td><input type="checkbox" <?=$strDisableNotMysql?> name="dump_base" OnClick="CheckActiveStart()" <?=IntOption("dump_base") ? "checked" : "" ?>><?= " (".getTableSize("")." ".GetMessage("MAIN_DUMP_BASE_SIZE").") " ;?>
-		</td>
+		<td><?echo GetMessage("MAIN_DUMP_SKIP_SYMLINKS")?></td>
+		<td><input type="checkbox" name="skip_symlinks" value="Y" <?=IntOption("skip_symlinks") ? "checked" : ''?>></td>
 	</tr>
 
-	<tr>
-		<td><?echo GetMessage("MAIN_DUMP_BASE_IGNORE")?></td>
-		<td><label><input type="checkbox" <?=$strDisableNotMysql?> name="dump_base_skip_stat" <?=IntOption("dump_base_skip_stat") ? "checked" : "" ?>> <? echo GetMessage("MAIN_DUMP_BASE_STAT")." (".getTableSize("b_stat")." ".GetMessage("MAIN_DUMP_BASE_SIZE").")" ?></label>
-		</td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td>
-		<td><label><input type="checkbox" <?=$strDisableNotMysql?> name="dump_base_skip_search" value="Y" <?=IntOption("dump_base_skip_search") ? "checked" : "" ?>> <? echo GetMessage("MAIN_DUMP_BASE_SINDEX")." (".getTableSize("b_search")." ".GetMessage("MAIN_DUMP_BASE_SIZE").")" ?></label>
-		</td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td>
-		<td><label><input type="checkbox" <?=$strDisableNotMysql?> name="dump_base_skip_log" value="Y"<?=IntOption("dump_base_skip_log") ? "checked" : "" ?>> <? echo GetMessage("MAIN_DUMP_EVENT_LOG")." (".getTableSize("b_event_log")." ".GetMessage("MAIN_DUMP_BASE_SIZE").")" ?></label>
-		</td>
-	</tr>
+
+
 	<tr class="heading">
-		<td colspan="2"><?=GetMessage('SERVER_LIMIT')?></td>
+		<td colspan="2"><?=GetMessage("DUMP_MAIN_ARC_MODE")?></td>
 	</tr>
 	<tr>
-		<td><?=GetMessage('STEP_LIMIT')?></td>
+		<td><?=GetMessage("MAIN_DUMP_ENABLE_ENC")?><span class="required"><sup>4</sup></td>
+		<td><input type="checkbox" name="dump_encrypt" value="Y" <?=($bBitrixCloud || IntOption("dump_encrypt") ? "checked" : "")?> <?=$bMcrypt && !$bBitrixCloud  ? '' : 'disabled'?>></td>
+	</tr>
+	<tr>
+		<td width=40%><?=GetMessage('INTEGRITY_CHECK_OPTION')?></td>
+		<td><input type="checkbox" name="dump_integrity_check" <?=IntOption('dump_integrity_check') ? 'checked' : '' ?>>
+	</tr>
+	<tr>
+		<td width=40%><?=GetMessage('STEP_LIMIT')?></td>
 		<td>
-			<input name="dump_max_exec_time" value="<?=IntOption("dump_max_exec_time")?>" size=2>
+			<input type="text" name="dump_max_exec_time" value="<?=IntOption("dump_max_exec_time")?>" size=2>
 			<?echo GetMessage("MAIN_DUMP_FILE_STEP_sec");?>,
 			<?echo GetMessage("MAIN_DUMP_FILE_STEP_SLEEP")?>
-			<input name="dump_max_exec_time_sleep" value="<?=IntOption("dump_max_exec_time_sleep")?>" size=2>
+			<input type="text" name="dump_max_exec_time_sleep" value="<?=IntOption("dump_max_exec_time_sleep")?>" size=2>
 			<?echo GetMessage("MAIN_DUMP_FILE_STEP_sec");?>
 		</td>
 	</tr>
@@ -1358,347 +1633,43 @@ function RefreshList()
 		<td><?=GetMessage('DISABLE_GZIP')?></td>
 		<td><input type="checkbox" name="dump_disable_gzip" <?=IntOption('dump_use_compression') ? '' : 'checked' ?>>
 	</tr>
+
 	<tr>
-		<td><?=GetMessage('INTEGRITY_CHECK_OPTION')?></td>
-		<td><input type="checkbox" name="dump_integrity_check" <?=IntOption('dump_integrity_check') ? 'checked' : '' ?>>
+		<td><?=GetMessage("MAIN_DUMP_MAX_ARCHIVE_SIZE")?></td>
+		<td><input type="text" name="dump_archive_size_limit" value="<?=intval(COption::GetOptionString('main', 'dump_archive_size_limit', 1024 * 1024 * 1024)) / 1024 / 1024?>" size=4></td>
 	</tr>
-
-	<?$editTab->Buttons();
+	<?
+	$editTab->Buttons();
 	?>
-	<input type="button" id="start_button" value="<?=GetMessage("MAIN_DUMP_FILE_DUMP_BUTTON")?>" <?=!CheckDumpFiles() && !CheckDumpClouds() && !IntOption("dump_base") ? "disabled" : ''?> OnClick="StartDump();">
-	<input type="button" id="stop_button" value="<?=GetMessage("MAIN_DUMP_FILE_STOP_BUTTON")?>" OnClick="EndDump();" disabled>
-
+	<input type="button" id="start_button" class="adm-btn-save" value="<?=GetMessage("MAIN_DUMP_FILE_DUMP_BUTTON")?>" OnClick="StartDump();">
+	<input type="button" id="stop_button" value="<?=GetMessage("MAIN_DUMP_FILE_STOP_BUTTON")?>" OnClick="EndDump(1);" disabled>
 	<?
 	$editTab->End();
 	?>
 	</form>
+	<br>
 
 <?
 $lAdmin->DisplayList();
 
 echo BeginNote();
-echo '<span class=required><sup>1</sup></span> '.GetMessage("MAIN_DUMP_FOOTER_MASK");
+echo '<div><span class=required><sup>1</sup></span> '.GetMessage("DUMP_MAIN_BXCLOUD_INFO").'</div>';
+echo '<div><span class=required><sup>2</sup></span> '.GetMessage("DUMP_MAIN_MULTISITE").'</div>';
+echo '<div><span class=required><sup>3</sup></span> '.GetMessage("MAIN_DUMP_FOOTER_MASK").'</div>';
+echo '<div><span class=required><sup>4</sup></span> '.GetMessage("MAIN_DUMP_BXCLOUD_ENC").'</div>';
+echo '<div><span class=required><sup>5</sup></span> '.GetMessage("MAIN_DUMP_HEADER_MSG").'</div>';
 echo EndNote();
 
 require($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/include/epilog_admin.php");
 
-
-
-
-
 #################################################
 ################## FUNCTIONS
-function skipMask($abs_path)
+function IntOption($name)
 {
-	if (!IntOption('skip_mask'))
-		return false;
-
-	global $skip_mask_array;
-	
-	$path = substr($abs_path,strlen(DOCUMENT_ROOT_SITE));
-	$path = str_replace('\\','/',$path);
-	
-	static $preg_mask_array;
-	if (!$preg_mask_array)
-		$preg_mask_array = prepare_preg_escape($skip_mask_array);
-
-	reset($skip_mask_array);
-	foreach($skip_mask_array as $k => $mask)
-	{
-		if (strpos($mask,'/')===0) // absolute path
-		{
-			if (strpos($mask,'*') === false) // нет звездочки 
-			{
-				if (strpos($path.'/',$mask.'/') === 0)
-					return true;
-			}
-			elseif (preg_match('#^'.str_replace('*','[^/]*?',$preg_mask_array[$k]).'$#i',$path))
-				return true;
-		}
-		elseif (strpos($mask, '/')===false)
-		{
-			if (strpos($mask,'*')===false)
-			{
-				if (substr($path,-strlen($mask)) == $mask)
-					return true;
-			}
-			elseif (preg_match('#/[^/]*'.str_replace('*','[^/]*?',$preg_mask_array[$k]).'$#i',$path))
-				return true;
-		}
-	}
-}
-
-function prepare_preg_escape($skip_mask_array)
-{
-	static $res;
-	if (!isset($res))
-		foreach($skip_mask_array as $a)
-			$res[] = _preg_escape($a); 
-	return $res;
-}
-
-function _preg_escape($str)
-{
-	$search = array('#','[',']','.','?','(',')','^','$','|','{','}');
-	$replace = array('\#','\[','\]','\.','\?','\(','\)','\^','\$','\|','\{','\}');
-	return str_replace($search, $replace, $str);
-}
-
-function createTable($table_name, $drop = true)
-{
-	global $DB, $com_marker;
-	$sql = "SHOW CREATE TABLE `".$table_name."`";
-
-	$res = $DB->Query($sql, false, "File: ".__FILE__."<br>Line: ".__LINE__);
-	$row = $res->Fetch();
-
-	$com = "\n\n";
-	$com .= $com_marker. " --------------------------------------------------------" ."\n";
-	$com .= $com_marker. " \n";
-	$com .= $com_marker. " Table structure for table `".$table_name."`\n";
-	$com .= $com_marker. " \n";
-	$com .= "\n";
-
-	$string = $row['Create Table'];
-//	$string = preg_replace('#collate [a-z0-9_]+#i','',$string);
-
-	return $com."\n\n\n".($drop ? "DROP TABLE IF EXISTS `".$table_name."`;\n".$string : str_replace('CREATE TABLE','CREATE TABLE IF NOT EXISTS',$string)).';';
-}
-
-function getData($table, $file, $row_count, $last_row = 0, $mem)
-{
-	global $DB, $com_marker;
-	$dump = "";
-	$step = "";
-
-	$com = "\n" .$com_marker. " \n";
-	$com .= $com_marker. " Dumping data for table  `".$table."`\n";
-	$com .= $com_marker. " \n";
-	$com .= "\n";
-
-	fwrite($file, $com."\n");
-
-	$sql = "SHOW COLUMNS FROM `$table`";
-	$res = $DB->Query($sql);
-	$num = Array();
-	$i = 0;
-
-	//Определяем тип поля
-	while($row = $res->Fetch())
-	{
-		if(preg_match("/^(\w*int|year|float|double|decimal)/", $row["Type"]))
-			$meta[$i] = 0;
-		elseif(preg_match("/^(\w*binary)/", $row["Type"]))
-		{
-			$meta[$i] = 1;
-		} else
-			$meta[$i] = 2;
-		$i++;
-	}
-
-	$sql = "SHOW TABLE STATUS LIKE '$table'";
-	$res = $DB->Query($sql);
-	$tbl_info = $res->Fetch();
-	$step = 1+round($mem * 1048576 * 0.5 / ($tbl_info["Avg_row_length"] + 1));
-
-	$DB->Query("LOCK TABLE `$table` WRITE",true);
-	while(($last_row <= ($row_count-1)) && haveTime())
-	{
-		$sql = "SELECT * FROM `$table` LIMIT $last_row, $step";
-		$res = $DB->Query($sql);
-
-		while($row = $res->Fetch())
-		{
-			$i = 0;
-			foreach($row as $key => $val)
-			{
-				if (!isset($val) || is_null($val))
-						$row[$key] = 'NULL';
-				else
-					switch($meta[$i])
-					{
-						case 0:
-							$row[$key] = $val;
-						break;
-						case 1:
-							if (empty($val) && $val != '0')
-								$row[$key] = '\'\'';
-							else
-								$row[$key] = '0x' . bin2hex($val);
-						break;
-						case 2:
-							$row[$key] = "'".$DB->ForSql($val)."'";
-						break;
-					}
-				$i++;
-			}
-			fwrite($file, "INSERT INTO `".$table."` VALUES (".implode(",", $row).");\n");
-		}
-		$last_row += $step;
-	}
-	$DB->Query("UNLOCK TABLES",true);
-
-	if($last_row >= ($row_count-1))
-		return -1;
-	else
-		return $last_row;
-}
-
-function ignorePath($path)
-{
-	## Ignore paths
-	$ignore_path = array(
-		BX_PERSONAL_ROOT."/cache",
-		BX_PERSONAL_ROOT."/cache_image",
-		BX_PERSONAL_ROOT."/managed_cache",
-		BX_PERSONAL_ROOT."/managed_flags",
-		BX_PERSONAL_ROOT."/stack_cache",
-		BX_PERSONAL_ROOT."/html_pages",
-		BX_PERSONAL_ROOT."/tmp",
-		BX_ROOT."/tmp",
-		BX_ROOT."/help",
-		BX_ROOT."/updates",
-	);
-
-	foreach($ignore_path as $value)
-		if(DOCUMENT_ROOT_SITE.$value == $path)
-			return true;
-
-	## Clouds
-	$clouds = DOCUMENT_ROOT_SITE.BX_ROOT.'/backup/clouds/';
-	if (strpos($path, $clouds) === 0 || strpos($clouds, $path) === 0)
-		return false;
-	
-	## Backups
-	if (strpos($path, DOCUMENT_ROOT_SITE.BX_ROOT.'/backup/') === 0)
-		return true;
-
-	## Symlinks
-	if (IntOption("skip_symlinks") && is_dir($path) && is_link($path))
-		return true;
-
-	## File size
-	if (($max_file_size = IntOption("dump_max_file_size")) > 0 && filesize($path) > $max_file_size * 1024)
-		return true;
-
-	## Skip mask	
-	if (skipMask($path))
-		return true;
-
-	## Kernel vs Public
-	$dump_file_public = IntOption('dump_file_public');
-	$dump_file_kernel = IntOption('dump_file_kernel');
-
-	if ($dump_file_public == $dump_file_kernel)
-		return !$dump_file_public;
-
-	$path_kernel = array(
-		"/bitrix/admin",
-		"/bitrix/activities/bitrix",
-		"/bitrix/components/bitrix",
-		"/bitrix/gadgets/bitrix",
-		"/bitrix/js",
-		"/bitrix/images",
-		"/bitrix/image_uploader",
-		"/bitrix/license_key.php",
-		"/bitrix/modules",
-		"/bitrix/php_interface",
-		"/bitrix/sounds",
-		"/bitrix/themes/.default",
-		"/bitrix/tools",
-		"/bitrix/wizards/bitrix",
-	);
-
-	// если публичка и админка 
-	foreach($path_kernel as $value)
-	{
-		if (strpos($path, DOCUMENT_ROOT_SITE.$value) === 0) // мы в ядре
-			return !$dump_file_kernel;
-		elseif ($dump_file_kernel && strpos(DOCUMENT_ROOT_SITE.$value, $path) === 0) // нужно ядро и мы на пути к ядру
-			return false;
-	}
-	return !$dump_file_public; // мы в публичке
-}
-
-function BaseDump($arc_name="", $tbl_num, $start_row)
-{
-	global $DB;
-
-	$ret = array();
-	$last_row = $start_row;
-	$mem = 32; // Minimum required value
-
-	$sql = "SHOW TABLES;";
-	$res = $DB->Query($sql, false, "File: ".__FILE__."<br>Line: ".__LINE__);
-	$ptab = Array();
-	while($row = $res->Fetch())
-	{
-		$ar = each($row);
-		$table = $ar[1];
-		$ptab[] = $table;
-	}
-
-	$f = fopen($arc_name,"a");
-	$i = $tbl_num;
-
-	$dump = "";
-
-	while($i <= (count($ptab) - 1) && haveTime())
-	{
-		if (strlen($ptab[$i]))
-		{
-			if($last_row == -1)
-			{
-				$table = $ptab[$i];
-				$drop = !IntOption('dump_base_skip_stat') || !preg_match("#^b_stat#i",$table); // если не переносим статистику, то не удаляем старую статистику при восстановлении 
-				$dump = createTable($ptab[$i], $drop);
-				fwrite($f, $dump."\n");
-				$next = false;
-				$ret["num"] = $i;
-				$ret["st_row"] = 0;
-				$last_row = 0;
-			}
-
-			$res = $DB->Query("SELECT count(*) as count FROM `$ptab[$i]`");
-			$row_count = $res->Fetch();
-
-			if($row_count["count"] > 0)
-			{
-				if($ptab[$i] == 'b_xml_tree')
-					$row_next = -1;
-				elseif(IntOption('dump_base_skip_stat') && preg_match('#^b_stat#i',$ptab[$i]))
-					$row_next = -1;
-				elseif(IntOption('dump_base_skip_search') && preg_match("#^(b_search_content_site|b_search_content_group|b_search_content_stem|b_search_content_title|b_search_tags|b_search_content_freq|b_search_content|b_search_suggest)$#i",$ptab[$i]))
-					$row_next = -1;
-				elseif(IntOption('dump_base_skip_log') && $ptab[$i] == 'b_event_log')
-					$row_next = -1;
-				else
-					$row_next = getData($ptab[$i], $f, $row_count["count"], $last_row, $mem);
-			}
-			else
-				$row_next = -1;
-
-			if($row_next == -1)
-			{
-				$ret["num"] = ++$i;
-				$ret["st_row"] = -1;
-				$last_row = -1;
-			}
-			else
-			{
-				$last_row = $row_next;
-				$ret["num"] = $i;
-				$ret["st_row"] = $last_row;
-			}
-		}
-	}
-
-	fclose($f);
-
-	if(!($i <= (count($ptab) - 1)))
-		$ret["end"] = true;
-
-	return $ret;
+	static $CACHE;
+	if (!$CACHE[$name])
+		$CACHE[$name] = COption::GetOptionInt("main", $name, 0);
+	return $CACHE[$name];
 }
 
 function getTableSize($prefix)
@@ -1717,749 +1688,6 @@ function getTableSize($prefix)
 	return round($size/(1048576), 2);
 }
 
-class CDirScan
-{
-	var $DirCount = 0;
-	var $FileCount = 0;
-	var $err= array();
-
-	var $bFound = false;
-	var $nextPath = '';
-	var $startPath = '';
-	var $arIncludeDir = false;
-
-	function __construct()
-	{
-	}
-
-	function ProcessDirBefore($f)
-	{
-		return true;
-	}
-
-	function ProcessDirAfter($f)
-	{
-		return true;
-	}
-
-	function ProcessFile($f)
-	{
-		return true;
-	}
-
-	function Skip($f)
-	{
-		if ($this->startPath)
-		{
-			if (strpos($this->startPath.'/', $f.'/') === 0)
-			{
-				if ($this->startPath == $f)
-					unset($this->startPath);
-				return false;
-			}
-			else
-				return true;
-		}
-		return false;
-	}
-
-	function Scan($dir)
-	{
-		$dir = str_replace('\\','/',$dir);
-
-		if ($this->Skip($dir))
-			return;
-
-		$this->nextPath = $dir;
-
-		if (is_dir($dir))
-		{
-		#############################
-		# DIR
-		#############################
-			if (!$this->startPath) // если начальный путь найден или не задан
-			{
-				$r = $this->ProcessDirBefore($dir);
-				if ($r === false)
-				{
-					$this->err[] = GetMessage('CDIR_FOLDER_ERROR').$dir;
-					return false;
-				}
-			}
-
-			if (!($handle = opendir($dir)))
-			{
-				$this->err[] = GetMessage('CDIR_FOLDER_OPEN_ERROR').$dir;
-				return false;
-			}
-
-			while (($item = readdir($handle)) !== false)
-			{
-				if ($item == '.' || $item == '..')
-					continue;
-
-				$f = $dir."/".$item;
-				$r = $this->Scan($f);
-				if ($r === false || $r === 'BREAK')
-				{
-					closedir($handle);
-					return $r;
-				}
-			}
-			closedir($handle);
-
-			if (!$this->startPath) // если начальный путь найден или не задан
-			{
-				if ($this->ProcessDirAfter($dir) === false)
-				{
-					$this->err[] = GetMessage('CDIR_FOLDER_ERROR').$dir;
-					return false;
-				}
-				$this->DirCount++;
-			}
-		}
-		else 
-		{
-		#############################
-		# FILE
-		#############################
-			$r = $this->ProcessFile($dir);
-			if ($r === false)
-			{
-				$this->err[] = GetMessage('CDIR_FILE_ERROR').$dir;
-				return false;
-			}
-			elseif ($r === 'BREAK') // если файл обработан частично
-				return $r;
-			$this->FileCount++;
-		}
-		return true;
-	}
-}
-
-class CDirRealScan extends CDirScan
-{
-	function ProcessFile($f)
-	{
-		global $tar;
-		while(haveTime())
-		{
-			if ($tar->addFile($f) === false)
-				return false; // error
-			if ($tar->ReadBlockCurrent == 0)
-				return true; // finished
-		}
-		return 'BREAK';
-	}
-
-	function ProcessDirBefore($f)
-	{
-		global $tar;
-		return $tar->addFile($f);
-	}
-
-	function Skip($f)
-	{
-		if ($this->startPath)
-		{
-			if (strpos($this->startPath.'/', $f.'/') === 0)
-			{
-				if ($this->startPath == $f)
-					unset($this->startPath);
-				return false;
-			}
-			else
-				return true;
-		}
-		
-		$res = ignorePath($f);
-//		echo $f.' <font color=red>'.$res.'</font> <br>';
-		return $res;
-	}
-
-}
-
-class CTar
-{
-	var $gzip;
-	var $file;
-	var $err = array();
-	var $res;
-	var $Block = 0;
-	var $BlockHeader;
-	var $path;
-	var $FileCount = 0;
-	var $DirCount = 0;
-	var $ReadBlockMax = 2000;
-	var $ReadBlockCurrent = 0;
-	var $header = null;
-	var $ArchiveSizeMax;
-	const BX_EXTRA = 'BX0000';
-
-	##############
-	# READ
-	# {
-	function openRead($file)
-	{
-		if (!isset($this->gzip) && (substr($file,-3)=='.gz' || substr($file,-4)=='.tgz'))
-			$this->gzip = true;
-
-		return $this->open($file, 'r');
-	}
-
-	function readBlock()
-	{
-		$str = $this->gzip ? gzread($this->res,512) : fread($this->res,512);
-		if (!$str && $this->openNext())
-			$str = $this->gzip ? gzread($this->res,512) : fread($this->res,512);
-
-		if ($str)
-			$this->Block++;
-
-		return $str;
-	}
-
-	function SkipFile()
-	{
-		$this->Skip(ceil($this->header['size']/512));
-		$this->header = null;
-	}
-
-	function Skip($Block = 0)
-	{
-		if (!$Block)
-			return false;
-		$pos = $this->gzip ? gztell($this->res) : ftell($this->res);
-		if (file_exists($this->getNextName()))
-		{
-			while(($BlockLeft = ($this->getArchiveSize($this->file) - $pos)/512) < $Block)
-			{
-				if ($BlockLeft != floor($BlockLeft))
-					return false; // invalid file size
-				$this->Block += $BlockLeft;
-				$Block -= $BlockLeft;
-				if (!$this->openNext())
-					return false;
-				$pos = 0;
-			}
-		}
-
-		$this->Block += $Block;
-		return 0 === ($this->gzip ? gzseek($this->res,$pos + $Block*512) : fseek($this->res,$pos + $Block*512));
-	}
-
-	function readHeader($Long = false)
-	{
-		$str = '';
-		while(trim($str) == '')
-			if (!strlen($str = $this->readBlock()))
-				return 0; // finish
-		if (!$Long)
-			$this->BlockHeader = $this->Block - 1;
-
-		if (strlen($str)!=512)
-			return $this->Error('TAR_WRONG_BLOCK_SIZE',$this->Block.' ('.strlen($str).')');
-
-
-		$data = unpack("a100filename/a8mode/a8uid/a8gid/a12size/a12mtime/a8checksum/a1type/a100link/a6magic/a2version/a32uname/a32gname/a8devmajor/a8devminor/a155prefix", $str);
-		$chk = $data['devmajor'].$data['devminor'];
-
-		if (!is_numeric(trim($data['checksum'])) || $chk!='' && $chk!=0)
-			return $this->Error('TAR_ERR_FORMAT',($this->Block-1).'<hr>Header: <br>'.htmlspecialcharsbx($str)); // быстрая проверка
-
-		$header['filename'] = trim($data['prefix'].'/'.$data['filename'],'/');
-		$header['mode'] = OctDec($data['mode']);
-		$header['uid'] = OctDec($data['uid']);
-		$header['gid'] = OctDec($data['gid']);
-		$header['size'] = OctDec($data['size']);
-		$header['mtime'] = OctDec($data['mtime']);
-		$header['type'] = $data['type'];
-//		$header['link'] = $data['link'];
-
-		if (strpos($header['filename'],'./')===0)
-			$header['filename'] = substr($header['filename'],2);
-
-		if ($header['type']=='L') // Long header
-		{
-			$n = ceil($header['size']/512);
-			for ($i = 0; $i < $n; $i++)
-				$filename .= $this->readBlock();
-
-			$header = $this->readHeader($Long = true);
-			$header['filename'] = substr($filename,0,strpos($filename,chr(0)));
-		}
-		
-		if (substr($header['filename'],-1)=='/') // trailing slash
-			$header['type'] = 5; // Directory
-
-		if ($header['type']=='5')
-			$header['size'] = '';
-
-		if ($header['filename']=='')
-			return $this->Error('TAR_EMPTY_FILE',($this->Block-1));
-
-		if (!$this->checkCRC($str, $data))
-			return $this->Error('TAR_ERR_CRC',htmlspecialcharsbx($header['filename']));
-
-		$this->header = $header;
-
-		return $header;
-	}
-
-	function checkCRC($str, $data)
-	{
-		$checksum = $this->checksum($str);
-		$res = octdec($data['checksum']) == $checksum || $data['checksum']===0 && $checksum==256;
-#		if (!$res)
-#			var_dump(octdec($data['checksum']) .'=='. $checksum);
-		return $res;
-	}
-
-	function extractFile()
-	{
-		if ($this->header === null)
-		{
-			if(($header = $this->readHeader()) === false || $header === 0 || $header === true)
-			{
-				if ($header === true)
-					$this->SkipFile();
-				return $header;
-			}
-
-			$this->lastPath = $f = $this->path.'/'.$header['filename'];
-		
-			if ($this->ReadBlockCurrent == 0)
-			{
-				if ($header['type']==5) // dir
-				{
-					if(!file_exists($f) && !self::xmkdir($f))
-						return $this->Error('TAR_ERR_FOLDER_CREATE',htmlspecialcharsbx($f));
-					//chmod($f, $header['mode']);
-				}
-				else // file
-				{
-					if (!self::xmkdir($dirname = dirname($f)))
-						return $this->Error('TAR_ERR_FOLDER_CREATE'.htmlspecialcharsbx($dirname));
-					elseif (($rs = fopen($f, 'wb'))===false)
-						return $this->Error('TAR_ERR_FILE_CREATE',htmlspecialcharsbx($f));
-				}
-			}
-			else
-				$this->Skip($this->ReadBlockCurrent);
-		}
-		else // файл уже частично распакован, продолжаем на том же хите
-		{
-			$header = $this->header;
-			$this->lastPath = $f = $this->path.'/'.$header['filename'];
-		}
-
-		if ($header['type'] != 5) // пишем контент в файл 
-		{
-			if (!$rs)
-			{
-				if (($rs = fopen($f, 'ab'))===false)
-					return $this->Error('TAR_ERR_FILE_OPEN',htmlspecialcharsbx($f));
-			}
-
-			$i = 0;
-			$FileBlockCount = ceil($header['size'] / 512);
-			while(++$this->ReadBlockCurrent <= $FileBlockCount && ($contents = $this->readBlock()))
-			{
-				if ($this->ReadBlockCurrent == $FileBlockCount && ($chunk = $header['size'] % 512))
-					$contents = substr($contents, 0, $chunk);
-
-				fwrite($rs,$contents);
-
-				if ($this->ReadBlockMax && ++$i >= $this->ReadBlockMax)
-				{
-					fclose($rs);
-					return true; // Break
-				}
-			}
-			fclose($rs);
-
-			//chmod($f, $header['mode']);
-			if (($s=filesize($f)) != $header['size'])
-				return $this->Error('TAR_ERR_FILE_SIZE',htmlspecialcharsbx($header['filename']).' (actual: '.$s.'  expected: '.$header['size'].')');
-		}
-
-		if ($this->header['type']==5)
-			$this->DirCount++;
-		else
-			$this->FileCount++;
-
-		$this->debug_header = $this->header;
-		$this->BlockHeader = $this->Block;
-		$this->ReadBlockCurrent = 0;
-		$this->header = null;
-
-		return true;
-	}
-
-	function extract()
-	{
-		while ($r = $this->extractFile());
-		return $r === 0;
-	}
-
-	function openNext()
-	{
-		if (file_exists($file = $this->getNextName()))
-		{
-			$this->close();
-			return $this->open($file,$this->mode);
-		}
-		else
-			return false;
-	}
-
-	# }
-	##############
-
-	##############
-	# WRITE 
-	# {
-	function openWrite($file)
-	{
-		if (!isset($this->gzip) && (substr($file,-3)=='.gz' || substr($file,-4)=='.tgz'))
-			$this->gzip = true;
-
-		if ($this->ArchiveSizeMax > 0)
-		{
-			while(file_exists($file1 = $this->getNextName($file)))
-				$file = $file1;
-
-			$size = 0;
-			if (($size = $this->getArchiveSize($file)) >= $this->ArchiveSizeMax)
-			{
-				$file = $file1;
-				$size = 0;
-			}
-			$this->ArchiveSizeCurrent = $size;
-		}
-		return $this->open($file, 'a');
-	}
-
-	// создадим пустой gzip с экстра полем
-	function createEmptyGzipExtra($file)
-	{
-		if (file_exists($file))
-			return false;
-
-		if (!($f = gzopen($file,'wb')))
-			return false;
-		gzwrite($f,'');
-		gzclose($f);
-
-		$data = file_get_contents($file);
-
-		if (!($f = fopen($file, 'w')))
-			return false;
-
-		$ar = unpack('A3bin0/A1FLG/A6bin1',substr($data,0,10));
-		if ($ar['FLG'] != 0)
-			return $this->Error('Error writing extra field: already exists');
-
-		$EXTRA = chr(0).chr(0).chr(strlen(self::BX_EXTRA)).chr(0).self::BX_EXTRA;
-		fwrite($f,$ar['bin0'].chr(4).$ar['bin1'].chr(strlen($EXTRA)).chr(0).$EXTRA.substr($data,10));
-		fclose($f);
-		return true;
-	}
-
-	function writeBlock($str)
-	{
-		$l = strlen($str);
-		if ($l!=512)
-			return $this->Error('TAR_WRONG_BLOCK_SIZE'.$l);
-
-		if ($this->ArchiveSizeMax && $this->ArchiveSizeCurrent >= $this->ArchiveSizeMax)
-		{
-			$file = $this->getNextName();
-			$this->close();
-
-			if (!$this->open($file,$this->mode))
-				return false;
-
-			$this->ArchiveSizeCurrent = 0;
-		}
-
-		if ($res = $this->gzip ? gzwrite($this->res, $str) : fwrite($this->res,$str))
-		{
-			$this->Block++;
-			$this->ArchiveSizeCurrent+=512;
-		}
-
-		return $res;
-	}
-
-	function writeHeader($ar)
-	{
-		$header0 = pack("a100a8a8a8a12a12", $ar['filename'], decoct($ar['mode']), decoct($ar['uid']), decoct($ar['gid']), decoct($ar['size']), decoct($ar['mtime']));
-		$header1 = pack("a1a100a6a2a32a32a8a8a155", $ar['type'],'','','','','','', '', $ar['prefix']);
-
-		$checksum = pack("a8",decoct($this->checksum($header0.'        '.$header1)));
-		$header = pack("a512", $header0.$checksum.$header1);
-		return $this->writeBlock($header) || $this->Error('TAR_ERR_WRITE_HEADER');
-	}
-
-	function addFile($f)
-	{
-		$f = str_replace('\\', '/', $f);
-		$path = substr($f,strlen($this->path) + 1);
-		if ($path == '')
-			return true;
-		if (strlen($path)>512)
-			return $this->Error('TAR_PATH_TOO_LONG',htmlspecialcharsbx($path));
-
-		$ar = array();
-
-		if (is_dir($f))
-		{
-			$ar['type'] = 5;
-			$path .= '/';
-		}
-		else
-			$ar['type'] = 0;
-
-		$info = stat($f);
-		if ($info)
-		{
-			if ($this->ReadBlockCurrent == 0) // read from start
-			{
-				$ar['mode'] = 0777 & $info['mode'];
-				$ar['uid'] = $info['uid'];
-				$ar['gid'] = $info['gid'];
-				$ar['size'] = $ar['type']==5 ? 0 : $info['size'];
-				$ar['mtime'] = $info['mtime'];
-
-
-				if (strlen($path)>100) // Long header
-				{
-					$ar0 = $ar;
-					$ar0['type'] = 'L';
-					$ar0['filename'] = '././@LongLink';
-					$ar0['size'] = strlen($path);
-					if (!$this->writeHeader($ar0))
-						return false;
-					$path .= str_repeat(chr(0),512 - strlen($path));
-
-					if (!$this->writeBlock($path))
-						return false;
-					$ar['filename'] = substr($path,0,100);
-				}
-				else
-					$ar['filename'] = $path;
-
-				if (!$this->writeHeader($ar))
-					return false;
-			}
-
-			if ($ar['type']==0 && $info['size']>0) // File
-			{
-				if (!($rs = fopen($f, 'rb')))
-					return $this->Error('TAR_ERR_FILE_READ',htmlspecialcharsbx($f));
-
-				if ($this->ReadBlockCurrent)
-					fseek($rs, $this->ReadBlockCurrent * 512);
-
-				$i = 0;
-				while(!feof($rs) && ('' !== $str = fread($rs,512)))
-				{
-					$this->ReadBlockCurrent++;
-					if (feof($rs) && ($l = strlen($str)) && $l < 512)
-						$str .= str_repeat(chr(0),512 - $l);
-
-					if (!$this->writeBlock($str))
-					{
-						fclose($rs);
-						return $this->Error('TAR_ERR_FILE_WRITE',htmlspecialcharsbx($f));
-					}
-
-					if ($this->ReadBlockMax && ++$i >= $this->ReadBlockMax)
-					{
-						fclose($rs);
-						return true;
-					}
-				}
-				fclose($rs);
-				$this->ReadBlockCurrent = 0;
-			}
-			return true;
-		}
-		else
-			return $this->Error('TAR_ERR_FILE_NO_ACCESS',htmlspecialcharsbx($f));
-	}
-
-	# }
-	##############
-
-	##############
-	# BASE 
-	# {
-	function open($file, $mode='r')
-	{
-		$this->file = $file;
-		$this->mode = $mode;
-
-		if ($this->gzip) 
-		{
-			if(!function_exists('gzopen'))
-				return $this->Error('TAR_NO_GZIP');
-			else
-			{
-				if ($mode == 'a' && !file_exists($file) && !$this->createEmptyGzipExtra($file))
-					return false;
-				$this->res = gzopen($file,$mode."b");
-			}
-		}
-		else
-			$this->res = fopen($file,$mode."b");
-
-		return $this->res;
-	}
-
-	function close()
-	{
-		if ($this->gzip)
-		{
-			gzclose($this->res);
-
-			// добавим фактический размер всех несжатых данных в extra поле
-			if ($this->mode == 'a')
-			{
-				$f = fopen($this->file, 'rb+');
-#				fseek($f, -4, SEEK_END);
-				fseek($f, 18);
-				fwrite($f, pack("V", $this->ArchiveSizeCurrent));
-				fclose($f);
-			}
-		}
-		else
-			fclose($this->res);
-	}
-
-	function getNextName($file = '')
-	{
-		if (!$file)
-			$file = $this->file;
-		static $CACHE;
-		$c = &$CACHE[$file];
-
-		if (!$c)
-		{
-			$l = strrpos($file, '.');
-			$num = substr($file,$l+1);
-			if (is_numeric($num))
-				$file = substr($file,0,$l+1).++$num;
-			else
-				$file .= '.1';
-			$c = $file;
-		}
-		return $c;
-	}
-
-	function checksum($str)
-	{
-		static $CACHE;
-		$checksum = &$CACHE[md5($str)];
-		if (!$checksum)
-		{
-//			$str = pack("a512",$str);
-			for ($i = 0; $i < 512; $i++)
-				if ($i>=148 && $i<156)
-					$checksum += 32; // ord(' ')
-				else
-					$checksum += ord($str[$i]);
-		}
-		return $checksum;
-	}
-
-	function getArchiveSize($file = '')
-	{
-		if (!$file)
-			$file = $this->file;
-
-		if (!file_exists($file))
-			$size = 0;
-		else
-		{
-			if ($this->gzip)
-			{
-				$f = fopen($file, "rb");
-	#			fseek($f, -4, SEEK_END);
-				fseek($f, 18);
-				$size = end(unpack("V", fread($f, 4)));
-				fclose($f);
-			}
-			else
-				$size = filesize($file);
-		}
-
-		return $size;
-	}
-
-	function Error($err_code, $str = '')
-	{
-		$this->err[] = self::GetMessage($err_code).' '.$str;
-		return false;
-	}
-
-	function xmkdir($dir)
-	{
-		if (!file_exists($dir))
-		{
-			$upper_dir = dirname($dir);
-			if (!file_exists($upper_dir) && !self::xmkdir($upper_dir))
-				return false;
-
-			return mkdir($dir);
-		}
-
-		return is_dir($dir);
-	}
-
-	function GetMessage($code)
-	{
-		static $arLang;
-
-		if (!$arLang)
-		{
-				$arLang = array(
-					'TAR_WRONG_BLOCK_SIZE' => 'Wrong block size: ',
-					'TAR_ERR_FORMAT' => 'Archive is corrupted, wrong block: ',
-					'TAR_EMPTY_FILE' => 'Filename is empty, wrong block: ',
-					'TAR_ERR_CRC' => 'Checksum error on file: ',
-					'TAR_ERR_FOLDER_CREATE' => 'Can\'t create folder: ',
-					'TAR_ERR_FILE_CREATE' => 'Can\'t create file: ',
-					'TAR_ERR_FILE_OPEN' => 'Can\'t open file: ',
-					'TAR_ERR_FILE_SIZE' => 'File size is wrong: ',
-					'TAR_ERR_WRITE_HEADER' => 'Error writing header',
-					'TAR_PATH_TOO_LONG' => 'Path is too long: ',
-					'TAR_ERR_FILE_READ' => 'Error reading file: ',
-					'TAR_ERR_FILE_WRITE' => 'Error writing file: ',
-					'TAR_ERR_FILE_NO_ACCESS' => 'No access to file: ',
-					'TAR_NO_GZIP' => 'Function &quot;gzopen&quot; is not available',
-				);
-		}
-		return $arLang[$code];
-	}
-
-	# }
-	##############
-}
-
-class CTarCheck extends CTar
-{
-	function extractFile()
-	{
-		if(($header = $this->readHeader()) === false || $header === 0)
-			return $header;
-
-		$this->SkipFile();
-		return true;
-	}
-}
-
 function haveTime()
 {
 	return microtime(true) - START_EXEC_TIME < IntOption("dump_max_exec_time");
@@ -2468,20 +1696,6 @@ function haveTime()
 function workTime()
 {
 	return microtime(true) - START_EXEC_TIME;
-}
-
-function HumanSize($num0, $show0 = false)
-{
-	$num = $num0;
-	$i=0;
-	$ar = array(GetMessage('MAIN_DUMP_FILE_MAX_SIZE_b'),GetMessage('MAIN_DUMP_FILE_MAX_SIZE_kb'),GetMessage('MAIN_DUMP_FILE_MAX_SIZE_mb'),GetMessage('MAIN_DUMP_FILE_MAX_SIZE_gb'));
-	while($num > 1024)
-	{
-		$num /= 1024;
-		$i++;
-	}
-	$num = round($num,1);
-	return $num." ".$ar[$i].($show0 ? ' ('.$num0.')' : '');
 }
 
 function HumanTime($t)
@@ -2494,29 +1708,9 @@ function HumanTime($t)
 	return sprintf('%d '.$ar[2].'%d '.$ar[1].' %d '.$ar[0], floor($t/3600), floor($t%3600/60), $t%60);
 }
 
-function GetBucketList($arFilter = array())
-{
-	if (CModule::IncludeModule('clouds'))
-	{
-		$arBucket = array();
-		$rsData = CCloudStorageBucket::GetList(
-			array("SORT"=>"DESC", "ID"=>"ASC")
-//			array('ACTIVE'=>'Y','READ_ONLY'=>'N')
-		);
-		while($f = $rsData->Fetch())
-		{
-			if ($f['ACTIVE'] != 'Y' || ($f['READ_ONLY'] == 'Y' && $arFilter['READ_ONLY'] == 'Y'))
-				continue; // sql filter currently is not supported TODO: remove in future
-
-			$arBucket[] = $f;
-		}
-		return count($arBucket) ? $arBucket : false;
-	}
-	return false;
-}
-
 function RaiseErrorAndDie($strError)
 {
+//	echo '<pre>';print_r(debug_print_backtrace());echo '</pre>';
 	CAdminMessage::ShowMessage(array(
 		"MESSAGE" => GetMessage("MAIN_DUMP_ERROR"),
 		"DETAILS" =>  $strError,
@@ -2524,118 +1718,6 @@ function RaiseErrorAndDie($strError)
 		"HTML" => true));
 	echo '<script>EndDump();</script>';
 	die();
-}
-
-function CheckDumpFiles()
-{
-	return IntOption("dump_file_public") || IntOption("dump_file_kernel");
-}
-
-function CheckDumpClouds()
-{
-	$arRes = array();
-	if ($arAllBucket = GetBucketList())
-	{
-		foreach($arAllBucket as $arBucket)
-			if (IntOption('dump_cloud_'.$arBucket['ID']))
-				$arRes[] = $arBucket['ID'];
-		if (count($arRes))
-			return $arRes;
-	}
-	return false;
-}
-
-function IntOption($name)
-{
-	static $CACHE;
-	if (!$CACHE[$name])
-		$CACHE[$name] = COption::GetOptionInt("main", $name, 0);
-	return $CACHE[$name];
-}
-
-function GetBucketFileList($BUCKET_ID, $path)
-{
-	static $CACHE;
-
-	if ($CACHE[$BUCKET_ID])
-		$obBucket = $CACHE[$BUCKET_ID];
-	else
-		$CACHE[$BUCKET_ID] = $obBucket = new CCloudStorageBucket($BUCKET_ID);
-
-	if ($obBucket->Init())
-		return $obBucket->ListFiles($path);
-	return false;
-}
-
-class CloudDownload
-{
-	function __construct($id)
-	{
-		$this->id = $id;
-		$this->last_bucket_path = '';
-		$this->arSkipped = array();
-		$this->path = '';
-		$this->download_cnt = 0;
-		$this->download_size = 0;
-
-		$this->obBucket = new CCloudStorageBucket($id);
-		if (!$this->obBucket->Init())
-			return;
-	}
-
-	function Scan($path)
-	{
-		$this->path = $path;
-
-		if ($arCloudFiles = GetBucketFileList($this->id, $path))
-		{
-			foreach($arCloudFiles['file'] as $k=>$file)
-			{
-				if ($this->last_bucket_path)
-				{
-					if ($path.'/'.$file == $this->last_bucket_path)
-						$this->last_bucket_path = '';
-					else
-						continue;
-				}
-
-				$name = $this->path = $path.'/'.$file;
-				if (!haveTime()) // Сохраняется путь файла, который еще предстоит сохранить, TODO: пошаговое скачивание больших файлов
-					return false;
-
-				$HTTP = new CHTTP;
-				if ($HTTP->Download($this->obBucket->GetFileSRC(array("URN" => $name)), DOCUMENT_ROOT.BX_ROOT.'/backup/clouds/'.$this->id.$name))
-				{
-					$this->download_size += $arCloudFiles['file_size'][$k];
-					$this->download_cnt++;
-				}
-				else
-					$this->arSkipped[] = $name;
-			}
-		}
-
-		foreach($arCloudFiles['dir'] as $dir)
-		{
-			if ($this->last_bucket_path)
-			{
-				if ($path.'/'.$dir == $this->last_bucket_path)
-					$this->last_bucket_path = '';
-				elseif (strpos($this->last_bucket_path, $path.'/'.$dir) !== 0)
-					continue;
-			}
-
-			if ($path.'/'.$dir == '/bitrix/backup')
-				continue;
-
-			if ($path.'/'.$dir == '/tmp')
-				continue;
-
-			if (!$this->Scan($path.'/'.$dir)) // partial
-				return false;
-		}
-
-		return true;
-	}
 }
 
 function ParseFileName($name)

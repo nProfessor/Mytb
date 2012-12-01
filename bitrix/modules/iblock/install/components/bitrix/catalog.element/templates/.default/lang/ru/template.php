@@ -18,4 +18,5 @@ $MESS["CATALOG_VAT_NOT_INCLUDED"] = "НДС не включен в цену";
 $MESS["CT_BCE_QUANTITY"] = "Количество";
 $MESS["CT_BCE_CATALOG_ADD"] = "В корзину";
 $MESS["CT_BCE_CATALOG_COMPARE"] = "Сравнить";
+$MESS["CATALOG_SUBSCRIBE"] = "Уведомить о поступлении";
 ?>

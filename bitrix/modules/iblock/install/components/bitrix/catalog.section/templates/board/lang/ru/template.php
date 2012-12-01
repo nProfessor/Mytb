@@ -10,4 +10,5 @@ $MESS["CATALOG_QUANTITY_TO"] = "До #TO#";
 $MESS["PUB_DATE"] = "Дата публикации:";
 $MESS["CT_BCS_QUANTITY"] = "Количество";
 $MESS["CT_BCS_ELEMENT_DELETE_CONFIRM"] = "Будет удалена вся информация, связанная с этой записью. Продолжить?";
+$MESS["CATALOG_SUBSCRIBE"] = "Уведомить о поступлении";
 ?>

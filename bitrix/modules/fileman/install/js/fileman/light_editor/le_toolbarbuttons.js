@@ -984,6 +984,12 @@ LHEButtons['SmileList'] = {
 	name : LHE_MESS.SmileList,
 	bBBShow: true,
 	type: 'List',
+	OnBeforeCreate: function(pLEditor, pBut)
+	{
+		if (pLEditor.arConfig.arSmiles.length <= 0)
+			return false;
+		return pBut;
+	},
 	OnAfterCreate: function(pLEditor, pList)
 	{
 		var n = parseInt(pLEditor.arConfig.smileCountInToolbar);
@@ -992,7 +998,7 @@ LHEButtons['SmileList'] = {
 		{
 			var
 				arSmiles = pLEditor.arConfig.arSmiles,
-				l = arSmiles.length,
+				i, l = arSmiles.length,
 				smileTable = pList.pWnd.parentNode.appendChild(BX.create("TABLE", {props: {className: "lhe-smiles-tlbr-table"}})),
 				r = smileTable.insertRow(-1),
 				pImg, oSmile, pSmile, k, arImg = [];
@@ -1030,28 +1036,37 @@ LHEButtons['SmileList'] = {
 				var i, n = arImg.length;
 				for (i = 0; i < n; i++)
 				{
-					var
-						h = arImg[i].offsetHeight,
-						w = arImg[i].offsetWidth;
-
-					if (h > 20)
-					{
-						arImg[i].style.height = "20px";
-						arImg[i].height = "20";
-						h = 20;
-					}
-
-					arImg[i].style.marginTop = Math.round((20 - h) / 2) + "px";
-
-					if (w > 20)
-					{
-						arImg[i].parentNode.style.width = arImg[i].offsetWidth + "px";
-						w = 20;
-					}
-					arImg[i].style.marginLeft = Math.round((20 - w) / 2) + "px";
-					arImg[i].style.visibility = "visible";
+					arImg[i].removeAttribute('height');
+					arImg[i].style.height = 'auto';
+					arImg[i].style.width = 'auto';
 				}
-				smileTable.parentNode.style.width = (parseInt(smileTable.offsetWidth) + 16 /*left margin*/) + "px";
+
+				setTimeout(function(){
+					for (i = 0; i < n; i++)
+					{
+						var
+							h = arImg[i].offsetHeight,
+							w = arImg[i].offsetWidth;
+
+						if (h > 20)
+						{
+							arImg[i].style.height = "20px";
+							arImg[i].height = "20";
+							h = 20;
+						}
+
+						arImg[i].style.marginTop = Math.round((20 - h) / 2) + "px";
+
+						if (w > 20)
+						{
+							arImg[i].parentNode.style.width = arImg[i].offsetWidth + "px";
+							w = 20;
+						}
+						arImg[i].style.marginLeft = Math.round((20 - w) / 2) + "px";
+						arImg[i].style.visibility = "visible";
+					}
+					smileTable.parentNode.style.width = (parseInt(smileTable.offsetWidth) + 16 /*left margin*/) + "px";
+				}, 10);
 			};
 
 			BX.addCustomEvent(pLEditor, 'onShow', function()
@@ -1065,8 +1080,11 @@ LHEButtons['SmileList'] = {
 	{
 		var
 			arSmiles = pList.pLEditor.arConfig.arSmiles,
-			l = arSmiles.length,
-			pImg, pSmile, i, oSmile, k;
+			l = arSmiles.length, row,
+		pImg, pSmile, i, oSmile, k;
+
+		if (l <= 0)
+			return;
 
 		pList.pValuesCont.style.width = '100px';
 		pList.oSmiles = {};

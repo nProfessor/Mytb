@@ -36,6 +36,7 @@ $MESS["IB_E_PROP_APPEARANCE_CHECKBOX"] = "Флажки";
 $MESS["IB_E_PROP_ROW_CNT"] = "Количество строк (для внешнего вида &quot;список&quot;):";
 $MESS["IB_E_PROP_SEARCHABLE"] = "Значения свойства участвуют в поиске:";
 $MESS["IB_E_PROP_FILTRABLE"] = "Выводить на странице списка элементов поле для фильтрации по этому свойству:";
+$MESS["IB_E_PROP_SECTION_PROPERTY"] = "Показывать на странице редактирования элемента:";
 $MESS["IB_E_PROP_LIST_VALUES"] = "Значения списка:";
 $MESS["IB_E_PROP_LIST_VALUE"] = "Значение";
 $MESS["IB_E_PROP_LIST_SORT"] = "Сорт.";

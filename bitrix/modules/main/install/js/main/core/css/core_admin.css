@@ -1,6 +1,6 @@
+/*Protection from user styles*/
 #bx-panel, #bx-panel a, #bx-panel span, #bx-panel div
 {
-     /*Protection from user styles*/
 
     letter-spacing:normal !important;
     list-style:none !important;
@@ -291,6 +291,7 @@
     display: block !important;
     z-index:110 !important;
 }
+
 #bx-panel #bx-panel-buttons { overflow: hidden !important; height:79px !important; margin:0 !important; padding:0 !important;}
 #bx-panel #bx-panel-buttons-inner { padding: 6px 0 0 0 !important; margin:0 !important; font: normal normal normal 11px/21px Tahoma, sans-serif !important;}
 
@@ -661,6 +662,7 @@
 
 #bx-panel .bx-panel-admin-button-favorites-icon {  background:scroll transparent url(../images/panel/sprite04.png) no-repeat -90px -282px !important;}
 #bx-panel .bx-panel-admin-button-settings-icon { background:scroll transparent url(../images/panel/sprite04.png) no-repeat -120px -282px !important;}
+.bx-panel-admin-button-settings-icon .menu-popup-item-icon { background:scroll transparent url(../images/panel/sprite04.png) no-repeat -120px -286px !important;}
 #bx-panel .bx-panel-admin-button-help-icon { background:scroll transparent url(../images/panel/sprite04.png) no-repeat -149px -282px !important;}
 #bx-panel .bx-panel-admin-button-updates-icon { background:scroll transparent url(../images/panel/sprite04.png) no-repeat -57px -283px !important;}
 #bx-panel .bx-panel-admin-button-new-updates-icon { background:url(../images/panel/sprite04.png) no-repeat -3px -978px !important;}

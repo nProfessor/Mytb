@@ -118,7 +118,7 @@ $oFilter = new CAdminFilter(
 	$sTableID."_filter",
 	array(
 		"find_id" => GetMessage("SEARCH_TAGSTAT_ID"),
-		"find_dates" => GetMessage("SEARCH_TAGSTAT_DATES", array("#DATE_FORMAT#" => CLang::GetDateFormat("SHORT"))),
+		"find_dates" => GetMessage("SEARCH_TAGSTAT_DATE"),
 		"find_site_id" => GetMessage("SEARCH_TAGSTAT_SITE_ID"),
 		"find_url_to" => GetMessage("SEARCH_TAGSTAT_URL_TO"),
 		"find_stat_sess_id" => GetMessage("SEARCH_TAGSTAT_STAT_SESS_ID"),
@@ -129,14 +129,14 @@ $oFilter->Begin();
 ?>
 <tr>
 	<td nowrap><b><?echo GetMessage("SEARCH_TAGSTAT_TAGS")?>:</b></td>
-	<td><input type="text" name="find_tags" size="47" value="<?echo htmlspecialchars($find_tags)?>"></td>
+	<td><input type="text" name="find_tags" size="47" value="<?echo htmlspecialcharsbx($find_tags)?>"></td>
 </tr>
 <tr>
 	<td><?echo GetMessage("SEARCH_TAGSTAT_ID")?>:</td>
-	<td><input type="text" name="find_id" size="47" value="<?echo htmlspecialchars($find_id)?>"></td>
+	<td><input type="text" name="find_id" size="47" value="<?echo htmlspecialcharsbx($find_id)?>"></td>
 </tr>
 <tr>
-	<td width="0%" nowrap><?echo GetMessage("SEARCH_TAGSTAT_DATES", array("#DATE_FORMAT#" => CLang::GetDateFormat("SHORT")))?>:</td>
+	<td width="0%" nowrap><?echo GetMessage("SEARCH_TAGSTAT_DATE")?>:</td>
 	<td width="0%" nowrap><?echo CalendarPeriod("find_date1", $find_date1, "find_date2", $find_date2, "form1","Y")?></td>
 </tr>
 <tr>
@@ -147,12 +147,12 @@ $oFilter->Begin();
 <tr>
 	<td nowrap><?echo GetMessage("SEARCH_TAGSTAT_URL_TO")?></td>
 	<td><?
-		echo SelectBoxFromArray("find_url_to_404", array("reference"=>array(GetMessage("MAIN_YES"), GetMessage("MAIN_NO")), "reference_id"=>array("Y","N")), htmlspecialchars($find_url_to_404), GetMessage("SEARCH_TAGSTAT_404"));
-	?>&nbsp;<input type="text" name="find_url_to" size="33" value="<?echo htmlspecialchars($find_url_to)?>"></td>
+		echo SelectBoxFromArray("find_url_to_404", array("reference"=>array(GetMessage("MAIN_YES"), GetMessage("MAIN_NO")), "reference_id"=>array("Y","N")), htmlspecialcharsbx($find_url_to_404), GetMessage("SEARCH_TAGSTAT_404"));
+	?>&nbsp;<input type="text" name="find_url_to" size="33" value="<?echo htmlspecialcharsbx($find_url_to)?>"></td>
 </tr>
 <tr>
 	<td nowrap><?echo GetMessage("SEARCH_TAGSTAT_STAT_SESS_ID")?></td>
-	<td><input type="text" name="find_stat_sess_id" size="47" value="<?echo htmlspecialchars($find_stat_sess_id)?>"></td>
+	<td><input type="text" name="find_stat_sess_id" size="47" value="<?echo htmlspecialcharsbx($find_stat_sess_id)?>"></td>
 </tr>
 
 <?

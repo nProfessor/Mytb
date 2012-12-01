@@ -86,56 +86,46 @@ $lAdmin->NavText($rsData->GetNavPrint(''));
 
 while(is_array($arRes = $rsData->NavNext()))
 {
-	$row =& $lAdmin->AddRow($arRes["ID"], $arRes);
-
 	if($arRes["TYPE"] === "dir")
 	{
 		if($arRes["NAME"] === "..")
-			$row->link = 'clouds_file_search.php?lang='.LANGUAGE_ID.'&n='.urlencode($n).'&bucket='.$obBucket->ID.'&path='.urlencode(preg_replace('#([^/]+)/$#', '', $path));
+			$link = 'clouds_file_search.php?lang='.LANGUAGE_ID.'&n='.urlencode($n).'&bucket='.$obBucket->ID.'&path='.urlencode(preg_replace('#([^/]+)/$#', '', $path));
 		else
-			$row->link = 'clouds_file_search.php?lang='.LANGUAGE_ID.'&n='.urlencode($n).'&bucket='.$obBucket->ID.'&path='.urlencode($path.$arRes["NAME"].'/');
+			$link = 'clouds_file_search.php?lang='.LANGUAGE_ID.'&n='.urlencode($n).'&bucket='.$obBucket->ID.'&path='.urlencode($path.$arRes["NAME"].'/');
+	}
+	else
+	{
+		$link = 'clouds_file_search.php?lang='.LANGUAGE_ID.'&n='.urlencode($n).'&file=y&bucket='.$obBucket->ID.'&path='.urlencode($path.$arRes["NAME"]);
+	}
 
-		$row->AddViewField("FILE_NAME", '<div class="clouds_menu_icon_folder'.($arRes["NAME"] === ".."? "_up": "").'"></div><a href="'.htmlspecialchars($row->link).'">'.htmlspecialcharsex($arRes["NAME"]).'</a>');
+	$row =& $lAdmin->AddRow($arRes["ID"], $arRes, $link);
+
+	$showFieldIcon = "";
+	$showFieldText = "";
+	if($arRes["TYPE"] === "dir")
+	{
+		$showFieldIcon = '<a href="'.htmlspecialcharsbx($link).'"><span id="fileman_menu_icon_sections" class="adm-submenu-item-link-icon"></span></a>';
+		$showFieldText = '<a href="'.htmlspecialcharsbx($link).'">'.htmlspecialcharsex($arRes["NAME"]).'</a>';
+	}
+	else
+	{
+		$showFieldIcon = "";
+		$showFieldText = '<a href="'.htmlspecialcharsbx($link).'">'.htmlspecialcharsex($arRes["NAME"]).'</a>';
+	}
+
+	$showField = '<table cellpadding="0" cellspacing="0" border="0"><tr><td align="left">'.$showFieldIcon.'</td><td align="left">&nbsp;'.$showFieldText.'</td></tr></table>';
+
+	if($arRes["TYPE"] === "dir")
+	{
+		$row->AddViewField("FILE_NAME", $showField);
 		$row->AddViewField("FILE_SIZE", '&nbsp;');
 	}
 	else
 	{
-		$row->link = 'clouds_file_search.php?lang='.LANGUAGE_ID.'&n='.urlencode($n).'&file=y&bucket='.$obBucket->ID.'&path='.urlencode($path.$arRes["NAME"]);
-		$row->AddViewField("FILE_NAME", '<a href="'.htmlspecialchars($row->link).'">'.htmlspecialcharsex($arRes["NAME"]).'</a>');
+		$row->AddViewField("FILE_NAME", $showField);
 		$row->AddViewField("FILE_SIZE", CFile::FormatSize((float)$arRes["SIZE"]));
 	}
 }
-
-$arFooter = array(
-	array(
-		"title" => GetMessage("MAIN_ADMIN_LIST_SELECTED"),
-		"value" => $path === "/"? $rsData->SelectedRowsCount(): $rsData->SelectedRowsCount()-1, // W/O ..
-	),
-);
-$lAdmin->AddFooter($arFooter);
-
-/*
-if($obBucket->Init())
-{
-	$chain = $lAdmin->CreateChain();
-	$arPath = explode("/", $path);
-	$curPath = "/";
-	foreach($arPath as $dir)
-	{
-		if($dir != "")
-		{
-			$curPath .= $dir."/";
-			$url = "clouds_file_search.php?lang=".LANGUAGE_ID."&n=".urlencode($n)."&bucket=".$obBucket->ID."&path=".urlencode($curPath);
-			$chain->AddItem(array(
-				"TEXT" => htmlspecialcharsex($dir),
-				"LINK" => htmlspecialchars($url),
-				"ONCLICK" => $lAdmin->ActionAjaxReload($url).';return false;',
-			));
-		}
-	}
-	$lAdmin->ShowChain($chain);
-}
-*/
 
 $lAdmin->BeginPrologContent();
 
@@ -180,14 +170,14 @@ function SelFile(name)
 		<td><select name="bucket">
 			<option value=""><?echo GetMessage("CLO_STORAGE_SEARCH_CHOOSE_BUCKET")?></option>
 			<?foreach($arBuckets as $id => $name):?>
-					<option value="<?echo htmlspecialchars($id)?>" <?if($id == $bucket) echo "selected"?>><?echo htmlspecialcharsex($name)?></option>
+					<option value="<?echo htmlspecialcharsbx($id)?>" <?if($id == $bucket) echo "selected"?>><?echo htmlspecialcharsex($name)?></option>
 			<?endforeach?>
 		</select></td>
 	</tr>
 
 	<tr>
 		<td><?echo GetMessage("CLO_STORAGE_SEARCH_PATH")?></td>
-		<td><input type="text" name="path" size="45" value="<?echo htmlspecialchars($path)?>"></td>
+		<td><input type="text" name="path" size="45" value="<?echo htmlspecialcharsbx($path)?>"></td>
 	</tr>
 <?
 $oFilter->Buttons(array(

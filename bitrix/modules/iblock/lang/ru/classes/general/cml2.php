@@ -136,4 +136,13 @@ $MESS["IBLOCK_XML2_BX_FILE_WIDTH"] = "БитриксШиринаИзображе
 $MESS["IBLOCK_XML2_BX_FILE_HEIGHT"] = "БитриксВысотаИзображения";
 $MESS["IBLOCK_XML2_BX_FILE_CONTENT_TYPE"] = "БитриксТипФайла";
 $MESS["IBLOCK_XML2_UF_ERROR"] = "Ошибка импорта пользовательского свойства (xml_id: #XML_ID#): #ERROR_TEXT#";
+$MESS["IBLOCK_XML2_STORES"] = "Склады";
+$MESS["IBLOCK_XML2_STORE_ADDRESS"] = "Адрес";
+$MESS["IBLOCK_XML2_STORE_AMOUNT_LIST"] = "КоличествоНаСкладах";
+$MESS["IBLOCK_XML2_STORE_AMOUNT"] = "КоличествоНаСкладе";
+$MESS["IBLOCK_XML2_STORE_ID"] = "ИдСклада";
+$MESS["IBLOCK_XML2_STORE_DESCRIPTION"] = "Комментарий";
+$MESS["IBLOCK_XML2_STORE_CANTACTS"] = "Контакты";
+$MESS["IBLOCK_XML2_SECTION_PROPERTIES"] = "СвойстваЭлементов";
+$MESS["IBLOCK_XML2_SMART_FILTER"] = "УмныйФильтр";
 ?>

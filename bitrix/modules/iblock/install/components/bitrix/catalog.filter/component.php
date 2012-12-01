@@ -337,7 +337,7 @@ if($this->StartResultCache(false, ($arParams["CACHE_GROUPS"]==="N"? false: $USER
 	$this->EndResultCache();
 }
 
-$arResult["FORM_ACTION"] = isset($_SERVER['REQUEST_URI'])? htmlspecialchars($_SERVER['REQUEST_URI']): "";
+$arResult["FORM_ACTION"] = isset($_SERVER['REQUEST_URI'])? htmlspecialcharsbx($_SERVER['REQUEST_URI']): "";
 $arResult["FILTER_NAME"] = $FILTER_NAME;
 
 /*************************************************************************
@@ -368,9 +368,10 @@ foreach($arParams["FIELD_CODE"] as $field_code)
 		case "IBLOCK_NAME":
 		case "IBLOCK_EXTERNAL_ID":
 		case "SEARCHABLE_CONTENT":
+		case "TAGS":
 			if(!is_array($value))
 			{
-				$field_res = '<input type="text" name="'.$name.'" size="'.$arParams["TEXT_WIDTH"].'" value="'.htmlspecialchars($value).'" />';
+				$field_res = '<input type="text" name="'.$name.'" size="'.$arParams["TEXT_WIDTH"].'" value="'.htmlspecialcharsbx($value).'" />';
 
 				if (strlen($value)>0)
 					${$FILTER_NAME}["?".$field_code] = $value;
@@ -384,7 +385,7 @@ foreach($arParams["FIELD_CODE"] as $field_code)
 				$value_left = $value["LEFT"];
 			else
 				$value_left = "";
-			$field_res = '<input type="text" name="'.$name.'" size="'.$arParams["NUMBER_WIDTH"].'" value="'.htmlspecialchars($value_left).'" />&nbsp;'.GetMessage("CC_BCF_TILL").'&nbsp;';
+			$field_res = '<input type="text" name="'.$name.'" size="'.$arParams["NUMBER_WIDTH"].'" value="'.htmlspecialcharsbx($value_left).'" />&nbsp;'.GetMessage("CC_BCF_TILL").'&nbsp;';
 
 			if(strlen($value_left) > 0)
 				${$FILTER_NAME}[">=".$field_code] = intval($value_left);
@@ -394,7 +395,7 @@ foreach($arParams["FIELD_CODE"] as $field_code)
 				$value_right = $value["RIGHT"];
 			else
 				$value_right = "";
-			$field_res .= '<input type="text" name="'.$name.'" size="'.$arParams["NUMBER_WIDTH"].'" value="'.htmlspecialchars($value_right).'" />';
+			$field_res .= '<input type="text" name="'.$name.'" size="'.$arParams["NUMBER_WIDTH"].'" value="'.htmlspecialcharsbx($value_right).'" />';
 
 			if(strlen($value_right) > 0)
 				${$FILTER_NAME}["<=".$field_code] = intval($value_right);
@@ -440,10 +441,10 @@ foreach($arParams["FIELD_CODE"] as $field_code)
 
 	if($field_res)
 		$arResult["ITEMS"][] = array(
-			"NAME" => htmlspecialchars(GetMessage("IBLOCK_FIELD_".$field_code)),
+			"NAME" => htmlspecialcharsbx(GetMessage("IBLOCK_FIELD_".$field_code)),
 			"INPUT" => $field_res,
 			"INPUT_NAME" => $name,
-			"INPUT_VALUE" => is_array($value)? array_map("htmlspecialchars", $value): htmlspecialchars($value),
+			"INPUT_VALUE" => is_array($value)? array_map("htmlspecialcharsbx", $value): htmlspecialcharsbx($value),
 			"~INPUT_VALUE" => $value,
 		);
 }
@@ -477,7 +478,7 @@ foreach($arResult["arrProp"] as $prop_id => $arProp)
 						$res .= ' selected';
 				}
 
-				$res .= ' value="'.htmlspecialchars($key).'">'.htmlspecialchars($val).'</option>';
+				$res .= ' value="'.htmlspecialcharsbx($key).'">'.htmlspecialcharsbx($val).'</option>';
 			}
 			$res .= '</select>';
 
@@ -499,7 +500,7 @@ foreach($arResult["arrProp"] as $prop_id => $arProp)
 				$value_left = $value["LEFT"];
 			else
 				$value_left = "";
-			$res .= '<input type="text" name="'.$name.'" size="'.$arParams["NUMBER_WIDTH"].'" value="'.htmlspecialchars($value_left).'" />&nbsp;'.GetMessage("CC_BCF_TILL").'&nbsp;';
+			$res .= '<input type="text" name="'.$name.'" size="'.$arParams["NUMBER_WIDTH"].'" value="'.htmlspecialcharsbx($value_left).'" />&nbsp;'.GetMessage("CC_BCF_TILL").'&nbsp;';
 
 			if (strlen($value_left) > 0)
 				${$FILTER_NAME}["PROPERTY"][">=".$arProp["CODE"]] = doubleval($value_left);
@@ -509,7 +510,7 @@ foreach($arResult["arrProp"] as $prop_id => $arProp)
 				$value_right = $value["RIGHT"];
 			else
 				$value_right = "";
-			$res .= '<input type="text" name="'.$name.'" size="'.$arParams["NUMBER_WIDTH"].'" value="'.htmlspecialchars($value_right).'" />';
+			$res .= '<input type="text" name="'.$name.'" size="'.$arParams["NUMBER_WIDTH"].'" value="'.htmlspecialcharsbx($value_right).'" />';
 
 			if (strlen($value_right) > 0)
 				${$FILTER_NAME}["PROPERTY"]["<=".$arProp["CODE"]] = doubleval($value_right);
@@ -522,7 +523,7 @@ foreach($arResult["arrProp"] as $prop_id => $arProp)
 			$value = $arrPFV[$arProp["CODE"]];
 			if(!is_array($value))
 			{
-				$res .= '<input type="text" name="'.$name.'" size="'.$arParams["TEXT_WIDTH"].'" value="'.htmlspecialchars($value).'" />';
+				$res .= '<input type="text" name="'.$name.'" size="'.$arParams["TEXT_WIDTH"].'" value="'.htmlspecialcharsbx($value).'" />';
 
 				if (strlen($value) > 0)
 					${$FILTER_NAME}["PROPERTY"]["?".$arProp["CODE"]] = $value;
@@ -531,10 +532,10 @@ foreach($arResult["arrProp"] as $prop_id => $arProp)
 	}
 	if($res)
 		$arResult["ITEMS"][] = array(
-			"NAME" => htmlspecialchars($arProp["NAME"]),
+			"NAME" => htmlspecialcharsbx($arProp["NAME"]),
 			"INPUT" => $res,
 			"INPUT_NAME" => $name,
-			"INPUT_VALUE" => is_array($value)? array_map("htmlspecialchars", $value): htmlspecialchars($value),
+			"INPUT_VALUE" => is_array($value)? array_map("htmlspecialcharsbx", $value): htmlspecialcharsbx($value),
 			"~INPUT_VALUE" => $value,
 		);
 }
@@ -559,7 +560,7 @@ foreach($arParams["OFFERS_FIELD_CODE"] as $field_code)
 		case "IBLOCK_NAME":
 		case "IBLOCK_EXTERNAL_ID":
 		case "SEARCHABLE_CONTENT":
-			$field_res = '<input type="text" name="'.$name.'" size="'.$arParams["TEXT_WIDTH"].'" value="'.htmlspecialchars($value).'" />';
+			$field_res = '<input type="text" name="'.$name.'" size="'.$arParams["TEXT_WIDTH"].'" value="'.htmlspecialcharsbx($value).'" />';
 
 			if (strlen($value)>0)
 				${$FILTER_NAME}["OFFERS"]["?".$field_code] = $value;
@@ -570,14 +571,14 @@ foreach($arParams["OFFERS_FIELD_CODE"] as $field_code)
 		case "SHOW_COUNTER":
 			$name = $FILTER_NAME."_of[".$field_code."][LEFT]";
 			$value = $arrOFV[$field_code]["LEFT"];
-			$field_res = '<input type="text" name="'.$name.'" size="'.$arParams["NUMBER_WIDTH"].'" value="'.htmlspecialchars($value).'" />&nbsp;'.GetMessage("CC_BCF_TILL").'&nbsp;';
+			$field_res = '<input type="text" name="'.$name.'" size="'.$arParams["NUMBER_WIDTH"].'" value="'.htmlspecialcharsbx($value).'" />&nbsp;'.GetMessage("CC_BCF_TILL").'&nbsp;';
 
 			if(strlen($value)>0)
 				${$FILTER_NAME}["OFFERS"][">=".$field_code] = intval($value);
 
 			$name = $FILTER_NAME."_of[".$field_code."][RIGHT]";
 			$value = $arrOFV[$field_code]["RIGHT"];
-			$field_res .= '<input type="text" name="'.$name.'" size="'.$arParams["NUMBER_WIDTH"].'" value="'.htmlspecialchars($value).'" />';
+			$field_res .= '<input type="text" name="'.$name.'" size="'.$arParams["NUMBER_WIDTH"].'" value="'.htmlspecialcharsbx($value).'" />';
 
 			if(strlen($value)>0)
 				${$FILTER_NAME}["OFFERS"]["<=".$field_code] = intval($value);
@@ -610,10 +611,10 @@ foreach($arParams["OFFERS_FIELD_CODE"] as $field_code)
 	{
 		$bHasOffersFilter = true;
 		$arResult["ITEMS"][] = array(
-			"NAME" => htmlspecialchars(GetMessage("IBLOCK_FIELD_".$field_code)),
+			"NAME" => htmlspecialcharsbx(GetMessage("IBLOCK_FIELD_".$field_code)),
 			"INPUT" => $field_res,
 			"INPUT_NAME" => $name,
-			"INPUT_VALUE" => htmlspecialchars($value),
+			"INPUT_VALUE" => htmlspecialcharsbx($value),
 			"~INPUT_VALUE" => $value,
 		);
 	}
@@ -649,7 +650,7 @@ foreach($arResult["arrOfferProp"] as $prop_id => $arProp)
 						$res .= ' selected';
 				}
 
-				$res .= ' value="'.htmlspecialchars($key).'">'.htmlspecialchars($val).'</option>';
+				$res .= ' value="'.htmlspecialcharsbx($key).'">'.htmlspecialcharsbx($val).'</option>';
 			}
 			$res .= '</select>';
 
@@ -669,14 +670,14 @@ foreach($arResult["arrOfferProp"] as $prop_id => $arProp)
 
 			$name = $FILTER_NAME."_op[".$arProp["CODE"]."][LEFT]";
 			$value = $arrOPFV[$arProp["CODE"]]["LEFT"];
-			$res .= '<input type="text" name="'.$name.'" size="'.$arParams["NUMBER_WIDTH"].'" value="'.htmlspecialchars($value).'" />&nbsp;'.GetMessage("CC_BCF_TILL").'&nbsp;';
+			$res .= '<input type="text" name="'.$name.'" size="'.$arParams["NUMBER_WIDTH"].'" value="'.htmlspecialcharsbx($value).'" />&nbsp;'.GetMessage("CC_BCF_TILL").'&nbsp;';
 
 			if (strlen($value)>0)
 				${$FILTER_NAME}["OFFERS"]["PROPERTY"][">=".$arProp["CODE"]] = intval($value);
 
 			$name = $FILTER_NAME."_op[".$arProp["CODE"]."][RIGHT]";
 			$value = $arrOPFV[$arProp["CODE"]]["RIGHT"];
-			$res .= '<input type="text" name="'.$name.'" size="'.$arParams["NUMBER_WIDTH"].'" value="'.htmlspecialchars($value).'" />';
+			$res .= '<input type="text" name="'.$name.'" size="'.$arParams["NUMBER_WIDTH"].'" value="'.htmlspecialcharsbx($value).'" />';
 
 			if (strlen($value)>0)
 				${$FILTER_NAME}["OFFERS"]["PROPERTY"]["<=".$arProp["CODE"]] = doubleval($value);
@@ -689,7 +690,7 @@ foreach($arResult["arrOfferProp"] as $prop_id => $arProp)
 
 			$name = $FILTER_NAME."_op[".$arProp["CODE"]."]";
 			$value = $arrOPFV[$arProp["CODE"]];
-			$res .= '<input type="text" name="'.$name.'" size="'.$arParams["TEXT_WIDTH"].'" value="'.htmlspecialchars($value).'" />';
+			$res .= '<input type="text" name="'.$name.'" size="'.$arParams["TEXT_WIDTH"].'" value="'.htmlspecialcharsbx($value).'" />';
 
 			if (strlen($value)>0)
 				${$FILTER_NAME}["OFFERS"]["PROPERTY"]["?".$arProp["CODE"]] = $value;
@@ -700,10 +701,10 @@ foreach($arResult["arrOfferProp"] as $prop_id => $arProp)
 	{
 		$bHasOffersFilter = true;
 		$arResult["ITEMS"][] = array(
-			"NAME" => htmlspecialchars($arProp["NAME"]),
+			"NAME" => htmlspecialcharsbx($arProp["NAME"]),
 			"INPUT" => $res,
 			"INPUT_NAME" => $name,
-			"INPUT_VALUE" => htmlspecialchars($value),
+			"INPUT_VALUE" => htmlspecialcharsbx($value),
 			"~INPUT_VALUE" => $value,
 		);
 	}
@@ -732,7 +733,7 @@ foreach($arResult["arrPrice"] as $price_code => $arPrice)
 			${$FILTER_NAME}[">=PROPERTY_".$arPrice["ID"]] = $value;
 	}
 
-	$res_price .= '<input type="text" name="'.$name.'" size="'.$arParams["NUMBER_WIDTH"].'" value="'.htmlspecialchars($value).'" />&nbsp;'.GetMessage("CC_BCF_TILL").'&nbsp;';
+	$res_price .= '<input type="text" name="'.$name.'" size="'.$arParams["NUMBER_WIDTH"].'" value="'.htmlspecialcharsbx($value).'" />&nbsp;'.GetMessage("CC_BCF_TILL").'&nbsp;';
 
 	$name = $FILTER_NAME."_cf[".$arPrice["ID"]."][RIGHT]";
 	$value = $arrCFV[$arPrice["ID"]]["RIGHT"];
@@ -745,9 +746,9 @@ foreach($arResult["arrPrice"] as $price_code => $arPrice)
 			${$FILTER_NAME}["<=PROPERTY_".$arPrice["ID"]] = $value;
 	}
 
-	$res_price .= '<input type="text" name="'.$name.'" size="'.$arParams["NUMBER_WIDTH"].'" value="'.htmlspecialchars($value).'" />';
+	$res_price .= '<input type="text" name="'.$name.'" size="'.$arParams["NUMBER_WIDTH"].'" value="'.htmlspecialcharsbx($value).'" />';
 
-	$arResult["ITEMS"][] = array("NAME" => htmlspecialchars($arPrice["TITLE"]), "INPUT" => $res_price);
+	$arResult["ITEMS"][] = array("NAME" => htmlspecialcharsbx($arPrice["TITLE"]), "INPUT" => $res_price);
 
 }
 
@@ -778,7 +779,7 @@ foreach(array_merge($_GET, $_POST) as $key=>$value)
 	{
 		$arResult["ITEMS"][] = array(
 			"HIDDEN" => true,
-			"INPUT" => '<input type="hidden" name="'.htmlspecialchars($key).'" value="'.htmlspecialchars($value).'" />',
+			"INPUT" => '<input type="hidden" name="'.htmlspecialcharsbx($key).'" value="'.htmlspecialcharsbx($value).'" />',
 		);
 	}
 }

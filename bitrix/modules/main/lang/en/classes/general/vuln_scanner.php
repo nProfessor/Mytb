@@ -28,4 +28,11 @@ $MESS["VULNSCAN_VULNCOUNTS"] = "Potential problems found: ";
 $MESS["VULNSCAN_DYNAMIC_FUNCTION"] = "Dynamic function call!";
 $MESS["VULNSCAN_EXTRACT"] = "Previously initialized variables can be overwritten!";
 $MESS["VULNSCAN_TOKENIZER_NOT_INSTALLED"] = "PHP tokenizer is not enabled. Please enable it to complete the test.";
+$MESS["VULNSCAN_XSS_HELP_SAFE"] = "Use <b>htmlspecialcharsbx</b>. Tag attribute values always in double quotes. Force protocol specifier (http) in href and src attribute values when required.";
+$MESS["VULNSCAN_HEADER_HELP_SAFE"] = "Newlines are recommended to be filtered out before adding text to header.";
+$MESS["VULNSCAN_DATABASE_HELP_SAFE"] = "Use explicit type casts for numeric data (int, float etc.). Use mysql_escape_string, \$DB->ForSQL() and similar routines for string data. Control data length.";
+$MESS["VULNSCAN_INCLUDE_HELP_SAFE"] = "Normalize paths before using them.";
+$MESS["VULNSCAN_EXEC_HELP_SAFE"] = "Check that the variable values are valid and in allowed range. For example, you may want to reject national and punctuation characters. The allowed range is defined by the project requirements. Use escapeshellcmd and escapeshellarg to be on the safe side.";
+$MESS["VULNSCAN_CODE_HELP_SAFE"] = "Filter user input using <b>EscapePHPString</b>.";
+$MESS["VULNSCAN_HELP_SAFE"] = "Be Safe!";
 ?>

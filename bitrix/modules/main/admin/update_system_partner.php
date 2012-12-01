@@ -102,7 +102,7 @@ $arTabs = array(
 		"TAB" => GetMessage("SUP_TAB_UPDATES_LIST"),
 		"ICON" => "",
 		"TITLE" => GetMessage("SUP_TAB_UPDATES_LIST_ALT"),
-	),	
+	),
 	array(
 		"DIV" => "tab3",
 		"TAB" => GetMessage("SUP_TAB_COUPON"),
@@ -226,7 +226,7 @@ $tabControl->BeginNextTab();
 							}
 							else
 							{
-								alert("<?= GetMessage("SUPP_SUBR_ERR") ?>: " + result);
+								alert('<?= GetMessageJS("SUPP_SUBR_ERR") ?>: ' + result);
 							}
 						}
 
@@ -251,41 +251,15 @@ $tabControl->BeginNextTab();
 										<td valign="top" width="5%">
 										</td>
 										<td valign="top">
-											<script language="JavaScript">
-											<!--
-											var ns4 = (document.layers) ? true : false;
-											var ie4 = (document.all) ? true : false;
-
-											var txt = '';
-											if (ns4)
-											{
-												txt += '<table border=0 cellpadding=0 cellspacing=0><tr><td>';
-												txt += '<layer width="300" height="15" bgcolor="#365069" top="0" left="0"></layer>';
-												txt += '<layer width="298" height="13" bgcolor="#ffffff" top="1" left="1"></layer>';
-												txt += '<layer name="PBdoneD" width="298" height="13" bgcolor="#D5E7F3" top="1" left="1"></layer>';
-												txt += '</td></tr></table>';
-												txt += '<br>';
-												txt += '<table border=0 cellpadding=0 cellspacing=0><tr><td>';
-												txt += '<layer width="300" height="15" bgcolor="#365069" top="0" left="0"></layer>';
-												txt += '<layer width="298" height="13" bgcolor="#ffffff" top="1" left="1"></layer>';
-												txt += '<layer name="PBdone" width="298" height="13" bgcolor="#D5E7F3" top="1" left="1"></layer>';
-												txt += '</td></tr></table>';
-											}
-											else
-											{
-												txt += '<div style="top:0px; left:0px; width:300; height:15px; background-color:#365069; font-size:1px;">';
-												txt += '<div style="position:relative; top:1px; left:1px; width:298px; height:13px; background-color:#ffffff; font-size:1px;">';
-												txt += '<div id="PBdoneD" style="position:relative; top:0px; left:0px; width:0px; height:13px; background-color:#D5E7F3; font-size:1px;">';
-												txt += '</div></div></div>';
-												txt += '<br>';
-												txt += '<div style="top:0px; left:0px; width:300; height:15px; background-color:#365069; font-size:1px;">';
-												txt += '<div style="position:relative; top:1px; left:1px; width:298px; height:13px; background-color:#ffffff; font-size:1px;">';
-												txt += '<div id="PBdone" style="position:relative; top:0px; left:0px; width:0px; height:13px; background-color:#D5E7F3; font-size:1px;">';
-												txt += '</div></div></div>';
-											}
-											document.write(txt);
-											//-->
-											</script>
+											<div style="top:0px; left:0px; width:300px; height:15px; background-color:#365069; font-size:1px;">
+											<div style="position:relative; top:1px; left:1px; width:298px; height:13px; background-color:#ffffff; font-size:1px;">
+											<div id="PBdoneD" style="position:relative; top:0px; left:0px; width:0px; height:13px; background-color:#D5E7F3; font-size:1px;">
+											</div></div></div>
+											<br>
+											<div style="top:0px; left:0px; width:300px; height:15px; background-color:#365069; font-size:1px;">
+											<div style="position:relative; top:1px; left:1px; width:298px; height:13px; background-color:#ffffff; font-size:1px;">
+											<div id="PBdone" style="position:relative; top:0px; left:0px; width:0px; height:13px; background-color:#D5E7F3; font-size:1px;">
+											</div></div></div>
 											<br>
 											<div id="install_progress_hint"></div>
 										</td>
@@ -310,7 +284,7 @@ $tabControl->BeginNextTab();
 										<tr>
 											<td class="icon-new"><div class="icon icon-main-partner"></div></td>
 											<td>
-								<b><?= GetMessage("SUP_SU_RECOMEND") ?>:</b> 
+								<b><?= GetMessage("SUP_SU_RECOMEND") ?>:</b>
 								<?
 								$bComma = False;
 								if ($countModuleUpdates > 0)
@@ -349,8 +323,8 @@ $tabControl->BeginNextTab();
 				var updSuccessDiv = document.getElementById("upd_success_div");
 				var updErrorDiv = document.getElementById("upd_error_div");
 
-				var PBdone = (ns4) ? findlayer('PBdone', document) : (ie4) ? document.all['PBdone'] : document.getElementById('PBdone');
-				var PBdoneD = (ns4) ? findlayer('PBdoneD', document) : (ie4) ? document.all['PBdoneD'] : document.getElementById('PBdoneD');
+				var PBdone = document.getElementById('PBdone');
+				var PBdoneD = document.getElementById('PBdoneD');
 
 				var aStrParams;
 
@@ -382,15 +356,7 @@ $tabControl->BeginNextTab();
 
 				function SetProgress(val)
 				{
-					if (ns4)
-					{
-						PBdone.clip.left = 0;
-						PBdone.clip.top = 0;
-						PBdone.clip.right = val*298/100;
-						PBdone.clip.bottom = 13;
-					}
-					else
-						PBdone.style.width = (val*298/100) + 'px';
+					PBdone.style.width = (val*298/100) + 'px';
 				}
 
 				function SetProgressD()
@@ -401,15 +367,7 @@ $tabControl->BeginNextTab();
 
 					var val = globalCounterD * 100 / globalQuantityD;
 
-					if (ns4)
-					{
-						PBdoneD.clip.left = 0;
-						PBdoneD.clip.top = 0;
-						PBdoneD.clip.right = val * 298 / 100;
-						PBdoneD.clip.bottom = 13;
-					}
-					else
-						PBdoneD.style.width = (val * 298 / 100) + 'px';
+					PBdoneD.style.width = (val * 298 / 100) + 'px';
 
 					if (!bStopUpdates)
 						setTimeout(SetProgressD, 1000);
@@ -430,10 +388,10 @@ $tabControl->BeginNextTab();
 					}
 					else
 					{
-						SetProgressHint("<?= GetMessage("SUP_INITIAL") ?>");
+						SetProgressHint('<?= GetMessageJS("SUP_INITIAL") ?>');
 
 						aStrParams = "addmodule=<?= CUtil::JSEscape($myaddmodule) ?>";
-						
+
 						var moduleList = "";
 						var tableUpdatesSelList = document.getElementById("table_updates_sel_list");
 						var i;
@@ -449,7 +407,7 @@ $tabControl->BeginNextTab();
 									if (moduleList.length > 0)
 										moduleList += ",";
 									moduleList += mod;
-									
+
 									if(document.getElementById('md_new_'+mod))
 									{
 										if(document.getElementById('md_new_'+mod).value == 'Y')
@@ -461,7 +419,7 @@ $tabControl->BeginNextTab();
 								}
 							}
 						}
-						
+
 						__InstallUpdates();
 						SetProgressD();
 					}
@@ -496,7 +454,7 @@ $tabControl->BeginNextTab();
 						arData = data.split("|");
 						globalCounter += parseInt(arData[0]);
 						if (arData.length > 1)
-							SetProgressHint("<?= GetMessage("SUP_SU_UPD_INSMED") ?> " + arData[1]);
+							SetProgressHint('<?= GetMessageJS("SUP_SU_UPD_INSMED") ?> ' + arData[1]);
 						if (globalCounter > globalQuantity)
 							globalCounter = 0;
 						SetProgress(globalCounter * 100 / globalQuantity);
@@ -547,20 +505,20 @@ $tabControl->BeginNextTab();
 							DisableUpdatesTable();
 
 							var updSuccessDivText = document.getElementById("upd_success_div_text");
-							updSuccessDivText.innerHTML = "<?= GetMessage("SUP_SU_UPD_INSSUC") ?>: " + globalCounter;
-						
+							updSuccessDivText.innerHTML = '<?= GetMessageJS("SUP_SU_UPD_INSSUC") ?>: ' + globalCounter;
+
 							if(modNewCount >= 1)
 							{
-								updSuccessDivText.innerHTML += '<br /><br /><b><?=GetMessage("SUP_SU_UPD_MP_NEW");?></b>';
+								updSuccessDivText.innerHTML += '<br /><br /><b><?=GetMessageJS("SUP_SU_UPD_MP_NEW");?></b>';
 								for (i=0; i<modNewCount; i++)
 								{
 									if(document.getElementById('md_name_'+moduleNew[i]))
 									{
 										n = document.getElementById('md_name_'+moduleNew[i]).value;
-										updSuccessDivText.innerHTML += '<br />' + n +'&nbsp;&nbsp;<input type="button" onclick="window.open(\'/bitrix/admin/partner_modules.php?lang=<?=LANGUAGE_ID?>&amp;id='+moduleNew[i]+'&amp;install=Y&amp;<?=bitrix_sessid_get()?>\');" value="<?=GetMessage("SUP_SU_UPD_MP_NEW_INST")?>">';
+										updSuccessDivText.innerHTML += '<br />' + n +'&nbsp;&nbsp;<input type="button" onclick="window.open(\'/bitrix/admin/partner_modules.php?lang=<?=LANGUAGE_ID?>&amp;id='+moduleNew[i]+'&amp;install=Y&amp;<?=bitrix_sessid_get()?>\');" value="<?=GetMessageJS("SUP_SU_UPD_MP_NEW_INST")?>">';
 									}
 								}
-								updSuccessDivText.innerHTML += '<br /><br /><?=GetMessage("SUP_SU_UPD_MP_NEW2");?>';
+								updSuccessDivText.innerHTML += '<br /><br /><?=GetMessageJS("SUP_SU_UPD_MP_NEW2");?>';
 							}
 						}
 					}
@@ -617,7 +575,7 @@ $tabControl->BeginNextTab();
 													<td><?echo $arUpdateList["CLIENT"][0]["@"]["NAME"]?></td>
 												</tr>
 											<?endif;?>
-											
+
 											<tr>
 												<td><b><?= GetMessage("SUP_LICENSE_KEY_MD5") ?>:&nbsp;&nbsp;</b></td>
 												<td><b><?= md5("BITRIX".CUpdateClientPartner::GetLicenseKey()."LICENCE"); ?></b></td>
@@ -907,7 +865,7 @@ $tabControl->BeginNextTab();
 						}
 						else
 						{
-							SetProgressHint("<?= GetMessage("SUP_INITIAL") ?>");
+							SetProgressHint("<?= GetMessageJS("SUP_INITIAL") ?>");
 
 							var moduleList = "";
 
@@ -930,7 +888,7 @@ $tabControl->BeginNextTab();
 												moduleList += ",";
 											moduleList += mod;
 											globalQuantity += arModuleUpdatesCnt[box.name.substring(14)];
-											
+
 											if(document.getElementById('md_new_'+mod))
 											{
 												if(document.getElementById('md_new_'+mod).value == 'Y')
@@ -1063,7 +1021,7 @@ $tabControl->BeginNextTab();
 								}
 							}
 						}
-						
+
 						EnableInstallButton(checkbox);
 					}
 
@@ -1114,7 +1072,7 @@ $tabControl->BeginNextTab();
 						tabControl.DisableTab('tab2');
 						document.getElementById("install_updates_button").disabled = true;
 						document.getElementById("install_updates_sel_button").disabled = true;
-						document.getElementById("id_view_updates_list_span").innerHTML = "<u><?= GetMessage("SUP_SU_UPD_VIEW") ?></u>";
+						document.getElementById("id_view_updates_list_span").innerHTML = "<u><?= GetMessageJS("SUP_SU_UPD_VIEW") ?></u>";
 						document.getElementById("id_view_updates_list_span").disabled = true;
 					}
 
@@ -1125,13 +1083,13 @@ $tabControl->BeginNextTab();
 
 						// document.getElementById("install_updates_button").disabled = <?= (($countModuleUpdates <= 0) ? "true" : "false") ?>;
 						document.getElementById("id_view_updates_list_span").disabled = false;
-						document.getElementById("id_view_updates_list_span").innerHTML = '<a id="id_view_updates_list" href="javascript:tabControl.SelectTab(\'tab2\');"><?= GetMessage("SUP_SU_UPD_VIEW") ?></a>';
+						document.getElementById("id_view_updates_list_span").innerHTML = '<a id="id_view_updates_list" href="javascript:tabControl.SelectTab(\'tab2\');"><?= GetMessageJS("SUP_SU_UPD_VIEW") ?></a>';
 
 						var cnt = document.getElementById("id_register_btn");
 						if (cnt != null)
 							cnt.disabled = false;
 					}
-					
+
 					var isFreeModule = true;
 					var NeedAgree = false;
 					var moduleId = '';
@@ -1149,7 +1107,7 @@ $tabControl->BeginNextTab();
 						{
 							if(arModulesList.length > 0)
 							{
-								for (var i = 0; i < arModulesList.length; i++) 
+								for (var i = 0; i < arModulesList.length; i++)
 								{
 									if(BX('id_select_module_'+arModulesList[i]) && BX('id_select_module_'+arModulesList[i]).checked)
 									{
@@ -1179,24 +1137,24 @@ $tabControl->BeginNextTab();
 						var txt = '<div class="title">';
 						txt += '<table cellspacing="0" width="100%">';
 						txt += '<tr>';
-						txt += '<td width="100%" class="title-text" onmousedown="jsFloatDiv.StartDrag(arguments[0], document.getElementById(\'licence_float_div\'));"><?= GetMessage("SUP_SUBT_LICENCE") ?></td>';
-						txt += '<td width="0%"><a class="close" href="javascript:CloseLicenceTextWindow();" title="<?= GetMessage("SUP_SULD_CLOSE") ?>"></a></td>';
+						txt += '<td width="100%" class="title-text" onmousedown="jsFloatDiv.StartDrag(arguments[0], document.getElementById(\'licence_float_div\'));"><?= GetMessageJS("SUP_SUBT_LICENCE") ?></td>';
+						txt += '<td width="0%"><a class="close" href="javascript:CloseLicenceTextWindow();" title="<?= GetMessageJS("SUP_SULD_CLOSE") ?>"></a></td>';
 						txt += '</tr>';
 						txt += '</table>';
 						txt += '</div>';
 						txt += '<div class="content">';
 						txt += '<form name="license_form">';
-						txt += '<h2><?= GetMessage("SUP_SUBT_LICENCE") ?></h2>';
+						txt += '<h2><?= GetMessageJS("SUP_SUBT_LICENCE") ?></h2>';
 						txt += '<table cellspacing="0"><tr><td>';
 						txt += '<iframe name="license_text" src="http://www.1c-bitrix.ru/license.php?module='+name+'&free_module='+freeModule+'&updatesystem=Y" style="width:450px; height:250px; display:block;"></iframe>';
 						txt += '</td></tr><tr><td>';
 						txt += '<input name="agree_license" type="checkbox" value="Y" id="agree_license_id">';
-						txt += '<label for="agree_license_id"><?= GetMessage("SUP_SUBT_AGREE") ?></label>';
+						txt += '<label for="agree_license_id"><?= GetMessageJS("SUP_SUBT_AGREE") ?></label>';
 						txt += '</td></tr></table>';
 						txt += '</form>';
 						txt += '</div>';
 						txt += '<div class="buttons">';
-						txt += '<input type="button" value="<?= GetMessage("SUP_APPLY") ?>" id="licence_agree_button" onclick="AgreeLicence()" title="<?= GetMessage("SUP_APPLY") ?>">';
+						txt += '<input type="button" value="<?= GetMessageJS("SUP_APPLY") ?>" id="licence_agree_button" onclick="AgreeLicence()" title="<?= GetMessageJS("SUP_APPLY") ?>">';
 						txt += '</div>';
 
 						div.innerHTML = txt;
@@ -1252,7 +1210,7 @@ $tabControl->BeginNextTab();
 						{
 							CloseLicence();
 							EnableInstallButton(BX('id_select_module_'+moduleId));
-							
+
 							if(!BX("install_updates_sel_button").disabled && !BX("install_updates_button").disabled)
 							{
 								BX('need_license').value = "N";
@@ -1321,12 +1279,12 @@ $tabControl->BeginNextTab();
 						result = PrepareString(result);
 						if (result == "Y")
 						{
-							alert("<?= GetMessage("SUP_SUAC_SUCCESS") ?>");
+							alert("<?= GetMessageJS("SUP_SUAC_SUCCESS") ?>");
 							window.location.href = "update_system_partner.php?lang=<?= LANG ?>&tabControl_active_tab=tab2";
 						}
 						else
 						{
-							alert("<?= GetMessage("SUP_SUAC_COUPON_ERROR") ?>: " + result);
+							alert("<?= GetMessageJS("SUP_SUAC_COUPON_ERROR") ?>: " + result);
 							document.getElementById("id_coupon_btn").disabled = false;
 						}
 					}
@@ -1342,7 +1300,7 @@ $tabControl->BeginNextTab();
 					{
 						document.getElementById("id_coupon_btn").disabled = false;
 						CloseWaitWindow();
-						alert("<?= GetMessage("SUP_SUAC_NO_COUP") ?>");
+						alert("<?= GetMessageJS("SUP_SUAC_NO_COUP") ?>");
 					}
 				}
 				//-->

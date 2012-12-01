@@ -216,7 +216,7 @@ class CAllSearch extends CDBResult
 
 			//$tStart = getmicrotime();
 			$r = $DB->Query($strSql, false, "File: ".__FILE__."<br>Line: ".__LINE__);
-			//echo "<pre>",htmlspecialchars($strSql),"</pre><br>",(getmicrotime()-$tStart);
+			//echo "<pre>",htmlspecialcharsbx($strSql),"</pre><br>",(getmicrotime()-$tStart);
 		}
 		parent::CDBResult($r);
 	}

@@ -99,7 +99,7 @@ class CIBlockPropertyDateTime
 
 	function GetPublicEditHTML($arProperty, $value, $strHTMLControlName)
 	{
-		$s = '<input type="text" name="'.htmlspecialchars($strHTMLControlName["VALUE"]).'" size="25" value="'.htmlspecialchars($value["VALUE"]).'" />';
+		$s = '<input type="text" name="'.htmlspecialcharsbx($strHTMLControlName["VALUE"]).'" size="25" value="'.htmlspecialcharsbx($value["VALUE"]).'" />';
 		ob_start();
 		$GLOBALS["APPLICATION"]->IncludeComponent(
 			'bitrix:main.calendar',
@@ -140,7 +140,7 @@ class CIBlockPropertyDateTime
 	{
 		return  CAdminCalendar::CalendarDate($strHTMLControlName["VALUE"], $value["VALUE"], 20, true).
 			($arProperty["WITH_DESCRIPTION"]=="Y" && '' != trim($strHTMLControlName["DESCRIPTION"]) ?
-				'&nbsp;<input type="text" size="20" name="'.$strHTMLControlName["DESCRIPTION"].'" value="'.htmlspecialchars($value["DESCRIPTION"]).'">'
+				'&nbsp;<input type="text" size="20" name="'.$strHTMLControlName["DESCRIPTION"].'" value="'.htmlspecialcharsbx($value["DESCRIPTION"]).'">'
 				:''
 			);
 	}

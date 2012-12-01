@@ -713,7 +713,7 @@ BXMedialibAdmin.prototype =
 			_this = this,
 			D = {
 				width: 360,
-				height: 220,
+				height: 260,
 				pWnd: BX('mlsd_coll'),
 				pTitle: BX('mlsd_coll_title'),
 				pName: BX('mlsd_coll_name'),
@@ -1098,7 +1098,7 @@ BXMedialibAdmin.prototype =
 		D.pName.title = oItem.name;
 
 		// Link
-		//D.pLink.href = oItem.path;		
+		//D.pLink.href = oItem.path;
 		D.pLink.onclick = function () { jsUtils.Redirect([], 'fileman_file_download.php?path='+BX.util.urlencode(oItem.path)); };
 
 		// Keywords
@@ -1436,7 +1436,7 @@ BXMedialibAdmin.prototype =
 			D = {
 				Params: Params || false,
 				width: 420,
-				height: 340,
+				height: 350,
 				pWnd: BX('mlsd_item'),
 				pTitle: BX('mlsd_item_title'),
 				pIfrm: BX('mlsd_iframe_upload'),
@@ -1754,7 +1754,7 @@ BXMedialibAdmin.prototype =
 		this.EditItemDialog.pItCollCont.style.height = rows * 28 + 'px';
 		this.EditItemDialog.pIfrm.style.height = 275 + delta + 'px';
 		this.EditItemDialog.pTbl.style.height = 265 + delta + 'px';
-		this.EditItemDialog.pWnd.style.height = 340 + delta + 'px';
+		this.EditItemDialog.pWnd.style.height = 350 + delta + 'px';
 		jsFloatDiv.AdjustShadow(this.EditItemDialog.pWnd);
 	},
 
@@ -1980,6 +1980,9 @@ BXMedialibAdmin.prototype =
 		var
 			id = Params.id,
 			arCols = [];
+
+		if (Params.colId == 'search_result')
+			Params.bSearch = true;
 
 		if (Params.bSearch)
 		{

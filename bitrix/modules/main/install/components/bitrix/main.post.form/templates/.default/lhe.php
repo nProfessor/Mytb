@@ -14,16 +14,26 @@ if(!function_exists('CustomizeLightEditor'))
 		{
 ?>
 <script>
-	CustomizeLightEditor('<?=$id?>', {
-		path: '<?= CUtil::JSEscape($sTemplateFolder)?>',
-		imageLinkText: '<?=GetMessageJS("MPF_IMAGE_LINK")?>',
-		spoilerText: '<?=GetMessageJS("MPF_SPOILER")?>',
-		videoText: '<?=GetMessageJS("FPF_VIDEO")?>',
-		videoUploadText: '<?= GetMessageJS("BPC_VIDEO_P")?>',
-		videoUploadText1: '<?= GetMessageJS("BPC_VIDEO_PATH_EXAMPLE")?>',
-		videoUploadText2: '<?= GetMessageJS("FPF_VIDEO")?>',
-		videoUploadText3: '<?=GetMessageJS("MPF_VIDEO_SIZE")?>'
-	});
+	function CheckLightEditorCustom()
+	{
+		if (!window.CustomizeLightEditor)
+		{
+			setTimeout("CheckLightEditorCustom", 100);
+			return;
+		}
+
+		CustomizeLightEditor('<?=$id?>', {
+			path: '<?= CUtil::JSEscape($sTemplateFolder)?>',
+			imageLinkText: '<?=GetMessageJS("MPF_IMAGE_LINK")?>',
+			spoilerText: '<?=GetMessageJS("MPF_SPOILER")?>',
+			videoText: '<?=GetMessageJS("FPF_VIDEO")?>',
+			videoUploadText: '<?= GetMessageJS("BPC_VIDEO_P")?>',
+			videoUploadText1: '<?= GetMessageJS("BPC_VIDEO_PATH_EXAMPLE")?>',
+			videoUploadText2: '<?= GetMessageJS("FPF_VIDEO")?>',
+			videoUploadText3: '<?=GetMessageJS("MPF_VIDEO_SIZE")?>'
+		});
+	}
+	CheckLightEditorCustom();
 </script>
 		<?
 			$bCalled[$id] = true;
@@ -52,31 +62,32 @@ window.__ctrlEnterHandler<?=$arParams["FORM_ID"]?> = function(e)
 ?>
 <div id="edit-post-text"><?
 $LHE = new CLightHTMLEditor;
-$res = array(
-	'id' => $arParams["LHE"]["id"],
-//	'width' => '800', // default 100%
-	'height' => $arParams["TEXT"]["HEIGHT"],
-	'inputId' => $arParams["TEXT"]["ID"],
-	'inputName' => $arParams["TEXT"]["NAME"],
-	'content' => htmlspecialcharsBack($arParams["TEXT"]["VALUE"]),
-	'bUseFileDialogs' => false,
-	'bUseMedialib' => false,
-	'toolbarConfig' => $arParams["PARSER"],
-	'jsObjName' => $arParams["LHE"]["jsObjName"],
-	'arSmiles' => $arParams["SMILES"],
-	'smileCountInToolbar' => $arParams['SMILES_COUNT'],
-	'bSaveOnBlur' => true,
-	'BBCode' => true,
-	'bConvertContentFromBBCodes' => false,
-	'bQuoteFromSelection' => true, // Make quote from any text in the page
-	'bSetDefaultCodeView' => false, // Set first view to CODE or to WYSIWYG
-	'bBBParseImageSize' => true, // [IMG ID=XXX WEIGHT=5 HEIGHT=6],  [IMGWEIGHT=5 HEIGHT=6]/image.gif[/IMG]
-	'bResizable' => true,
-	'bAutoResize' => true,
-	'autoResizeOffset' => 40,
-	'controlButtonsHeight' => '34',
-	'autoResizeSaveSize' => false
-) + $arParams["LHE"];
+$res = array_merge(
+	array(
+		'id' => $arParams["LHE"]["id"],
+//		'width' => '800', // default 100%
+		'height' => $arParams["TEXT"]["HEIGHT"],
+		'inputId' => $arParams["TEXT"]["ID"],
+		'inputName' => $arParams["TEXT"]["NAME"],
+		'content' => htmlspecialcharsBack($arParams["TEXT"]["VALUE"]),
+		'bUseFileDialogs' => false,
+		'bUseMedialib' => false,
+		'toolbarConfig' => $arParams["PARSER"],
+		'jsObjName' => $arParams["LHE"]["jsObjName"],
+		'arSmiles' => $arParams["SMILES"]["VALUE"],
+		'smileCountInToolbar' => $arParams['SMILES_COUNT'],
+		'bSaveOnBlur' => true,
+		'BBCode' => true,
+		'bConvertContentFromBBCodes' => false,
+		'bQuoteFromSelection' => true, // Make quote from any text in the page
+		'bSetDefaultCodeView' => false, // Set first view to CODE or to WYSIWYG
+		'bBBParseImageSize' => true, // [IMG ID=XXX WEIGHT=5 HEIGHT=6],  [IMGWEIGHT=5 HEIGHT=6]/image.gif[/IMG]
+		'bResizable' => true,
+		'bAutoResize' => true,
+		'autoResizeOffset' => 40,
+		'controlButtonsHeight' => '34',
+		'autoResizeSaveSize' => false
+	), $arParams["LHE"]);
 if ($arParams["LHE"]['ctrlEnterHandler'] === true || !empty($arParams["LHE"]['ctrlEnterHandler']))
 	$res['ctrlEnterHandler'] = "__ctrlEnterHandler".$arParams["FORM_ID"];
 $LHE->Show($res);

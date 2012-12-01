@@ -6,6 +6,7 @@ global $DB;
 $db_type = strtolower($DB->type);
 CModule::AddAutoloadClasses("bitrixcloud", array(
 	"CBitrixCloudOption" => "classes/".$db_type."/option.php",
+	"CBitrixCloudWebService" => "classes/general/webservice.php",
 	"CBitrixCloudCDNWebService" => "classes/general/cdn_webservice.php",
 	"CBitrixCloudCDNConfig" => "classes/general/cdn_config.php",
 	"CBitrixCloudCDN" => "classes/general/cdn.php",
@@ -16,7 +17,17 @@ CModule::AddAutoloadClasses("bitrixcloud", array(
 	"CBitrixCloudCDNServerGroup" => "classes/general/cdn_server.php",
 	"CBitrixCloudCDNLocations" => "classes/general/cdn_location.php",
 	"CBitrixCloudCDNLocation" => "classes/general/cdn_location.php",
+	"CBitrixCloudBackupWebService" => "classes/general/backup_webservice.php",
+	"CBitrixCloudBackup" => "classes/general/backup.php",
 ));
+
+if(CModule::IncludeModule('clouds'))
+{
+	CModule::AddAutoloadClasses("bitrixcloud", array(
+		"CBitrixCloudBackupBucket" => "classes/general/backup_bucket.php",
+	));
+}
+
 class CBitrixCloudException extends Exception
 {
 	protected $error_code = "";

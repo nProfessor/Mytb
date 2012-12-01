@@ -3098,7 +3098,7 @@ function FindUserID($tag_name, $tag_value, $user_name="", $form_name = "form1", 
 <input type=\"text\" name=\"".$tag_name."\" id=\"".$tag_name."\" value=\"".htmlspecialcharsbx($tag_value)."\" size=\"".$tag_size."\" maxlength=\"".$tag_maxlength."\" class=\"".$tag_class."\">
 <iframe style=\"width:0px; height:0px; border:0px\" src=\"javascript:''\" name=\"hiddenframe".$tag_name."\" id=\"hiddenframe".$tag_name."\"></iframe>
 <input class=\"".$button_class."\" type=\"button\" name=\"FindUser\" id=\"FindUser\" OnClick=\"window.open('".$search_page."?lang=".LANGUAGE_ID."&FN=".$form_name."&FC=".$tag_name."', '', 'scrollbars=yes,resizable=yes,width=760,height=500,top='+Math.floor((screen.height - 560)/2-14)+',left='+Math.floor((screen.width - 760)/2-5));\" value=\"".$button_value."\">
-<span id=\"div_".$tag_name."\">".$user_name."</span>
+<span id=\"div_".$tag_name."\" class=\"adm-filter-text-search\">".$user_name."</span>
 <script type=\"text/javascript\">
 ";
 		if($user_name=="")
@@ -3110,21 +3110,29 @@ function FindUserID($tag_name, $tag_value, $user_name="", $form_name = "form1", 
 function Ch".$tag_name_x."()
 {
 	var DV_".$tag_name_x.";
-	DV_".$tag_name_x." = document.getElementById(\"div_".$tag_name."\");
-	if (tv".$tag_name_x."!=document.".$form_name."['".$tag_name."'].value)
+	DV_".$tag_name_x." = BX(\"div_".$tag_name."\");
+	if (!!DV_".$tag_name_x.")
 	{
-		tv".$tag_name_x."=document.".$form_name."['".$tag_name."'].value;
-		if (tv".$tag_name_x."!='')
+		if (tv".$tag_name_x."!=document.".$form_name."['".$tag_name."'].value)
 		{
-			DV_".$tag_name_x.".innerHTML = '<i>".GetMessage("MAIN_WAIT")."</i>';
-			document.getElementById(\"hiddenframe".$tag_name."\").src='/bitrix/admin/get_user.php?ID=' + tv".$tag_name_x."+'&strName=".$tag_name."&lang=".LANG.(defined("ADMIN_SECTION") && ADMIN_SECTION===true?"&admin_section=Y":"")."';
+			tv".$tag_name_x."=document.".$form_name."['".$tag_name."'].value;
+			if (tv".$tag_name_x."!='')
+			{
+				DV_".$tag_name_x.".innerHTML = '<i>".GetMessage("MAIN_WAIT")."</i>';
+				BX(\"hiddenframe".$tag_name."\").src='/bitrix/admin/get_user.php?ID=' + tv".$tag_name_x."+'&strName=".$tag_name."&lang=".LANG.(defined("ADMIN_SECTION") && ADMIN_SECTION===true?"&admin_section=Y":"")."';
+			}
+			else
+			{
+				DV_".$tag_name_x.".innerHTML = '';
+			}
 		}
-		else
-			DV_".$tag_name_x.".innerHTML = '';
 	}
 	setTimeout(function(){Ch".$tag_name_x."()},1000);
 }
-Ch".$tag_name_x."();
+
+BX.ready(function(){
+	Ch".$tag_name_x."();
+});
 //-->
 </script>
 ";
@@ -3626,6 +3634,9 @@ function IncludeAJAX()
 
 class CJSCore
 {
+	const USE_ADMIN = 'admin';
+	const USE_PUBLIC = 'public';
+
 	private static $arRegisteredExt = array();
 	private static $arCurrentlyLoadedExt = array();
 
@@ -3637,10 +3648,28 @@ class CJSCore
 		'css' => '/bitrix/js/timeman/css/core_timeman.css',
 		'lang' => '/bitrix/modules/timeman/lang/#LANG#/js_core_timeman.php',
 		'rel' => array(needed extensions for automatic inclusion),
+		'use' => CJSCore::USE_ADMIN|CJSCore::USE_PUBLIC
 	));
 	*/
 	public static function RegisterExt($name, $arPaths)
 	{
+		if(isset($arPaths['use']))
+		{
+			switch($arPaths['use'])
+			{
+				case CJSCore::USE_PUBLIC:
+					if(defined("ADMIN_SECTION") && ADMIN_SECTION === true)
+						return;
+
+				break;
+				case CJSCore::USE_ADMIN:
+					if(!defined("ADMIN_SECTION") || ADMIN_SECTION !== true)
+						return;
+
+				break;
+			}
+		}
+
 		self::$arRegisteredExt[$name] = $arPaths;
 	}
 
@@ -3658,12 +3687,6 @@ class CJSCore
 			$arExt = array($arExt);
 
 		$bReturn = ($bReturn === true); // prevent syntax mistake
-
-		if (defined('BX_PUBLIC_MODE') && BX_PUBLIC_MODE == 1 && !$bReturn)
-		{
-			$bOldReturn = false;
-			$bReturn = true;
-		}
 
 		$bNeedCore = false;
 		if (count($arExt) > 0)
@@ -3833,6 +3856,14 @@ class CJSCore
 
 	private static function _loadCSS($css, $bReturn)
 	{
+		if (is_array($css))
+		{
+			$ret = '';
+			foreach ($css as $css_file)
+				$res .= self::_loadCSS($css_file, $bReturn);
+			return $ret;
+		}
+
 		$css_filename = $_SERVER['DOCUMENT_ROOT'].$css;
 
 		if (!file_exists($css_filename))
@@ -4760,6 +4791,32 @@ class CHTTP
 		return $ob->Post($url, $arPostData);
 	}
 
+	function SetAdditionalHeaders($arHeader=array())
+	{
+		foreach($arHeader as $name => $value)
+		{
+			$name = str_replace(array("\r","\n"), "", $name);
+			$value = str_replace(array("\r","\n"), "", $value);
+			$this->additional_headers[$name] = $value;
+		}
+	}
+
+	public static function sGetHeader($url, $arHeader = array())
+	{
+		$ob = new CHTTP();
+		if(!empty($arHeader))
+			$ob->SetAdditionalHeaders($arHeader);
+		return $ob->Get($url);
+	}
+
+	public static function sPostHeader($url, $arPostData, $arHeader = array())
+	{
+		$ob = new CHTTP();
+		if(!empty($arHeader))
+			$ob->SetAdditionalHeaders($arHeader);
+		return $ob->Post($url, $arPostData);
+	}
+
 	public static function SetStatus($status)
 	{
 		$bCgi = (stristr(php_sapi_name(), "cgi") !== false);
@@ -5311,7 +5368,7 @@ class UpdateTools
 			if($updOptions['display'] <> 'off')
 			{
 				if($update_res["result"] == true)
-					$update_res['tooltip'] = GetMessage("top_panel_updates").(($n = count($update_res["modules"])) > 0? GetMessage("top_panel_updates_modules", array("#MODULE_COUNT#"=>$n)) : '').'<br><a href="/bitrix/admin/update_system.php?lang='.LANGUAGE_ID.'">'.GetMessage("top_panel_updates_settings1").'</a>';
+					$update_res['tooltip'] = GetMessage("top_panel_updates").(($n = count($update_res["modules"])) > 0? GetMessage("top_panel_updates_modules", array("#MODULE_COUNT#"=>$n)) : '');
 				elseif($update_res["error"] <> '')
 					$update_res['tooltip'] = GetMessage("top_panel_updates_err").' '.$update_res["error"].'<br><a href="/bitrix/admin/settings.php?lang='.LANGUAGE_ID.'&amp;mid=main&amp;tabControl_active_tab=edit5">'.GetMessage("top_panel_updates_settings").'</a>';
 			}

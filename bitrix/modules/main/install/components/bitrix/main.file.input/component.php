@@ -77,7 +77,6 @@ if ($_POST['mfi_mode'])
 					if ($file)
 					{
 						$tmp["fileContentType"] = $file["CONTENT_TYPE"];
-						$tmp["fileSrc"] = $file["SRC"];
 						$tmp["fileURL"] = CHTTP::URN2URI($APPLICATION->GetCurPageParam("mfi_mode=down&fileID=".$fileID."&cid=".$cid."&".bitrix_sessid_get(), array("mfi_mode", "fileID", "cid")));
 						$tmp["fileSize"] = CFile::FormatSize($file['FILE_SIZE']);
 					}

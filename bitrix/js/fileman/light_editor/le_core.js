@@ -1,15 +1,26 @@
 function JCLightHTMLEditor(arConfig) {this.Init(arConfig);}
 
+JCLightHTMLEditor.items = {};
+
 JCLightHTMLEditor.prototype = {
 Init: function(arConfig)
 {
+	this.id = arConfig.id;
+	JCLightHTMLEditor.items[this.id] = this;
+
 	var _this = this;
 	this.arConfig = arConfig;
 	this.bxTags = {};
-	this.id = arConfig.id;
-	this.bKillPInIE = true;
+
 	this.bPopup = false;
-	this.arBBTags = ['p', 'u', 'div', 'table', 'tr', 'img', 'td', 'a', 'center', 'left', 'right', 'justify'];
+	this.buttonsIndex = {};
+	this.parseAlign = true;
+	this.lastCursorId = 'bxed-last-cursor';
+	this.bHandleOnPaste = this.arConfig.bHandleOnPaste !== false;
+	//if (BX.browser.IsMac()) // TODO: check this handler for Mac
+	this.bHandleOnPaste = false;
+
+	this.arBBTags = ['p', 'u', 'div', 'table', 'tr', 'td', 'th', 'img', 'a', 'center', 'left', 'right', 'justify'];
 	this._turnOffCssCount = 0;
 
 	if (this.arConfig.arBBTags)
@@ -23,11 +34,10 @@ Init: function(arConfig)
 
 	this.CACHE = {};
 	this.arVideos = {};
+
 	// Set content from config;
 	this.content = this.arConfig.content;
 	this.oSpecialParsers = {};
-	this.bIEplusDoctype = BX.browser.IsDoctype() && BX.browser.IsIE();
-
 	BX.onCustomEvent(window, 'LHE_OnBeforeParsersInit', [this]);
 
 	if (arConfig.parsers)
@@ -122,14 +132,32 @@ Init: function(arConfig)
 		this.pResizer.ondragstart = function (e){return BX.PreventDefault(e);};
 		this.pResizer.onmousedown = function(){_this.InitResizer(); return false;};
 
-		BX.bind(this.pTextarea, 'keydown', BX.proxy(this.AutoResize, this));
 
 		if (this.arConfig.bAutoResize)
+		{
+			BX.bind(this.pTextarea, 'keydown', BX.proxy(this.AutoResize, this));
 			BX.addCustomEvent(this, 'onShow', BX.proxy(this.AutoResize, this));
+		}
 	}
 
 	// Add buttons
 	this.AddButtons();
+
+	// Check if ALIGN tags allowed
+	if (!this.buttonsIndex['Justify'] && !this.buttonsIndex['JustifyLeft'])
+	{
+		var arBBTags = [];
+		for (var k in this.arBBTags)
+		{
+			if (this.arBBTags[k] == 'center' || this.arBBTags[k] ==  'left' ||
+				this.arBBTags[k] ==  'right' || this.arBBTags[k] == 'justify')
+				continue;
+
+			arBBTags.push(this.arBBTags[k]);
+		}
+		this.arBBTags = arBBTags;
+		this.parseAlign = false;
+	}
 
 	this.SetEditorContent(this.content);
 	this.oTransOverlay = new LHETransOverlay({zIndex: 995}, this);
@@ -345,16 +373,19 @@ OnKeyDown: function(e)
 		//}
 	}
 
-	//if ((e.ctrlKey && !e.shiftKey && !e.altKey && e.keyCode == 86) /* Ctrl+V */ || (!e.ctrlKey && e.shiftKey && !e.altKey && e.keyCode == 45)/*Shift+Ins*/)
-	//{
-		//this.OnPaste();
-		// var _this = this;
-		// setTimeout(function(){
-			// _this.InsertHTML("#CURSOR#");
-			// _this.SaveContent();
-			// _this.SetEditorContent(_this.GetContent());
-		// },5);
-	//}
+	if (this.bHandleOnPaste
+		&&
+		(
+			(e.ctrlKey && !e.shiftKey && !e.altKey && e.keyCode == 86) /* Ctrl+V */
+				||
+			(!e.ctrlKey && e.shiftKey && !e.altKey && e.keyCode == 45) /*Shift+Ins*/
+				||
+			(e.metaKey && !e.shiftKey && !e.altKey && e.keyCode == 86) /* Cmd+V */
+		)
+	)
+	{
+		this.OnPaste();
+	}
 
 	// Shift +Del - Deleting code fragment in WYSIWYG
 	if (this.bCodeBut && e.shiftKey && e.keyCode == 46 /* Del*/)
@@ -388,7 +419,7 @@ OnKeyDown: function(e)
 
 	if (this.bCodeBut && e.keyCode == 13)
 	{
-		if (BX.browser.IsIE() || BX.browser.IsSafari())
+		if (BX.browser.IsIE() || BX.browser.IsSafari() || BX.browser.IsChrome())
 		{
 			var pElement = this.GetSelectionObject();
 			if (pElement)
@@ -404,7 +435,7 @@ OnKeyDown: function(e)
 				{
 					if (BX.browser.IsIE())
 						this.InsertHTML("<br/><img src=\"" + this.oneGif + "\" height=\"20\" width=\"1\"/>");
-					else if (BX.browser.IsSafari())
+					else if (BX.browser.IsSafari() || BX.browser.IsChrome())
 						this.InsertHTML(" \r\n");
 
 					return BX.PreventDefault(e);
@@ -528,6 +559,8 @@ SetEditorContent: function(sContent)
 
 	if(BX.browser.IsIE())
 	{
+		if (this.bHandleOnPaste)
+			BX.bind(this.pEditorDocument.body, 'paste', BX.proxy(this.OnPaste, this));
 		this.pEditorDocument.body.contentEditable = true;
 	}
 	else if (this.pEditorDocument.designMode)
@@ -673,6 +706,13 @@ _RecursiveDomWalker: function(pNode, pParentNode)
 						oNode.arAttributes[attrName] = pNode.style.cssText;
 						oNode.arStyle = pNode.style;
 
+						if(oNode.arStyle.display == 'none')
+						{
+							oNode.type = 'text';
+							oNode.text = '';
+							break;
+						}
+
 						if(oNode.arStyle.textAlign && (oNode.text == 'div' || oNode.text == 'p' || oNode.text == 'span'))
 						{
 							var align = oNode.arStyle.textAlign;
@@ -724,9 +764,15 @@ _RecursiveDomWalker: function(pNode, pParentNode)
 			break;
 	}
 
-	var arChilds = pNode.childNodes, i, l = arChilds.length;
-	for(i = 0; i < l; i++)
-		oNode.arNodes.push(this._RecursiveDomWalker(arChilds[i], oNode));
+	if (oNode.type != 'text')
+	{
+		var
+			arChilds = pNode.childNodes,
+			i, l = arChilds.length;
+
+		for(i = 0; i < l; i++)
+			oNode.arNodes.push(this._RecursiveDomWalker(arChilds[i], oNode));
+	}
 
 	return oNode;
 },
@@ -824,8 +870,11 @@ GetNodeHTMLLeft: function(pNode)
 
 			if(attrName == 'style')
 			{
-				if (atrVal.length > 0 && atrVal.indexOf('-moz') != -1)
-					atrVal = BX.util.trim(atrVal.replace(/-moz.*?;/ig, '')); // Kill -moz* styles from firefox
+				if (atrVal.length > 0 && atrVal.indexOf('-moz') != -1) // Kill -moz* styles from firefox
+					atrVal = BX.util.trim(atrVal.replace(/-moz.*?;/ig, ''));
+
+				if (pNode.text == 'td') // Kill border-image: none; styles from firefox for <td>
+					atrVal = BX.util.trim(atrVal.replace(/border-image:\s*none;/ig, ''));
 
 				if(atrVal.length <= 0)
 					 continue;
@@ -864,6 +913,9 @@ executeCommand: function(commandName, sValue)
 	this.SetFocus();
 	//this.OnEvent("OnSelectionChange");
 	//this.OnChange("executeCommand", commandName);
+
+	if (this.arConfig.bAutoResize && this.arConfig.bResizable)
+		this.AutoResize();
 
 	return res;
 },
@@ -1004,6 +1056,8 @@ ParseContent: function(sContent, bJustParse) // HTML -> WYSIWYG
 	if (this.arConfig.bBBCode && !sContent.match(/(<br[^>]*>)$/ig))
 		sContent += '<br/>';
 
+	sContent = sContent.replace(/#BXCURSOR#/ig, '<span id="' + this.lastCursorId + '">|</span>');
+
 	return sContent;
 },
 
@@ -1017,30 +1071,24 @@ UnParseContent: function() // WYSIWYG - > html
 
 	var arDivRules = [
 		['^(?:\\n|\\r|\\s)*?#TAG_BEGIN#(?:\\n|\\r|\\s)*?#TAG_END#', "#BR#"], // [DIV][/DIV]  ==> \n
-
 		['^#TAG_BEGIN#', ""], //kill [DIV] in the begining of the text
-		['^(?:\\n|\\r|\\s)+?#TAG_BEGIN#', "######"], //kill [DIV] in the begining of the line
 		['^((?:\\s|\\S)*?)#TAG_BEGIN#(?:\\n|\\r|\\s)*?#TAG_END#((?:\\s|\\S)*?)', "$1#BR#$2"],
-
 		['#TAG_END#(?:\\n|\\r|\\s)#TAG_BEGIN#(?:\\n|\\r|\\s)*?#TAG_END#', "#BR#"], // [/DIV][DIV][/DIV]  ==> \n
 		['#TAG_BEGIN#(?:\\n|\\r|\\s)*?#TAG_END#', "#BR#"], // [DIV][/DIV]  ==> \n
 		['^((?:\\s|\\S)*?)#TAG_BEGIN#((?:\\s|\\S)*?)', "$1#BR#$2"], // Replace first [DIV] after text
 		['#TAG_BEGIN#(?:\\n|\\r|\\s)*?#TAG_BEGIN#', "#BR##BR#"], // [DIV][DIV]  ==> \n\n
 		['#TAG_END#', "#BR#"] // [/DIV] ==> \n
 	];
-	// var arDivRules = [
-		// ['^(?:\n|\r|\s)+?#TAG_BEGIN#((?:\s|\S)*?)$', "$1"], //kill [DIV] in the begining
-		// ['#TAG_BEGIN#(?:\n|\r|\s)*?#TAG_END#', "#BR#"], // [DIV][/DIV]  ==> \n
-		// ['#TAG_BEGIN#(?:\n|\r|\s)*?#TAG_BEGIN#', "#BR##BR#"], // [DIV][DIV]  ==> \n\n
-		// ['#TAG_END#', "#BR#"] // [DIV] ==> \n
-	// ];
-	var re, i, l = arDivRules.length;
 
+	var re, i, l = arDivRules.length;
 	if (this.bBBCode)
 	{
 		// Handle [P] tags from IE
 		sContent = sContent.replace(/(?:\n|\r|\s)*?\[\/P\]/ig, "[/P]"); // \n[/P]  ==> [/P] for opera
-		sContent = sContent.replace(/(?:\n|\r|\s)*?\[\/P\](?:\n|\r|\s)*?\[P\](?:\n|\r|\s)*?\[\/P\]/ig, "\n"); // [/P] [P][/P]  ==> \n for opera
+		sContent = sContent.replace(/(?:\n|\r|\s)*?\[\/P\](?:\n|\r|\s)*?\[P\](?:\n|\r|\s)*?\[\/P\]\[/ig, "\n\n["); // [/P][P][/P][  ==> \n\n[ for opera
+		//sContent = sContent.replace(/(?:\n|\r|\s)*?\[\/P\](?:\n|\r|\s)*?\[P\](?:\n|\r|\s)*?\[\/P\]\[P\]/ig, "\n\n[P]"); // [/P][P][/P][P]  ==> \n[P] for opera
+		//sContent = sContent.replace(/(?:\n|\r|\s)*?\[\/P\](?:\n|\r|\s)*?\[P\](?:\n|\r|\s)*?\[\/P\]/ig, "\n"); // [/P] [P][/P]  ==> \n for opera
+
 		sContent = sContent.replace(/\[P\](?:\n|\r|\s)*?\[\/P\]/ig, "\n"); // [P][/P]  ==> \n
 		sContent = sContent.replace(/\[\/P\](?:\n|\r|\s)*?\[P\]/ig, "\n"); // [/P]    [P]  ==> \n
 		sContent = sContent.replace(/^(?:\n|\r|\s)+?\[P\]((?:\s|\S)*?)$/ig, "$1"); //kill [P] in the begining
@@ -1057,10 +1105,7 @@ UnParseContent: function() // WYSIWYG - > html
 			re = re.replace(/#TAG_END#/g, '\\[\\/DIV\\]');
 			re = re.replace(/\\\\/ig, '\\\\');
 
-			res = arDivRules[i][1];
-			//res = res.replace(/#BR#/g, "\n");
-
-			sContent = sContent.replace(new RegExp(re, 'igm'), res);
+			sContent = sContent.replace(new RegExp(re, 'igm'), arDivRules[i][1]);
 		}
 
 		sContent = sContent.replace(/#BR#/ig, "\n");
@@ -1178,17 +1223,32 @@ AutoResize: function()
 	{
 		if (_this.sEditorMode == 'html')
 		{
-			newHeight = _this.pEditorDocument.body.offsetHeight + heightOffset;
+			//newHeight = _this.pEditorDocument.body.offsetHeight + heightOffset;
+			newHeight = _this.pEditorDocument.body.offsetHeight;
 			var
 				body = _this.pEditorDocument.body,
+				node = body.lastChild,
 				offsetTop = false, i;
 
-			if (!body.lastChild || !body.lastChild.offsetTop)
-				return;
-			offsetTop = body.lastChild.offsetTop + (body.lastChild.offsetHeight || 0);
+			while (true)
+			{
+				if (!node)
+					break;
+				if (node.offsetTop)
+				{
+					offsetTop = node.offsetTop + (node.offsetHeight || 0);
+					newHeight = offsetTop + heightOffset;
+					break;
+				}
+				else
+				{
+					node = node.previousSibling;
+				}
+			}
 
-			if (offsetTop)
-				newHeight = offsetTop + heightOffset;
+			var oEdSize = BX.GetWindowSize(_this.pEditorDocument);
+			if (oEdSize.scrollHeight - oEdSize.innerHeight > 5)
+				newHeight = Math.max(oEdSize.scrollHeight + heightOffset, newHeight);
 		}
 		else
 		{
@@ -1197,13 +1257,13 @@ AutoResize: function()
 
 		if (newHeight > parseInt(_this.arConfig.height))
 		{
-			if (!maxHeight || maxHeight < 10)
-				maxHeight = Math.round(BX.GetWindowInnerSize().innerHeight * 0.8); // 80% from screen height
+			if (BX.browser.IsIOS())
+				maxHeight = Infinity;
+			else if (!maxHeight || maxHeight < 10)
+				maxHeight = Math.round(BX.GetWindowInnerSize().innerHeight * 0.9); // 90% from screen height
 
-			if (newHeight >= maxHeight)
-				newHeight = maxHeight;
-			if (newHeight < minHeight)
-				newHeight = minHeight;
+			newHeight = Math.min(newHeight, maxHeight);
+			newHeight = Math.max(newHeight, minHeight);
 
 			_this.SmoothResizeFrame(newHeight);
 		}
@@ -1237,6 +1297,9 @@ SmoothResizeFrame: function(height)
 		bRise = height > curHeight,
 		timeInt = BX.browser.IsIE() ? 50 : 50,
 		dy = 5;
+
+	if (!bRise)
+		return;
 
 	if (this.smoothResizeInterval)
 		clearInterval(this.smoothResizeInterval);
@@ -1366,6 +1429,7 @@ AddButtons: function()
 		}
 		else if (LHEButtons[butId])
 		{
+			this.buttonsIndex[butId] = i;
 			pCont = this.AddButton(LHEButtons[butId], butId);
 			if (pCont)
 			{
@@ -1713,6 +1777,9 @@ InsertHTML: function(sContent)
 			this.pEditorWindow.document.execCommand('insertHTML', false, sContent);
 		}
 	}catch(e){}
+
+	if (this.arConfig.bAutoResize && this.arConfig.bResizable)
+		this.AutoResize();
 	//this.OnChange("insertHTML", "");
 },
 
@@ -1879,6 +1946,9 @@ WrapSelectionWith: function (tagName, arAttributes)
 		arTags[i].parentNode.insertBefore(pEl, arTags[i]);
 		arTags[i].parentNode.removeChild(arTags[i]);
 	}
+
+	if (this.arConfig.bAutoResize && this.arConfig.bResizable)
+		this.AutoResize();
 
 	return arRes;
 },
@@ -2118,9 +2188,11 @@ ParseBB: function (sContent)  // BBCode -> WYSIWYG
 	// Table
 	sContent = sContent.replace(/[\r\n\s\t]?\[table\][\r\n\s\t]*?\[tr\]/ig, '[TABLE][TR]');
 	sContent = sContent.replace(/\[tr\][\r\n\s\t]*?\[td\]/ig, '[TR][TD]');
+	sContent = sContent.replace(/\[tr\][\r\n\s\t]*?\[th\]/ig, '[TR][TH]');
 	sContent = sContent.replace(/\[\/td\][\r\n\s\t]*?\[td\]/ig, '[/TD][TD]');
 	sContent = sContent.replace(/\[\/tr\][\r\n\s\t]*?\[tr\]/ig, '[/TR][TR]');
 	sContent = sContent.replace(/\[\/td\][\r\n\s\t]*?\[\/tr\]/ig, '[/TD][/TR]');
+	sContent = sContent.replace(/\[\/th\][\r\n\s\t]*?\[\/tr\]/ig, '[/TH][/TR]');
 	sContent = sContent.replace(/\[\/tr\][\r\n\s\t]*?\[\/table\][\r\n\s\t]?/ig, '[/TR][/TABLE]');
 
 	// List
@@ -2130,7 +2202,7 @@ ParseBB: function (sContent)  // BBCode -> WYSIWYG
 	var
 		arSimpleTags = [
 			'b','u', 'i', ['s', 'del'], // B, U, I, S
-			'table', 'tr', 'td'//, // Table
+			'table', 'tr', 'td', 'th'//, // Table
 		],
 		bbTag, tag, i, l = arSimpleTags.length, re;
 
@@ -2214,7 +2286,6 @@ UnParseNodeBB: function (pNode) // WYSIWYG -> BBCode
 		return "[CODE]" + this.RecGetCodeContent(pNode) + "[/CODE]";
 
 	pNode.bbHide = true;
-
 	if (pNode.text == 'font' && pNode.arAttributes.color)
 	{
 		pNode.bbHide = false;
@@ -2279,12 +2350,18 @@ UnParseNodeBB: function (pNode) // WYSIWYG -> BBCode
 		pNode.text = 'url';
 		pNode.bbValue = pNode.arAttributes.href;
 	}
-	else if(pNode.arAttributes.align || pNode.arStyle.textAlign)
+	else if(this.parseAlign && (pNode.arAttributes.align || pNode.arStyle.textAlign))
 	{
-		pNode.bbHide = false;
 		var align = pNode.arStyle.textAlign || pNode.arAttributes.align;
 		if (BX.util.in_array(align, ['left', 'right', 'center', 'justify']))
+		{
+			pNode.bbHide = false;
 			pNode.text = align;
+		}
+		else
+		{
+			pNode.bbHide = true;
+		}
 	}
 	else if(BX.util.in_array(pNode.text, this.arBBTags)) //'p', 'u', 'div', 'table', 'tr', 'img', 'td', 'a'
 	{
@@ -2489,6 +2566,147 @@ GetCutHTML: function(e)
 
 	this.curCutId = this.SetBxTag(false, {tag: "cut"});
 	return '<img src="' + this.oneGif+ '" class="bxed-cut" id="' + this.curCutId + '" title="' + LHE_MESS.CutTitle + '"/>';
+},
+
+OnPaste: function()
+{
+	var _this = this;
+	BX.showWait(this.iFrame, LHE_MESS.OnPasteProcessing);
+
+	setTimeout(function(){
+		_this.InsertHTML('#BXCURSOR#');
+		_this.SaveContent();
+		setTimeout(function()
+		{
+			var content = _this.GetContent();
+
+			if (/<\w[^>]*(( class="?MsoNormal"?)|(="mso-))/gi.test(content))
+				content = _this.CleanWordText(content);
+
+			_this.SetEditorContent(content);
+
+			setTimeout(function()
+			{
+				try{
+					var pCursor = _this.pEditorDocument.getElementById(_this.lastCursorId);
+					if (pCursor && pCursor.parentNode)
+					{
+						_this.SelectElement(pCursor);
+						pCursor.parentNode.removeChild(pCursor);
+						_this.SetFocus();
+					}
+				}catch(e){}
+
+				setTimeout(function(){
+					BX.closeWait(_this.iFrame);
+				}, 1000);
+			}, 100);
+
+		}, 100);
+	}, 100);
+},
+
+CleanWordText: function(text)
+{
+	text = text.replace(/<(P|B|U|I|STRIKE)>&nbsp;<\/\1>/g, ' ');
+	text = text.replace(/<o:p>([\s\S]*?)<\/o:p>/ig, "$1");
+	//text = text.replace(/<o:p>[\s\S]*?<\/o:p>/ig, "&nbsp;");
+
+	text = text.replace(/<span[^>]*display:\s*?none[^>]*>([\s\S]*?)<\/span>/gi, ''); // Hide spans with display none
+
+	text = text.replace(/<!--\[[\s\S]*?\]-->/ig, ""); //<!--[.....]--> <!--[if gte mso 9]>...<![endif]-->
+	text = text.replace(/<!\[[\s\S]*?\]>/ig, ""); //	<! [if !vml]>
+	text = text.replace(/<\\?\?xml[^>]*>/ig, ""); //<xml...>, </xml...>
+
+	text = text.replace(/<o:p>\s*<\/o:p>/ig, "");
+
+	text = text.replace(/<\/?[a-z1-9]+:[^>]*>/gi, "");	//<o:p...>, </o:p>
+	text = text.replace(/<([a-z1-9]+[^>]*) class=([^ |>]*)(.*?>)/gi, "<$1$3");
+	text = text.replace(/<([a-z1-9]+[^>]*) [a-z]+:[a-z]+=([^ |>]*)(.*?>)/gi, "<$1$3"); //	xmlns:v="urn:schemas-microsoft-com:vml"
+
+	text = text.replace(/&nbsp;/ig, ' ');
+	text = text.replace(/\s+?/gi, ' ');
+
+	// Remove mso-xxx styles.
+	text = text.replace(/\s*mso-[^:]+:[^;"]+;?/gi, "");
+
+	// Remove margin styles.
+	text = text.replace(/\s*margin: 0cm 0cm 0pt\s*;/gi, "");
+	text = text.replace(/\s*margin: 0cm 0cm 0pt\s*"/gi, "\"");
+
+	text = text.replace(/\s*TEXT-INDENT: 0cm\s*;/gi, "");
+	text = text.replace(/\s*TEXT-INDENT: 0cm\s*"/gi, "\"");
+
+
+	text = text.replace(/\s*TEXT-ALIGN: [^\s;]+;?"/gi, "\"");
+	text = text.replace(/\s*PAGE-BREAK-BEFORE: [^\s;]+;?"/gi, "\"");
+	text = text.replace(/\s*FONT-VARIANT: [^\s;]+;?"/gi, "\"");
+	text = text.replace(/\s*tab-stops:[^;"]*;?/gi, "");
+	text = text.replace(/\s*tab-stops:[^"]*/gi, "");
+
+	text = text.replace(/<FONT[^>]*>([\s\S]*?)<\/FONT>/gi, '$1');
+	text = text.replace(/\s*face="[^"]*"/gi, "");
+	text = text.replace(/\s*face=[^ >]*/gi, "");
+	text = text.replace(/\s*FONT-FAMILY:[^;"]*;?/gi, "");
+
+	// Remove Class attributes
+	text = text.replace(/<(\w[^>]*) class=([^ |>]*)([^>]*)/gi, "<$1$3");
+
+	// Remove styles.
+	text = text.replace(/<(\w[^>]*) style="([^\"]*)"([^>]*)/gi, "<$1$3");
+
+	// Remove empty styles.
+	text = text.replace(/\s*style="\s*"/gi, '');
+
+	// Remove Lang attributes
+	text = text.replace(/<(\w[^>]*) lang=([^ |>]*)([^>]*)/gi, "<$1$3");
+
+	var iter = 0;
+	while (text.toLowerCase().indexOf('<span') != -1 && text.toLowerCase().indexOf('</span>') != -1 && iter++ < 20)
+		text = text.replace(/<span[^>]*?>([\s\S]*?)<\/span>/gi, '$1');
+
+	var
+		_text,
+		i, tag, arFormatTags = ['b', 'strong', 'i', 'u', 'font', 'span', 'strike'];
+
+	while (true)
+	{
+		_text = text;
+		for (i in arFormatTags)
+		{
+			tag = arFormatTags[i];
+			text = text.replace(new RegExp('<' + tag + '[^>]*?>(\\s*?)<\\/' + tag + '>', 'gi'), '$1');
+			text = text.replace(new RegExp('<\\/' + tag + '[^>]*?>(\\s*?)<' + tag + '>', 'gi'), '$1');
+		}
+
+		if (_text == text)
+			break;
+	}
+
+	// Remove empty tags
+	text = text.replace(/<(?:[^\s>]+)[^>]*>([\s\n\t\r]*)<\/\1>/g, "$1");
+	text = text.replace(/<(?:[^\s>]+)[^>]*>(\s*)<\/\1>/g, "$1");
+	text = text.replace(/<(?:[^\s>]+)[^>]*>(\s*)<\/\1>/g, "$1");
+
+	//text = text.replace(/<\/?xml[^>]*>/gi, "");	//<xml...>, </xml...>
+	text = text.replace(/<xml[^>]*?(?:>\s*?<\/xml)?(?:\/?)?>/ig, '');
+	text = text.replace(/<meta[^>]*?(?:>\s*?<\/meta)?(?:\/?)?>/ig, '');
+	text = text.replace(/<link[^>]*?(?:>\s*?<\/link)?(?:\/?)?>/ig, '');
+	text = text.replace(/<style[\s\S]*?<\/style>/ig, '');
+
+	text = text.replace(/<table([\s\S]*?)>/gi, "<table>");
+	text = text.replace(/<tr([\s\S]*?)>/gi, "<tr>");
+	text = text.replace(/(<td[\s\S]*?)width=("|')[\s\S]*?\2([\s\S]*?>)/gi, "$1$3");
+	text = text.replace(/(<td[\s\S]*?)height=("|')[\s\S]*?\2([\s\S]*?>)/gi, "$1$3");
+	text = text.replace(/(<td[\s\S]*?)style=("|')[\s\S]*?\2([\s\S]*?>)/gi, "$1$3");
+	text = text.replace(/(<td[\s\S]*?)valign=("|')[\s\S]*?\2([\s\S]*?>)/gi, "$1$3");
+	text = text.replace(/(<td[\s\S]*?)nowrap=("|')[\s\S]*?\2([\s\S]*?>)/gi, "$1$3");
+	text = text.replace(/(<td[\s\S]*?)nowrap([\s\S]*?>)/gi, "$1$3");
+
+	text = text.replace(/(<col[\s\S]*?)width=("|')[\s\S]*?\2([\s\S]*?>)/gi, "$1$3");
+	text = text.replace(/(<col[\s\S]*?)style=("|')[\s\S]*?\2([\s\S]*?>)/gi, "$1$3");
+
+	return text;
 }
 };
 

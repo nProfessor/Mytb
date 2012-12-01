@@ -435,7 +435,7 @@ elseif($prop_edit=="Y")
 	$bEditProps = true;
 
 if($bEdit)
-	$APPLICATION->SetTitle(GetMessage("FILEMAN_FILEEDIT_PAGE_TITLE")." \"".htmlspecialchars($arParsedPath["LAST"])."\"");
+	$APPLICATION->SetTitle(GetMessage("FILEMAN_FILEEDIT_PAGE_TITLE")." \"".htmlspecialcharsbx($arParsedPath["LAST"])."\"");
 else
 	$APPLICATION->SetTitle(GetMessage("FILEMAN_NEWFILEEDIT_TITLE"));
 
@@ -557,8 +557,8 @@ $arTemplates = CFileman::GetFileTemplates(LANGUAGE_ID, array($site_template));
 for($i=0; $i<count($arTemplates); $i++)
 {
 	$arContextTemplates[] = Array(
-			"TEXT"=>htmlspecialchars($arTemplates[$i]["name"]),
-			"ONCLICK" => "__NewDocTempl('".AddSlashes(htmlspecialchars($arTemplates[$i]["file"]))."')",
+			"TEXT"=>htmlspecialcharsbx($arTemplates[$i]["name"]),
+			"ONCLICK" => "__NewDocTempl('".AddSlashes(htmlspecialcharsbx($arTemplates[$i]["file"]))."')",
 		);
 }
 
@@ -583,14 +583,14 @@ $u->Show();
 ?>
 
 <form action="fileman_html_edit.php?lang=<?=LANG?>" method="post" enctype="multipart/form-data" name="ffilemanedit" id="ffilemanedit">
-<input type="hidden" name="site" id="site" value="<?=htmlspecialchars($site)?>">
-<input type="hidden" name="path" id="path" value="<?=htmlspecialchars($originalPath)?>">
-<input type="hidden" name="logical" value="<?=htmlspecialchars($logical)?>">
+<input type="hidden" name="site" id="site" value="<?=htmlspecialcharsbx($site)?>">
+<input type="hidden" name="path" id="path" value="<?=htmlspecialcharsbx($originalPath)?>">
+<input type="hidden" name="logical" value="<?=htmlspecialcharsbx($logical)?>">
 <span style="display:none;"><input type="submit" name="saveb" value="Y" style="width:0px;height:0px"></span>
 <input type="hidden" name="save" value="Y">
 <input type="hidden" name="fullscreen" id="fullscreen" value="<?=($bFullScreen?"Y":"N")?>">
-<input type="hidden" name="template" value="<?= htmlspecialchars($template)?>">
-<input type="hidden" name="back_url" value="<?=htmlspecialchars($back_url)?>">
+<input type="hidden" name="template" value="<?= htmlspecialcharsbx($template)?>">
+<input type="hidden" name="back_url" value="<?=htmlspecialcharsbx($back_url)?>">
 <?=bitrix_sessid_post()?>
 <?
 $tabControl->Begin();
@@ -625,19 +625,19 @@ $tabControl->BeginNextTab();
 		?>
 		<select id="bx_template" name="template" onchange="templateOnChange(this);">
 			<?for($i=0; $i<count($arTemplates); $i++):?>
-			<option value="<?= htmlspecialchars($arTemplates[$i]["file"])?>"<?if($template==$arTemplates[$i]["file"])echo " selected"?>><?= htmlspecialchars($arTemplates[$i]["name"])?></option>
+			<option value="<?= htmlspecialcharsbx($arTemplates[$i]["file"])?>"<?if($template==$arTemplates[$i]["file"])echo " selected"?>><?= htmlspecialcharsbx($arTemplates[$i]["name"])?></option>
 			<?endfor;?>
 		</select></td></tr>
 		<tr>
 			<td width="30%"><label for="title"><?= GetMessage("FILEMAN_FILEEDIT_TITLE")?></label></td>
-			<td width="70%"><input type="text" id="title" name="title" size="60" maxlength="255" value="<?= htmlspecialchars($title)?>"></td>
+			<td width="70%"><input type="text" id="title" name="title" size="60" maxlength="255" value="<?= htmlspecialcharsbx($title)?>"></td>
 		</tr>
 		<tr>
 			<td><label for="filename"><?= GetMessage("FILEMAN_FILEEDIT_NAME")?></td>
 			<td>
 				<?if (isset($filename2))
 					$filename = $filename2;?>
-				<input type="text" name="filename" id="filename" style="float: left;" size="60" maxlength="255" value="<?= htmlspecialchars($filename)?>" />
+				<input type="text" name="filename" id="filename" style="float: left;" size="60" maxlength="255" value="<?= htmlspecialcharsbx($filename)?>" />
 			</td>
 		</tr>
 		<tr><td style="padding: 0!important;"></td><td style="padding: 0!important;">
@@ -666,11 +666,11 @@ $tabControl->BeginNextTab();
 	<?else:?>
 		<tr>
 			<td width="30%"><label for="title"><?= GetMessage("FILEMAN_FILEEDIT_TITLE")?></label></td>
-			<td width="70%"><input type="text" id="title" name="title" size="60" maxlength="255" value="<?= htmlspecialchars($title)?>">
+			<td width="70%"><input type="text" id="title" name="title" size="60" maxlength="255" value="<?= htmlspecialcharsbx($title)?>">
 
 			<input type="hidden" name="new" id="new" value="n">
-			<input type="hidden" name="filename" id="filename" value="<?=htmlspecialchars($arParsedPath["LAST"])?>">
-			<input type="hidden" name="ofp_id" id="ofp_id" value="<?=htmlspecialchars($ofp_id)?>">
+			<input type="hidden" name="filename" id="filename" value="<?=htmlspecialcharsbx($arParsedPath["LAST"])?>">
+			<input type="hidden" name="ofp_id" id="ofp_id" value="<?=htmlspecialcharsbx($ofp_id)?>">
 			</td>
 		</tr>
 	<tr>
@@ -920,13 +920,13 @@ $tabControl->BeginNextTab();
 					?>
 					<tr>
 						<td  valign="top" >
-							<input type="hidden" id="H_CODE_<?=$i;?>" name="H_CODE_<?=$i;?>" value="<?=htmlspecialchars($arProp["CODE"])?>">
+							<input type="hidden" id="H_CODE_<?=$i;?>" name="H_CODE_<?=$i;?>" value="<?=htmlspecialcharsbx($arProp["CODE"])?>">
 							<?if($arProp["NAME"]):?>
-								<input type="hidden" id="CODE_<?=$i;?>" name="CODE_<?=$i;?>" value="<?=htmlspecialchars($arProp["CODE"])?>">
-								<input type="hidden" id="NAME_<?=$i;?>" name="NAME_<?=$i;?>" value="<?=htmlspecialchars($arProp["NAME"]);?>">
-								<?=htmlspecialchars($arProp["NAME"]);?>:
+								<input type="hidden" id="CODE_<?=$i;?>" name="CODE_<?=$i;?>" value="<?=htmlspecialcharsbx($arProp["CODE"])?>">
+								<input type="hidden" id="NAME_<?=$i;?>" name="NAME_<?=$i;?>" value="<?=htmlspecialcharsbx($arProp["NAME"]);?>">
+								<?=htmlspecialcharsbx($arProp["NAME"]);?>:
 							<?else:?>
-								<input type="text" name="CODE_<?=$i?>" id="CODE_<?=$i?>" value="<?echo htmlspecialchars((isset($_POST["CODE_$i"])) ? $_POST["CODE_$i"] : $arProp["CODE"]);?>" size="30">:
+								<input type="text" name="CODE_<?=$i?>" id="CODE_<?=$i?>" value="<?echo htmlspecialcharsbx((isset($_POST["CODE_$i"])) ? $_POST["CODE_$i"] : $arProp["CODE"]);?>" size="30">:
 							<?endif;?>
 						</td>
 						<td>
@@ -935,11 +935,11 @@ $tabControl->BeginNextTab();
 							if($arProp["CODE"] == $tag_prop_name && $search_exist):
 								echo InputTags("VALUE_".$i, $value_, array(), 'size="55"', "VALUE_".$i);
 							else:?>
-								<input type="text" name="VALUE_<?=$i?>" id="VALUE_<?=$i?>" value="<?=htmlspecialchars($value_);?>" size="60">
+								<input type="text" name="VALUE_<?=$i?>" id="VALUE_<?=$i?>" value="<?=htmlspecialcharsbx($value_);?>" size="60">
 							<?endif;
 							if($APPLICATION->GetDirProperty($arProp["CODE"], Array($site, $path)))
 							{
-								?><br><small><b><?=GetMessage("FILEMAN_FILE_EDIT_FOLDER_PROP")?></b> <?echo htmlspecialchars($APPLICATION->GetDirProperty($arProp["CODE"], Array($site, $path)));?></small><?
+								?><br><small><b><?=GetMessage("FILEMAN_FILE_EDIT_FOLDER_PROP")?></b> <?echo htmlspecialcharsbx($APPLICATION->GetDirProperty($arProp["CODE"], Array($site, $path)));?></small><?
 							}?>
 						</td>
 					</tr>
@@ -989,7 +989,7 @@ $tabControl->BeginNextTab();
 					for($j = 0; $j < count($aMenuLinksTmp); $j++)
 					{
 						$aMenuLinksItem = $aMenuLinksTmp[$j];
-						$arItems[] = htmlspecialchars($aMenuLinksItem[0]);
+						$arItems[] = htmlspecialcharsbx($aMenuLinksItem[0]);
 					}
 					$arAllItems[$key] = $arItems;
 					if($strSelected=="")
@@ -1169,7 +1169,7 @@ BX.ready(function() {
 </tr>
 <tr id="e1"<?if($_REQUEST['add_to_menu']!='Y')echo ' style="display:none;"';?>>
 	<td><?echo GetMessage("FILEMAN_H_EDIT_MENU_NEW_NAME")?></td>
-	<td><input type="text" name="newp" id="newp" value="<?if(isset($_POST['newp'])) echo htmlspecialchars($_POST['newp']);?>"></td>
+	<td><input type="text" name="newp" id="newp" value="<?if(isset($_POST['newp'])) echo htmlspecialcharsbx($_POST['newp']);?>"></td>
 </tr>
 <tr id="e2"<?if($_REQUEST['add_to_menu']!='Y')echo ' style="display:none;"';?>>
 	<td><?echo GetMessage("FILEMAN_H_EDIT_MENU_INS_BEFORE")?></td>

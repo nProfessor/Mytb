@@ -949,11 +949,8 @@ function BXEdColorPicker()
 BXEdColorPicker.prototype = {
 	_Create: function ()
 	{
-		this.pWnd = BX.create("TABLE", {props: {className: 'bx-ed-colorpicker'}});
-		var
-			_this = this,
-			row = this.pWnd.insertRow(-1),
-			cell = row.insertCell(-1);
+		this.pWnd = BX.create("DIV", {props: {className: 'bx-ed-colorpicker'}});
+		var _this = this;
 
 		if(this.OnSelectionChange)
 			this.pMainObj.AddEventHandler("OnSelectionChange", this.OnSelectionChange, this);
@@ -963,17 +960,15 @@ BXEdColorPicker.prototype = {
 
 		if(this.with_input)
 		{
-			this.pInput = cell.appendChild(BX.create("INPUT", {props: {size: 7}}));
+			this.pInput = this.pWnd.appendChild(BX.create("INPUT", {props: {size: 7}}));
 			if (_this.OnChange)
 				this.pInput.onchange = function(){_this.OnChange(this.value);};
-
-			cell = row.insertCell(-1);
 		}
 
 		if (!this.id)
 			this.id = 'BackColor';
 
-		this.pIcon = cell.appendChild(BX.create("IMG", {props: {id: 'bx_btn_' + this.id, title: this.title, src: one_gif_src, className: "bxedtbutton"}, style:  {border: '1px solid '+borderColorNormal, backgroundImage: "url(" + image_path + "/_global_iconkit.gif)"}}));
+		this.pIcon = this.pWnd.appendChild(BX.create("IMG", {props: {id: 'bx_btn_' + this.id, title: this.title, src: one_gif_src, className: "bxedtbutton"}, style:  {border: '1px solid '+borderColorNormal, backgroundImage: "url(" + image_path + "/_global_iconkit.gif)"}}));
 
 		this.pIcon.onclick = function(e){_this.OnClick(e, this)};
 		this.pIcon.onmouseover = function (e){if(!_this.disabled){BX.addClass(this, "bxedtbuttonover");}};
@@ -1127,21 +1122,6 @@ BXEdColorPicker.prototype = {
 			BX.addClass(this.pIcon, 'bxedtbutton-disabled');
 		else
 			BX.removeClass(this.pIcon, 'bxedtbutton-disabled');
-
-		// if(bFlag)
-		// {
-			// BX.addClass(this.pIcon, 'bxedtbutton-disabled');
-			//this.pIcon.className = 'bxedtbuttondisabled';
-			//this.pWnd.style.filter = 'gray() alpha(opacity=30)';
-		// }
-		// else
-		// {
-			// BX.removeClass(this.pIcon, 'bxedtbutton-disabled');
-			//this.pIcon.className = 'bxedtbutton';
-			//this.pIcon.style.backgroundColor ="";
-			//this.pIcon.style.borderColor = borderColorNormal;
-			//this.pWnd.style.filter = '';
-		//}
 	},
 
 	SetValue: function(val)
@@ -1503,7 +1483,6 @@ BXDialog.prototype = {
 		pObj = window.pObj = this;
 
 		oPrevRange = BXGetSelectionRange(this.pMainObj.pEditorDocument, this.pMainObj.pEditorWindow);
-
 		var ShowResult = function(result, bFastMode)
 		{
 			BX.closeWait();
@@ -1537,7 +1516,7 @@ BXDialog.prototype = {
 				}
 			}
 
-			window.oBXEditorDialog = new BX.CDialog(arDConfig);
+			window.oBXEditorDialog = new BX.CEditorDialog(arDConfig);
 			window.oBXEditorDialog.editorParams = _this.params;
 
 			BX.addCustomEvent(window.oBXEditorDialog, 'onWindowUnRegister', function()
@@ -1580,6 +1559,9 @@ BXDialog.prototype = {
 		}
 		else
 		{
+			// hack to loading auth
+			url += '&bxsender=core_window_cadmindialog';
+
 			BX.ajax.post(url, {}, ShowResult);
 		}
 	},

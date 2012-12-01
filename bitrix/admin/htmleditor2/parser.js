@@ -213,6 +213,7 @@ GetHTMLLeft: function()
 	if(this.type == 'element')
 	{
 		res = "<"+this.text;
+
 		for(attrName in this.arAttributes)
 		{
 			atrVal = this.arAttributes[attrName];
@@ -221,10 +222,23 @@ GetHTMLLeft: function()
 
 			if(this.text.toUpperCase()=='BR' && attrName.toLowerCase() == 'type' && atrVal == '_moz')
 				continue;
+
 			if(attrName == 'style')
 			{
 				if (atrVal.length > 0 && atrVal.indexOf('-moz') != -1)
 					atrVal = BX.util.trim(atrVal.replace(/-moz.*?;/ig, '')); // Kill -moz* styles from firefox
+
+				if (this.text == 'td')
+				{
+					// Kill border-image: none; styles from firefox for <td>
+					atrVal = BX.util.trim(atrVal.replace(/border-image:\s*none;/ig, '')); //
+
+					// kill border-color: for ie
+					atrVal = BX.util.trim(atrVal.replace(/border-bottom-color:\s*;?/ig, ''));
+					atrVal = BX.util.trim(atrVal.replace(/border-top-color:\s*;?/ig, ''));
+					atrVal = BX.util.trim(atrVal.replace(/border-right-color:\s*;?/ig, ''));
+					atrVal = BX.util.trim(atrVal.replace(/border-left-color:\s*;?/ig, ''));
+				}
 
 				if(atrVal.length <= 0)
 					 continue;
@@ -395,11 +409,10 @@ SystemParse: function(sContent)
 	);
 
 	// Link
-	sContent = sContent.replace(/(<noindex>)*?<a(\s[\s\S]*?(?:.*?[^\?%]{1})??)(>([\s\S]*?)<\/a>)(<\/noindex>)*/ig,
+	sContent = sContent.replace(/(<noindex>)*?<a(\s[\s\S]*?(?:.*?[^\?%\/]{1})??)(>([\s\S]*?)<\/a>)(<\/noindex>)*/ig,
 		function(str, s0, s1, s2, innerHtml, s3)
 		{
-			var arParams = _this.GetAttributesList(s1), i , val, res = "", bPhp = false;
-
+			var arParams = _this.GetAttributesList(s1), i , res, bPhp = false;
 			if (s0 && s3 && s0.toLowerCase().indexOf('noindex') != -1 && s3.toLowerCase().indexOf('noindex') != -1)
 			{
 				arParams.noindex = true;
@@ -407,7 +420,7 @@ SystemParse: function(sContent)
 			}
 
 			// It's anchor
-			if (arParams.name && (!arParams.href || BX.util.trim(innerHtml) == ""))
+			if (arParams.name && (BX.util.trim(innerHtml) == ""))
 				return str;
 
 			res = "<a id=\"" + _this.pMainObj.SetBxTag(false, {tag: 'a', params: arParams}) + "\" ";
@@ -470,8 +483,10 @@ SystemParse: function(sContent)
 	sContent = sContent.replace(/<style[\s\S]*?>([\s\S]*?)<\/style>/gi, function(sContent, s1){return _this.UnparseStyleNode(sContent, s1)});
 	sContent = sContent.replace(/<script[\s\S]*?\/script>/gi, function(sContent){return '<img id="' + _this.pMainObj.SetBxTag(false, {tag: "script", params: {value : sContent}}) + '" src="' + image_path + '/script.gif" />';});
 	sContent = sContent.replace(/<!--[\s\S]*?-->/ig, function(sContent){return '<img id="' + _this.pMainObj.SetBxTag(false, {tag: "comments", params: {value : sContent}}) + '" src="' + image_path + '/comments.gif" />';});
-	sContent = sContent.replace(/<a(\s[\s\S]*?)(?:>\s*?<\/a)?(?:\/?)?>/ig, function(sContent, s1){return _this.UnparseAnchors(sContent, s1);});
 
+	sContent = sContent.replace(/<a\s([\s\S]*?)>\s*?<\/a>/ig, function(sContent, s1){return _this.UnparseAnchors(sContent, s1);});
+	sContent = sContent.replace(/<a(\s[\s\S]*?)\/>/ig, function(sContent, s1){return _this.UnparseAnchors(sContent, s1);});
+	//sContent = sContent.replace(/<a(\s[\s\S]*?)(?:>\s*?<\/a)?(?:\/?)?>/ig, function(sContent, s1){return _this.UnparseAnchors(sContent, s1);});
 	sContent = this.SymbolsParse(sContent);
 
 	if (this.strStyleNodes.length > 0)

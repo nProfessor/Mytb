@@ -4,7 +4,7 @@
 //**    MODIFICATION OF THIS FILE WILL ENTAIL SITE FAILURE            **/
 //**********************************************************************/
 if (!defined("UPDATE_SYSTEM_VERSION"))
-	define("UPDATE_SYSTEM_VERSION", "12.0.0");
+	define("UPDATE_SYSTEM_VERSION", "12.0.3");
 
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
 define("HELP_FILE", "updates/update_system.php");
@@ -409,7 +409,7 @@ $tabControl->BeginNextTab();
 								CloseLicence();
 								var udl = document.getElementById("upd_licence_div");
 								udl.style["display"] = "none";
-								UnLockControls();
+								<?if (empty($errorMessage)){?>UnLockControls();<?}?>
 							}
 							else
 							{

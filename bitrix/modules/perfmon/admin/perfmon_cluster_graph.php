@@ -2,7 +2,11 @@
 define("STOP_STATISTICS", true);
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
 
-if(!$USER->IsAdmin() || !CModule::IncludeModule('perfmon'))
+if(!CModule::IncludeModule('perfmon'))
+	$APPLICATION->AuthForm(GetMessage("ACCESS_DENIED"));
+
+$RIGHT = $APPLICATION->GetGroupRight("perfmon");
+if($RIGHT < "R")
 	$APPLICATION->AuthForm(GetMessage("ACCESS_DENIED"));
 
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/img.php");

@@ -378,7 +378,7 @@ if ($REQUEST_METHOD == "POST" && $STEP > 1 && check_bitrix_sessid())
 <div id="result">
 	<div style="text-align: center; margin: 20px;">
 <?echo GetMessage("IBLOCK_ADM_EXP_LINES_EXPORTED", array("#LINES#" => "<b>".intval($num_rows_writed)."</b>")) ?><br />
-<?echo GetMessage("IBLOCK_ADM_EXP_DOWNLOAD_RESULT", array("#HREF#" => "<a href=\"".htmlspecialchars($DATA_FILE_NAME)."\">".htmlspecialcharsex($DATA_FILE_NAME)."</a>")) ?>
+<?echo GetMessage("IBLOCK_ADM_EXP_DOWNLOAD_RESULT", array("#HREF#" => "<a href=\"".htmlspecialcharsbx($DATA_FILE_NAME)."\">".htmlspecialcharsex($DATA_FILE_NAME)."</a>")) ?>
 	</div>
 </div>
 
@@ -444,8 +444,8 @@ if (!$bPublicMode)
 	{
 ?>
 	<tr>
-		<td><?echo GetMessage("IBLOCK_ADM_EXP_CHOOSE_IBLOCK") ?></td>
-		<td>
+		<td width="40%"><?echo GetMessage("IBLOCK_ADM_EXP_CHOOSE_IBLOCK") ?></td>
+		<td width="60%">
 			<?echo GetIBlockDropDownList($IBLOCK_ID, 'IBLOCK_TYPE_ID', 'IBLOCK_ID');?>
 		</td>
 	</tr>
@@ -467,14 +467,14 @@ if ($STEP == 2)
 		</td>
 	</tr>
 	<tr>
-		<td valign="top"><?echo GetMessage("IBLOCK_ADM_EXP_DELIMITER") ?>:</td>
-		<td valign="top">
+		<td width="40%" class="adm-detail-valign-top"><?echo GetMessage("IBLOCK_ADM_EXP_DELIMITER") ?>:</td>
+		<td width="60%">
 			<input type="radio" name="delimiter_r" id="delimiter_TZP" value="TZP" <?if ($delimiter_r=="TZP" || strlen($delimiter_r)<=0) echo "checked"?>><label for="delimiter_TZP"><?echo GetMessage("IBLOCK_ADM_EXP_DELIM_TZP") ?></label><br>
 			<input type="radio" name="delimiter_r" id="delimiter_ZPT" value="ZPT" <?if ($delimiter_r=="ZPT") echo "checked"?>><label for="delimiter_ZPT"><?echo GetMessage("IBLOCK_ADM_EXP_DELIM_ZPT") ?></label><br>
 			<input type="radio" name="delimiter_r" id="delimiter_TAB" value="TAB" <?if ($delimiter_r=="TAB") echo "checked"?>><label for="delimiter_TAB"><?echo GetMessage("IBLOCK_ADM_EXP_DELIM_TAB") ?></label><br>
 			<input type="radio" name="delimiter_r" id="delimiter_SPS" value="SPS" <?if ($delimiter_r=="SPS") echo "checked"?>><label for="delimiter_SPS"><?echo GetMessage("IBLOCK_ADM_EXP_DELIM_SPS") ?></label><br>
 			<input type="radio" name="delimiter_r" id="delimiter_OTR" value="OTR" <?if ($delimiter_r=="OTR") echo "checked"?>><label for="delimiter_OTR"><?echo GetMessage("IBLOCK_ADM_EXP_DELIM_OTR") ?></label>
-			<input type="text" name="delimiter_other_r" size="3" value="<?echo htmlspecialchars($delimiter_other_r) ?>">
+			<input type="text" name="delimiter_other_r" size="3" value="<?echo htmlspecialcharsbx($delimiter_other_r) ?>">
 		</td>
 	</tr>
 	<tr>
@@ -537,7 +537,7 @@ if ($STEP == 2)
 				}
 			?><table width="100%" border="0" cellspacing="0" cellpadding="0" class="internal">
 				<tr class="heading">
-					<td align="left" style="text-align: left;"><input type="checkbox" name="field_needed_all" id="field_needed_all" value="Y" onclick="checkAll(this,<? echo $intCountFields; ?>);"<? echo ($intCountChecked == $intCountFields ? ' checked' : ''); ?>>&nbsp;<?echo GetMessage("IBLOCK_ADM_EXP_IS_FIELD_NEEDED") ?></td>
+					<td style="text-align: left !important;"><input type="checkbox" name="field_needed_all" id="field_needed_all" value="Y" onclick="checkAll(this,<? echo $intCountFields; ?>);"<? echo ($intCountChecked == $intCountFields ? ' checked' : ''); ?>>&nbsp;<?echo GetMessage("IBLOCK_ADM_EXP_IS_FIELD_NEEDED") ?></td>
 					<td><?echo GetMessage("IBLOCK_ADM_EXP_FIELD_NAME") ?></td>
 					<td><?echo GetMessage("IBLOCK_ADM_EXP_FIELD_SORT") ?></td>
 				</tr><?
@@ -545,7 +545,7 @@ if ($STEP == 2)
 				{
 					?>
 					<tr>
-						<td align="left">
+						<td style="text-align: left !important;">
 							<input type="checkbox" name="field_needed[<?echo $i ?>]" id="field_needed_<? echo $i; ?>"<?/*if ($field_needed[$i]=="Y" || strlen($strError)<=0) echo "checked"; */ if (in_array($i,$arCheckID)) echo "checked"; ?> value="Y" onclick="checkOne(this,<? echo $intCountFields; ?>);">
 						</td>
 						<td>
@@ -592,9 +592,9 @@ if ($STEP == 2)
 		<td colspan="2"><?echo GetMessage("IBLOCK_ADM_EXP_FILE_NAME") ?></td>
 	</tr>
 	<tr>
-		<td valign="top"><?echo GetMessage("IBLOCK_ADM_EXP_ENTER_FILE_NAME") ?>:</td>
-		<td valign="top">
-			<input type="text" name="DATA_FILE_NAME" size="40" value="<?echo htmlspecialchars(strlen($DATA_FILE_NAME) > 0? $DATA_FILE_NAME: "/".COption::GetOptionString("main", "upload_dir", "upload")."/export_file_".mt_rand(0, 999999).".csv")?>"><br>
+		<td><?echo GetMessage("IBLOCK_ADM_EXP_ENTER_FILE_NAME") ?>:</td>
+		<td>
+			<input type="text" name="DATA_FILE_NAME" size="40" value="<?echo htmlspecialcharsbx(strlen($DATA_FILE_NAME) > 0? $DATA_FILE_NAME: "/".COption::GetOptionString("main", "upload_dir", "upload")."/export_file_".mt_rand(0, 999999).".csv")?>"><br>
 			<small><?echo GetMessage("IBLOCK_ADM_EXP_FILE_WARNING") ?></small>
 		</td>
 	</tr>
@@ -611,12 +611,13 @@ if (!$bPublicMode)
 	{
 ?>
 	<tr>
-		<td colspan="2"><b><?echo GetMessage("IBLOCK_ADM_EXP_SUCCESS") ?></b></td>
-	</tr>
-	<tr>
-		<td colspan="2">
-			<?echo GetMessage("IBLOCK_ADM_EXP_LINES_EXPORTED", array("#LINES#" => "<b>".intval($num_rows_writed)."</b>")) ?><br>
-			<?echo GetMessage("IBLOCK_ADM_EXP_DOWNLOAD_RESULT", array("#HREF#" => "<a href=\"".htmlspecialchars($DATA_FILE_NAME)."\" target=\"_blank\">".htmlspecialcharsex($DATA_FILE_NAME)."</a>")) ?><br>
+		<td>
+		<?echo CAdminMessage::ShowMessage(array(
+			"TYPE" => "PROGRESS",
+			"MESSAGE" => GetMessage("IBLOCK_ADM_EXP_SUCCESS"),
+			"DETAILS" => GetMessage("IBLOCK_ADM_EXP_LINES_EXPORTED", array("#LINES#" => "<b>".intval($num_rows_writed)."</b>")).'<br>'.GetMessage("IBLOCK_ADM_EXP_DOWNLOAD_RESULT", array("#HREF#" => "<a href=\"".htmlspecialcharsbx($DATA_FILE_NAME)."\" target=\"_blank\">".htmlspecialcharsex($DATA_FILE_NAME)."</a>")),
+			"HTML" => true,
+		))?>
 		</td>
 	</tr>
 	<?
@@ -635,11 +636,11 @@ else:
 <?
 		endif;
 ?>
-	<input type="submit" value="<?echo ($STEP==2)?GetMessage("IBLOCK_ADM_EXP_FINISH_BUTTON"):GetMessage("IBLOCK_ADM_EXP_NEXT_BUTTON") ?> &gt;&gt;" name="submit_btn">
+	<input type="submit" value="<?echo ($STEP==2)?GetMessage("IBLOCK_ADM_EXP_FINISH_BUTTON"):GetMessage("IBLOCK_ADM_EXP_NEXT_BUTTON") ?> &gt;&gt;" name="submit_btn" class="adm-btn-save">
 <?
 	else:
 ?>
-	<input type="submit" name="backButton2" value="&lt;&lt; <?echo GetMessage("IBLOCK_ADM_EXP_RESTART_BUTTON") ?>">
+	<input type="submit" name="backButton2" value="&lt;&lt; <?echo GetMessage("IBLOCK_ADM_EXP_RESTART_BUTTON") ?>" class="adm-btn-save">
 <?
 	endif;
 endif;

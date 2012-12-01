@@ -666,7 +666,7 @@ class BXInstallServices
 			}
 
 			if (strlen($databaseStep->createDBType) > 0)
-				$DB->Query("SET table_type = '".$databaseStep->createDBType."'", false);
+				$DB->Query("SET storage_engine = '".$databaseStep->createDBType."'", false);
 
 			//SQL mode
 			$dbResult = $DB->Query("SELECT @@sql_mode", true);

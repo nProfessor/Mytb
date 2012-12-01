@@ -27,7 +27,7 @@ $MESS["MAIN_MENU_FAVORITE_ALT"] = "Bookmark list";
 $MESS["MAIN_MENU_FAVORITE_HEADER"] = "Bookmarks";
 $MESS["MAIN_MENU_TEMPLATE"] = "Site templates";
 $MESS["MAIN_MENU_SITE_CHECKER"] = "Site checker";
-$MESS["MAIN_MENU_SITE_CHECKER_ALT"] = "Test site params and report error message to support";
+$MESS["MAIN_MENU_SITE_CHECKER_ALT"] = "Test site parameters and report error message to support";
 $MESS["MAIN_MENU_PHPINFO"] = "PHP settings";
 $MESS["MAIN_MENU_PHPINFO_ALT"] = "Full list of all PHP settings, PHP modules and environment variables.";
 $MESS["MAIN_MENU_FILE_CHECKER"] = "File checker";
@@ -101,4 +101,5 @@ $MESS["MAIN_MENU_SHORT_URLS"] = "Short URL's";
 $MESS["MAIN_MENU_SHORT_URLS_ALT"] = "Short URL parameters";
 $MESS["MAIN_MENU_HOTKEYS"] = "Keyboard shortcuts";
 $MESS["MAIN_MENU_HOTKEYS_ALT"] = "Customize keyboard shortcuts";
+$MESS["MAIN_MENU_MP_CATEGORY"] = "Solutions in category";
 ?>

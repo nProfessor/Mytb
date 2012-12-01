@@ -11,7 +11,6 @@ if($APPLICATION->GetGroupRight("perfmon")!="D")
 		"sort" => 1850,
 		"text" => GetMessage("PERFMON_MNU_SECT"),
 		"title" => GetMessage("PERFMON_MNU_SECT_TITLE"),
-		"url" => "perfmon_index.php?lang=".LANGUAGE_ID,
 		"icon" => "perfmon_menu_icon",
 		"page_icon" => "perfmon_page_icon",
 		"items_id" => "menu_perfmon",
@@ -58,7 +57,11 @@ if($APPLICATION->GetGroupRight("perfmon")!="D")
 	$aMenu["items"][] = array(
 		"text" => GetMessage("PERFMON_MNU_TABLES"),
 		"url" => "perfmon_tables.php?lang=".LANGUAGE_ID,
-		"more_url" => Array("perfmon_tables.php", "perfmon_table.php"),
+		"more_url" => Array(
+			"perfmon_tables.php",
+			"perfmon_table.php",
+			"perfmon_row_edit.php",
+		),
 		"title" => GetMessage("PERFMON_MNU_TABLES_ALT"),
 	);
 
@@ -66,7 +69,6 @@ if($APPLICATION->GetGroupRight("perfmon")!="D")
 	{
 		$aMenu["items"][] = array(
 			"text" => GetMessage("PERFMON_MNU_INDEXES"),
-			"url" => "perfmon_index_list.php?lang=".LANGUAGE_ID,
 			"items_id" => "menu_perfmon_index_list",
 			"items" => array(
 				array(

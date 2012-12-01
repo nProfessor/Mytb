@@ -21,19 +21,18 @@ class CSocServGoogleOAuth extends CSocServAuth
 
 		$gAuth = new CGoogleOAuthInterface($appID, $appSecret);
 
+		$state = 'site_id='.SITE_ID.'&backurl='.urlencode($GLOBALS["APPLICATION"]->GetCurPageParam('check_key='.$_SESSION["UNIQUE_KEY"], array("logout", "auth_service_error", "auth_service_id")));
 		$redirect_uri = CSocServUtil::ServerName()."/bitrix/tools/oauth/google.php";
-		$state = 'site_id='.SITE_ID.'&backurl='.urlencode($GLOBALS["APPLICATION"]->GetCurPageParam('', array("logout", "auth_service_error", "auth_service_id")));
-
 		$url = $gAuth->GetAuthUrl($redirect_uri, $state);
 
-		return '<a href="javascript:void(0)" onclick="BX.util.popup(\''.htmlspecialchars(CUtil::JSEscape($url)).'\', 580, 400)" class="bx-ss-button google-button"></a><span class="bx-spacer"></span><span>'.GetMessage("socserv_google_form_note").'</span>';
+		return '<a href="javascript:void(0)" onclick="BX.util.popup(\''.htmlspecialcharsbx(CUtil::JSEscape($url)).'\', 580, 400)" class="bx-ss-button google-button"></a><span class="bx-spacer"></span><span>'.GetMessage("socserv_google_form_note").'</span>';
 	}
 	
 	public function Authorize()
 	{
 		$GLOBALS["APPLICATION"]->RestartBuffer();
 		$bSuccess = false;
-		if(isset($_REQUEST["code"]) && $_REQUEST["code"] <> '')
+		if((isset($_REQUEST["code"]) && $_REQUEST["code"] <> '') && CSocServAuthManager::CheckUniqueKey())
 		{
 			$redirect_uri = CSocServUtil::ServerName()."/bitrix/tools/oauth/google.php";
 			$appID = self::GetOption("google_appid");
@@ -56,11 +55,11 @@ class CSocServGoogleOAuth extends CSocServAuth
 							$last_name = $aName[1];
 					}
 					$email = $arGoogleUser['feed']['author']['0']['email']['$t'];
-	
+
 					$arFields = array(
 						'EXTERNAL_AUTH_ID' => self::ID,
 						'XML_ID' => $email,
-						'LOGIN' => $email,
+						'LOGIN' => "G_".$email,
 						'EMAIL' => $email,
 						'NAME'=> $first_name,
 						'LAST_NAME'=> $last_name,
@@ -69,19 +68,18 @@ class CSocServGoogleOAuth extends CSocServAuth
 				}
 			}
 		}
-
-		$url = '/auth/';
+		$url = ($GLOBALS["APPLICATION"]->GetCurDir() == "/login/") ? "/auth/" : $GLOBALS["APPLICATION"]->GetCurDir();
 		if(isset($_REQUEST["state"]))
 		{
 			$arState = array();
 			parse_str($_REQUEST["state"], $arState);
 		
 			if(isset($arState['backurl']))
-				$url = $arState['backurl'];
+				$url = parse_url($arState['backurl'], PHP_URL_PATH);
 		}
+		$aRemove = array("logout", "auth_service_error", "auth_service_id", "code", "error_reason", "error", "error_description", "check_key");
 		if(!$bSuccess)
-			$url .= (strpos($url, '?') === false? '?':'&').'auth_service_id='.self::ID.'&auth_service_error=1';
-	
+			$url = $GLOBALS['APPLICATION']->GetCurPageParam(('auth_service_id='.self::ID.'&auth_service_error=1'), $aRemove);
 		echo '
 <script type="text/javascript">
 if(window.opener)

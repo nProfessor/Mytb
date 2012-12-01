@@ -214,7 +214,18 @@ if(strlen($strLastTables) > 0)
 		sort($arLastTables);
 
 		foreach($arLastTables as $i => $table_name)
-			$arLastTables[$i] = array("NAME" => '<a href="perfmon_table.php?lang='.LANGUAGE_ID.'&amp;table_name='.urlencode($table_name).'">'.$table_name.'</a>');
+		{
+			if($DB->TableExists($table_name))
+			{
+				$arLastTables[$i] = array(
+					"NAME" => '<a href="perfmon_table.php?lang='.LANGUAGE_ID.'&amp;table_name='.urlencode($table_name).'">'.$table_name.'</a>',
+				);
+			}
+			else
+			{
+				unset($arLastTables[$i]);
+			}
+		}
 
 		$sTableID2= "t_perfmon_recent_tables";
 
@@ -250,11 +261,12 @@ if(strlen($strLastTables) > 0)
 	}
 }
 ?>
-<h4><?echo GetMessage("PERFMON_TABLES_QUICK_SEARCH")?><h4>
+<h4><?echo GetMessage("PERFMON_TABLES_QUICK_SEARCH")?></h4>
 <input type="text" id="instant-search">
 <script>
 BX.ready(function(){
-	BX('instant-search').value = location.hash.replace(/^#/, '');
+	if(location.hash != '#empty')
+		BX('instant-search').value = location.hash.replace(/^#/, '');
 	BX('instant-search').focus();
 	setTimeout(filter_rows, 250);
 });
@@ -266,7 +278,11 @@ function filter_rows()
 	var input = BX('instant-search').value;
 	if(input != prev)
 	{
-		location.hash = prev = input;
+		prev = input;
+		if(prev.length)
+			location.hash = prev;
+		else
+			location.hash = 'empty';
 
 		var tbody = BX('<?echo $sTableID?>').getElementsByTagName("tbody")[0];
 		if(!hrefs)
@@ -286,13 +302,6 @@ function filter_rows()
 		{
 			if(input.length == 0 || hrefs[i].id.indexOf(input) >= 0)
 			{
-				if(j == 0)
-					rows[i].className = 'odd top';
-				else if (j % 2 == 0)
-					rows[i].className = 'odd';
-				else
-					rows[i].className = 'even';
-
 				tbody.appendChild(rows[i]);
 				j++;
 			}

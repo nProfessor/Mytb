@@ -11,8 +11,8 @@ function BXSnippetsTaskbar()
 
 	BXSnippetsTaskbar.prototype.OnTaskbarCreate = function ()
 	{
-		this.icon_class = 'tb_icon_snippets';
-		this.iconDiv.className = 'tb_icon ' + this.icon_class;
+		this.icon = 'snippets';
+		this.iconDiv.className = 'tb_icon bxed-taskbar-icon-' + this.icon;
 		this.pHeaderTable.setAttribute("__bxtagname", "_taskbar_cached");
 		this.oTaskbar = ar_BXTaskbarS["BXSnippetsTaskbar_" + this.pMainObj.name];
 		this.oTaskbar.pCellSnipp = this.oTaskbar.CreateScrollableArea(this.oTaskbar.pWnd);
@@ -92,24 +92,14 @@ function BXSnippetsTaskbar()
 		if (!oTaskbar)
 			oTaskbar = this;
 
-		var oDiv = BX("___add_snippet___"+this.oTaskbar.pMainObj.name);
+		var
+			id = "___add_snippet___"+this.oTaskbar.pMainObj.name,
+			oDiv = BX(id);
 		if (oDiv)
 			this.oTaskbar.pCellSnipp.removeChild(oDiv);
 
-		oDiv = document.createElement("DIV");
-		oDiv.id = "___add_snippet___" + this.oTaskbar.pMainObj.name;
-		oDiv.style.padding = "3px 0px 10px 10px";
-		var oLink = document.createElement("a");
-		oLink.href = "";
-		oLink.innerHTML = BX_MESS.AddSnippet;
-		oLink.onclick = function(e)
-		{
-			oTaskbar.addSnippet();
-			return false;
-		}
-		oLink.style.marginLeft = "2px";
-		oDiv.appendChild(oLink);
-		this.oTaskbar.pCellSnipp.appendChild(oDiv);
+		oDiv = this.oTaskbar.pCellSnipp.appendChild(BX.create("DIV", {props: {id: id, className: 'bxed-add-snip-cont'}}));
+		oDiv.appendChild(BX.create("A", {props: {href: 'javascript:void("")'}, text: BX_MESS.AddSnippet, events: {click: function(){oTaskbar.addSnippet();	return false;}}}));
 	};
 
 	BXSnippetsTaskbar.prototype.Remove__script__ = function (str)

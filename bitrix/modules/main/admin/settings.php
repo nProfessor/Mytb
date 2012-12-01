@@ -62,6 +62,7 @@ require_once ($DOCUMENT_ROOT.BX_ROOT."/modules/main/include/prolog_admin_after.p
 <?endforeach;?>
 </select>
 </form>
+<br />
 
 <?
 function __AdmSettingsSaveOptions($module_id, $arOptions)
@@ -84,7 +85,7 @@ function __AdmSettingsSaveOption($module_id, $arOption)
 
 	if(isset($arControllerOption[$arOption[0]]))
 		return false;
-	
+
 	$name = $arOption[0];
 	$val = $_REQUEST[$name];
 
@@ -93,7 +94,7 @@ function __AdmSettingsSaveOption($module_id, $arOption)
 	{
 		if($arOption[3][0] == 'checkbox')
 			$val = 'N';
-		else 
+		else
 			return false;
 	}
 
@@ -111,13 +112,13 @@ function __AdmSettingsDrawRow($module_id, $Option)
 	if(!is_array($Option)):
 	?>
 		<tr class="heading">
-			<td valign="top" colspan="2" align="center"><b><?=$Option?></b></td>
+			<td colspan="2"><?=$Option?></td>
 		</tr>
 	<?
 	elseif(isset($Option["note"])):
 	?>
 		<tr>
-			<td valign="top" colspan="2" align="center">
+			<td colspan="2" align="center">
 				<?echo BeginNote('align="center"');?>
 				<?=$Option["note"]?>
 				<?echo EndNote();?>
@@ -131,7 +132,7 @@ function __AdmSettingsDrawRow($module_id, $Option)
 		$sup_text = array_key_exists(5, $Option) ? $Option[5] : '';
 	?>
 		<tr>
-			<td valign="top" width="50%" class="field-name"><?
+			<td<?if($type[0]=="multiselectbox" || $type[0]=="textarea" || $type[0]=="statictext" || $type[0]=="statichtml") echo ' class="adm-detail-valign-top"'?> width="50%"><?
 				if($type[0]=="checkbox")
 					echo "<label for='".htmlspecialcharsbx($Option[0])."'>".$Option[1]."</label>";
 				else
@@ -141,7 +142,7 @@ function __AdmSettingsDrawRow($module_id, $Option)
 					?><span class="required"><sup><?=$sup_text?></sup></span><?
 				}
 					?></td>
-			<td valign="middle" width="50%"><?
+			<td width="50%"><?
 			if($type[0]=="checkbox"):
 				?><input type="checkbox" <?if(isset($arControllerOption[$Option[0]]))echo ' disabled title="'.GetMessage("MAIN_ADMIN_SET_CONTROLLER_ALT").'"';?> id="<?echo htmlspecialcharsbx($Option[0])?>" name="<?echo htmlspecialcharsbx($Option[0])?>" value="Y"<?if($val=="Y")echo" checked";?><?=$disabled?><?if($type[2]<>'') echo " ".$type[2]?>><?
 			elseif($type[0]=="text" || $type[0]=="password"):

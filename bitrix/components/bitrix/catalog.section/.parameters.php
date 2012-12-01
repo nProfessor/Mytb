@@ -152,7 +152,12 @@ $arComponentParameters = array(
 		"INCLUDE_SUBSECTIONS" => array(
 			"PARENT" => "DATA_SOURCE",
 			"NAME" => GetMessage("CP_BCS_INCLUDE_SUBSECTIONS"),
-			"TYPE" => "CHECKBOX",
+			"TYPE" => "LIST",
+			"VALUES" => array(
+				"Y" => GetMessage('CP_BCS_INCLUDE_SUBSECTIONS_ALL'),
+				"A" => GetMessage('CP_BCS_INCLUDE_SUBSECTIONS_ACTIVE'),
+				"N" => GetMessage('CP_BCS_INCLUDE_SUBSECTIONS_NO'),
+			),
 			"DEFAULT" => "Y",
 		),
 		"SHOW_ALL_WO_SECTION" => array(
@@ -392,6 +397,7 @@ if (CModule::IncludeModule('catalog') && CModule::IncludeModule('currency'))
 			'TYPE' => 'LIST',
 			'VALUES' => $arCurrencyList,
 			'DEFAULT' => CCurrency::GetBaseCurrency(),
+			"ADDITIONAL_VALUES" => "Y",
 		);
 	}
 }

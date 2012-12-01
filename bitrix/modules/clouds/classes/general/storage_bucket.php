@@ -114,7 +114,7 @@ class CCloudStorageBucket extends CAllCloudStorageBucket
 		return 0;
 	}
 
-	function GetAllBuckets()
+	static function GetAllBuckets()
 	{
 		self::_init();
 		return self::$arBuckets;
@@ -341,7 +341,7 @@ class CCloudStorageBucket extends CAllCloudStorageBucket
 		return true;
 	}
 
-	function GetList($arOrder=false, $arFilter=false, $arSelect=false)
+	static function GetList($arOrder=false, $arFilter=false, $arSelect=false)
 	{
 		global $DB;
 
@@ -640,6 +640,11 @@ class CCloudStorageBucket extends CAllCloudStorageBucket
 		}
 
 		return $arRules;
+	}
+
+	function setHeader($name, $value)
+	{
+		$this->service->setHeader($name, $value);
 	}
 }
 ?>

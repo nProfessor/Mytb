@@ -488,10 +488,10 @@ $context->Show();
 ?>
 
 <form method="POST" action="<?= $APPLICATION->GetCurPage()?>?" name="ffilemanedit">
-<input type="hidden" name="logical" value="<?=htmlspecialchars($logical)?>">
+<input type="hidden" name="logical" value="<?=htmlspecialcharsbx($logical)?>">
 <?= GetFilterHiddens("filter_");?>
-<input type="hidden" name="site" value="<?= htmlspecialchars($site) ?>">
-<input type="hidden" name="path" value="<?= htmlspecialchars($originalPath)?>">
+<input type="hidden" name="site" value="<?= htmlspecialcharsbx($site) ?>">
+<input type="hidden" name="path" value="<?= htmlspecialcharsbx($originalPath)?>">
 <input type="hidden" name="save" value="Y">
 <input type="hidden" name="lang" value="<?= LANG?>">
 <?=bitrix_sessid_post()?>
@@ -502,8 +502,8 @@ $context->Show();
 <?if($full_src=="Y"):?>
 	<input type="hidden" name="full_src" value="Y">
 <?endif?>
-<input type="hidden" name="template" value="<?= htmlspecialchars($template)?>">
-<input type="hidden" name="back_url" value="<?= htmlspecialchars($back_url)?>">
+<input type="hidden" name="template" value="<?= htmlspecialcharsbx($template)?>">
+<input type="hidden" name="back_url" value="<?= htmlspecialcharsbx($back_url)?>">
 
 <?
 $aTabs = array(
@@ -521,7 +521,7 @@ $tabControl->BeginNextTab();?>
 			<td width="70%">
 				<select name="template" onchange="window.location='/bitrix/admin/fileman_file_edit.php?lang=<?= LANG?>&site=<?=Urlencode($site)?>&path=<?= UrlEncode($path)?><? echo ($full_src=="Y" ? "&full_src=Y" : "")?>&new=y&template='+escape(this[this.selectedIndex].value)">
 					<?for($i=0; $i<count($arTemplates); $i++):?>
-					<option value="<?= htmlspecialchars($arTemplates[$i]["file"])?>"<?if($template==$arTemplates[$i]["file"])echo " selected"?>><?= htmlspecialchars($arTemplates[$i]["name"])?></option>
+					<option value="<?= htmlspecialcharsbx($arTemplates[$i]["file"])?>"<?if($template==$arTemplates[$i]["file"])echo " selected"?>><?= htmlspecialcharsbx($arTemplates[$i]["name"])?></option>
 					<?endfor;?>
 				</select>
 			</td>
@@ -529,7 +529,7 @@ $tabControl->BeginNextTab();?>
 		<?if(!$bFullPHP):?>
 		<tr>
 			<td width="30%"><label for="bxfm_title"><?= GetMessage("FILEMAN_FILEEDIT_TITLE")?></label></td>
-			<td width="70%"><input id="bxfm_title" type="text" name="title" size="50" maxlength="255" value="<?= htmlspecialchars($title)?>"></td>
+			<td width="70%"><input id="bxfm_title" type="text" name="title" size="50" maxlength="255" value="<?= htmlspecialcharsbx($title)?>"></td>
 		</tr>
 		<?endif;?>
 		<tr>
@@ -537,7 +537,7 @@ $tabControl->BeginNextTab();?>
 			<td>
 				<?if (isset($filename2))
 					$filename = $filename2;?>
-				<input type="text" name="filename" id="bxfm_filename" style="float: left;" size="50" maxlength="255" value="<?= htmlspecialchars($filename)?>"></td>
+				<input type="text" name="filename" id="bxfm_filename" style="float: left;" size="50" maxlength="255" value="<?= htmlspecialcharsbx($filename)?>"></td>
 		</tr>
 		<tr><td></td><td style="padding: 0!important;">
 			<table id='jserror_name' style="visibility:hidden"><tr><td valign="top">
@@ -567,7 +567,7 @@ $tabControl->BeginNextTab();?>
 	<?elseif(!$bFullPHP):?>
 		<tr>
 			<td width="30%"><label for="bxfm_title"><?= GetMessage("FILEMAN_FILEEDIT_TITLE")?></label></td>
-			<td width="70%"><input id="bxfm_title" type="text" name="title" size="50" maxlength="255" value="<?= htmlspecialchars($title)?>"></td>
+			<td width="70%"><input id="bxfm_title" type="text" name="title" size="50" maxlength="255" value="<?= htmlspecialcharsbx($title)?>"></td>
 		</tr>
 	<?endif?>
 
@@ -708,13 +708,13 @@ $tabControl->BeginNextTab();?>
 							?>
 							<tr>
 								<td  valign="top" <?if(!$arProp["NAME"]) echo 'nowrap';?>>
-									<input type="hidden" id="H_CODE_<?=$i;?>" name="H_CODE_<?=$i;?>" value="<?=htmlspecialchars($arProp["CODE"])?>">
+									<input type="hidden" id="H_CODE_<?=$i;?>" name="H_CODE_<?=$i;?>" value="<?=htmlspecialcharsbx($arProp["CODE"])?>">
 									<?if($arProp["NAME"]):?>
-										<input type="hidden" id="CODE_<?=$i;?>" name="CODE_<?=$i;?>" value="<?=htmlspecialchars($arProp["CODE"])?>">
-										<input type="hidden" id="NAME_<?=$i;?>" name="NAME_<?=$i;?>" value="<?=htmlspecialchars($arProp["NAME"]);?>">
-										<?=htmlspecialchars($arProp["NAME"]);?>:
+										<input type="hidden" id="CODE_<?=$i;?>" name="CODE_<?=$i;?>" value="<?=htmlspecialcharsbx($arProp["CODE"])?>">
+										<input type="hidden" id="NAME_<?=$i;?>" name="NAME_<?=$i;?>" value="<?=htmlspecialcharsbx($arProp["NAME"]);?>">
+										<?=htmlspecialcharsbx($arProp["NAME"]);?>:
 									<?else:?>
-										<input type="text" name="CODE_<?=$i?>" id="CODE_<?=$i?>" value="<?= htmlspecialchars((isset($_POST["CODE_$i"])) ? $_POST["CODE_$i"] : $arProp["CODE"]);?>" size="30">:
+										<input type="text" name="CODE_<?=$i?>" id="CODE_<?=$i?>" value="<?= htmlspecialcharsbx((isset($_POST["CODE_$i"])) ? $_POST["CODE_$i"] : $arProp["CODE"]);?>" size="30">:
 									<?endif;?>
 								</td>
 								<td>
@@ -723,11 +723,11 @@ $tabControl->BeginNextTab();?>
 									if($arProp["CODE"] == $tag_prop_name && $search_exist):
 										echo InputTags("VALUE_".$i, $value_, array(), 'size="55"', "VALUE_".$i);
 									else:?>
-										<input type="text" name="VALUE_<?=$i?>" id="VALUE_<?=$i?>" value="<?=htmlspecialchars($value_);?>" size="60">
+										<input type="text" name="VALUE_<?=$i?>" id="VALUE_<?=$i?>" value="<?=htmlspecialcharsbx($value_);?>" size="60">
 									<?endif;
 									if($APPLICATION->GetDirProperty($arProp["CODE"], Array($site, $path)))
 									{
-										?><br><small><b><?=GetMessage("FILEMAN_FILE_EDIT_FOLDER_PROP")?></b> <?= htmlspecialchars($APPLICATION->GetDirProperty($arProp["CODE"], Array($site, $path)));?></small><?
+										?><br><small><b><?=GetMessage("FILEMAN_FILE_EDIT_FOLDER_PROP")?></b> <?= htmlspecialcharsbx($APPLICATION->GetDirProperty($arProp["CODE"], Array($site, $path)));?></small><?
 									}?>
 								</td>
 							</tr>
@@ -766,7 +766,7 @@ BX.ready(function() {
 		<?endif?>
 	<?endif?>
 		<tr><td colspan="2">
-			<textarea id="bx-filesrc" name="filesrc" rows="37" style="width:100%; overflow:auto;" wrap="OFF"><?= htmlspecialchars($filesrc)?></textarea></td></tr>
+			<textarea id="bx-filesrc" name="filesrc" rows="37" style="width:100%; overflow:auto;" wrap="OFF"><?= htmlspecialcharsbx($filesrc)?></textarea></td></tr>
 
 <?
 $tabControl->EndTab();
@@ -774,7 +774,7 @@ $tabControl->EndTab();
 $tabControl->Buttons(
 	array(
 		"disabled" => $only_read,
-		"back_url" => (strlen($back_url)>0 && strpos($back_url, "/bitrix/admin/fileman_file_edit.php")!==0) ? htmlspecialchars($back_url) : "/bitrix/admin/fileman_admin.php?".$addUrl."&site=".Urlencode($site)."&path=".UrlEncode($arParsedPath["PREV"])
+		"back_url" => (strlen($back_url)>0 && strpos($back_url, "/bitrix/admin/fileman_file_edit.php")!==0) ? htmlspecialcharsbx($back_url) : "/bitrix/admin/fileman_admin.php?".$addUrl."&site=".Urlencode($site)."&path=".UrlEncode($arParsedPath["PREV"])
 	)
 );
 
@@ -854,8 +854,5 @@ if(COption::GetOptionString('fileman', "use_code_editor", "Y") == "Y")
 // echo $hkInst->PrintJSExecs($arExecs);
 ?>
 
-<?= BeginNote();?>
-<span class="required">*</span><font class="legendtext"> - <?= GetMessage("REQUIRED_FIELDS")?>
-<?= EndNote();?>
 <?endif;?>
 <?require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");?>

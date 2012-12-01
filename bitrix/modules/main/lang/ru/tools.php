@@ -38,13 +38,13 @@ $MESS["MAIN_EDIT_USER_PROFILE"] = "Профайл пользователя";
 $MESS["COUNTRY_1"] = "Россия";
 $MESS["COUNTRY_2"] = "Азербайджан";
 $MESS["COUNTRY_3"] = "Армения";
-$MESS["COUNTRY_4"] = "Беларусь";
+$MESS["COUNTRY_4"] = "Белоруссия";
 $MESS["COUNTRY_5"] = "Грузия";
 $MESS["COUNTRY_6"] = "Казахстан";
-$MESS["COUNTRY_7"] = "Киргизстан";
+$MESS["COUNTRY_7"] = "Киргизия";
 $MESS["COUNTRY_8"] = "Латвия";
 $MESS["COUNTRY_9"] = "Литва";
-$MESS["COUNTRY_10"] = "Молдова";
+$MESS["COUNTRY_10"] = "Молдавия";
 $MESS["COUNTRY_11"] = "Таджикистан";
 $MESS["COUNTRY_12"] = "Туркменистан";
 $MESS["COUNTRY_13"] = "Узбекистан";
@@ -227,7 +227,7 @@ $MESS["COUNTRY_190"] = "Остров Рождества";
 $MESS["COUNTRY_191"] = "Кокосовые острова";
 $MESS["COUNTRY_192"] = "Острова Кука";
 $MESS["COUNTRY_193"] = "Доминика";
-$MESS["COUNTRY_194"] = "Фолклендские осторова";
+$MESS["COUNTRY_194"] = "Фолклендские острова";
 $MESS["COUNTRY_195"] = "Фарерские острова";
 $MESS["COUNTRY_196"] = "Гвиана";
 $MESS["COUNTRY_197"] = "Французская Полинезия";
@@ -274,13 +274,13 @@ $MESS["MAIN_MAILTO"] = "Написать письмо";
 $MESS["MAIN_F_TIMESTAMP"] = "Дата изменения";
 $MESS["AJAX_WAIT"] = "Загрузка...";
 $MESS["HTTP_CLIENT_ERROR_CONNECT"] = "Ошибка подключения к %HOST%:%PORT%. Код ошибки: \"%ERRNO%\", текст ошибки: \"%ERRSTR%\"";
-$MESS["TOOLS_TRIAL_EXP"] = "Срок работы пробной версии продукта истек. Вы можете купить полнофункциональную версию продукта на сайте <a href=\"http://www.1c-bitrix.ru/?r1=bsm7trial&amp;r2=expiried\">www.1c-bitrix.ru</a>.";
+$MESS["TOOLS_TRIAL_EXP"] = "Срок работы пробной версии продукта истек. Вы можете купить полнофункциональную версию продукта на сайте <a href=\"http://www.1c-bitrix.ru/?r1=bsm7trial&amp;r2=expired\">www.1c-bitrix.ru</a>.";
 $MESS["expire_mess1"] = "<font class=\"tablebodytext\"><font color=\"#FF0000\">
 		Срок работы пробной версии продукта истек.
 		Через две недели этот сайт полностью прекратит свою работу.
 		Вы можете купить полнофункциональную версию продукта на сайте <a href=\"http://www.1c-bitrix.ru/?r1=bsm7trial&amp;r2=expiried\">www.1c-bitrix.ru</a>.
 		</font></font>";
-$MESS["expire_mess2"] = "Срок работы пробной версии продукта истек. Вы можете купить полнофункциональную версию продукта на сайте <a href=\"http://www.1c-bitrix.ru/?r1=bsm7trial&amp;r2=expiried\">www.1c-bitrix.ru</a>. <a href=\"/bitrix/coupon_activation.php?lang=ru\">Регистрация</a>.";
+$MESS["expire_mess2"] = "Срок работы пробной версии продукта истек. Вы можете купить полнофункциональную версию продукта на сайте <a href=\"http://www.1c-bitrix.ru/?r1=bsm7trial&amp;r2=expired\">www.1c-bitrix.ru</a>. <a href=\"/bitrix/coupon_activation.php?lang=ru\">Регистрация</a>.";
 $MESS["main_tools_menu_left"] = "Меню раздела";
 $MESS["main_tools_menu_top"] = "Главное меню";
 $MESS["top_panel_updates"] = "Доступны обновления продукта";

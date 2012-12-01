@@ -17,4 +17,5 @@ $MESS ['CATALOG_VAT_INCLUDED'] = "НДС включен в цену";
 $MESS ['CATALOG_VAT_NOT_INCLUDED'] = "НДС не включен в цену";
 $MESS ['PUB_DATE'] = "Дата публикации:";
 $MESS ['CT_BCE_QUANTITY'] = "Количество";
+$MESS["CATALOG_SUBSCRIBE"] = "Уведомить о поступлении";
 ?>

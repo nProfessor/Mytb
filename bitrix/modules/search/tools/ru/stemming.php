@@ -115,6 +115,7 @@ function stemming_ru($word, $flags = 0)
 		"ГРАНИТ"=>true,
 		"ИЛИ"=>true,
 		"РУКАВ"=>true,
+		"ПРИЕМ"=>true,
 	);
 	if(isset($STEMMING_RU_EX[$word]))
 		return $word;

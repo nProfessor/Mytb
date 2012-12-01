@@ -64,7 +64,7 @@ class CCheckList
 						$this->current_result[$key] = Array(
 							"STATUS"=>"W");
 				}
-
+				////$this->current_result[$key] = Array("STATUS"=>"A");
 			}
 		}
 		if ($this->current_result != false && $this->report_id == false)
@@ -88,6 +88,7 @@ class CCheckList
 	{
 		$arResult = Array(
 			"CHECK"=>0,
+			"CHECK_R"=>0,
 			"FAILED"=>0,
 			"WAITING"=>0,
 			"TOTAL"=>0,
@@ -105,7 +106,11 @@ class CCheckList
 				foreach ($arPoints as $arPointFields)
 				{
 					if ($arPointFields["STATE"]["STATUS"] == "A")
+					{
 						$arResult["CHECK"]++;
+						if (isset($arPointFields['REQUIRE']) && $arPointFields['REQUIRE']=='Y')
+							$arResult["CHECK_R"]++;
+					}
 					if ($arPointFields["STATE"]["STATUS"] == "F")
 						$arResult["FAILED"]++;
 					if ($arPointFields["STATE"]["STATUS"] == "W")
@@ -185,11 +190,11 @@ class CCheckList
 				continue;
 			}
 
-		 	$arFields = $arSectionFields;
-		 	$arFields["POINTS"] = $this->GetPoints($key);
-		 	$arFields = array_merge($arFields, $this->GetSectionStat($key));
-		 	$arSections[$arFields["PARENT"]]["CATEGORIES"][$key] = $arFields;
-		 	unset($arSections[$key]);
+			$arFields = $arSectionFields;
+			$arFields["POINTS"] = $this->GetPoints($key);
+			$arFields = array_merge($arFields, $this->GetSectionStat($key));
+			$arSections[$arFields["PARENT"]]["CATEGORIES"][$key] = $arFields;
+			unset($arSections[$key]);
 		}
 
 		$arResult["STRUCTURE"] = $arSections;
@@ -322,23 +327,26 @@ class CCheckList
 		return $arResult;
 	}
 
-	function AddReport($arReportFields = Array())
+	function AddReport($arReportFields = Array(), $errorCheck = false)
 	{//saving current state to a report
 		if ($this->report_id)
 			return false;
 
-		if (!$arReportFields["TESTER"] && !$arReportFields["COMPANY_NAME"])
+		if ($errorCheck && !$arReportFields["TESTER"] && !$arReportFields["COMPANY_NAME"])
 			return Array("ERROR" => GetMessage("EMPTY_NAME"));
 
 		$arStats = $this->GetSectionStat();
 		$arFields = Array(
 				"TESTER" => $arReportFields["TESTER"],
 				"COMPANY_NAME" => $arReportFields["COMPANY_NAME"],
+				"PHONE" => $arReportFields["PHONE"],
+				"EMAIL" => $arReportFields["EMAIL"],
 				"PICTURE" => $arReportFields["PICTURE"],
 				"REPORT_COMMENT" => $arReportFields["COMMENT"],
 				"STATE" => $this->current_result,
 				"TOTAL" => $arStats["TOTAL"],
 				"SUCCESS" => $arStats["CHECK"],
+				"SUCCESS_R" => $arStats["CHECK_R"],
 				"FAILED" => $arStats["FAILED"],
 				"PENDING"=> $arStats["WAITING"],
 				"REPORT" =>true
@@ -445,7 +453,7 @@ class CCheckListResult
 		if (is_array($arFilter) && count($arFilter)>0)
 		{
 			$arSqlWhere = "";
-			$arSqlFields=Array("ID","REPORT");
+			$arSqlFields=Array("ID","REPORT","HIDDEN","SENDED_TO_BITRIX");
 			foreach($arFilter as $key=>$value):
 				if (in_array($key,$arSqlFields))
 					$arSqlWhere[] = $key."='".$DB->ForSql($value)."'";
@@ -462,6 +470,19 @@ class CCheckListResult
 		return $arResult;
 	}
 
+	function Update($ID, $arFields)
+	{
+		global $DB, $USER;
+		$ID = IntVal($ID);
+
+		$strUpdate = $DB->PrepareUpdate("b_checklist", $arFields);
+
+		$strSql =
+			"UPDATE b_checklist SET ".$strUpdate." WHERE ID = ".$ID." ";
+		$DB->Query($strSql);
+		return $ID;
+	}
+	
 	function Delete($ID)
 	{
 		global $DB;
@@ -551,16 +572,36 @@ class CAutoCheck
 
 	function CheckBackup()
 	{
-		$arBackUpFolder = $_SERVER['DOCUMENT_ROOT']."/bitrix/backup";
 		$arCount = 0;
 		$arResult = Array();
 		$arResult["STATUS"] = false;
-		if (file_exists($arBackUpFolder) && $handle = opendir($arBackUpFolder))
+		$bMcrypt = function_exists('mcrypt_encrypt');
+		$bBitrixCloud = $bMcrypt && CModule::IncludeModule('bitrixcloud') && CModule::IncludeModule('clouds');
+
+		$site = CSite::GetSiteByFullPath(DOCUMENT_ROOT);
+		$path = BX_ROOT."/backup";
+		$arTmpFiles = array();
+		$arFilter = array();
+		GetDirList(Array($site, $path), $arDir, $arTmpFiles, $arFilter, Array('sort' => 'asc'), "F");
+
+		foreach($arTmpFiles as $ar)
 		{
-			while(($file = readdir($handle))!==false)
-			{
-				if (strpos($file,".tar.gz"))
-					$arCount++;
+			if (strpos($ar['NAME'],".enc.gz"))
+				$arCount++;
+		}
+
+		if ($bBitrixCloud)
+		{
+			$backup = CBitrixCloudBackup::getInstance();
+			try {
+				foreach($backup->listFiles() as $ar)
+				{
+					if (strpos($ar['FILE_NAME'],".enc.gz"))
+						$arCount++;
+				}
+			} catch (Exception $e) {
+				$bBitrixCloud = false;
+				$strBXError = $e->getMessage();
 			}
 		}
 		if ($arCount>0)
@@ -570,7 +611,6 @@ class CAutoCheck
 		}
 		else
 			$arResult["MESSAGE"]["PREVIEW"] = GetMessage("CL_NOT_FOUND_BACKUP");
-
 		return $arResult;
 	}
 

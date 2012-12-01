@@ -144,8 +144,8 @@ if ($_POST["type"] == "desktop")
 				{
 					if (BX('SETTINGS_COLUMNS'))
 					{
-						BX.bind(BX('SETTINGS_COLUMNS'), 'keyup', __RecalcDesktopSettingsDialog);
-						BX.bind(BX('SETTINGS_COLUMNS'), 'blur', __RecalcDesktopSettingsDialog);
+						BX.bind(BX('SETTINGS_COLUMNS'), 'keyup', BX.adminPanel.recalcDesktopSettingsDialog);
+						BX.bind(BX('SETTINGS_COLUMNS'), 'blur', BX.adminPanel.recalcDesktopSettingsDialog);
 					}
 					current_col_count = <?=htmlspecialcharsbx($cols_count)?>;
 				}

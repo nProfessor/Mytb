@@ -288,7 +288,6 @@ var jsUtils =
 			window.open(url);
 		else
 		{
-			ShowWaitWindow();
 			window.location.href=url;
 		}
 	},

@@ -161,11 +161,9 @@ Class clouds extends CModule
 
 	function InstallFiles($arParams = array())
 	{
-		global $DB;
 		if($_ENV["COMPUTERNAME"]!='BX')
 		{
 			CopyDirFiles($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/clouds/install/admin/", $_SERVER["DOCUMENT_ROOT"]."/bitrix/admin");
-			CopyDirFiles($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/clouds/install/themes/", $_SERVER["DOCUMENT_ROOT"]."/bitrix/themes/", true, true);
 		}
 		return true;
 	}
@@ -175,8 +173,6 @@ Class clouds extends CModule
 		if($_ENV["COMPUTERNAME"]!='BX')
 		{
 			DeleteDirFiles($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/clouds/install/admin/", $_SERVER["DOCUMENT_ROOT"]."/bitrix/admin");
-			DeleteDirFiles($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/clouds/install/themes/.default/", $_SERVER["DOCUMENT_ROOT"]."/bitrix/themes/.default");
-			DeleteDirFilesEx("/bitrix/themes/.default/icons/clouds/");
 		}
 		return true;
 	}

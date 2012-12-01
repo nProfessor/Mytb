@@ -30,4 +30,5 @@ $MESS["IBLOCK_ADM_CONFIRM_DEL_MESSAGE"] = "Будет удалена вся ин
 $MESS["IBLOCK_ADM_SAVE_ERROR"] = "Ошибка сохранения записи ##ID#: #ERROR_TEXT#";
 $MESS["IBLOCK_ADM_HEADER_BIZPROC"] = "Шаблоны бизнес-процессов";
 $MESS["IBLOCK_ADM_MENU_BIZPROC"] = "Бизнес-процессы";
+$MESS["IBLOCK_ADM_MENU_PROPERTIES"] = "Свойства";
 ?>

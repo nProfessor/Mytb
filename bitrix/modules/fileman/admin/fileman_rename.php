@@ -94,16 +94,16 @@ else
 		{
 			$module_id = "fileman";
 			if(COption::GetOptionString($module_id, "log_page", "Y")=="Y")
-			{	
+			{
 				$res_log['path'] = substr($pathto, 1);
 				CEventLog::Log(
-					"content",                   
+					"content",
 					"FILE_RENAME",
 					"fileman",
 					"",
 					serialize($res_log)
-				);				
-			}	
+				);
+			}
 			$path = $pathTmp;
 			$arParsedPath = CFileMan::ParsePath(Array($site, $path), false, false, "", $logical == "Y");
 			$abs_path = $DOC_ROOT.$path;
@@ -118,12 +118,12 @@ require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_aft
 <?ShowError($strWarning);?>
 <?if(count($arFiles)>0):?>
 <form action="fileman_rename.php?lang=<?=LANG?>&path=<?=UrlEncode($path)?>&site=<?=Urlencode($site)?>" method="POST">
-	<input type="hidden" name="logical" value="<?=htmlspecialchars($logical)?>">
+	<input type="hidden" name="logical" value="<?=htmlspecialcharsbx($logical)?>">
 	<?=bitrix_sessid_post()?>
 	<input type="hidden" name="save" value="Y">
 	<?foreach($arFiles as $ind => $file):?>
-	<input type="hidden" name="files[<?echo htmlspecialchars($ind)?>]" value="<?echo htmlspecialchars($file)?>">
-	<input type="text" class="typeinput" name="filename[<?echo htmlspecialchars($ind)?>]" value="<?echo htmlspecialchars($file)?>" size="30" maxlength="255"><br>
+	<input type="hidden" name="files[<?echo htmlspecialcharsbx($ind)?>]" value="<?echo htmlspecialcharsbx($file)?>">
+	<input type="text" class="typeinput" name="filename[<?echo htmlspecialcharsbx($ind)?>]" value="<?echo htmlspecialcharsbx($file)?>" size="30" maxlength="255"><br>
 	<?endforeach?>
 	<p><input type="submit" class="button" name="saveb" value="<?echo GetMessage("FILEMAN_RENAME_SAVE")?>">&nbsp;<input class="button" type="reset" value="<?=GetMessage("FILEMAN_RENAME_RESET")?>" onclick="javascript:window.location='/bitrix/admin/fileman_admin.php?<?=$addUrl?>&site=<?=$site?>&path=<?=UrlEncode($path)?>'"></p>
 </form>

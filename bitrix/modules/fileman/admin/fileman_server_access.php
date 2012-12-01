@@ -255,7 +255,7 @@ $tabControl->Begin();
 			}
 			?>
 			<tr id="bxsp_file_row_<?= $i?>">
-				<td class="bxsp-filename">"<?= htmlspecialchars($APPLICATION->UnJSEscape($arFilesEx[$i]["PATH"]))?>"</td>
+				<td class="bxsp-filename">"<?= htmlspecialcharsbx($APPLICATION->UnJSEscape($arFilesEx[$i]["PATH"]))?>"</td>
 				<td class="bxsp-separator"> - </td>
 				<td class="bxsp-value" title="<?= $title?>"><?= $html?></td>
 				<td class="bxsp-status"><?= GetMessage("FM_SA_IN_PROC")?>...</td>

@@ -43,4 +43,5 @@ $MESS["IBLOCK_SORT_DESC"] = "descending";
 $MESS["CP_BCE_CONVERT_CURRENCY"] = "Use only one currency to show prices";
 $MESS["CP_BCE_CURRENCY_ID"] = "Convert all prices to currency";
 $MESS["CP_BCE_OFFERS_LIMIT"] = "Maximum SKU's to Show (use 0 to show all)";
+$MESS["CP_BCE_USE_ELEMENT_COUNTER"] = "Use view counter";
 ?>

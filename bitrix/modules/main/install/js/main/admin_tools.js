@@ -26,7 +26,11 @@ if(!phpVars)
 		messPanelFixOn: '',
 		messPanelFixOff: '',
 		messPanelCollapse: '',
-		messPanelExpand: ''
+		messPanelExpand: '',
+		messFavAddSucc: '',
+		messFavAddErr: '',
+		messFavDelSucc: '',
+		messFavDelErr: ''
 	};
 }
 
@@ -233,338 +237,9 @@ function JCAdminMenu(sOpenedSections)
 	}
 }
 
-/************************************************/
 
-function JCAdminFilter(filter_id, aRows)
-{
-	var _this = this;
-	this.filter_id = filter_id;
-	this.aRows = aRows;
-	this.oVisRows = null;
 
-	this.ToggleFilterRow = function(row_id, on, bSave)
-	{
-		var row = document.getElementById(row_id);
-		var delimiter = document.getElementById(row_id+'_delim');
-		if(!row)
-			return;
-
-		var short_id = row_id.substr((this.filter_id+'_row_').length);
-
-		if(on != true && on != false)
-			on = (row.style.display == 'none');
-
-		//filter popup menu
-		var filterMenu = window[this.filter_id+"_menu"];
-		if(on == true)
-		{
-			try{
-				row.style.display = 'table-row';
-				delimiter.style.display = 'table-row';
-			}
-			catch(e){
-				row.style.display = 'block';
-				delimiter.style.display = 'block';
-			}
-			if(filterMenu)
-				filterMenu.SetItemIcon('gutter_'+row_id, "checked");
-			this.oVisRows[short_id] = true;
-		}
-		else
-		{
-			row.style.display = 'none';
-			delimiter.style.display = 'none';
-			if(filterMenu)
-				filterMenu.SetItemIcon('gutter_'+row_id, "");
-			this.oVisRows[short_id] = false;
-		}
-
-		if(bSave != false)
-			this.SaveRowsOption();
-	}
-
-	this.SaveRowsOption = function()
-	{
-		var sRows = '';
-		for(var key in this.oVisRows)
-			if(this.oVisRows[key] == true)
-				sRows += (sRows != ''? ',':'')+key;
-		jsUserOptions.SaveOption('filter', this.filter_id, 'rows', sRows);
-	}
-
-	this.ToggleAllFilterRows = function(on)
-	{
-		var tbl = document.getElementById(this.filter_id);
-		if(!tbl)
-			return;
-
-		var n = tbl.rows.length;
-		for(var i=0; i<n; i++)
-		{
-			var row = tbl.rows[i];
-			if(row.id && row.cells[0].className != 'delimiter')
-				this.ToggleFilterRow(row.id, on, false);
-		}
-		this.SaveRowsOption();
-	}
-
-	this.InitFilter = function(oVisRows)
-	{
-		this.oVisRows = oVisRows;
-
-		var i;
-		var tbl = document.getElementById(this.filter_id);
-		if(!tbl)
-			return;
-
-		//filter popup menu
-		var filterMenu = window[this.filter_id+"_menu"];
-
-		var n=tbl.rows.length;
-		for(i=0; i<n; i++)
-		{
-			var row = tbl.rows[i];
-			var td = row.insertCell(-1);
-			td.className = 'filterless';
-			if(i>0)
-			{
-				row.id = this.filter_id+'_row_'+this.aRows[i-1];
-				if(this.oVisRows[this.aRows[i-1]] == true)
-				{
-					if(filterMenu)
-						filterMenu.SetItemIcon('gutter_'+row.id, "checked");
-				}
-				else
-					row.style.display = 'none';
-
-				td.innerHTML = '<a href="javascript:void(0)" onclick="this.blur();'+this.filter_id+'.ToggleFilterRow(\''+row.id+'\');" hidefocus="true" title="'+phpVars.messFilterLess+'" class="context-button icon" id="filterless"></a>';
-			}
-		}
-
-		for(i=0; i<n; i++)
-		{
-			var tr = tbl.insertRow(i*2+1);
-			if(i > 0)
-			{
-				if(this.oVisRows[this.aRows[i-1]] != true)
-					tr.style.display = 'none';
-				tr.id = this.filter_id+'_row_'+this.aRows[i-1]+'_delim';
-			}
-			var td = tr.insertCell(-1);
-			td.colSpan = 3;
-			td.className = 'delimiter';
-			td.innerHTML = '<div class="empty"></div>';
-		}
-
-		try{
-			tbl.style.display = 'table';}
-		catch(e){
-			tbl.style.display = 'block';}
-
-		this.DisplayVisibleRows();
-		this.SetActive(this.CheckActive());
-	}
-
-	this.GetParameters = function()
-	{
-		var form = jsUtils.FindParentObject(document.getElementById(this.filter_id), "form");
-		if(!form)
-			return;
-
-		var i, s = "";
-		var n = form.elements.length;
-		for(i=0; i<n; i++)
-		{
-			var el = form.elements[i];
-			if(el.disabled)
-				continue;
-			var tr = jsUtils.FindParentObject(el, 'tr');
-			if(tr && tr.style && tr.style.display == 'none')
-				continue;
-
-			var val = "";
-			switch(el.type.toLowerCase())
-			{
-				case 'select-one':
-				case 'text':
-				case 'textarea':
-				case 'hidden':
-					val = el.value;
-					break;
-				case 'radio':
-				case 'checkbox':
-					if(el.checked)
-						val = el.value;
-					break;
-				case 'select-multiple':
-					var j;
-					var l = el.options.length;
-					for(j=0; j<l; j++)
-						if(el.options[j].selected)
-							s += '&' + el.name + '=' + encodeURIComponent(el.options[j].value);
-					break;
-				default:
-					break;
-			}
-			if(val != "")
-				s += '&' + el.name + '=' + encodeURIComponent(val);
-		}
-		return s;
-	}
-
-	this.ClearParameters = function()
-	{
-		var form = jsUtils.FindParentObject(document.getElementById(this.filter_id), "form");
-		if(!form)
-			return;
-
-		var i;
-		var n = form.elements.length;
-		for(i=0; i<n; i++)
-		{
-			var el = form.elements[i];
-			switch(el.type.toLowerCase())
-			{
-				case 'text':
-				case 'textarea':
-					el.value = '';
-					break;
-				case 'select-one':
-					el.selectedIndex = 0;
-					if(el.onchange)
-						el.onchange();
-					break;
-				case 'select-multiple':
-					var j;
-					var l = el.options.length;
-					for(j=0; j<l; j++)
-						el.options[j].selected = false;
-					break;
-				default:
-					break;
-			}
-		}
-	}
-
-	this.OnSet = function(table_id, url)
-	{
-		this.SetActive(this.CheckActive());
-		window[table_id].GetAdminList(url+'set_filter=Y'+this.GetParameters());
-	}
-
-	this.OnClear = function(table_id, url)
-	{
-		this.ClearParameters();
-		this.SetActive(false);
-		window[table_id].GetAdminList(url+'del_filter=Y'+this.GetParameters());
-	}
-
-	this.SetActive = function(on)
-	{
-		var div = document.getElementById(this.filter_id+'_active_lamp');
-		div.className = (on? 'active':'inactive');
-		div.title = (on? phpVars.messFilterActive:phpVars.messFilterInactive);
-	}
-
-	this.CheckActive = function()
-	{
-		var form = jsUtils.FindParentObject(document.getElementById(this.filter_id), "form");
-		if(!form)
-			return;
-
-		var i;
-		var n = form.elements.length;
-		for(i=0; i<n; i++)
-		{
-			var el = form.elements[i];
-			if(el.disabled)
-				continue;
-			var tr = jsUtils.FindParentObject(el, 'tr');
-			if(tr && tr.style && tr.style.display == 'none')
-				continue;
-
-			switch(el.type.toLowerCase())
-			{
-				case 'select-one':
-					if(el.options[0].value.length != 0 && (el.options[0].value.toUpperCase() != 'NOT_REF' || el.value.toUpperCase() == 'NOT_REF'))
-						break;
-				case 'text':
-				case 'textarea':
-					if(el.value.length > 0)
-						return true;
-					break;
-				case 'checkbox':
-					if(el.checked)
-						return true;
-					break;
-				case 'select-multiple':
-					var j;
-					var l = el.options.length;
-					for(j=0; j<l; j++)
-						if(el.options[j].selected && el.options[j].value != '')
-							return true;
-					break;
-				default:
-					break;
-			}
-		}
-		return false;
-	}
-
-	this.DisplayVisibleRows = function()
-	{
-		var form = jsUtils.FindParentObject(document.getElementById(this.filter_id), "form");
-		if(!form)
-			return;
-
-		var i;
-		var n = form.elements.length;
-		for(i=0; i<n; i++)
-		{
-			var el = form.elements[i];
-			if(el.disabled)
-				continue;
-
-			var bVisible = false;
-			switch(el.type.toLowerCase())
-			{
-				case 'select-one':
-					if(el.value.length>0 && (el.options[0].value.length == 0 || (el.options[0].value != el.value)))
-						bVisible = true;
-					break;
-				case 'text':
-				case 'textarea':
-					if(el.value.length>0)
-						bVisible = true;
-					break;
-				case 'checkbox':
-					if(el.checked)
-						bVisible = true;
-					break;
-				case 'select-multiple':
-					var j;
-					var l = el.options.length;
-					for(j=0; j<l; j++)
-						if(el.options[j].selected && el.options[j].value != '')
-						{
-							bVisible = true;
-							break;
-						}
-					break;
-				default:
-					break;
-			}
-			if(bVisible)
-			{
-				var tr = jsUtils.FindParentObject(el, 'tr');
-				if(tr.id)
-					this.ToggleFilterRow(tr.id, true);
-			}
-		}
-	}
-}
-
-/************************************************/
+/***************************************/
 
 function JCAdminList(table_id)
 {
@@ -1575,7 +1250,7 @@ var jsAdminChain =
 		if(!div)
 			return;
 
-		main_chain.innerHTML += '<img src="/bitrix/themes/'+phpVars.ADMIN_THEME_ID+'/images/chain_arrow.gif" alt="" border="0" class="arrow">';
+		main_chain.innerHTML += '<span class="adm-navchain-delimiter"></span>';
 		main_chain.innerHTML += div.innerHTML;
 	}
 }
@@ -1674,6 +1349,7 @@ var CHttpRequest = new JCHttpRequest();
 
 /************************************************/
 
+/***** DEPRECATED! Use BX.userOptions from core_ajax.js **********/
 function JCUserOptions()
 {
 	var _this = this;
@@ -1683,6 +1359,12 @@ function JCUserOptions()
 
 	this.GetParams = function()
 	{
+		if (BX && BX.userOptions)
+		{
+			_this.GetParams = BX.userOptions.__get;
+			return _this.GetParams.apply(BX.userOptions, arguments);
+		}
+
 		var sParam = '';
 		var n = -1;
 		var prevParam = '';
@@ -1706,6 +1388,12 @@ function JCUserOptions()
 
 	this.SaveOption = function(sCategory, sName, sValName, sVal, bCommon)
 	{
+		if (BX && BX.userOptions)
+		{
+			_this.SaveOption = BX.userOptions.save;
+			return _this.SaveOption.apply(BX.userOptions, arguments);
+		}
+
 		if(!this.options)
 			this.options = new Object();
 
@@ -1726,6 +1414,12 @@ function JCUserOptions()
 
 	this.SendData = function(callback)
 	{
+		if (BX && BX.userOptions)
+		{
+			_this.SendData = BX.userOptions.send;
+			return _this.SendData.apply(BX.userOptions, arguments);
+		}
+
 		var sParam = _this.GetParams();
 		_this.options = null;
 		_this.bSend = false;
@@ -1739,6 +1433,12 @@ function JCUserOptions()
 
 	this.DeleteOption = function(sCategory, sName, bCommon, callback)
 	{
+		if (BX && BX.userOptions)
+		{
+			_this.DeleteOption = BX.userOptions.del;
+			return _this.DeleteOption.apply(BX.userOptions, arguments);
+		}
+
 		_this.request.Action = callback;
 		_this.request.Send('/bitrix/admin/user_options.php?action=delete&c='+sCategory+'&n='+sName+(bCommon == true? '&common=Y':'')+'&sessid='+phpVars.bitrix_sessid);
 	}
@@ -2739,4 +2439,3 @@ function FieldsUpAndDown(direction)
 			jsSelectUtils.moveOptionsDown(oSelect);
 	}
 }
-

@@ -164,4 +164,5 @@ $MESS["MTP_SHORT_URI_LIST"] = "Список ссылок";
 $MESS["MTP_SHORT_URI_LIST_ALT"] = "Список коротких ссылок";
 $MESS["MTP_SHORT_URI_HINT"] = "Короткая ссылка";
 $MESS["MTP_SHORT_URI_HINT_ALT"] = "Настройка короткой ссылки для текущей страницы";
+$MESS["top_panel_notif_block_title"] = "Просмотр уведомлений";
 ?>

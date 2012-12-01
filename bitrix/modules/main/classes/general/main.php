@@ -45,6 +45,9 @@ class CAllMain
 	var $buffer_man = false;
 	var $buffer_manual = false;
 	var $auto_buffer_cleaned, $buffered = false;
+	/**
+	 * @var CApplicationException
+	 */
 	var $LAST_ERROR = false;
 	var $ERROR_STACK = array();
 	var $arIncludeDebug = array();
@@ -211,39 +214,39 @@ class CAllMain
 			//форма высылки пароля
 			$APPLICATION->SetTitle(GetMessage("AUTH_TITLE_SEND_PASSWORD"));
 			$comp_name = "system.auth.forgotpasswd";
-			$inc_file = "forgot_password.php";
+			$inc_file = "forgot_password";
 		}
 		elseif($change_password=="yes")
 		{
 			//форма изменения пароля
 			$APPLICATION->SetTitle(GetMessage("AUTH_TITLE_CHANGE_PASSWORD"));
 			$comp_name = "system.auth.changepasswd";
-			$inc_file = "change_password.php";
+			$inc_file = "change_password";
 		}
 		elseif($register=="yes" && $isAdmin==""	&& COption::GetOptionString("main", "new_user_registration", "N")=="Y")
 		{
 			//форма регистрации
 			$APPLICATION->SetTitle(GetMessage("AUTH_TITLE_REGISTER"));
 			$comp_name = "system.auth.registration";
-			$inc_file = "registration.php";
+			$inc_file = "registration";
 		}
 		elseif(($confirm_registration === "yes") && ($isAdmin === "") && (COption::GetOptionString("main", "new_user_registration_email_confirmation", "N") === "Y"))
 		{
 			//confirm registartion
 			$APPLICATION->SetTitle(GetMessage("AUTH_TITLE_CONFIRM"));
 			$comp_name = "system.auth.confirmation";
-			$inc_file = "confirmation.php";
+			$inc_file = "confirmation";
 		}
 		elseif($authorize_registration=="yes" && $isAdmin=="")
 		{
 			//форма авторизации и регистрации
-			$inc_file = "authorize_registration.php";
+			$inc_file = "authorize_registration";
 		}
 		else
 		{
 			//форма авторизации
 			$comp_name = "system.auth.authorize";
-			$inc_file = "authorize.php";
+			$inc_file = "authorize";
 		}
 
 		if($show_prolog)
@@ -266,12 +269,12 @@ class CAllMain
 			}
 			else
 			{
-				$this->IncludeFile("main/auth/".$inc_file, Array("last_login"=>$last_login, "arAuthResult"=>$arAuthResult, "not_show_links" => $not_show_links));
+				$this->IncludeFile("main/auth/".$inc_file.".php", Array("last_login"=>$last_login, "arAuthResult"=>$arAuthResult, "not_show_links" => $not_show_links));
 			}
 		}
 		else
 		{
-			include($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/interface/auth/".$inc_file);
+			include($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/interface/auth/wrapper.php");
 		}
 
 		if($show_epilog)
@@ -1037,7 +1040,7 @@ class CAllMain
 
 	function GetShowIncludeAreas()
 	{
-		if(!$GLOBALS["USER"]->IsAuthorized())
+		if(!$GLOBALS["USER"]->IsAuthorized() || defined('ADMIN_SECTION') && ADMIN_SECTION == true)
 			return false;
 		if($_SESSION["SESS_INCLUDE_AREAS"])
 			return true;
@@ -1157,7 +1160,7 @@ class CAllMain
 
 		if (is_object($parentComponent))
 		{
-			if (strtolower(get_class($parentComponent)) != "cbitrixcomponent")
+			if (!($parentComponent instanceof cbitrixcomponent))
 				$parentComponent = null;
 		}
 
@@ -3163,6 +3166,8 @@ class CAllMain
 
 			//Prints global url classes and  variables for HotKeys
 			$this->AddBufferContent(array('CAllMain',"PrintHKGlobalUrlVar"));
+
+			$this->AddBufferContent(array('CAdminInformer',"PrintHtml"));
 		}
 	}
 
@@ -3404,7 +3409,20 @@ class CAllMain
 			}
 		}
 
-		$bAdminSection = (false !== strpos($arUrl['URL'], 'bxpublic='));
+		$dialog_class = 'CDialog';
+		if (!!$arUrl['PARAMS']['dialog_type'])
+		{
+			switch ($arUrl['PARAMS']['dialog_type'])
+			{
+				case 'EDITOR': $dialog_class = 'CEditorDialog'; break;
+				case 'ADMIN': $dialog_class = 'CAdminDialog'; break;
+				default: $dialog_class = 'CDialog';
+			}
+		}
+		elseif (strpos($arUrl['URL'], 'bxpublic=') !== false)
+		{
+			$dialog_class = 'CAdminDialog';
+		}
 
 		$arDialogParams = array(
 			'content_url' => $arUrl['URL'],
@@ -3422,7 +3440,7 @@ class CAllMain
 			$arDialogParams['content_post'] = $arUrl['POST'];
 		}
 
-		return '(new BX.C'.($bAdminSection ? 'Admin' : '').'Dialog('.CUtil::PhpToJsObject($arDialogParams).')).Show()';
+		return '(new BX.'.$dialog_class.'('.CUtil::PhpToJsObject($arDialogParams).')).Show()';
 	}
 
 	function GetServerUniqID()
@@ -4323,18 +4341,18 @@ class CAllSite
 	function GetNameTemplates()
 	{
 		return array(
-			'#NOBR##NAME# #LAST_NAME##/NOBR#' => GetMessage('MAIN_NAME_JOHN_SMITH'),
-			'#NOBR##LAST_NAME# #NAME##/NOBR#' => GetMessage('MAIN_NAME_SMITH_JOHN'),
-			'#NOBR##NAME# #SECOND_NAME_SHORT# #LAST_NAME##/NOBR#' => GetMessage('MAIN_NAME_JOHN_L_SMITH'),
-			'#NOBR##LAST_NAME# #NAME##/NOBR# #SECOND_NAME#' => GetMessage('MAIN_NAME_SMITH_JOHN_LLOYD'),
-			'#LAST_NAME#, #NOBR##NAME# #SECOND_NAME##/NOBR#' => GetMessage('MAIN_NAME_SMITH_COMMA_JOHN_LLOYD'),
+			'#NAME# #LAST_NAME#' => GetMessage('MAIN_NAME_JOHN_SMITH'),
+			'#LAST_NAME# #NAME#' => GetMessage('MAIN_NAME_SMITH_JOHN'),
+			'#NAME# #SECOND_NAME_SHORT# #LAST_NAME#' => GetMessage('MAIN_NAME_JOHN_L_SMITH'),
+			'#LAST_NAME# #NAME# #SECOND_NAME#' => GetMessage('MAIN_NAME_SMITH_JOHN_LLOYD'),
+			'#LAST_NAME#, #NAME# #SECOND_NAME#' => GetMessage('MAIN_NAME_SMITH_COMMA_JOHN_LLOYD'),
 			'#NAME# #SECOND_NAME# #LAST_NAME#' => GetMessage('MAIN_NAME_JOHN_LLOYD_SMITH'),
-			'#NOBR##NAME_SHORT# #SECOND_NAME_SHORT# #LAST_NAME##/NOBR#' => GetMessage('MAIN_NAME_J_L_SMITH'),
-			'#NOBR##NAME_SHORT# #LAST_NAME##/NOBR#' => GetMessage('MAIN_NAME_J_SMITH'),
-			'#NOBR##LAST_NAME# #NAME_SHORT##/NOBR#' => GetMessage('MAIN_NAME_SMITH_J'),
-			'#NOBR##LAST_NAME# #NAME_SHORT# #SECOND_NAME_SHORT##/NOBR#' => GetMessage('MAIN_NAME_SMITH_J_L'),
-			'#NOBR##LAST_NAME#, #NAME_SHORT##/NOBR#' => GetMessage('MAIN_NAME_SMITH_COMMA_J'),
-			'#NOBR##LAST_NAME#, #NAME_SHORT# #SECOND_NAME_SHORT##/NOBR#' => GetMessage('MAIN_NAME_SMITH_COMMA_J_L')
+			'#NAME_SHORT# #SECOND_NAME_SHORT# #LAST_NAME#' => GetMessage('MAIN_NAME_J_L_SMITH'),
+			'#NAME_SHORT# #LAST_NAME#' => GetMessage('MAIN_NAME_J_SMITH'),
+			'#LAST_NAME# #NAME_SHORT#' => GetMessage('MAIN_NAME_SMITH_J'),
+			'#LAST_NAME# #NAME_SHORT# #SECOND_NAME_SHORT#' => GetMessage('MAIN_NAME_SMITH_J_L'),
+			'#LAST_NAME#, #NAME_SHORT#' => GetMessage('MAIN_NAME_SMITH_COMMA_J'),
+			'#LAST_NAME#, #NAME_SHORT# #SECOND_NAME_SHORT#' => GetMessage('MAIN_NAME_SMITH_COMMA_J_L')
 		);
 	}
 
@@ -4361,11 +4379,10 @@ class CAllSite
 	* If there is no value for language - returns pre-defined value @see CSite::GetDefaultNameFormat
 	* FORMAT_NAME constant can be set in dbconn.php
 	*
-	* @param bool $bUseBreaks - if true, will contain #NOBR# #/NOBR# for <nobr> tags. Default - true
 	* @param string $site_id - use to get value for the specific site
 	* @return string ex: #LAST_NAME# #NAME#
 	*/
-	function GetNameFormat($bUseBreaks = true, $site_id = "")
+	function GetNameFormat($dummy = null, $site_id = "")
 	{
 		if ($site_id == "")
 			$site_id = SITE_ID;
@@ -4404,8 +4421,7 @@ class CAllSite
 		if ($format == "")
 			$format = self::GetDefaultNameFormat(empty($res["LANGUAGE_ID"]) ? "" : $res["LANGUAGE_ID"]);
 
-		if (!$bUseBreaks)
-			$format = str_replace(array("#NOBR#","#/NOBR#"), array("",""), $format);
+		$format = str_replace(array("#NOBR#","#/NOBR#"), "", $format);
 
 		return $format;
 	}
@@ -4419,14 +4435,7 @@ class CAllSite
 	*/
 	function GetDefaultNameFormat($sLangId = "")
 	{
-		return '#NOBR##NAME# #LAST_NAME##/NOBR#';
-
-		// if ($sLangId == "")
-		// 	$sCheckLang = LANGUAGE_ID;
-		// else
-		// 	$sCheckLang = $sLangId;
-
-		// return ($sCheckLang == 'ru' ? '#NOBR##LAST_NAME# #NAME##/NOBR#' : '#NOBR##NAME# #LAST_NAME##/NOBR#');
+		return '#NAME# #LAST_NAME#';
 	}
 
 	function SelectBoxName($sFieldName, $sValue, $sDefaultValue="", $sFuncName="", $field="class=\"typeselect\"")

@@ -8,6 +8,7 @@ $MESS["IBLOCK_CML2_TABLES_CREATION"] = "Создание временных та
 $MESS["IBLOCK_CML2_TABLES_CREATED"] = "Временные таблицы для импорта созданы.";
 $MESS["IBLOCK_CML2_FILE_READING"] = "Чтение файла импорта во временные таблицы.";
 $MESS["IBLOCK_CML2_FILE_PROGRESS"] = "Чтение файла импорта во временные таблицы. Прочитано: #PERCENT#%.";
+$MESS["IBLOCK_CML2_FILE_PROGRESS2"] = "Чтение файла импорта во временные таблицы.";
 $MESS["IBLOCK_CML2_FILE_READ"] = "Файл импорта прочитан.";
 $MESS["IBLOCK_CML2_INDEX_CREATION"] = "Создание вспомогательных индексов.";
 $MESS["IBLOCK_CML2_INDEX_CREATED"] = "Вспомогательные индексы созданы.";

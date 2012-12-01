@@ -2,6 +2,11 @@
 IncludeModuleLangFile(__FILE__);
 class CMedialib
 {
+	private static
+		$bCache = true,
+		$cacheTime = 360000,
+		$cachePath = "medialib/";
+
 	function Init(){}
 	function GetOperations($collectionId)
 	{
@@ -246,7 +251,7 @@ class CMedialib
 		}
 		else
 		{
-			echo '<font color="#FF0000">'.htmlspecialchars($strWarn).'</font>';
+			echo '<font color="#FF0000">'.htmlspecialcharsbx($strWarn).'</font>';
 		}
 	}
 
@@ -266,49 +271,49 @@ BX.loadScript("/bitrix/js/main/file_dialog.js?v=<?=@filemtime($_SERVER['DOCUMENT
 ?>
 var ML_MESS =
 {
-	AccessDenied : '<?= addslashes(GetMessage('ML_ACCESS_DENIED'))?>',
-	SessExpired : '<?= addslashes(GetMessage('ML_SESS_EXPIRED'))?>',
-	DelCollection : '<?= addslashes(GetMessage('ML_DEL_COLLECTION'))?>',
-	DelItem : '<?= addslashes(GetMessage('ML_DEL_ITEM'))?>',
-	DelCollectionConf : '<?= addslashes(GetMessage('ML_DEL_COLLECTION_CONFIRM'))?>',
-	DelItemConf : '<?= addslashes(GetMessage('ML_DEL_ITEM_CONFIRM'))?>',
-	EditCollection : '<?= addslashes(GetMessage('ML_EDIT_COLLECTION'))?>',
-	EditItem : '<?= addslashes(GetMessage('ML_EDIT_ITEM'))?>',
-	NewCollection : '<?= addslashes(GetMessage('ML_NEW_COLLECTION'))?>',
-	Collection : '<?= addslashes(GetMessage('ML_COLLECTION'))?>',
-	ColLocEr : '<?= addslashes(GetMessage('ML_COL_LOC_ER'))?>',
-	ColLocEr2 : '<?= addslashes(GetMessage('ML_COL_LOC_ER2'))?>',
-	Item : '<?= addslashes(GetMessage('ML_ITEM'))?>',
-	NewItem : '<?= addslashes(GetMessage('ML_NEW_ITEM'))?>',
-	DelColFromItem : '<?= addslashes(GetMessage('ML_DEL_COL2ITEM'))?>',
-	ItemNoColWarn : '<?= addslashes(GetMessage('ML_COL2ITEM_WARN'))?>',
-	DateModified : '<?= addslashes(GetMessage('ML_DATE_MODIFIED'))?>',
-	FileSize : '<?= addslashes(GetMessage('ML_FILE_SIZE'))?>',
-	ImageSize : '<?= addslashes(GetMessage('ML_IMAGE_SIZE'))?>',
-	CheckedColTitle : '<?= addslashes(GetMessage('ML_CHECKED_COL_TITLE'))?>',
-	ItSourceError : '<?= addslashes(GetMessage('ML_SOURCE_ERROR'))?>',
-	ItNameError : '<?= addslashes(GetMessage('ML_NAME_ERROR'))?>',
-	ItCollsError : '<?= addslashes(GetMessage('ML_COLLS_ERROR'))?>',
-	ColNameError : '<?= addslashes(GetMessage('ML_COL_NAME_ERROR'))?>',
-	DelItConfTxt : '<?= addslashes(GetMessage('ML_DEL_CONF_TEXT'))?>',
-	DelItB1 : '<?= addslashes(GetMessage('ML_DEL_IT_B1'))?>',
-	DelItB2 : '<?= addslashes(GetMessage('ML_DEL_IT_B2'))?>',
-	CollAccessDenied : '<?= addslashes(GetMessage('ML_COLL_ACCESS_DENIED'))?>',
-	CollAccessDenied2 : '<?= addslashes(GetMessage('ML_COLL_ACCESS_DENIED2'))?>',
-	CollAccessDenied3: '<?= addslashes(GetMessage('ML_COLL_ACCESS_DENIED3'))?>',
-	CollAccessDenied4: '<?= addslashes(GetMessage('ML_COLL_ACCESS_DENIED4'))?>',
-	BadSubmit: '<?= addslashes(GetMessage('ML_BAD_SUBMIT'))?>',
-	ColNameError: '<?= addslashes(GetMessage('ML_COL_NAME_ERROR'))?>',
-	ItemExtError: '<?= addslashes(GetMessage('ML_ITEM_EXT_ERROR'))?>',
-	EditItemError: '<?= addslashes(GetMessage('ML_EDIT_ITEM_ERROR'))?>',
-	SearchResultEx: '<?= addslashes(GetMessage('ML_SEARCH_RESULT_EX'))?>',
-	DelElConfirm: '<?= addslashes(GetMessage('ML_DEL_EL_CONFIRM'))?>',
-	DelElConfirmYes: '<?= addslashes(GetMessage('ML_DEL_EL_CONFIRM_YES'))?>',
-	SearchDef: '<?= addslashes(GetMessage('ML_SEARCH_DEF'))?>',
-	NoResult: '<?= addslashes(GetMessage('ML_SEARCH_NO_RESULT'))?>',
-	ViewItem : '<?= addslashes(GetMessage('ML_VIEW_ITEM'))?>',
-	FileExt : '<?= addslashes(GetMessage('ML_FILE_EXT'))?>',
-	CheckExtTypeConf : '<?= addslashes(GetMessage('ML_CHECK_TYPE_EXT_CONF'))?>'
+	AccessDenied : '<?= GetMessageJS('ML_ACCESS_DENIED')?>',
+	SessExpired : '<?= GetMessageJS('ML_SESS_EXPIRED')?>',
+	DelCollection : '<?= GetMessageJS('ML_DEL_COLLECTION')?>',
+	DelItem : '<?= GetMessageJS('ML_DEL_ITEM')?>',
+	DelCollectionConf : '<?= GetMessageJS('ML_DEL_COLLECTION_CONFIRM')?>',
+	DelItemConf : '<?= GetMessageJS('ML_DEL_ITEM_CONFIRM')?>',
+	EditCollection : '<?= GetMessageJS('ML_EDIT_COLLECTION')?>',
+	EditItem : '<?= GetMessageJS('ML_EDIT_ITEM')?>',
+	NewCollection : '<?= GetMessageJS('ML_NEW_COLLECTION')?>',
+	Collection : '<?= GetMessageJS('ML_COLLECTION')?>',
+	ColLocEr : '<?= GetMessageJS('ML_COL_LOC_ER')?>',
+	ColLocEr2 : '<?= GetMessageJS('ML_COL_LOC_ER2')?>',
+	Item : '<?= GetMessageJS('ML_ITEM')?>',
+	NewItem : '<?= GetMessageJS('ML_NEW_ITEM')?>',
+	DelColFromItem : '<?= GetMessageJS('ML_DEL_COL2ITEM')?>',
+	ItemNoColWarn : '<?= GetMessageJS('ML_COL2ITEM_WARN')?>',
+	DateModified : '<?= GetMessageJS('ML_DATE_MODIFIED')?>',
+	FileSize : '<?= GetMessageJS('ML_FILE_SIZE')?>',
+	ImageSize : '<?= GetMessageJS('ML_IMAGE_SIZE')?>',
+	CheckedColTitle : '<?= GetMessageJS('ML_CHECKED_COL_TITLE')?>',
+	ItSourceError : '<?= GetMessageJS('ML_SOURCE_ERROR')?>',
+	ItNameError : '<?= GetMessageJS('ML_NAME_ERROR')?>',
+	ItCollsError : '<?= GetMessageJS('ML_COLLS_ERROR')?>',
+	ColNameError : '<?= GetMessageJS('ML_COL_NAME_ERROR')?>',
+	DelItConfTxt : '<?= GetMessageJS('ML_DEL_CONF_TEXT')?>',
+	DelItB1 : '<?= GetMessageJS('ML_DEL_IT_B1')?>',
+	DelItB2 : '<?= GetMessageJS('ML_DEL_IT_B2')?>',
+	CollAccessDenied : '<?= GetMessageJS('ML_COLL_ACCESS_DENIED')?>',
+	CollAccessDenied2 : '<?= GetMessageJS('ML_COLL_ACCESS_DENIED2')?>',
+	CollAccessDenied3: '<?= GetMessageJS('ML_COLL_ACCESS_DENIED3')?>',
+	CollAccessDenied4: '<?= GetMessageJS('ML_COLL_ACCESS_DENIED4')?>',
+	BadSubmit: '<?= GetMessageJS('ML_BAD_SUBMIT')?>',
+	ColNameError: '<?= GetMessageJS('ML_COL_NAME_ERROR')?>',
+	ItemExtError: '<?= GetMessageJS('ML_ITEM_EXT_ERROR')?>',
+	EditItemError: '<?= GetMessageJS('ML_EDIT_ITEM_ERROR')?>',
+	SearchResultEx: '<?= GetMessageJS('ML_SEARCH_RESULT_EX')?>',
+	DelElConfirm: '<?= GetMessageJS('ML_DEL_EL_CONFIRM')?>',
+	DelElConfirmYes: '<?= GetMessageJS('ML_DEL_EL_CONFIRM_YES')?>',
+	SearchDef: '<?= GetMessageJS('ML_SEARCH_DEF')?>',
+	NoResult: '<?= GetMessageJS('ML_SEARCH_NO_RESULT')?>',
+	ViewItem : '<?= GetMessageJS('ML_VIEW_ITEM')?>',
+	FileExt : '<?= GetMessageJS('ML_FILE_EXT')?>',
+	CheckExtTypeConf : '<?= GetMessageJS('ML_CHECK_TYPE_EXT_CONF')?>'
 };
 <?
 	}
@@ -316,22 +321,22 @@ var ML_MESS =
 	function AppendLangMessagesEx()
 	{
 ?>
-ML_MESS.Edit = '<?= addslashes(GetMessage('ML_EDIT'))?>';
-ML_MESS.Delete = '<?= addslashes(GetMessage('ML_DELETE'))?>';
-ML_MESS.Access = '<?= addslashes(GetMessage('ML_ACCESS'))?>';
-ML_MESS.AccessTitle = '<?= addslashes(GetMessage('ML_ACCESS_TITLE'))?>';
+ML_MESS.Edit = '<?= GetMessageJS('ML_EDIT')?>';
+ML_MESS.Delete = '<?= GetMessageJS('ML_DELETE')?>';
+ML_MESS.Access = '<?= GetMessageJS('ML_ACCESS')?>';
+ML_MESS.AccessTitle = '<?= GetMessageJS('ML_ACCESS_TITLE')?>';
 
-ML_MESS.AddElement = '<?= addslashes(GetMessage('ML_ADD_ELEMENT'))?>';
-ML_MESS.AddElementTitle = '<?= addslashes(GetMessage('ML_ADD_ELEMENT_TITLE'))?>';
-ML_MESS.AddCollection = '<?= addslashes(GetMessage('ML_ADD_COLLECTION'))?>';
-ML_MESS.AddCollectionTitle = '<?= addslashes(GetMessage('ML_ADD_COLLECTION_TITLE'))?>';
-ML_MESS.MultiDelConfirm = '<?= addslashes(GetMessage('ML_MULTI_DEL_CONFIRM'))?>';
-ML_MESS.Decreased = '<?= addslashes(GetMessage('ML_DECREASED'))?>';
+ML_MESS.AddElement = '<?= GetMessageJS('ML_ADD_ELEMENT')?>';
+ML_MESS.AddElementTitle = '<?= GetMessageJS('ML_ADD_ELEMENT_TITLE')?>';
+ML_MESS.AddCollection = '<?= GetMessageJS('ML_ADD_COLLECTION')?>';
+ML_MESS.AddCollectionTitle = '<?= GetMessageJS('ML_ADD_COLLECTION_TITLE')?>';
+ML_MESS.MultiDelConfirm = '<?= GetMessageJS('ML_MULTI_DEL_CONFIRM')?>';
+ML_MESS.Decreased = '<?= GetMessageJS('ML_DECREASED')?>';
 
-ML_MESS.ChangeType = '<?= addslashes(GetMessage('ML_CHANGE_TYPE'))?>';
-ML_MESS.ChangeTypeTitle = '<?= addslashes(GetMessage('ML_CHANGE_TYPE_TITLE'))?>';
-ML_MESS.ChangeTypeError = '<?= addslashes(GetMessage('ML_CHANGE_TYPE_ERROR'))?>';
-ML_MESS.ChangeTypeChildConf = '<?= addslashes(GetMessage('ML_CHANGE_TYPE_CHILD_CONF'))?>';
+ML_MESS.ChangeType = '<?= GetMessageJS('ML_CHANGE_TYPE')?>';
+ML_MESS.ChangeTypeTitle = '<?= GetMessageJS('ML_CHANGE_TYPE_TITLE')?>';
+ML_MESS.ChangeTypeError = '<?= GetMessageJS('ML_CHANGE_TYPE_ERROR')?>';
+ML_MESS.ChangeTypeChildConf = '<?= GetMessageJS('ML_CHANGE_TYPE_CHILD_CONF')?>';
 <?
 	}
 
@@ -1090,7 +1095,7 @@ ML_MESS.ChangeTypeChildConf = '<?= addslashes(GetMessage('ML_CHANGE_TYPE_CHILD_C
 		{
 			$title = isset($Params['title']) ? $Params['title'] : GetMessage('ML_BR_BUT_ML_TITLE');
 			?>
-			<input  id="<?= $inputId?>" style="display: none;"/>
+			<input id="<?= $inputId?>" style="display: none;"/>
 			<input type="button" value="<?= $value?>" title="<?= $title?>" onclick="<?= $arMLConfig['event']?>();"/>
 			<?
 		}
@@ -1103,28 +1108,31 @@ ML_MESS.ChangeTypeChildConf = '<?= addslashes(GetMessage('ML_CHANGE_TYPE_CHILD_C
 		{
 			$cid = 'bxmlbut'.$inputId;
 		?>
-<style>
-div.bx-ml-pnbutton{float:left; cursor: pointer; width: 25px; height: 21px; margin:-1px 0 0 2px;}
-div.bx-ml-pnbutton div.bx-pn1{background: url(/bitrix/images/fileman/medialib/browse.gif); width: 14px; height: 21px; float: left;}
-div.bx-ml-pnbutton div.bx-pn2{background: url(/bitrix/images/fileman/medialib/browse.gif) -14px 0; width: 10px; height: 21px; float: left;}
-div.bx-ml-pnbutton div.bx-pressed{background: url(/bitrix/images/fileman/medialib/browse.gif) -39px 0;}
-.bxml-empty-icon{height: 22px !important; width: 20px !important;}
-</style>
 
 <script>
-if (!window.<?= $cid?>_menu)
+if (!window.<?= $cid?>_onclick)
 {
-	window.<?= $cid?>_menu = new BX.CMenu();
-	function <?= $cid?>_onclick(pEl){
-		window.<?= $cid?>_menu.ShowMenu(pEl, [
-		{ICONCLASS : 'bxml-empty-icon', DEFAULT: <?= $useMLDefault ? 'true' : 'false'?>, TEXT : '<?= addslashes(GetMessage('ML_BR_BUT_ML'))?>', TITLE: '<?= addslashes(GetMessage('ML_BR_BUT_ML_TITLE'))?>', ONCLICK: '<?= $arMLConfig['event']?>();'},
-		{ICONCLASS : 'bxml-empty-icon', DEFAULT: <?= $useMLDefault ? 'false' : 'true'?>, TEXT : '<?= addslashes(GetMessage('ML_BR_BUT_FD'))?>',TITLE: '<?= addslashes(GetMessage('ML_BR_BUT_FD_TITLE'))?>', ONCLICK: '<?= $event?>();'}
-	]);}
+	window.<?= $cid?>_onclick = function (pEl)
+	{
+		if (!!pEl.OPENER)
+			return true;
+
+		pEl.OPENER = new BX.COpener({
+			DIV: pEl,
+			TYPE: 'click',
+			MENU: [
+				{ICONCLASS : 'bxml-empty-icon', DEFAULT: <?= $useMLDefault ? 'true' : 'false'?>, TEXT : '<?= GetMessageJS('ML_BR_BUT_ML')?>', TITLE: '<?= GetMessageJS('ML_BR_BUT_ML_TITLE')?>', ONCLICK: '<?= $arMLConfig['event']?>();'},
+				{ICONCLASS : 'bxml-empty-icon', DEFAULT: <?= $useMLDefault ? 'false' : 'true'?>, TEXT : '<?= GetMessageJS('ML_BR_BUT_FD')?>',TITLE: '<?= GetMessageJS('ML_BR_BUT_FD_TITLE')?>', ONCLICK: '<?= $event?>();'}
+			]
+		});
+
+		pEl.OPENER.Toggle();
+	}
 }
 </script>
 
 <div class="bx-ml-pnbutton">
-<div class="bx-pn1" title="<?= GetMessage('ML_BR_BUT_ML_TITLE')?>" onclick="<?= $useMLDefault ? $arMLConfig['event'] : $event?>();"></div>
+<div class="bx-pn1" title="<?= GetMessage('ML_BR_BUT_ML_TITLE')?>" onclick="<?= ($useMLDefault ? $arMLConfig['event'] : $event)?>();"></div>
 <div class="bx-pn2" title="<?= GetMessage('ML_BR_BUT_SEL')?>" onclick="<?= $cid?>_onclick(this);"></div>
 </div>
 		<?
@@ -1317,547 +1325,18 @@ window.MLSearchResult = [
 		$cloudInput = false
 	)
 	{
-		global $USER;
-		$io = CBXVirtualIo::GetInstance();
-
-		$arFile = CFile::GetFileArray($strImageID);
-		//Check if not ID but file path was given
-		if(!is_array($arFile))
-		{
-			$strFilePath = $_SERVER["DOCUMENT_ROOT"].$strImageID;
-			if($io->FileExists($strFilePath))
-			{
-				$flTmp = $io->GetFile($strFilePath);
-				$arFile = array(
-					"PATH" => $strImageID,
-					"FILE_SIZE" => $flTmp->GetFileSize(),
-					"DESCRIPTION" => "",
-				);
-
-				$arImageSize = CFile::GetImageSize($strFilePath);
-				if(is_array($arImageSize))
-				{
-					$arFile["WIDTH"] = $arImageSize[0];
-					$arFile["HEIGHT"] = $arImageSize[1];
-				}
-			}
-		}
-
-		$tabCount = 0;
-		$arTabs = array();
-
-		if(is_array($fileInput))
-		{
-			if(!array_key_exists("NAME", $fileInput))
-				$fileInput["NAME"] = $strInputName;
-			if(!array_key_exists("ID", $fileInput))
-				$fileInput["ID"] = preg_replace("/[^a-z0-9_]/i", "_", $fileInput["NAME"])."_file";
-			if(!array_key_exists("SIZE", $fileInput) || intval($fileInput["SIZE"]) <= 0)
-				$fileInput["SIZE"] = 35;
-			else
-				$fileInput["SIZE"] = intval($fileInput["SIZE"]);
-			if(!array_key_exists("LABEL", $fileInput))
-				$fileInput["LABEL"] = GetMessage("ML_IF_SELECT_FILE");
-			$arTabs[] = array(
-				"DIV" => "file",
-				"ICON" => "file",
-				"NAME" => GetMessage("ML_IF_TAB_FILE"),
-				"TITLE" => GetMessage("ML_IF_TAB_FILE_TITLE"),
-			);
-		}
-
-		if(is_array($servInput))
-		{
-			if(!array_key_exists("NAME", $servInput))
-				$servInput["NAME"] = $strInputName;
-			if(!array_key_exists("ID", $servInput))
-				$servInput["ID"] = preg_replace("/[^a-z0-9_]/i", "_", $servInput["NAME"])."_serv";
-			if(!array_key_exists("SIZE", $servInput) || intval($servInput["SIZE"]) <= 0)
-				$servInput["SIZE"] = 35;
-			else
-				$servInput["SIZE"] = intval($servInput["SIZE"]);
-			if(!array_key_exists("LABEL", $servInput))
-			{
-				if(is_array($fileInput))
-					$servInput["LABEL"] = $fileInput["LABEL"];
-				else
-					$servInput["LABEL"] = GetMessage("ML_IF_SELECT_FILE");
-			}
-			$arTabs[] = array(
-				"DIV" => "server",
-				"ICON" => "server",
-				"NAME" => GetMessage("ML_IF_TAB_SERV"),
-				"TITLE" => GetMessage("ML_IF_TAB_SERV_TITLE"),
-			);
-		}
-
-		if(COption::GetOptionString('fileman', "use_medialib", "Y") != "Y")
-			$pathInput = false;
-
-		if(is_array($pathInput))
-		{
-			if(!array_key_exists("NAME", $pathInput))
-				$pathInput["NAME"] = $strInputName;
-			if(!array_key_exists("ID", $pathInput))
-				$pathInput["ID"] = preg_replace("/[^a-z0-9_]/i", "_", $pathInput["NAME"])."_path";
-			if(!array_key_exists("SIZE", $pathInput) || intval($pathInput["SIZE"]) <= 0)
-				$pathInput["SIZE"] = 35;
-			else
-				$pathInput["SIZE"] = intval($pathInput["SIZE"]);
-			if(!array_key_exists("LABEL", $pathInput))
-			{
-				if(is_array($fileInput))
-					$pathInput["LABEL"] = $fileInput["LABEL"];
-				else
-					$pathInput["LABEL"] = GetMessage("ML_IF_SELECT_FILE");
-			}
-			$arTabs[] = array(
-				"DIV" => "media",
-				"ICON" => "media",
-				"NAME" => GetMessage("ML_IF_TAB_MEDIA"),
-				"TITLE" => GetMessage("ML_IF_TAB_MEDIA_TITLE"),
-			);
-		}
-
-		if(
-			is_array($cloudInput)
-			&& $USER->CanDoOperation("clouds_browse")
-			&& CModule::IncludeModule("clouds")
-			&& CCloudStorage::HasActiveBuckets()
-		)
-		{
-			if(!array_key_exists("NAME", $cloudInput))
-				$cloudInput["NAME"] = $strInputName;
-			if(!array_key_exists("ID", $cloudInput))
-				$cloudInput["ID"] = preg_replace("/[^a-z0-9_]/i", "_", $cloudInput["NAME"])."_cloud";
-			if(!array_key_exists("SIZE", $cloudInput) || intval($cloudInput["SIZE"]) <= 0)
-				$cloudInput["SIZE"] = 35;
-			else
-				$cloudInput["SIZE"] = intval($cloudInput["SIZE"]);
-			if(!array_key_exists("LABEL", $cloudInput))
-			{
-				if(is_array($fileInput))
-					$cloudInput["LABEL"] = $fileInput["LABEL"];
-				else
-					$cloudInput["LABEL"] = GetMessage("ML_IF_SELECT_FILE");
-			}
-			$arTabs[] = array(
-				"DIV" => "clouds",
-				"ICON" => "clouds",
-				"NAME" => GetMessage("ML_IF_TAB_CLOUDS"),
-				"TITLE" => GetMessage("ML_IF_TAB_CLOUDS_TITLE"),
-			);
-		}
-		else
-			$cloudInput = false;
-
-		if(is_array($descInput))
-		{
-			if(!array_key_exists("NAME", $descInput))
-			{
-				$p = strpos($strInputName, "[");
-				if($p > 0)
-					$descInput["NAME"] = substr($strInputName, 0, $p)."_descr".substr($strInputName, $p);
-				else
-					$descInput["NAME"] = $strInputName."_descr";
-			}
-			$descInput["ID"] = preg_replace("/[^a-z0-9_]/i", "_", $descInput["NAME"]);
-			if(!array_key_exists("SIZE", $descInput) || intval($descInput["SIZE"]) <= 0)
-				$descInput["SIZE"] = 35;
-			else
-				$descInput["SIZE"] = intval($descInput["SIZE"]);
-			if(!array_key_exists("LABEL", $descInput))
-				$descInput["LABEL"] = GetMessage("ML_IF_DESCRIPTION");
-
-			if($arFile)
-				$descInput["VALUE"] = $arFile["DESCRIPTION"];
-		}
-
-		if(is_array($delInput))
-		{
-			if(!array_key_exists("NAME", $delInput))
-			{
-				$p = strpos($strInputName, "[");
-				if($p > 0)
-					$delInput["NAME"] = substr($strInputName, 0, $p)."_del".substr($strInputName, $p);
-				else
-					$delInput["NAME"] = $strInputName."_del";
-			}
-			if(!array_key_exists("LABEL", $delInput))
-				$delInput["LABEL"] = GetMessage("ML_IF_DELETE_FILE");
-		}
-
-		$bFileExists = false;
-		if($arFile)
-		{
-			if(isset($arFile["PATH"]))
-				$sImagePath = $arFile["PATH"];
-			else
-				$sImagePath = $arFile["SRC"];
-
-			if(
-				$arFile["HANDLER_ID"]
-				|| (defined("BX_IMG_SERVER") && substr($sImagePath, 0, strlen(BX_IMG_SERVER)) === BX_IMG_SERVER)
-				|| $io->FileExists($_SERVER["DOCUMENT_ROOT"].$sImagePath)
+		return CFileInput::Show($strInputName,
+			$strImageID,
+			$showInfo,
+			array(
+				'upload' => $fileInput,
+				'medialib' => $pathInput,
+				'file_dialog' => $servInput,
+				'cloud' => $cloudInput,
+				'del' => $delInput,
+				'description' => $descInput
 			)
-			{
-				$bFileExists = true;
-
-				$intWidth = intval($arFile["WIDTH"]);
-				$intHeight = intval($arFile["HEIGHT"]);
-				$intSize = CFile::FormatSize($arFile["FILE_SIZE"]);
-			}
-		}
-
-
-		$strImageHTML = "";
-
-		ob_start();
-
-		if($arFile && (is_array($showInfo) || is_array($descInput) || ($bFileExists && is_array($delInput)))):
-
-			ob_start();
-
-			if(is_array($showInfo))
-			{
-				$showInfo["ID"] = preg_replace("/[^a-z0-9_]/i", "_", $strInputName)."_info";
-				if(array_key_exists("MAX_SIZE", $showInfo) && is_array($showInfo["MAX_SIZE"]))
-				{
-					$iMaxW = intval($showInfo["MAX_SIZE"]["W"]);
-					$iMaxH = intval($showInfo["MAX_SIZE"]["H"]);
-				}
-				else
-				{
-					$iMaxW = 0;
-					$iMaxH = 0;
-				}
-
-				if($bFileExists)
-				{
-					$imgPath = CUtil::addslashes(htmlspecialcharsEx($sImagePath));
-					$bImageShowed = false;
-					if($showInfo["IMAGE"] == "Y" && $intWidth > 0 && $intHeight > 0)
-					{
-						if($iMaxW > 0 && $iMaxH > 0) //need to check scale, maybe show actual size in the popup window
-						{
-							//check for max dimensions exceeding
-							if($intWidth > $iMaxW || $intHeight > $iMaxH)
-							{
-								$coeff = ($intWidth/$iMaxW > $intHeight/$iMaxH? $intWidth/$iMaxW : $intHeight/$iMaxH);
-								if($showInfo["IMAGE_POPUP"] == "Y") //show in JS window
-								{
-									?><tr><td class="img-control-image">
-									<?CFile::OutputJSImgShw();?>
-									<a title="<?echo GetMessage("FILE_ENLARGE")?>" onclick="ImgShw('<?= $imgPath?>','<?echo $intWidth?>','<?echo $intHeight?>', ''); return false;" href="<?= $imgPath?>" target="_blank"><img border="0" id="<?echo $showInfo["ID"]?>" src="<?= $imgPath?>" width="<?echo intval(roundEx($intWidth/$coeff))?>" height="<?echo intval(roundEx($intHeight/$coeff))?>" /></a>
-									</td></tr><?
-									$bImageShowed = true;
-								}
-							}
-							else
-							{
-								?><tr><td class="img-control-image">
-								<img id="<?echo $showInfo["ID"]?>" src="<?= $imgPath?>" width="<?echo $intWidth?>" height="<?echo $intHeight?>">
-								</td></tr><?
-								$bImageShowed = true;
-							}
-						}
-						else
-						{
-							?><tr><td class="img-control-image">
-							<img id="<?echo $showInfo["ID"]?>" src="<?= $imgPath?>" width="<?= $intWidth?>" height="<?= $intHeight?>">
-							</td></tr><?
-							$bImageShowed = true;
-						}
-					}
-
-					if(!$bImageShowed)
-					{
-						?><tr><td class="img-control-image"><div style="text-align:left"><?
-						if($showInfo["PATH"] == "Y")
-							echo GetMessage("FILE_TEXT").": <a href=\"".htmlspecialchars($sImagePath)."\">".htmlspecialcharsEx($sImagePath)."</a>";
-						if($showInfo["DIMENSIONS"] == "Y" && $intWidth>0 && $intHeight>0)
-						{
-							echo "<br>".GetMessage("FILE_WIDTH").': '.$intWidth;
-							echo "<br>".GetMessage("FILE_HEIGHT").': '.$intHeight;
-						}
-						if($showInfo["FILE_SIZE"] == "Y")
-							echo "<br>".GetMessage("FILE_SIZE").': '.$intSize;
-						?></div></td></tr><?
-					}
-				}
-				else
-				{
-					?><tr><td class="img-control-image"><div style="text-align:left"><?
-					echo GetMessage("FILE_NOT_FOUND").": ".htmlspecialcharsEx($sImagePath);
-					?></td></tr><?
-				}
-			}
-
-			if(is_array($descInput))
-			{
-				?><tr><td class="img-control-descr">
-				<label><?echo $descInput["LABEL"]?><br>
-				<input type="text" name="<?echo htmlspecialchars($descInput["NAME"])?>" id="<?echo htmlspecialchars($descInput["ID"])?>" size="<?echo $descInput["SIZE"]?>" value="<?echo htmlspecialchars($descInput["VALUE"])?>">
-				</label>
-				</td></tr><?
-			}
-
-			if($bFileExists && is_array($delInput))
-			{
-				?><tr><td class="img-control-del">
-				<label><input type="checkbox" name="<?echo htmlspecialchars($delInput["NAME"])?>" value="Y" id="<?echo htmlspecialchars($delInput["NAME"])?>" /> <?echo $delInput["LABEL"]?></label>
-				</td></tr><?
-			}
-
-			$strImageHTML = ob_get_contents();
-			ob_end_clean();
-		endif;
-
-		if(is_array($scaleIcon))
-		{
-			$sHintRows = "";
-			if($scaleIcon["SCALE"]=="Y")
-			{
-				$sHintRows .= '<tr valign="top"><td colspan="2" class="bx-grey">'.GetMessage("ML_IF_SCALE_HINT").'</td>';
-				$sHintRows .= '<tr valign="top"><td class="bx-grey" nowrap>'.GetMessage("ML_IF_SCALE_WIDTH").'</td><td nowrap>'.intval($scaleIcon["WIDTH"]).'</td></tr>';
-				$sHintRows .= '<tr valign="top"><td class="bx-grey" nowrap>'.GetMessage("ML_IF_SCALE_HEIGHT").'</td><td nowrap>'.intval($scaleIcon["HEIGHT"]).'</td></tr>';
-				if(is_array($fileInput))
-					$fileInput["SCALE_HINT_HTML"] = '&nbsp;<img id="'.$fileInput["ID"].'_scale" src="/bitrix/images/fileman/medialib/tabs/icon_resized.gif">';
-				if(is_array($servInput))
-					$servInput["SCALE_HINT_HTML"] = '&nbsp;<img id="'.$servInput["ID"].'_scale" src="/bitrix/images/fileman/medialib/tabs/icon_resized.gif">';
-				if(is_array($pathInput))
-					$pathInput["SCALE_HINT_HTML"] = '&nbsp;<img id="'.$pathInput["ID"].'_scale" src="/bitrix/images/fileman/medialib/tabs/icon_resized.gif">';
-			}
-			else
-			{
-				$sHintRows .= '<tr valign="top"><td colspan="2" class="bx-grey">'.GetMessage("ML_IF_NO_SCALE_HINT").'</td>';
-				if(is_array($fileInput))
-					$fileInput["SCALE_HINT_HTML"] = '&nbsp;<img id="'.$fileInput["ID"].'_scale" src="/bitrix/images/fileman/medialib/tabs/icon_original.gif">';
-				if(is_array($servInput))
-					$servInput["SCALE_HINT_HTML"] = '&nbsp;<img id="'.$servInput["ID"].'_scale" src="/bitrix/images/fileman/medialib/tabs/icon_original.gif">';
-				if(is_array($pathInput))
-					$pathInput["SCALE_HINT_HTML"] = '&nbsp;<img id="'.$pathInput["ID"].'_scale" src="/bitrix/images/fileman/medialib/tabs/icon_original.gif">';
-			}
-			$sHint = '<table cellspacing="0" border="0" style="font-size:100%">'.$sHintRows.'</table>';
-		}
-		else
-		{
-			if(is_array($fileInput))
-				$fileInput["SCALE_HINT_HTML"] = '';
-			if(is_array($servInput))
-				$servInput["SCALE_HINT_HTML"] = '';
-			if(is_array($pathInput))
-				$pathInput["SCALE_HINT_HTML"] = '';
-		}
-
-		if(count($arTabs))
-		{
-			$tabControl = new CMedialibTabControl(preg_replace("/[^a-z0-9_]/i", "_", $strInputName)."_tab", $arTabs);
-			$bFirst = true;
-			if(is_array($fileInput))
-			{
-				$tabControl->BeginTab();
-				?><table width="95%" cellpadding="2" cellspacing="2">
-				<tr><td colspan="2"><?echo $fileInput["LABEL"]?></td></tr>
-				<tr valign="center"><td><input type="file" id="<?echo htmlspecialchars($fileInput["ID"])?>" name="<?echo htmlspecialchars($fileInput["NAME"])?>" size="<?echo $fileInput["SIZE"]?>" <?if(!$bFirst) echo "disabled"?>></td><td align="left" width="100%"><?echo $fileInput["SCALE_HINT_HTML"]?>&nbsp;</td></tr>
-				<?if(is_array($descInput) && !$arFile):?>
-					<tr><td colspan="2"><?echo $descInput["LABEL"]?></td></tr>
-					<tr><td colspan="2"><input type="text" name="<?echo htmlspecialchars($descInput["NAME"])?>" id="<?echo htmlspecialchars($descInput["ID"])?>_file" size="<?echo $descInput["SIZE"]?>" value="<?echo htmlspecialchars($descInput["VALUE"])?>" <?if(!$bFirst) echo "disabled"?>></td></tr>
-				<?endif;?>
-				</table><?
-				if($fileInput["SCALE_HINT_HTML"]):?>
-					<script>
-					// TODO: use new BX.CHint instead
-					window.structHint<?echo $fileInput["ID"]."_scale"?> = new BXHint(
-						'<?= CUtil::JSEscape($sHint)?>',
-						document.getElementById('<?echo $fileInput["ID"]."_scale"?>')
-					);
-					</script>
-				<?endif;
-
-				$bFirst = false;
-				$tabControl->EndTab();
-			}
-
-			if(is_array($servInput))
-			{
-				$tabControl->BeginTab();
-				?><table width="100%" cellpadding="2" cellspacing="2">
-				<tr><td colspan="3"><?echo $servInput["LABEL"]?></td></tr>
-				<tr valign="center"><td><input type="text" id="<?echo htmlspecialchars($servInput["ID"])?>" size="<?echo $servInput["SIZE"]?>" value="<?echo htmlspecialchars($servInput["VALUE"])?>" name="<?echo htmlspecialchars($servInput["NAME"])?>" <?if(!$bFirst) echo "disabled"?>></td><td>
-				<input type="button" id="mlsd_<?echo htmlspecialchars($servInput["ID"])?>_open" value="..." style="width: 30px;" OnClick="<?echo htmlspecialchars("window.inputId = '".CUtil::JSEscape($servInput["ID"])."';serv_OpenML()")?>"></td><td align="left" width="100%"><?echo $servInput["SCALE_HINT_HTML"]?>&nbsp;</td></tr>
-				<?if(is_array($descInput) && !$arFile):?>
-					<tr><td colspan="3"><?echo $descInput["LABEL"]?></td></tr>
-					<tr><td colspan="3"><input type="text" name="<?echo htmlspecialchars($descInput["NAME"])?>" id="<?echo htmlspecialchars($descInput["ID"])?>_serv" size="<?echo $descInput["SIZE"]?>" value="<?echo htmlspecialchars($descInput["VALUE"])?>" <?if(!$bFirst) echo "disabled"?>></td></tr>
-				<?endif;?>
-				</table><?
-				if($fileInput["SCALE_HINT_HTML"]):?>
-					<script>
-					// TODO: use new BX.CHint instead
-					window.structHint<?echo $servInput["ID"]."_scale"?> = new BXHint(
-						'<?= CUtil::JSEscape($sHint)?>',
-						document.getElementById('<?echo $servInput["ID"]."_scale"?>')
-					);
-					</script>
-				<?endif;
-				CAdminFileDialog::ShowScript
-				(
-					Array(
-						"event" => "serv_OpenML",
-						"arResultDest" => array("FUNCTION_NAME" => "setServerInputFromDialog"),
-						"arPath" => array("SITE" => SITE_ID, "PATH" =>"/upload"),
-						"select" => 'F',// F - file only, D - folder only
-						"operation" => 'O',
-						"showUploadTab" => true,
-						"showAddToMenuTab" => false,
-						"allowAllFiles" => true,
-						"SaveConfig" => true,
-					)
-				);
-				?><script>
-				function setServerInputFromDialog(filename, path, site, title, menu)
-				{
-					var inp = document.getElementById(window.inputId);
-					if(inp)
-						inp.value = path + (path == '/'? '': '/') + filename;
-				}
-				</script><?
-				$bFirst = false;
-				$tabControl->EndTab();
-			}
-
-			if(is_array($pathInput))
-			{
-				$tabControl->BeginTab();
-
-				$ar = array(
-					"event" => "media_OpenML",
-					"arResultDest" => array(
-						"FUNCTION_NAME" => "setMediaInputFromDialog",
-					),
-				);
-				if(is_array($descInput))
-				{
-					if($arFile)
-						$ar["description_id"] = $descInput["ID"];
-					else
-						$ar["description_id"] = $descInput["ID"]."_path";
-				}
-
-				?><table width="100%" cellpadding="2" cellspacing="2">
-				<tr><td colspan="3"><?echo $pathInput["LABEL"]?></td></tr>
-				<tr valign="center"><td><input type="text" id="<?echo htmlspecialchars($pathInput["ID"])?>" size="<?echo $pathInput["SIZE"]?>" value="" name="<?echo htmlspecialchars($pathInput["NAME"])?>" <?if(!$bFirst) echo "disabled"?>></td><td>
-				<input type="button" id="mlsd_<?echo htmlspecialchars($pathInput["ID"])?>_open" value="..." style="width: 30px;" OnClick="<?echo htmlspecialchars("window.inputId = '".CUtil::JSEscape($pathInput["ID"])."';window.descrId = '".CUtil::JSEscape($ar["description_id"])."';media_OpenML()")?>"></td><td align="left" width="100%"><?echo $pathInput["SCALE_HINT_HTML"]?>&nbsp;</td></tr>
-				<?if(is_array($descInput) && !$arFile):?>
-					<tr><td colspan="3"><?echo $descInput["LABEL"]?></td></tr>
-					<tr><td colspan="3"><input type="text" name="<?echo htmlspecialchars($descInput["NAME"])?>" id="<?echo htmlspecialchars($descInput["ID"])?>_path" size="<?echo $descInput["SIZE"]?>" value="<?echo htmlspecialchars($descInput["VALUE"])?>" <?if(!$bFirst) echo "disabled"?>></td></tr>
-				<?endif;?>
-				</table>
-				<?
-				if($fileInput["SCALE_HINT_HTML"]):?>
-					<script>
-					// TODO: use new BX.CHint instead
-					window.structHint<?echo $pathInput["ID"]."_scale"?> = new BXHint(
-						'<?= CUtil::JSEscape($sHint)?>',
-						document.getElementById('<?echo $pathInput["ID"]."_scale"?>')
-					);
-					</script>
-				<?endif;
-				CMedialib::ShowDialogScript($ar);
-				?><script>
-				function setMediaInputFromDialog(oItem)
-				{
-					var inp = document.getElementById(window.inputId);
-					if(inp)
-						inp.value = oItem.src;
-					var desc = document.getElementById(window.descrId);
-					if(desc)
-						desc.value = oItem.name;
-				}
-				</script><?
-				$bFirst = false;
-				$tabControl->EndTab();
-			}
-
-			if(is_array($cloudInput))
-			{
-				$tabControl->BeginTab();
-				?><table width="100%" cellpadding="2" cellspacing="2">
-				<tr><td colspan="3"><?echo $cloudInput["LABEL"]?></td></tr>
-				<tr valign="center"><td><input type="text" id="<?echo htmlspecialchars($cloudInput["ID"])?>" size="<?echo $cloudInput["SIZE"]?>" value="" name="<?echo htmlspecialchars($cloudInput["NAME"])?>" <?if(!$bFirst) echo "disabled"?>></td><td>
-				<input type="button" value="..." style="width: 30px;" OnClick="jsUtils.OpenWindow('/bitrix/admin/clouds_file_search.php?lang=<?echo LANGUAGE_ID?>&amp;n=<?echo htmlspecialchars($cloudInput["ID"])?>', 600, 500);"></td><td align="left" width="100%"><?echo $cloudInput["SCALE_HINT_HTML"]?>&nbsp;</td></tr>
-				<?if(is_array($descInput) && !$arFile):?>
-					<tr><td colspan="3"><?echo $descInput["LABEL"]?></td></tr>
-					<tr><td colspan="3"><input type="text" name="<?echo htmlspecialchars($descInput["NAME"])?>" id="<?echo htmlspecialchars($descInput["ID"])?>_cloud" size="<?echo $descInput["SIZE"]?>" value="<?echo htmlspecialchars($descInput["VALUE"])?>" <?if(!$bFirst) echo "disabled"?>></td></tr>
-				<?endif;?>
-				</table><?
-				if($fileInput["SCALE_HINT_HTML"]):?>
-					<script>
-					// TODO: use new BX.CHint instead
-					window.structHint<?echo $cloudInput["ID"]."_scale"?> = new BXHint(
-						'<?= CUtil::JSEscape($sHint)?>',
-						document.getElementById('<?echo $cloudInput["ID"]."_scale"?>')
-					);
-					</script>
-				<?endif;
-				$bFirst = false;
-				$tabControl->EndTab();
-			}
-
-			if($strImageHTML)
-			{
-				$tabControl->BeginEpilog();
-				?><table class="img-control img-control-tab" width="100%" cellpadding="0" cellspacing="0"><tr><td class="img-control-empty-top"><div class="empty" /></td></tr><?
-				echo $strImageHTML;
-				?><tr><td class="img-control-empty-bottom"><div class="empty" /></td></tr></table><?
-				$tabControl->EndEpilog();
-			}
-
-			$tabControl->Show();
-
-
-		}
-		else
-		{
-			if($strImageHTML)
-			{
-				?><table class="img-control img-control-alone"><tr><td class="img-control-empty-top"><div class="empty" /></td></tr><?
-				echo $strImageHTML;
-				?><tr><td class="img-control-empty-bottom"><div class="empty" /></td></tr></table><br><?
-			}
-		}
-
-		if($bImageShowed)
-		{
-			$sHintRows = "";
-			if($showInfo["PATH"] == "Y")
-				$sHintRows .= '<tr valign="top"><td class="bx-grey" nowrap>'.htmlspecialcharsEx(GetMessage("FILE_TEXT")).':</td><td nowrap>'.htmlspecialcharsEx($sImagePath).'</td></tr>';
-			if($showInfo["DIMENSIONS"] == "Y" && $intWidth>0 && $intHeight>0)
-			{
-				$sHintRows .= '<tr valign="top"><td class="bx-grey" nowrap>'.htmlspecialcharsEx(GetMessage("FILE_WIDTH")).':</td><td nowrap>'.htmlspecialcharsEx($intWidth).'</td></tr>';
-				$sHintRows .= '<tr valign="top"><td class="bx-grey" nowrap>'.htmlspecialcharsEx(GetMessage("FILE_HEIGHT")).':</td><td nowrap>'.htmlspecialcharsEx($intHeight).'</td></tr>';
-			}
-			if($showInfo["FILE_SIZE"] == "Y")
-				$sHintRows .= '<tr valign="top"><td class="bx-grey" nowrap>'.htmlspecialcharsEx(GetMessage("FILE_SIZE")).':</td><td nowrap>'.htmlspecialcharsEx($intSize).'</td></tr>';
-			if($sHintRows <> "")
-			{
-				$sHint = '<table cellspacing="0" border="0" style="font-size:100%">'.$sHintRows.'</table>';
-				?>
-				<script>
-				// TODO: use new BX.CHint instead
-				window.structHint<?echo $showInfo["ID"]?> = new BXHint(
-					'<?= CUtil::JSEscape($sHint)?>',
-					document.getElementById('<?echo $showInfo["ID"]?>'),
-					{width:false}
-				);
-				</script>
-				<?
-			}
-		}
-
-		$result = ob_get_contents();
-		ob_end_clean();
-		return $result;
+		);
 	}
 
 	function GetTypeById($id, $arMLTypes = false)
@@ -1875,49 +1354,85 @@ window.MLSearchResult = [
 	function GetTypes($arConfigTypes = array(), $bGetEmpties = false)
 	{
 		global $DB;
-		if ($bGetEmpties)
-			$q = "SELECT MT.*, MC.ML_TYPE FROM b_medialib_type MT LEFT JOIN b_medialib_collection MC ON (MT.ID=MC.ML_TYPE)";
-		else
-			$q = "SELECT * FROM b_medialib_type";
 
-
-		$err_mess = CMedialibCollection::GetErrorMess()."<br>Function: CMedialib::GetTypes<br>Line: ";
-		$res = $DB->Query($q, false, $err_mess);
-		$arMLTypes = array();
-		$arMLTypesInd = array();
-
-		while($arRes = $res->Fetch())
+		if (self::$bCache)
 		{
-			if ($arMLTypesInd[$arRes["ID"]])
-				continue;
+			$cache = new CPHPCache;
+			$cacheId = 'medialib_types_'.$bGetEmpties;
+			$cachePath = self::$cachePath.'types';
 
-			$typeIcon = "/bitrix/images/fileman/medialib/type_".strtolower($arRes["CODE"]).".gif";
-			if (!file_exists($_SERVER['DOCUMENT_ROOT'].$typeIcon))
-				$typeIcon = "/bitrix/images/fileman/medialib/type_default.gif";
-
-			if (count($arConfigTypes) > 0 && !in_array(strtolower($arRes["CODE"]), $arConfigTypes))
-				continue;
-
-			if ($arRes["SYSTEM"] == "Y")
+			if ($cache->InitCache(self::$cacheTime, $cacheId, $cachePath))
 			{
-				$arRes["NAME"] = GetMessage("ML_TYPE_".strtoupper($arRes["NAME"]));
-				$arRes["DESCRIPTION"] = GetMessage("ML_TYPE_".strtoupper($arRes["DESCRIPTION"]));
+				$res = $cache->GetVars();
+				$arMLTypes = $res["arMLTypes"];
+			}
+		}
+
+		if (!self::$bCache || !isset($arMLTypes))
+		{
+			if ($bGetEmpties)
+				$q = "SELECT MT.*, MC.ML_TYPE FROM b_medialib_type MT LEFT JOIN b_medialib_collection MC ON (MT.ID=MC.ML_TYPE)";
+			else
+				$q = "SELECT * FROM b_medialib_type";
+
+			$err_mess = CMedialibCollection::GetErrorMess()."<br>Function: CMedialib::GetTypes<br>Line: ";
+			$res = $DB->Query($q, false, $err_mess);
+			$arMLTypes = array();
+			$arMLTypesInd = array();
+
+			while($arRes = $res->Fetch())
+			{
+				if ($arMLTypesInd[$arRes["ID"]])
+					continue;
+
+				$typeIcon = "/bitrix/images/fileman/medialib/type_".strtolower($arRes["CODE"]).".gif";
+				if (!file_exists($_SERVER['DOCUMENT_ROOT'].$typeIcon))
+					$typeIcon = "/bitrix/images/fileman/medialib/type_default.gif";
+
+				if ($arRes["SYSTEM"] == "Y")
+				{
+					$arRes["NAME"] = GetMessage("ML_TYPE_".strtoupper($arRes["NAME"]));
+					$arRes["DESCRIPTION"] = GetMessage("ML_TYPE_".strtoupper($arRes["DESCRIPTION"]));
+				}
+
+				$arMLTypesInd[$arRes["ID"]] = true;
+
+				$arMLTypes[] = array(
+					"id" => $arRes["ID"],
+					"code" => $arRes["CODE"],
+					"name" => $arRes["NAME"],
+					"ext" => $arRes["EXT"],
+					"system" => $arRes["SYSTEM"] == "Y",
+					"desc" => $arRes["DESCRIPTION"],
+					"type_icon" => $typeIcon,
+					"empty" => !$arRes['ML_TYPE'] && ($arRes["CODE"] != "image" || $arRes["SYSTEM"] != "Y")
+				);
 			}
 
-			$arMLTypesInd[$arRes["ID"]] = true;
-
-			$arMLTypes[] = array(
-				"id" => $arRes["ID"],
-				"code" => $arRes["CODE"],
-				"name" => $arRes["NAME"],
-				"ext" => $arRes["EXT"],
-				"system" => $arRes["SYSTEM"] == "Y",
-				"desc" => $arRes["DESCRIPTION"],
-				"type_icon" => $typeIcon,
-				"empty" => !$arRes['ML_TYPE'] && ($arRes["CODE"] != "image" || $arRes["SYSTEM"] != "Y")
-			);
+			if (self::$bCache)
+			{
+				$cache->StartDataCache(self::$cacheTime, $cacheId, $cachePath);
+				$cache->EndDataCache(array(
+					"arMLTypes" => $arMLTypes
+				));
+			}
 		}
-		return $arMLTypes;
+
+		$result = array();
+		if (count($arConfigTypes) > 0)
+		{
+			foreach($arMLTypes as $type)
+			{
+				if (in_array(strtolower($type["code"]), $arConfigTypes))
+					$result[] = $type;
+			}
+		}
+		else
+		{
+			$result = $arMLTypes;
+		}
+
+		return $result;
 	}
 
 	function SetTypes($arTypes = array())
@@ -1965,6 +1480,8 @@ window.MLSearchResult = [
 					);
 			}
 		}
+
+		self::ClearCache(array("types"));
 	}
 
 	function DelTypes($arIds = array())
@@ -1978,6 +1495,8 @@ window.MLSearchResult = [
 			$strItems .= ",".IntVal($arIds[$i]);
 
 		$res = $DB->Query("DELETE FROM b_medialib_type WHERE ID in (".$strItems.")", false, "FILE: ".__FILE__."<br> LINE: ".__LINE__);
+
+		self::ClearCache(array("types"));
 
 		return $res;
 	}
@@ -2133,6 +1652,22 @@ window.bx_req_res = {
 			return true;
 
 		return false;
+	}
+
+	public static function ClearCache($arPath = false)
+	{
+		if ($arPath === false)
+			$arPath = array('types');
+		elseif (!is_array($arPath))
+			$arPath = array($arPath);
+
+		if (is_array($arPath) && count($arPath) > 0)
+		{
+			$cache = new CPHPCache;
+			foreach($arPath as $path)
+				if ($path != '')
+					$cache->CleanDir(self::$cachePath.$path);
+		}
 	}
 }
 
@@ -2736,140 +2271,11 @@ class CMedialibItem
 	}
 }
 
+// Deprecated and unused class. Placed here to prevent fatal errors in customized forms
 class CMedialibTabControl
 {
-	var $_id = "";
-	var $_key = "";
-	var $_tabs = array();
-	var $_current_tab = 0;
-	var $sEpilog = "";
-
 	function ShowScript()
 	{
-		static $bShowed = false;
-		if(!$bShowed)
-		{
-			CUtil::InitJSCore(array('ajax'));
-			?>
-			<script type="text/javascript" src="/bitrix/js/fileman/medialib/tabs.js?v=<?= filemtime($_SERVER["DOCUMENT_ROOT"].'/bitrix/js/fileman/medialib/tabs.js')?>"></script>
-			<?
-			$bShowed = true;
-		}
-	}
-
-	function CMedialibTabControl($id, $tabs)
-	{
-		$this->_id = $id;
-		$this->_tabs = $tabs;
-		$this->_key = md5(mt_rand());
-		$this->_uniq_id = $this->_id."_".$this->_key;
-	}
-
-	function BeginEpilog()
-	{
-		ob_start();
-	}
-
-	function EndEpilog()
-	{
-		$this->sEpilog = ob_get_contents();
-		ob_end_clean();
-	}
-
-	function BeginTab()
-	{
-		ob_start();
-	}
-
-	function EndTab()
-	{
-		$this->_tabs[$this->_current_tab]["CONTENT"] = ob_get_contents();
-		ob_end_clean();
-		$this->_current_tab++;
-	}
-
-	function Show()
-	{
-		$bClosed = strlen($this->sEpilog) <= 0;
-		CMedialibTabControl::ShowScript();
-		?>
-		<table class="bx-ml-tab-cont" cellspacing="0" cellpadding="0"><tr><td>
-		<table id="<?= $this->_uniq_id?>" class="imgtab-tabs" cellspacing="0" cellpadding="0" width="100%"><tr valign="top">
-		<td class="imgtab-none-sel"><div class="empty"></div></td>
-		<?
-		$this->__tabs = array();
-		for($i = 0; $i < count($this->_tabs); $i++)
-		{
-			$this->_tabs[$i]["TD_ID"] = $this->_id."_".$this->_tabs[$i]["DIV"];
-			$this->_tabs[$i]["DIV_ID"] = "div_".$this->_tabs[$i]["TD_ID"];
-			$this->__tabs[$i] = $this->_tabs[$i];
-			unset($this->__tabs[$i]['CONTENT']);
-		}
-		$this->__tabs = CUtil::PHPToJSObject($this->__tabs);
-
-		for($i = 0; $i < count($this->_tabs); $i++)
-		{
-			if($i == 0):?>
-
-				<td class="imgtab-sel" nowrap id="<?= $this->_tabs[$i]["TD_ID"]?>" onclick="InitMedialibTabControl('<?= $this->_uniq_id?>', <?= $this->__tabs?>);top.<?= $this->_uniq_id?>.SelectTab(this);"><table class="imgtab-tab" cellspacing="0" cellpadding="0"><tr valign="top"><td><img src="<?= "/bitrix/images/fileman/medialib/tabs/".$this->_tabs[$i]["ICON"].".gif"?>" /></td><td>&nbsp;<div title="<?= $this->_tabs[$i]["TITLE"]?>"><?= $this->_tabs[$i]["NAME"]?></div></td></tr></table></td>
-				<?if($i == count($this->_tabs)-1){?>
-					<td class="imgtab-sel-none" ><div class="empty"></div></td>
-				<?}else{?>
-					<td class="imgtab-sel-some" ><div class="empty"></div></td>
-				<?}?>
-			<?else:?>
-				<td class="imgtab-some" nowrap id="<?= $this->_tabs[$i]["TD_ID"]?>" onclick="InitMedialibTabControl('<?= $this->_uniq_id?>', <?= $this->__tabs?>); top.<?= $this->_uniq_id?>.SelectTab(this)"><table class="imgtab-tab" cellspacing="0" cellpadding="0"><tr valign="top"><td><img src="<?= "/bitrix/images/fileman/medialib/tabs/".$this->_tabs[$i]["ICON"].".gif"?>" /></td><td>&nbsp;<div title="<?= $this->_tabs[$i]["TITLE"]?>"><?= $this->_tabs[$i]["NAME"]?></div></td></tr></table></td>
-				<?if($i == count($this->_tabs)-1){?>
-					<td class="imgtab-some-none" ><div class="empty"></div></td>
-				<?}else{?>
-					<td class="imgtab-some-some" ><div class="empty"></div></td>
-				<?}?>
-			<?endif;
-		}
-		?>
-		<td class="imgtab-none" width="100%"><div class="empty"></div></td>
-		</tr></table>
-
-		</td></tr>
-		<tr><td class="imgtab-content <?echo $bClosed? "imgtab-content-closed": "imgtab-content-opened";?>">
-			<?
-			for($i = 0; $i < count($this->_tabs); $i++)
-			{
-				if($i == 0):?>
-					<div id="<?echo $this->_tabs[$i]["DIV_ID"]?>" >
-					<?echo $this->_tabs[$i]["CONTENT"]?>
-					</div>
-				<?else:?>
-					<div id="<?echo $this->_tabs[$i]["DIV_ID"]?>" style="display:none">
-					<?echo $this->_tabs[$i]["CONTENT"]?>
-					</div>
-				<?endif;
-				unset($this->_tabs[$i]["CONTENT"]);
-			}
-			?>
-		<?if($this->sEpilog):?>
-			<tr><td><?echo $this->sEpilog;?></td></tr>
-		<?endif;?>
-		</td></tr></table>
-
-		<script>
-		if (!window.InitMedialibTabControl)
-		{
-			function InitMedialibTabControl(uniq_id, tabs)
-			{
-				if (!top[uniq_id] || (top[uniq_id] && top[uniq_id].nodeType != undefined))
-				{
-					top[uniq_id] = new MedialibTabControl(uniq_id, tabs, '<?= filemtime($_SERVER["DOCUMENT_ROOT"].'/bitrix/js/fileman/medialib/tabs.css')?>');
-					BX.bind(window, "unload", function(){if (top[uniq_id]){top[uniq_id].Destroy();}});
-				}
-			}
-		}
-
-		InitMedialibTabControl('<?= $this->_uniq_id?>', <?= CUtil::PHPToJSObject($this->_tabs)?>);
-		BX.ready(function(){top.<?= $this->_uniq_id?>.SelectTab(BX('<?= $this->_tabs[0]["TD_ID"]?>'));});
-		</script>
-		<?
 	}
 }
-
 ?>

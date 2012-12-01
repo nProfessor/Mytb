@@ -3,8 +3,8 @@ if (BX.admin) return;
 
 BX.admin = {
 	/* settings */
-	__border_style: 'solid 1px red', // 'dashed 1px orange',
-	__bg_style: 'red', // 'dashed 1px orange',
+	__border_style: 'solid 1px #777f8c', // 'dashed 1px orange',
+	__bg_style: '#777f8c', // 'dashed 1px orange',
 	__border_dx: 0,
 	__border_min_height: 12,
 	__border_menu_timeout: 500,
@@ -337,20 +337,22 @@ BX.admin.panel = {
 		{
 			BX.setUnselectable(BX.admin.panel.DIV);
 
-			if (BX.admin.dynamic_mode)
+			q = BX('bx-panel-toggle');
+			if (q)
 			{
-				BX('bx-panel-small-toggle').onclick = BX('bx-panel-toggle').onclick = BX.admin.panel.__view_mode_toggle;
-			}
-			else
-			{
-				q = BX('bx-panel-toggle');
-				if (q)
+				q.onclick = function(event)
 				{
-					BX('bx-panel-small-toggle').onclick = q.onclick = function(e)
-					{
-						BX.showWait();
-					}
+					BX.admin.toggle.toggleStatus();
+					event = event || window.event;
+					BX.PreventDefault(event);
 				}
+			}
+
+			q = BX('bx-panel-toggle-icon');
+			if (q)
+			{
+				BX.bind(q, "mousedown", BX.proxy(BX.admin.toggle.start, BX.admin.toggle));
+				BX.bind(q, "click", BX.PreventDefault);
 			}
 
 			q = BX('bx-panel-hider');
@@ -359,7 +361,6 @@ BX.admin.panel = {
 				BX.admin.panel.DIV.ondblclick = BX('bx-panel-expander').onclick = q.onclick = BX.admin.panel.Collapse;
 
 				BX('bx-panel-tabs').ondblclick = BX.PreventDefault;
-				BX('bx-panel-userinfo').ondblclick = BX.PreventDefault;
 				var sw = BX('bx-panel-switcher');
 				if (sw) sw.ondblclick = BX.PreventDefault;
 			}
@@ -368,8 +369,12 @@ BX.admin.panel = {
 			if (q)
 			{
 				BX.bind(q, 'click', function() {
-					var bFixed = this.className == 'bx-panel-pin-fixed';
-					this.className = (bFixed) ? '' : 'bx-panel-pin-fixed';
+					var bFixed = BX.hasClass(this, 'bx-panel-pin-fixed');
+					if (bFixed)
+						BX.removeClass(this, 'bx-panel-pin-fixed');
+					else
+						BX.addClass(this, 'bx-panel-pin-fixed');
+
 					BX.userOptions.save('admin_panel', 'settings', 'fix', (bFixed? 'off':'on'));
 				});
 
@@ -384,11 +389,15 @@ BX.admin.panel = {
 
 				if (btn)
 				{
-					BX.admin.panel.buttons[i].HOVER_CSS
+					if (BX.admin.panel.buttons[i].HOVER_CSS)
 					{
 						btn.bx_hover_class = BX.admin.panel.buttons[i].HOVER_CSS;
+						if (BX.admin.panel.buttons[i].ACTIVE_CSS)
+							btn.bx_active_class = BX.admin.panel.buttons[i].ACTIVE_CSS;
+
 						BX.bind(btn, 'mouseover', BX.admin.panel.__btn_hover);
 						BX.bind(btn, 'mouseout', BX.admin.panel.__btn_hout);
+						BX.bind(btn, 'mousedown', BX.admin.panel.__btn_down);
 					}
 
 					if (BX.admin.panel.buttons[i].MENU)
@@ -432,24 +441,22 @@ BX.admin.panel = {
 
 	__view_mode_toggle: function(e)
 	{
-		var this1 = BX('bx-panel-small-toggle'), this2 = BX('bx-panel-toggle');
+		var this1 = BX('bx-panel-toggle');
 
 		var captiontext = BX('bx-panel-toggle-caption-mode');
 		if (this1.className=='bx-panel-toggle-on')
 		{
-			this1.className=this2.className='bx-panel-toggle-off';
+			this1.className='bx-panel-toggle-off';
 			captiontext.innerHTML=BX.message('ADMIN_SHOW_MODE_OFF');
 			BX.admin.dynamic_mode_show_borders = false;
-			this1.href = this2.href =
-				this1.href.replace('bitrix_include_areas=N', 'bitrix_include_areas=Y');
+			this1.href = this1.href.replace('bitrix_include_areas=N', 'bitrix_include_areas=Y');
 		}
 		else
 		{
-			this1.className=this2.className='bx-panel-toggle-on';
+			this1.className = 'bx-panel-toggle-on';
 			captiontext.innerHTML=BX.message('ADMIN_SHOW_MODE_ON');
 			BX.admin.dynamic_mode_show_borders = true;
-			this1.href = this2.href =
-				this1.href.replace('bitrix_include_areas=Y', 'bitrix_include_areas=N');
+			this1.href = this1.href.replace('bitrix_include_areas=Y', 'bitrix_include_areas=N');
 		}
 
 		if (null != this.BXHINT)
@@ -482,15 +489,54 @@ BX.admin.panel = {
 	{
 		this.bx_hover = false;
 		if (!BX.admin.panel._menu_open) BX.removeClass(this.parentNode.parentNode, this.bx_hover_class);
+		BX.admin.panel.__btn_inactive.apply(this);
 	},
-	__btn_menuopen: function() {
-		if (this.bx_hover) BX.admin.panel.__btn_hover.apply(this);
+
+	__btn_down: function()
+	{
+		//BX.bind(document, "mouseup", BX.proxy(BX.admin.panel.__btn_up, this));
+		BX.admin.panel.__btn_active.apply(this);
+	},
+
+	__btn_up : function()
+	{
+		BX.unbind(document, "mouseup", BX.proxy(BX.admin.panel.__btn_up, this));
+		BX.admin.panel.__btn_inactive.apply(this);
+	},
+
+	__btn_active: function()
+	{
+		this.bx_active = true;
+		if (!BX.admin.panel._menu_open)
+			BX.addClass(this.parentNode.parentNode, this.bx_active_class);
+	},
+
+	__btn_inactive: function()
+	{
+		this.bx_active = false;
+		if (!BX.admin.panel._menu_open)
+			BX.removeClass(this.parentNode.parentNode, this.bx_active_class);
+	},
+
+	__btn_menuopen: function()
+	{
+		if (this.bx_hover)
+			BX.admin.panel.__btn_hover.apply(this);
+
+		if (this.bx_active)
+			BX.admin.panel.__btn_active.apply(this);
+
 		BX.admin.panel._menu_open = true;
 	},
+
 	__btn_menuclose: function()
 	{
 		BX.admin.panel._menu_open = false;
-		if (!this.bx_hover) BX.admin.panel.__btn_hout.apply(this);
+		if (!this.bx_hover)
+			BX.admin.panel.__btn_hout.apply(this);
+
+		//if (!this.bx_active)
+		BX.admin.panel.__btn_inactive.apply(this);
 	},
 
 	RegisterButton: function(btn)
@@ -504,14 +550,24 @@ BX.admin.panel = {
 
 		BX.admin.panel.state.collapsed = !(BX.admin.panel.DIV.className.indexOf('bx-panel-folded')>-1);
 		var y_start = BX.admin.panel.DIV.offsetHeight;
-		if (!BX.admin.panel.state.collapsed)
+
+		var hider = BX("bx-panel-hider", true);
+		var expander = BX("bx-panel-expander", true);
+		var toggle = BX("bx-panel-toggle");
+
+		if (BX.admin.panel.state.collapsed)
 		{
-			BX.admin.panel.DIV.className=BX.admin.panel.DIV.className.replace(/\s*bx-panel-folded/ig, '');
+			BX.admin.toggle.unset();
+			BX("bx-panel-userinfo").insertBefore(toggle.parentNode.removeChild(toggle), expander);
+			BX.addClass(BX.admin.panel.DIV, "bx-panel-folded");
 		}
 		else
 		{
-			BX.admin.panel.DIV.className +=' bx-panel-folded';
+			BX.admin.toggle.unset();
+			BX("bx-panel-switcher").insertBefore(toggle.parentNode.removeChild(toggle), hider);
+			BX.removeClass(BX.admin.panel.DIV, "bx-panel-folded");
 		}
+
 		var dy = BX.admin.panel.DIV.offsetHeight - y_start;
 
 		BX.userOptions.save('admin_panel', 'settings', 'collapsed', (BX.admin.panel.state.collapsed ? 'on':'off'));
@@ -546,9 +602,7 @@ BX.admin.panel = {
 			BX.admin.panel.BACKDIV.style.display = 'none';
 			if(bIE)
 			{
-				BX.admin.panel.DIV.style.removeExpression("top");
-				BX.admin.panel.DIV.style.removeExpression("left");
-				BX.admin.panel.DIV.style.removeExpression("width");
+				BX.admin.panel.DIV.style.cssText = "position: static !important;";
 
 				if(BX.admin.panel.BACKFRAME)
 					BX.admin.panel.BACKFRAME.style.visibility = 'hidden';
@@ -560,6 +614,9 @@ BX.admin.panel = {
 			{
 				try{BX.admin.panel.DIV.style.setExpression("top", "0");} catch(e) {bIE = false;}
 			}
+
+			if (bIE)
+				BX.admin.panel.DIV.style.cssText = "";
 
 			BX.addClass(BX.admin.panel.DIV, bIE ? 'bx-panel-fixed-ie' : 'bx-panel-fixed');
 
@@ -637,35 +694,27 @@ BX.admin.panel = {
 		if (null == BX.admin.panel.NOTIFY)
 		{
 			BX.admin.panel.NOTIFY = BX.admin.panel.DIV.appendChild(BX.create('DIV', {
-				props: {className: 'bx-panel-notification'},
-				children: [
-					BX.create('DIV', {
-						props: {className: 'bx-panel-notification-close'},
-						children: [
-							BX.create('A', {
-								style: {cursor: 'pointer'},
-								events: {click: BX.admin.panel.hideNotify}
-							})
-						]
-					}),
-					BX.create('DIV', {
-						props: {className: 'bx-panel-notification-text'}
-					})
-				]
+				props: {className: 'adm-warning-block'},
+				html:
+					'<span class="adm-warning-text">'+(str||'&nbsp;')+'</span><span onclick="BX.admin.panel.hideNotify(this.parentNode)" class="adm-warning-close"></span>'
 			}));
+
 		}
 
-		BX.admin.panel.NOTIFY.lastChild.innerHTML = str || '&nbsp;';
-		BX.removeClass(BX.admin.panel.NOTIFY, 'bx-panel-notification-hidden');
+		BX.removeClass(BX.admin.panel.NOTIFY, 'adm-warning-animate');
+
 		BX.admin.panel.__adjustBackDiv();
 	},
+
 
 	hideNotify: function(element)
 	{
 		var element = BX.type.isDomNode(element)? element: this;
+
 		if (!!element && !!element.parentNode && !!element.parentNode.parentNode)
-			BX.remove(element.parentNode.parentNode);
-		BX.admin.panel.__adjustBackDiv();
+		{
+			BX.addClass(element, 'adm-warning-animate');
+		}
 
 		if (BX.type.isDomNode(element) && element.getAttribute('data-ajax') == "Y")
 		{
@@ -680,7 +729,11 @@ BX.admin.panel = {
 				});
 			}
 		}
+
+		(BX.defer(BX.admin.panel.__adjustBackDiv, this))();
+		setTimeout(BX.proxy(BX.admin.panel.__adjustBackDiv, this), 310);
 	}
+
 	/*,
 	setZIndex: function()
 	{
@@ -689,6 +742,193 @@ BX.admin.panel = {
 	}
 	*/
 };
+
+BX.admin.toggle = {
+
+	icon : null,
+	indicator : null,
+	toggle : null,
+	caption : null,
+
+	pageX : 0,
+	initIconPos : 0,
+	initIndicatorPos : 0,
+
+	minLeft : -3,
+	maxLeft : 17,
+
+	unset : function()
+	{
+		this.icon = this.indicator = this.toggle = this.caption = null;
+	},
+
+	start : function(event)
+	{
+		event = event || window.event;
+
+		if (!this._init() || !event)
+			return;
+
+		BX.fixEventPageX(event);
+		this.pageX = event.pageX;
+		this.initIconPos = parseInt(BX.style(this.icon, "left"));
+		this.initIndicatorPos = BX.hasClass(this.toggle, "bx-panel-toggle-on") ? -270 : -290;
+
+		BX.removeClass(this.toggle, "bx-panel-toggle-animate");
+
+		BX.bind(document, "mousemove", BX.proxy(this._onMouseMove, this));
+		BX.bind(document, "mouseup", BX.proxy(this._onMouseUp, this));
+
+		document.body.onselectstart = BX.False;
+		document.body.ondragstart = BX.False;
+		document.body.style.MozUserSelect = "none";
+	},
+
+	_init : function()
+	{
+		if (this.toggle)
+			return true;
+
+		this.toggle = BX("bx-panel-toggle");
+		this.icon = BX("bx-panel-toggle-icon");
+		this.indicator = BX("bx-panel-toggle-indicator");
+		this.caption = BX("bx-panel-toggle-caption-mode");
+
+		return (this.toggle && this.icon && this.indicator && this.caption);
+	},
+
+	_onMouseMove : function(event)
+	{
+		event = event || window.event;
+		BX.fixEventPageX(event);
+		this._moveToggle(event.pageX - this.pageX);
+	},
+
+	_onMouseUp : function()
+	{
+		var pos = parseInt(BX.style(this.icon, "left"));
+		if (this.initIconPos == pos)
+		{
+			this.toggleStatus();
+		}
+		else
+		{
+			var half = this.minLeft + Math.floor((this.maxLeft - this.minLeft) / 2);
+			if (pos >= half)
+			{
+				BX.addClass(this.toggle, "bx-panel-toggle-on bx-panel-toggle-animate");
+				BX.removeClass(this.toggle, "bx-panel-toggle-off");
+				this._changePosition(true);
+			}
+			else
+			{
+				BX.addClass(this.toggle, "bx-panel-toggle-off bx-panel-toggle-animate");
+				BX.removeClass(this.toggle, "bx-panel-toggle-on");
+				this._changePosition(false);
+			}
+		}
+
+		this.icon.style.cssText = "";
+		this.indicator.style.cssText = "";
+
+		BX.unbind(document, "mousemove", BX.proxy(this._onMouseMove, this));
+		BX.unbind(document, "mouseup", BX.proxy(this._onMouseUp, this));
+
+		document.body.onselectstart = null;
+		document.body.ondragstart = null;
+		document.body.style.MozUserSelect = "";
+	},
+
+	_changePosition : function(on)
+	{
+		var firstNode = this.caption.childNodes[0];
+
+		if ( (on && firstNode.id == "bx-panel-toggle-caption-mode-on") || (!on && firstNode.id == "bx-panel-toggle-caption-mode-off"))
+			return;
+		this.caption.appendChild(this.caption.removeChild(firstNode));
+
+		if (BX.admin.dynamic_mode)
+		{
+			if (on)
+			{
+				BX.admin.dynamic_mode_show_borders = true;
+				this.toggle.href = this.toggle.href.replace('bitrix_include_areas=Y', 'bitrix_include_areas=N');
+			}
+			else
+			{
+				BX.admin.dynamic_mode_show_borders = false;
+				this.toggle.href = this.toggle.href.replace('bitrix_include_areas=N', 'bitrix_include_areas=Y');
+			}
+
+			if (null != BX.admin.panel.BXHINT)
+				BX.admin.panel.BXHINT.Destroy();
+
+			BX.admin.panel.BXHINT = new BX.CHint({
+				parent: this.toggle,
+				title: BX.message('AMDIN_SHOW_MODE_TITLE'),
+				hint: BX.admin.dynamic_mode_show_borders
+					? BX.message('ADMIN_SHOW_MODE_ON_HINT')
+					: BX.message('ADMIN_SHOW_MODE_OFF_HINT'),
+				showOnce: true,
+				preventHide: true,
+				show_timeout: 0,
+				hide_timeout: 2000
+			});
+
+			BX.userOptions.save('admin_panel', 'settings', 'edit', (BX.admin.dynamic_mode_show_borders ? 'on' : 'off'));
+			BX.onCustomEvent(window, 'onDynamicModeChange', [BX.admin.dynamic_mode_show_borders]);
+		}
+		else
+		{
+			BX.reload(this.toggle.href);
+		}
+	},
+
+	_moveToggle : function(offset)
+	{
+		var newPos = this.initIconPos + offset;
+		newPos = Math.min(this.maxLeft, Math.max(newPos, this.minLeft));
+		this.icon.style.cssText = "left:" + newPos + "px !important";
+		this.indicator.style.cssText = "background-position: " + ( this.initIndicatorPos + newPos - this.initIconPos) + "px -1751px !important";
+
+	},
+
+	toggleStatus : function()
+	{
+		if (!this._init())
+			return;
+
+		if (BX.hasClass(this.toggle, "bx-panel-toggle-off"))
+		{
+			BX.addClass(this.toggle, "bx-panel-toggle-on bx-panel-toggle-animate");
+			BX.removeClass(this.toggle, "bx-panel-toggle-off");
+			this._changePosition(true);
+		}
+		else
+		{
+			BX.addClass(this.toggle, "bx-panel-toggle-off bx-panel-toggle-animate");
+			BX.removeClass(this.toggle, "bx-panel-toggle-on");
+			this._changePosition(false);
+		}
+	}
+};
+
+BX.admin.startMenuRecent = function(itemInfo)
+{
+	BX.ajax.get('/bitrix/admin/get_start_menu.php', {
+		mode: 'save_recent',
+		url: itemInfo['LINK'],
+		text: itemInfo['TEXT'],
+		title: itemInfo['TITLE'],
+		icon: itemInfo['GLOBAL_ICON'],
+		sessid:BX.bitrix_sessid()
+	});
+}
+
+BX.admin.startMenuFavAdd = function(back_url)
+{
+	window.location.href = '/bitrix/admin/favorite_edit.php?lang='+BX.message('LANGUAGE_ID')+'&name='+BX.util.urlencode(document.title)+'&addurl='+BX.util.urlencode(window.location.href)+'&encoded=Y' + (!!back_url ? '&back_url_pub=' + BX.util.urlencode(back_url) : '');
+}
 
 /************************** init admin panel **********************************/
 BX.ready(function() {

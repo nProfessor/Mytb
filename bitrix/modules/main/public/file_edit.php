@@ -44,8 +44,8 @@ if (strlen($filename) > 0 && ($mess = CFileMan::CheckFileName($filename)) !== tr
 	$bVarsFromForm = true;
 }
 
-$path = $io->CombinePath("/", $path);
 $path = urldecode($path);
+$path = $io->CombinePath("/", $path);
 
 $site = CFileMan::__CheckSite($site);
 if(!$site)
@@ -391,10 +391,6 @@ $obJSPopup->StartContent(
 ?>
 </form>
 
-<?//dont forget to remove it?>
-<script src="/bitrix/js/main/utils.js"></script>
-<script src="/bitrix/js/main/admin_tools.js"></script>
-
 <iframe src="javascript:void(0)" name="file_edit_form_target" height="0" width="0" style="display: none;"></iframe>
 <form action="/bitrix/admin/public_file_edit.php" name="editor_form" method="post" enctype="multipart/form-data" target="file_edit_form_target" style="margin: 0px; padding: 0px; ">
 <?
@@ -482,7 +478,8 @@ arEditorFastDialogs['asksave'] = function(pObj)
 						if(pObj.params.savetype == 'save')
 							BXFormSubmit();
 						window.oBXEditorDialog.Close(true);
-					}
+					},
+					className: 'adm-btn-save'
 				}),
 				new BX.CWindowButton(
 				{
@@ -497,7 +494,7 @@ arEditorFastDialogs['asksave'] = function(pObj)
 				window.oBXEditorDialog.btnCancel
 			]);
 
-			BX.addClass(window.oBXEditorDialog.PARTS.CONTENT, "bxed-dialog");
+			BX.addClass(window.oBXEditorDialog.PARTS.CONTENT_DATA, "bxed-dialog");
 		}
 	};
 };
@@ -544,7 +541,7 @@ function CheckEditorFinish()
 	{
 		var
 			h = parseInt(Params.height) - 2,
-			w = parseInt(Params.width) - 10;
+			w = parseInt(Params.width) - 3;
 
 		pMainObj.pWnd.style.height = h + "px";
 		pMainObj.pWnd.style.width = w + "px";
@@ -576,16 +573,25 @@ else: //if ($bDisableEditor)
 ?>
 <textarea name="<?=htmlspecialcharsbx($editor_name)?>" id="<?=htmlspecialcharsbx($editor_name)?>" style="height: 99%; width: 100%;"><?=htmlspecialcharsex($filesrc)?></textarea>
 <script type="text/javascript">
-var border = null, ta = null, wnd = BX.WindowManager.Get();
+var
+	border,
+	ta,
+	wnd = BX.WindowManager.Get();
 
 function TAResize(data)
 {
-	if (null == ta) ta = BX('<?=CUtil::JSEscape($editor_name)?>');
-	if (null == border) border = parseInt(BX.style(ta, 'border-left-width')) + parseInt(BX.style(ta, 'border-right-width'));
-	if (isNaN(border)) border = 0;
+	if (null == ta)
+		ta = BX('<?=CUtil::JSEscape($editor_name)?>');
+	if (null == border)
+		border = parseInt(BX.style(ta, 'border-left-width')) + parseInt(BX.style(ta, 'border-right-width'));
 
-	if (data.height) ta.style.height = (data.height - border - 10) + 'px';
-	if (data.width) ta.style.width = (data.width - border - 10) + 'px';
+	if (isNaN(border))
+		border = 0;
+
+	if (data.height)
+		ta.style.height = (data.height - border - 10) + 'px';
+	if (data.width)
+		ta.style.width = (data.width - border - 10) + 'px';
 }
 
 BX.addCustomEvent(wnd, 'onWindowResizeExt', TAResize);
@@ -595,7 +601,7 @@ TAResize(wnd.GetInnerPos());
 endif; //if (!$bDisableEditor)
 $obJSPopup->StartButtons();
 ?>
-	<input type="button" id="btn_popup_save" name="btn_popup_save" value="<?=GetMessage("JSPOPUP_SAVE_CAPTION")?>" onclick="BXFormSubmit();" title="<?=GetMessage("JSPOPUP_SAVE_CAPTION")?>" />
+	<input type="button" class="adm-btn-save" id="btn_popup_save" name="btn_popup_save" value="<?=GetMessage("JSPOPUP_SAVE_CAPTION")?>" onclick="BXFormSubmit();" title="<?=GetMessage("JSPOPUP_SAVE_CAPTION")?>" />
 <?
 $obJSPopup->ShowStandardButtons(array('cancel'));
 $obJSPopup->EndButtons();
@@ -604,6 +610,6 @@ if (CAutoSave::Allowed())
 {
 	$AUTOSAVE->checkRestore();
 }
-die();
+
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin_js.php");
 ?>

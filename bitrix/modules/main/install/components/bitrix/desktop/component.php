@@ -70,6 +70,9 @@ if (IsModuleInstalled('intranet'))
 if (!array_key_exists("GADGETS_FIXED", $arParams))
 	$arParams["GADGETS_FIXED"] = array();
 
+$arParams["DATE_TIME_FORMAT"] = trim(empty($arParams["DATE_TIME_FORMAT"]) ? $GLOBALS["DB"]->DateFormatToPHP(CSite::GetDateFormat("FULL")) : $arParams["DATE_TIME_FORMAT"]);
+$arParams["DATE_FORMAT"] = trim(empty($arParams["DATE_FORMAT"]) ? $GLOBALS["DB"]->DateFormatToPHP(CSite::GetDateFormat("SHORT")) : $arParams["DATE_FORMAT"]);
+	
 $arResult = Array();
 
 if($USER->IsAuthorized() && $APPLICATION->GetFileAccessPermission($APPLICATION->GetCurPage()) > "R" && !$arParams["DEFAULT_ID"])

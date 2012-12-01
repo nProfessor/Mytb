@@ -7,7 +7,6 @@ if ($USER->IsAdmin())
 		"section" => "bitrixcloud",
 		"sort" => 1645,
 		"text" => GetMessage("BCL_MENU_ITEM"),
-		"url" => "bitrixcloud_index.php?lang=".LANGUAGE_ID,
 		"icon" => "bitrixcloud_menu_icon",
 		"page_icon" => "bitrixcloud_page_icon",
 		"items_id" => "menu_bitrixcloud",
@@ -15,9 +14,10 @@ if ($USER->IsAdmin())
 			array(
 				"text" => GetMessage("BCL_MENU_CONTROL_ITEM"),
 				"url" => "bitrixcloud_cdn.php?lang=".LANGUAGE_ID,
-				"more_url" => array(
-					"bitrixcloud_cdn.php",
-				),
+			),
+			array(
+				"text" => GetMessage("BCL_MENU_BACKUP_ITEM"),
+				"url" => "bitrixcloud_backup.php?lang=".LANGUAGE_ID,
 			),
 		),
 	);

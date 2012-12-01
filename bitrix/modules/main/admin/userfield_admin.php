@@ -210,7 +210,7 @@ while($arRes = $rsData->NavNext(true, "f_")):
 	$arActions[] = array(
 		"ICON"=>"delete",
 		"TEXT"=>GetMessage("MAIN_DELETE"),
-		"ACTION"=>"if(confirm('".GetMessage('USERTYPE_DELETE_CONF')."')) ".$lAdmin->ActionDoGroup($f_ID, "delete")
+		"ACTION"=>"if(confirm('".GetMessage('USERTYPE_DELETE_CONF')."')) ".$lAdmin->ActionDoGroup($f_ID, "delete", 'back_url='.urlencode($back_url).'&list_url='.urlencode($list_url))
 	);
 
 	$row->AddActions($arActions);
@@ -226,14 +226,40 @@ $lAdmin->AddGroupActionTable(Array(
 	"delete"=>GetMessage("MAIN_ADMIN_LIST_DELETE"),
 ));
 
-$aContext = array(
-	array(
-		"TEXT"=>GetMessage("MAIN_ADD"),
-		"LINK"=>"userfield_edit.php?lang=".LANG,
-		"TITLE"=>GetMessage("USERTYPE_ADD_TITLE"),
-		"ICON"=>"btn_new",
-	),
+$aContext = array();
+
+// backurl button
+if (!empty($back_url))
+{
+	//$aContext[] = array("SEPARATOR" => true);
+	$aContext[] = array(
+		"TEXT"=>"Return",
+		"LINK"=>$back_url,
+		"TITLE"=>"Return",
+		"ICON"=>"btn_list"
+	);
+}
+
+// add button
+$add_url =  "userfield_edit.php?lang=".LANG;
+
+if ($find_type === 'ENTITY_ID' && !empty($find))
+{
+	$add_url .= '&ENTITY_ID='.urlencode($find);
+
+	if (!empty($back_url))
+	{
+		$add_url .= '&back_url='.urlencode($APPLICATION->GetCurPageParam()).'&list_url='.urlencode($APPLICATION->GetCurPageParam());
+	}
+}
+
+$aContext[] = array(
+	"TEXT"=>GetMessage("MAIN_ADD"),
+	"LINK"=>$add_url,
+	"TITLE"=>GetMessage("USERTYPE_ADD_TITLE"),
+	"ICON"=>"btn_new"
 );
+
 $lAdmin->AddAdminContextMenu($aContext);
 $lAdmin->CheckListMode();
 

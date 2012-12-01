@@ -148,6 +148,9 @@ class CWizardBase
 		return $this->currentStepID;
 	}
 
+	/**
+	 * @return CWizardStep
+	 */
 	function GetCurrentStep()
 	{
 		if (array_key_exists($this->currentStepID, $this->wizardSteps))
@@ -1159,7 +1162,7 @@ class CWizardStep
 	function _ShowAttributes($arAttributes)
 	{
 		if (!is_array($arAttributes))
-			return;
+			return "";
 
 		$strReturn = "";
 		foreach ($arAttributes as $name => $value)
@@ -1168,7 +1171,11 @@ class CWizardStep
 		return $strReturn;
 	}
 
-	//Return wizard reference
+	/**
+	 * Returns wizard reference
+	 *
+	 * @return CWizardBase
+	 */
 	function GetWizard()
 	{
 		return $this->wizard;
@@ -1405,7 +1412,11 @@ WizardOnLoad();
 HTML;
 	}
 
-	//Return wizard reference
+	/**
+	 * Returns wizard reference
+	 *
+	 * @return CWizardBase
+	 */
 	function GetWizard()
 	{
 		return $this->wizard;

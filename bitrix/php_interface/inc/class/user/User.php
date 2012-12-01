@@ -13,7 +13,7 @@ class User
 
     function __construct($userID)
     {
-        $rsUser     = CUser::GetByID(intval($userID));
+        $rsUser = CUser::GetByID(intval($userID));
         $this->user = $rsUser->Fetch();
     }
 
@@ -33,7 +33,7 @@ class User
     function getProps($arSelect = array())
     {
         $ob = CIBlockElement::GetList(Array("SORT" => "ASC"), array("PROPERTY_USER" => $this->getUserId(),
-                                                                    "IBLOCK_ID"     => IB_USER_PROPS), FALSE, FALSE, $arSelect);
+            "IBLOCK_ID" => IB_USER_PROPS), FALSE, FALSE, $arSelect);
         return $ob->Fetch();
     }
 
@@ -46,12 +46,12 @@ class User
         global $USER;
 
         $PROP['PROPERTY_USER'] = $this->getUserId();
-        $arLoadProductArray    = Array(
-            "MODIFIED_BY"    => $USER->GetID(),
-            "IBLOCK_ID"      => IB_USER_PROPS,
-            "PROPERTY_VALUES"=> $PROP,
-            "NAME"           => $name,
-            "ACTIVE"         => "Y"
+        $arLoadProductArray = Array(
+            "MODIFIED_BY" => $USER->GetID(),
+            "IBLOCK_ID" => IB_USER_PROPS,
+            "PROPERTY_VALUES" => $PROP,
+            "NAME" => $name,
+            "ACTIVE" => "Y"
         );
 
         return CIBlockElement::Add($arLoadProductArray);
@@ -84,14 +84,14 @@ class User
 
         $ob = CIBlockElement::GetList(
             Array("SORT" => "ASC"),
-            array("PROPERTY_USER" => $this->getUserId(), "IBLOCK_ID"=> IB_USER_PROPS),
+            array("PROPERTY_USER" => $this->getUserId(), "IBLOCK_ID" => IB_USER_PROPS),
             FALSE,
             FALSE,
             array("ID",
-                  "PROPERTY_USER",
-                  "PROPERTY_LINK_NEWS",
-                  "PROPERTY_LINK_EVENT",
-                  "PROPERTY_LINK_STOK"))->Fetch();
+                "PROPERTY_USER",
+                "PROPERTY_LINK_NEWS",
+                "PROPERTY_LINK_EVENT",
+                "PROPERTY_LINK_STOK"))->Fetch();
 
 
         foreach ($type as $var) {
@@ -126,7 +126,7 @@ class User
     {
         $ob = CIBlockElement::GetList(
             Array("SORT" => "ASC"),
-            array("PROPERTY_USER" => $this->getUserId(), "IBLOCK_ID"=> IB_USER_PROPS),
+            array("PROPERTY_USER" => $this->getUserId(), "IBLOCK_ID" => IB_USER_PROPS),
             FALSE,
             FALSE,
             array("ID"))->Fetch();
@@ -143,29 +143,29 @@ class User
 
         $ob = CIBlockElement::GetList(
             Array("SORT" => "ASC"),
-            array("PROPERTY_USER" => $this->getUserId(), "IBLOCK_ID"=> IB_USER_PROPS),
+            array("PROPERTY_USER" => $this->getUserId(), "IBLOCK_ID" => IB_USER_PROPS),
             FALSE,
             FALSE,
             array("ID",
-                  "PROPERTY_USER",
-                  "PROPERTY_LINK_NEWS",
-                  "PROPERTY_LINK_EVENT",
-                  "PROPERTY_LINK_STOK"))->Fetch();
+                "PROPERTY_USER",
+                "PROPERTY_LINK_NEWS",
+                "PROPERTY_LINK_EVENT",
+                "PROPERTY_LINK_STOK"))->Fetch();
 
 
-        $data['LINK_NEWS']  = count($data['LINK_NEWS'])
+        $data['LINK_NEWS'] = count($data['LINK_NEWS'])
             ? $data['LINK_NEWS']
             : array("");
         $data['LINK_EVENT'] = count($data['LINK_EVENT'])
             ? $data['LINK_EVENT']
             : array("");
-        $data['LINK_STOK']  = count($data['LINK_STOK'])
+        $data['LINK_STOK'] = count($data['LINK_STOK'])
             ? $data['LINK_STOK']
             : array("");
 
         CIBlockElement::SetPropertyValuesEx($ob["ID"], IB_USER_PROPS, array("LINK_NEWS" => $data['LINK_NEWS'],
-                                                                            "LINK_EVENT"=> $data['LINK_EVENT'],
-                                                                            "LINK_STOK" => $data['LINK_STOK']));
+            "LINK_EVENT" => $data['LINK_EVENT'],
+            "LINK_STOK" => $data['LINK_STOK']));
 
 
         return TRUE;
@@ -239,7 +239,7 @@ class User
 
         $userInfo = CUser::GetByID($this->user["ID"])->Fetch();
 
-        $user   = new CUser;
+        $user = new CUser;
         $fields = Array(
             "PERSONAL_MOBILE" => $userInfo["PERSONAL_PHONE"]
         );
@@ -248,6 +248,22 @@ class User
         return FALSE;
     }
 
+
+
+    static function getList($lisstID)
+    {
+        $filter = Array
+        (
+            "ID" => implode(" | ", $lisstID),
+
+        );
+        $rsUsers = CUser::GetList(($by = "personal_country"), ($order = "desc"), $filter); // выбираем пользователей
+        $arUser = array();
+
+        while ($user = $rsUsers->Fetch()) {
+            $arUser[$user["ID"]] = $user;
+        }
+        return $arUser;
 
     /**
      * Ищем пользователя по ID фейсбука.
@@ -283,6 +299,7 @@ class User
             array("ID","PROPERTY_USER"))->Fetch();
 
         return $ob?intval($ob['PROPERTY_USER_VALUE']):false;
+
 
     }
 

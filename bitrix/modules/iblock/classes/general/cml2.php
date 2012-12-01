@@ -328,6 +328,7 @@ class CIBlockCMLImport
 			else
 				$this->arElementCache[$IBLOCK_ID][$XML_ID] = false;
 		}
+
 		return $this->arElementCache[$IBLOCK_ID][$XML_ID];
 	}
 
@@ -538,6 +539,8 @@ class CIBlockCMLImport
 		$XML_PROPERTIES_PARENT = false;
 		$XML_SECTIONS_PROPERTIES_PARENT = false;
 		$XML_PRICES_PARENT = false;
+		$XML_STORES_PARENT = false;
+		$XML_SECTION_PROPERTIES = false;
 
 		$this->next_step["bOffer"] = false;
 		$rs = $this->_xml_file->GetList(
@@ -578,6 +581,7 @@ class CIBlockCMLImport
 			);
 			while($ar = $rs->Fetch())
 			{
+
 				if(isset($ar["VALUE_CLOB"]))
 					$ar["VALUE"] = $ar["VALUE_CLOB"];
 				if($ar["NAME"] == GetMessage("IBLOCK_XML2_ID"))
@@ -595,6 +599,8 @@ class CIBlockCMLImport
 					$XML_ELEMENTS_PARENT = $ar["ID"];
 				elseif($ar["NAME"] == GetMessage("IBLOCK_XML2_PRICE_TYPES"))
 					$XML_PRICES_PARENT = $ar["ID"];
+				elseif($ar["NAME"] == GetMessage("IBLOCK_XML2_STORES"))
+					$XML_STORES_PARENT = $ar["ID"];
 				elseif($ar["NAME"] == GetMessage("IBLOCK_XML2_METADATA_ID"))
 					$meta_data_xml_id = $ar["VALUE"];
 				elseif($ar["NAME"] == GetMessage("IBLOCK_XML2_UPDATE_ONLY"))
@@ -867,6 +873,8 @@ class CIBlockCMLImport
 							$XML_PROPERTIES_PARENT = $arMeta["ID"];
 						elseif($arMeta["NAME"] == GetMessage("IBLOCK_XML2_GROUPS_PROPERTIES"))
 							$XML_SECTIONS_PROPERTIES_PARENT = $arMeta["ID"];
+						elseif($arMeta["NAME"] == GetMessage("IBLOCK_XML2_SECTION_PROPERTIES"))
+							$XML_SECTION_PROPERTIES = $arMeta["ID"];
 					}
 					break;
 				}
@@ -876,6 +884,13 @@ class CIBlockCMLImport
 		if($XML_PROPERTIES_PARENT)
 		{
 			$result = $this->ImportProperties($XML_PROPERTIES_PARENT, $arIBlock["ID"]);
+			if($result!==true)
+				return $result;
+		}
+
+		if($XML_SECTION_PROPERTIES)
+		{
+			$result = $this->ImportSectionProperties($XML_SECTION_PROPERTIES, $arIBlock["ID"]);
 			if($result!==true)
 				return $result;
 		}
@@ -892,6 +907,16 @@ class CIBlockCMLImport
 			if($this->bCatalog)
 			{
 				$result = $this->ImportPrices($XML_PRICES_PARENT, $arIBlock["ID"], $IBLOCK_LID);
+				if($result!==true)
+					return $result;
+			}
+		}
+
+		if($XML_STORES_PARENT)
+		{
+			if($this->bCatalog)
+			{
+				$result = $this->ImportStores($XML_STORES_PARENT);
 				if($result!==true)
 					return $result;
 			}
@@ -1047,6 +1072,69 @@ class CIBlockCMLImport
 					$arPrice["USER_LANG"][$lang] = $arXMLPrice[GetMessage("IBLOCK_XML2_NAME")];
 				}
 				$ID = CCatalogGroup::Add($arPrice);
+			}
+		}
+		return true;
+	}
+
+	function ImportStores($XML_STORES_PARENT)
+	{
+		$this->next_step["XML_STORES_PARENT"] = $XML_STORES_PARENT;
+
+		$arXMLStores = $this->_xml_file->GetAllChildrenArray($XML_STORES_PARENT);
+		foreach($arXMLStores as $key => $arXMLStore)
+		{
+			$storeTitle = $arXMLStore[GetMessage("IBLOCK_XML2_NAME")];
+			$storeAddress = (isset($arXMLStore[GetMessage("IBLOCK_XML2_STORE_ADDRESS")])) ? $arXMLStore[GetMessage("IBLOCK_XML2_STORE_ADDRESS")] : "";
+			$storeDescription = (isset($arXMLStore[GetMessage("IBLOCK_XML2_STORE_DESCRIPTION")])) ? $arXMLStore[GetMessage("IBLOCK_XML2_STORE_DESCRIPTION")] : "";
+			$storeContacts = (isset($arXMLStore[GetMessage("IBLOCK_XML2_STORE_CONTACTS")])) ? $arXMLStore[GetMessage("IBLOCK_XML2_STORE_CONTACTS")] : "";
+			$rsStore = CCatalogStore::GetList(array(), array("XML_ID" => $arXMLStore[GetMessage("IBLOCK_XML2_ID")]));
+
+			$arStore = array(
+				"TITLE" => $storeTitle,
+				"XML_ID" => $arXMLStore[GetMessage("IBLOCK_XML2_ID")],
+				"ADDRESS" => $storeAddress,
+				"DESCRIPTION" => $storeDescription,
+				"PHONE" => $storeContacts,
+			);
+			$arIDStore = $rsStore->Fetch();
+			if(!$arIDStore)
+			{
+				$ID = CCatalogStore::Add($arStore);
+			}
+			else
+			{
+				$ID = CCatalogStore::Update($arIDStore["ID"],$arStore);
+			}
+		}
+		if(!$ID)
+			return false;
+		return true;
+	}
+
+	function ImportStoresAmount($arElement, $elementID, &$counter)
+	{
+		$arFields = array();
+		$arFields['PRODUCT_ID'] = $elementID;
+		static $arStoreResult = array();
+		if (count($arStoreResult)<=0)
+		{
+			$resStore =  CCatalogStore::GetList(array(), array(), false, false, array("ID", "XML_ID"));
+			while($arStore = $resStore->Fetch())
+			{
+				$arStoreResult[$arStore["XML_ID"]] = $arStore["ID"];
+			}
+		}
+
+		foreach($arElement as $key => $value)
+		{
+			foreach ($value as $xmlID => $amount)
+			{
+				$arFields['STORE_ID'] = $arStoreResult[$xmlID];
+				$arFields['AMOUNT'] = $this->ToFloat($amount);
+				$res = CCatalogStoreProduct::UpdateFromForm($arFields);
+				if(!$res)
+					$counter["ERR"]++;
 			}
 		}
 		return true;
@@ -1427,6 +1515,45 @@ class CIBlockCMLImport
 		return true;
 	}
 
+	function ImportSectionProperties($XML_SECTION_PROPERTIES, $IBLOCK_ID, $SECTION_ID = 0)
+	{
+		global $DB;
+
+		if($SECTION_ID == 0)
+		{
+			CIBlockSectionPropertyLink::DeleteByIBlock($IBLOCK_ID);
+			$ib = new CIBlock;
+			$ib->Update($IBLOCK_ID, array("SECTION_PROPERTY" => "Y"));
+		}
+
+		$rs = $this->_xml_file->GetList(
+			array("ID" => "asc"),
+			array("PARENT_ID" => $XML_SECTION_PROPERTIES),
+			array("ID")
+		);
+		while($ar = $rs->Fetch())
+		{
+			$arLink = array(
+			);
+			$rsP = $this->_xml_file->GetList(
+				array("ID" => "asc"),
+				array("PARENT_ID" => $ar["ID"])
+			);
+			while($arP = $rsP->Fetch())
+			{
+				if($arP["NAME"]==GetMessage("IBLOCK_XML2_ID"))
+					$arLink["XML_ID"] = $arP["VALUE"];
+				elseif($arP["NAME"]==GetMessage("IBLOCK_XML2_SMART_FILTER"))
+					$arLink["SMART_FILTER"] = ($arP["VALUE"]=="true") || intval($arP["VALUE"])? "Y": "N";
+			}
+
+			$rsProperty = CIBlockProperty::GetList(array(), array("IBLOCK_ID"=>$IBLOCK_ID, "XML_ID"=>$arLink["XML_ID"], "CHECK_PERMISSIONS"=>"N"));
+			if($arDBProperty = $rsProperty->Fetch())
+				CIBlockSectionPropertyLink::Add($SECTION_ID, $arDBProperty["ID"], $arLink);
+		}
+		return true;
+	}
+
 	function ReadCatalogData(&$SECTION_MAP, &$PRICES_MAP)
 	{
 		global $DB;
@@ -1537,11 +1664,15 @@ class CIBlockCMLImport
 				$counter["CRC"]++;
 
 				$arXMLElement = $this->_xml_file->GetAllChildrenArray($arParent);
+
 				if(!$this->next_step["bOffer"] && $this->use_offers)
 				{
 					$p = strrpos($arXMLElement[GetMessage("IBLOCK_XML2_ID")], "#");
 					if($p !== false)
+					{
+						$this->next_step["XML_LAST_ID"] = $arParent["ID"];
 						continue;
+					}
 				}
 				if(array_key_exists(GetMessage("IBLOCK_XML2_STATUS"), $arXMLElement) && ($arXMLElement[GetMessage("IBLOCK_XML2_STATUS")] == GetMessage("IBLOCK_XML2_DELETED")))
 				{
@@ -1615,13 +1746,13 @@ class CIBlockCMLImport
 		{
 			if(strlen($this->next_step["sdp"]))
 			{
-				$search = array("\xa0", " ", $this->next_step["sdp"], ",");
-				$replace = array("", "", ".", ".");
+				$search = array("\xc2\xa0", "\xa0", " ", $this->next_step["sdp"], ",");
+				$replace = array("", "", "", ".", ".");
 			}
 			else
 			{
-				$search = array("\xa0", " ", ",");
-				$replace = array("", "", ".");
+				$search = array("\xc2\xa0", "\xa0", " ", ",");
+				$replace = array("", "", "", ".");
 			}
 		}
 
@@ -1696,6 +1827,7 @@ class CIBlockCMLImport
 
 	function ImportElement($arXMLElement, &$counter, $bWF, $arParent)
 	{
+
 		global $USER;
 		$USER_ID = is_object($USER)? intval($USER->GetID()): 0;
 
@@ -1972,6 +2104,9 @@ class CIBlockCMLImport
 					}
 				}
 			}
+
+
+
 			if(isset($arXMLElement[GetMessage("IBLOCK_XML2_AMOUNT")]))
 				$arElement["QUANTITY"] = $this->ToFloat($arXMLElement[GetMessage("IBLOCK_XML2_AMOUNT")]);
 			else
@@ -2451,6 +2586,22 @@ class CIBlockCMLImport
 			}
 		}
 
+		if(isset($arXMLElement[GetMessage("IBLOCK_XML2_STORE_AMOUNT_LIST")]))
+		{
+			$arElement["STORE_AMOUNT"]=array();
+			foreach($arXMLElement[GetMessage("IBLOCK_XML2_STORE_AMOUNT_LIST")] as $key=>$storeAmount)
+			{
+				if(isset($storeAmount[GetMessage("IBLOCK_XML2_STORE_ID")]))
+				{
+					$storeXMLID = $storeAmount[GetMessage("IBLOCK_XML2_STORE_ID")];
+					$amount = $storeAmount[GetMessage("IBLOCK_XML2_AMOUNT")];
+					$arElement["STORE_AMOUNT"][]=array($storeXMLID => $amount);
+				}
+			}
+		}
+		if(isset($arElement["STORE_AMOUNT"]))
+			$this->ImportStoresAmount($arElement["STORE_AMOUNT"], $arElement["ID"], $counter);
+
 		return $arElement["ID"];
 	}
 
@@ -2482,6 +2633,7 @@ class CIBlockCMLImport
 					{
 						$price["PRICE"] = $this->PRICES_MAP[$price[GetMessage("IBLOCK_XML2_PRICE_TYPE_ID")]];
 						$arElement["PRICES"][] = $price;
+
 					}
 				}
 
@@ -2604,6 +2756,22 @@ class CIBlockCMLImport
 			}
 		}
 
+		if(isset($arXMLElement[GetMessage("IBLOCK_XML2_STORE_AMOUNT_LIST")]))
+		{
+			$arElement["STORE_AMOUNT"]=array();
+			foreach($arXMLElement[GetMessage("IBLOCK_XML2_STORE_AMOUNT_LIST")] as $key=>$storeAmount)
+			{
+				if(isset($storeAmount[GetMessage("IBLOCK_XML2_STORE_ID")]))
+				{
+					$storeXMLID = $storeAmount[GetMessage("IBLOCK_XML2_STORE_ID")];
+					$amount = $storeAmount[GetMessage("IBLOCK_XML2_AMOUNT")];
+					$arElement["STORE_AMOUNT"][]=array($storeXMLID => $amount);
+				}
+			}
+		}
+		if(isset($arElement["STORE_AMOUNT"]))
+			$this->ImportStoresAmount($arElement["STORE_AMOUNT"], $arElement["ID"], $counter);
+
 		return $arElement["ID"];
 	}
 
@@ -2621,14 +2789,14 @@ class CIBlockCMLImport
 				{
 					$arDiscounts[$prev] = array(
 						"QUANTITY_FROM" => $prev,
-						"QUANTITY_TO" => $volume - 1,
+						"QUANTITY_TO" => $volume,
 						"PERCENT" => $arDiscounts[$prev],
 					);
 				}
 				$prev = $volume;
 			}
 			$arDiscounts[$prev] = array(
-				"QUANTITY_FROM" => $prev,
+				"QUANTITY_FROM" => $prev + 1,
 				"QUANTITY_TO" => "",
 				"PERCENT" => $arDiscounts[$prev],
 			);
@@ -2719,6 +2887,7 @@ class CIBlockCMLImport
 		);
 		$XML_SECTIONS_PARENT = false;
 		$XML_PROPERTIES_PARENT = false;
+		$XML_SECTION_PROPERTIES = false;
 		while($arS = $rsS->Fetch())
 		{
 			if(isset($arS["VALUE_CLOB"]))
@@ -2757,6 +2926,8 @@ class CIBlockCMLImport
 			}
 			elseif($arS["NAME"] == GetMessage("IBLOCK_XML2_BX_ACTIVE"))
 				$arSection["ACTIVE"] = ($arS["VALUE"]=="true") || intval($arS["VALUE"])? "Y": "N";
+			elseif($arS["NAME"] == GetMessage("IBLOCK_XML2_SECTION_PROPERTIES"))
+				$XML_SECTION_PROPERTIES = $arS["ID"];
 		}
 
 		if($XML_PROPERTIES_PARENT)
@@ -2862,6 +3033,11 @@ class CIBlockCMLImport
 				$this->LAST_ERROR = $obSection->LAST_ERROR;
 				return $this->LAST_ERROR;
 			}
+		}
+
+		if($XML_SECTION_PROPERTIES)
+		{
+			$this->ImportSectionProperties($XML_SECTION_PROPERTIES, $IBLOCK_ID, $arSection["ID"]);
 		}
 
 		if($arSection["ID"])
@@ -2972,8 +3148,10 @@ class CIBlockCMLExport
 	var $prices = false;
 	var $only_price = false;
 	var $download_files = true;
+	var $export_as_url = false;
+	var $PRODUCT_IBLOCK_ID = false;
 
-	function Init($fp, $IBLOCK_ID, $next_step, $bExtended=false, $work_dir=false, $file_dir=false)
+	function Init($fp, $IBLOCK_ID, $next_step, $bExtended=false, $work_dir=false, $file_dir=false, $bCheckPermissions = true, $PRODUCT_IBLOCK_ID = false)
 	{
 		$this->fp = $fp;
 		$this->IBLOCK_ID = intval($IBLOCK_ID);
@@ -2983,8 +3161,16 @@ class CIBlockCMLExport
 		$this->next_step = $next_step;
 		$this->only_price = false;
 		$this->download_files = true;
+		$this->PRODUCT_IBLOCK_ID = intval($PRODUCT_IBLOCK_ID);
 
-		$rsIBlock = CIBlock::GetList(array(), array("ID"=>$this->IBLOCK_ID, "MIN_PERMISSION"=>"W"));
+		$arFilter = array(
+			"ID" => $this->IBLOCK_ID,
+			"MIN_PERMISSION" => "W",
+		);
+		if(!$bCheckPermissions)
+			$arFilter["CHECK_PERMISSIONS"] = "N";
+
+		$rsIBlock = CIBlock::GetList(array(), $arFilter);
 		if(($this->arIBlock = $rsIBlock->Fetch()) && ($this->arIBlock["ID"]==$this->IBLOCK_ID))
 		{
 			$this->next_step["catalog"] = CModule::IncludeModule('catalog');
@@ -3015,6 +3201,16 @@ class CIBlockCMLExport
 	function DoNotDownloadCloudFiles()
 	{
 		$this->download_files = false;
+	}
+
+	function NotCatalog()
+	{
+		$this->next_step["catalog"] = false;
+	}
+
+	function ExportFileAsURL()
+	{
+		$this->export_as_url = true;
 	}
 
 	function GetIBlockXML_ID($IBLOCK_ID, $XML_ID=false)
@@ -3157,6 +3353,13 @@ class CIBlockCMLExport
 				}
 			}
 		}
+		elseif($this->export_as_url)
+		{
+			$arFile = CFile::GetFileArray($FILE_ID);
+			if($arFile)
+				return CHTTP::URN2URI($arFile["SRC"]);
+		}
+
 		return "";
 	}
 
@@ -3172,7 +3375,7 @@ class CIBlockCMLExport
 		}
 		else
 		{
-			$xmlValue = htmlspecialchars($value);
+			$xmlValue = htmlspecialcharsbx($value);
 		}
 
 		return str_repeat("\t", $level)."<".$tagName.">".$xmlValue."</".$tagName.">\n";
@@ -3214,7 +3417,7 @@ class CIBlockCMLExport
 		fwrite($this->fp, "\t\t</".GetMessage("IBLOCK_XML2_GROUPS_PROPERTIES").">\n");
 	}
 
-	function ExportSections(&$SECTION_MAP, $start_time, $INTERVAL, $FILTER = "")
+	function ExportSections(&$SECTION_MAP, $start_time, $INTERVAL, $FILTER = "", $PROPERTY_MAP = array())
 	{
 		$counter = 0;
 		if(!array_key_exists("CURRENT_DEPTH", $this->next_step))
@@ -3238,6 +3441,7 @@ class CIBlockCMLExport
 		$arFilter = array(
 			"IBLOCK_ID" => $this->arIBlock["ID"],
 			"GLOBAL_ACTIVE" => "Y",
+			"CHECK_PERMISSIONS" => "N",
 		);
 		if($FILTER === "all")
 			unset($arFilter["GLOBAL_ACTIVE"]);
@@ -3265,7 +3469,7 @@ class CIBlockCMLExport
 				.$this->formatXMLNode($level, GetMessage("IBLOCK_XML2_NAME"), $arSection["NAME"])
 			);
 			if(strlen($arSection["DESCRIPTION"])>0)
-				fwrite($this->fp, $white_space."\t\t<".GetMessage("IBLOCK_XML2_DESCRIPTION").">".htmlspecialchars(FormatText($arSection["DESCRIPTION"], $arSection["DESCRIPTION_TYPE"]))."</".GetMessage("IBLOCK_XML2_DESCRIPTION").">\n");
+				fwrite($this->fp, $white_space."\t\t<".GetMessage("IBLOCK_XML2_DESCRIPTION").">".htmlspecialcharsbx(FormatText($arSection["DESCRIPTION"], $arSection["DESCRIPTION_TYPE"]))."</".GetMessage("IBLOCK_XML2_DESCRIPTION").">\n");
 			if($this->bExtended)
 			{
 				fwrite($this->fp,
@@ -3311,6 +3515,23 @@ class CIBlockCMLExport
 						fwrite($this->fp, $white_space."\t\t\t</".GetMessage("IBLOCK_XML2_PROPERTY_VALUES").">\n");
 					}
 					fwrite($this->fp, $white_space."\t\t</".GetMessage("IBLOCK_XML2_PROPERTIES_VALUES").">\n");
+				}
+
+				$arPropLink = CIBlockSectionPropertyLink::GetArray($this->arIBlock["ID"], $arSection["ID"]);
+				foreach($arPropLink as $PID => $arLink)
+					if($arLink["INHERITED"] != "N" || !array_key_exists($PID, $PROPERTY_MAP))
+						unset($arPropLink[$PID]);
+				if(!empty($arPropLink))
+				{
+					fwrite($this->fp, $white_space."\t\t<".GetMessage("IBLOCK_XML2_SECTION_PROPERTIES").">\n");
+					foreach($arPropLink as $PID => $arLink)
+					{
+						fwrite($this->fp, $white_space."\t\t\t<".GetMessage("IBLOCK_XML2_PROPERTY").">\n");
+						fwrite($this->fp, $white_space."\t\t\t\t<".GetMessage("IBLOCK_XML2_ID").">".htmlspecialcharsbx($PROPERTY_MAP[$PID])."</".GetMessage("IBLOCK_XML2_ID").">\n");
+						fwrite($this->fp, $white_space."\t\t\t\t<".GetMessage("IBLOCK_XML2_SMART_FILTER").">".($arLink["SMART_FILTER"] == "Y"? "true": "false")."</".GetMessage("IBLOCK_XML2_SMART_FILTER").">\n");
+						fwrite($this->fp, $white_space."\t\t\t</".GetMessage("IBLOCK_XML2_PROPERTY").">\n");
+					}
+					fwrite($this->fp, $white_space."\t\t</".GetMessage("IBLOCK_XML2_SECTION_PROPERTIES").">\n");
 				}
 			}
 
@@ -3424,6 +3645,26 @@ class CIBlockCMLExport
 			fwrite($this->fp, "\t\t\t</".GetMessage("IBLOCK_XML2_PROPERTY").">\n");
 		}
 		fwrite($this->fp, "\t\t</".GetMessage("IBLOCK_XML2_PROPERTIES").">\n");
+
+		if($this->bExtended)
+		{
+			$arPropLink = CIBlockSectionPropertyLink::GetArray($this->arIBlock["ID"], 0);
+			foreach($arPropLink as $PID => $arLink)
+				if($arLink["INHERITED"] != "N" || !array_key_exists($PID, $PROPERTY_MAP))
+					unset($arPropLink[$PID]);
+			if(!empty($arPropLink))
+			{
+				fwrite($this->fp, $white_space."\t\t<".GetMessage("IBLOCK_XML2_SECTION_PROPERTIES").">\n");
+				foreach($arPropLink as $PID => $arLink)
+				{
+					fwrite($this->fp, $white_space."\t\t\t<".GetMessage("IBLOCK_XML2_PROPERTY").">\n");
+					fwrite($this->fp, $white_space."\t\t\t\t<".GetMessage("IBLOCK_XML2_ID").">".htmlspecialcharsbx($PROPERTY_MAP[$PID])."</".GetMessage("IBLOCK_XML2_ID").">\n");
+					fwrite($this->fp, $white_space."\t\t\t\t<".GetMessage("IBLOCK_XML2_SMART_FILTER").">".($arLink["SMART_FILTER"] == "Y"? "true": "false")."</".GetMessage("IBLOCK_XML2_SMART_FILTER").">\n");
+					fwrite($this->fp, $white_space."\t\t\t</".GetMessage("IBLOCK_XML2_PROPERTY").">\n");
+				}
+				fwrite($this->fp, $white_space."\t\t</".GetMessage("IBLOCK_XML2_SECTION_PROPERTIES").">\n");
+			}
+		}
 	}
 
 	function ExportPrices()
@@ -3457,7 +3698,10 @@ class CIBlockCMLExport
 		else
 			fwrite($this->fp, "\t<".GetMessage("IBLOCK_XML2_CATALOG").">\n");
 
-		$xml_id = $this->GetIBlockXML_ID($this->arIBlock["ID"], $this->arIBlock["XML_ID"]);
+		if($this->PRODUCT_IBLOCK_ID)
+			$xml_id = $this->GetIBlockXML_ID($this->PRODUCT_IBLOCK_ID, CIBlock::GetArrayByID($this->PRODUCT_IBLOCK_ID, "XML_ID"));
+		else
+			$xml_id = $this->GetIBlockXML_ID($this->arIBlock["ID"], $this->arIBlock["XML_ID"]);
 		$this->arIBlock["XML_ID"] = $xml_id;
 
 		fwrite($this->fp, $this->formatXMLNode(2, GetMessage("IBLOCK_XML2_ID"), $xml_id));
@@ -3581,27 +3825,35 @@ class CIBlockCMLExport
 			else
 				$xml_id = $arElement["ID"];
 
-			fwrite($this->fp, "\t\t\t\t<".GetMessage("IBLOCK_XML2_ID").">".htmlspecialchars($xml_id)."</".GetMessage("IBLOCK_XML2_ID").">\n");
+			if($this->PRODUCT_IBLOCK_ID > 0)
+			{
+				$rsLink = CIBlockElement::GetProperty($this->arIBlock["ID"], $arElement["ID"], $arPropOrder, array("ACTIVE"=>"Y", "CODE" => "CML2_LINK"));
+				$arLink = $rsLink->Fetch();
+				if(is_array($arLink) && !is_array($arLink["VALUE"]) && $arLink["VALUE"] > 0)
+					$xml_id = $this->GetElementXML_ID($this->PRODUCT_IBLOCK_ID, $arLink["VALUE"])."#".$xml_id;
+			}
+
+			fwrite($this->fp, "\t\t\t\t<".GetMessage("IBLOCK_XML2_ID").">".htmlspecialcharsbx($xml_id)."</".GetMessage("IBLOCK_XML2_ID").">\n");
 
 			if(!$this->only_price)
 			{
-				fwrite($this->fp, "\t\t\t\t<".GetMessage("IBLOCK_XML2_NAME").">".htmlspecialchars($arElement["NAME"])."</".GetMessage("IBLOCK_XML2_NAME").">\n");
+				fwrite($this->fp, "\t\t\t\t<".GetMessage("IBLOCK_XML2_NAME").">".htmlspecialcharsbx($arElement["NAME"])."</".GetMessage("IBLOCK_XML2_NAME").">\n");
 				if($this->bExtended)
-					fwrite($this->fp, "\t\t\t\t<".GetMessage("IBLOCK_XML2_BX_TAGS").">".htmlspecialchars($arElement["TAGS"])."</".GetMessage("IBLOCK_XML2_BX_TAGS").">\n");
+					fwrite($this->fp, "\t\t\t\t<".GetMessage("IBLOCK_XML2_BX_TAGS").">".htmlspecialcharsbx($arElement["TAGS"])."</".GetMessage("IBLOCK_XML2_BX_TAGS").">\n");
 
 				$arSections = array();
-				$rsSections = CIBlockElement::GetElementGroups($arElement["ID"]);
+				$rsSections = CIBlockElement::GetElementGroups($arElement["ID"], true);
 				while($arSection = $rsSections->Fetch())
 					if(array_key_exists($arSection["ID"], $SECTION_MAP))
 						$arSections[] = $SECTION_MAP[$arSection["ID"]];
 
 				fwrite($this->fp, "\t\t\t\t<".GetMessage("IBLOCK_XML2_GROUPS").">\n");
 				foreach($arSections as $xml_id)
-					fwrite($this->fp, "\t\t\t\t\t<".GetMessage("IBLOCK_XML2_ID").">".htmlspecialchars($xml_id)."</".GetMessage("IBLOCK_XML2_ID").">\n");
+					fwrite($this->fp, "\t\t\t\t\t<".GetMessage("IBLOCK_XML2_ID").">".htmlspecialcharsbx($xml_id)."</".GetMessage("IBLOCK_XML2_ID").">\n");
 				fwrite($this->fp, "\t\t\t\t</".GetMessage("IBLOCK_XML2_GROUPS").">\n");
 
 				if(!$this->bExtended)
-					fwrite($this->fp, "\t\t\t\t<".GetMessage("IBLOCK_XML2_DESCRIPTION").">".htmlspecialchars(FormatText($arElement["DETAIL_TEXT"], $arElement["DETAIL_TEXT_TYPE"]))."</".GetMessage("IBLOCK_XML2_DESCRIPTION").">\n");
+					fwrite($this->fp, "\t\t\t\t<".GetMessage("IBLOCK_XML2_DESCRIPTION").">".htmlspecialcharsbx(FormatText($arElement["DETAIL_TEXT"], $arElement["DETAIL_TEXT_TYPE"]))."</".GetMessage("IBLOCK_XML2_DESCRIPTION").">\n");
 
 				fwrite($this->fp, $this->formatXMLNode(4, GetMessage("IBLOCK_XML2_PICTURE"), $this->ExportFile($arElement["DETAIL_PICTURE"])));
 
@@ -3649,7 +3901,7 @@ class CIBlockCMLExport
 				{
 					$bEmpty = true;
 					fwrite($this->fp, "\t\t\t\t\t<".GetMessage("IBLOCK_XML2_PROPERTY_VALUES").">\n");
-					fwrite($this->fp, "\t\t\t\t\t\t<".GetMessage("IBLOCK_XML2_ID").">".htmlspecialchars($PROPERTY_MAP[$pid])."</".GetMessage("IBLOCK_XML2_ID").">\n");
+					fwrite($this->fp, "\t\t\t\t\t\t<".GetMessage("IBLOCK_XML2_ID").">".htmlspecialcharsbx($PROPERTY_MAP[$pid])."</".GetMessage("IBLOCK_XML2_ID").">\n");
 					foreach($arProp["VALUES"] as $arValue)
 					{
 						$value = $arValue["VALUE"];
@@ -3693,7 +3945,7 @@ class CIBlockCMLExport
 								if($bSerialized)
 									fwrite($this->fp, "\t\t\t\t\t\t\t<".GetMessage("IBLOCK_XML2_SERIALIZED").">true</".GetMessage("IBLOCK_XML2_SERIALIZED").">\n");
 								fwrite($this->fp, $this->formatXMLNode(7, GetMessage("IBLOCK_XML2_VALUE"), $value));
-								fwrite($this->fp, "\t\t\t\t\t\t\t<".GetMessage("IBLOCK_XML2_DESCRIPTION").">".htmlspecialchars($arValue["DESCRIPTION"])."</".GetMessage("IBLOCK_XML2_DESCRIPTION").">\n");
+								fwrite($this->fp, "\t\t\t\t\t\t\t<".GetMessage("IBLOCK_XML2_DESCRIPTION").">".htmlspecialcharsbx($arValue["DESCRIPTION"])."</".GetMessage("IBLOCK_XML2_DESCRIPTION").">\n");
 								fwrite($this->fp, "\t\t\t\t\t\t</".GetMessage("IBLOCK_XML2_PROPERTY_VALUE").">\n");
 							}
 						}
@@ -3729,11 +3981,14 @@ class CIBlockCMLExport
 						fwrite($this->fp, "\t\t\t\t\t<".GetMessage("IBLOCK_XML2_PRICE").">\n");
 						foreach($arPrice as $key=>$value)
 						{
-							fwrite($this->fp, "\t\t\t\t\t\t<".$key.">".htmlspecialchars($value)."</".$key.">\n");
+							fwrite($this->fp, "\t\t\t\t\t\t<".$key.">".htmlspecialcharsbx($value)."</".$key.">\n");
 						}
 						fwrite($this->fp, "\t\t\t\t\t</".GetMessage("IBLOCK_XML2_PRICE").">\n");
 					}
 					fwrite($this->fp, "\t\t\t\t</".GetMessage("IBLOCK_XML2_PRICES").">\n");
+					$arCatalogProduct = CCatalogProduct::GetByID($arElement["ID"]);
+					if($arCatalogProduct)
+						fwrite($this->fp, "\t\t\t\t<".GetMessage("IBLOCK_XML2_AMOUNT").">".htmlspecialcharsbx($arCatalogProduct["QUANTITY"])."</".GetMessage("IBLOCK_XML2_AMOUNT").">\n");
 				}
 			}
 

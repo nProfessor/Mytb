@@ -41,6 +41,7 @@
 		"OFFERS_PROPERTIES" => $arParams["OFFERS_PROPERTIES"],
 		'CONVERT_CURRENCY' => $arParams['CONVERT_CURRENCY'],
 		'CURRENCY_ID' => $arParams['CURRENCY_ID'],
+		'USE_ELEMENT_COUNTER' => $arParams['USE_ELEMENT_COUNTER'],
 	),
 	$component
 );?>
@@ -66,4 +67,18 @@
 	),
 	$component
 );?>
+<?endif?>
+<?if($arParams["USE_STORE"] == "Y" && IsModuleInstalled("catalog") && $ElementID):?>
+<?$APPLICATION->IncludeComponent("bitrix:catalog.store.amount", ".default", array(
+			"PER_PAGE" => "10",
+			"USE_STORE_PHONE" => $arParams["USE_STORE_PHONE"],
+			"SCHEDULE" => $arParams["USE_STORE_SCHEDULE"],
+			"USE_MIN_AMOUNT" => $arParams["USE_MIN_AMOUNT"],
+			"MIN_AMOUNT" => $arParams["MIN_AMOUNT"],
+			"ELEMENT_ID" => $ElementID,
+			"STORE_PATH"  =>  $arParams["STORE_PATH"],
+			"MAIN_TITLE"  =>  $arParams["MAIN_TITLE"],
+		),
+		$component
+	);?>
 <?endif?>

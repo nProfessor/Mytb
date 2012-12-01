@@ -80,13 +80,13 @@ else
 							$sMenuTemplateTmp = $res["sMenuTemplate"];
 							$aMenuLinksTmp[] = Array($menuname, $arParsedPathTmp["PREV"]."/".$arParsedPathTmp["LAST"]."/", Array(), Array(), "");
 							CFileMan::SaveMenu(Array($site, $menu_path), $aMenuLinksTmp, $sMenuTemplateTmp);
-														
+
 							if(COption::GetOptionString($module_id, "log_menu", "Y")=="Y")
-							{    
+							{
 								$mt = COption::GetOptionString("fileman", "menutypes", $default_value, $site);
-					 			$mt = unserialize(str_replace("\\", "", $mt));
-					  			$res_log['menu_name'] = $mt[$menutype];
-					  			$res_log['path'] = substr($path, 1);
+								$mt = unserialize(str_replace("\\", "", $mt));
+								$res_log['menu_name'] = $mt[$menutype];
+								$res_log['path'] = substr($path, 1);
 								CEventLog::Log(
 									"content",
 									"MENU_EDIT",
@@ -101,7 +101,7 @@ else
 					if(strlen($sectionname)>0)
 					{
 						if(COption::GetOptionString($module_id, "log_page", "Y")=="Y")
-						{	
+						{
 							$res_log['path'] = substr($pathto, 1);
 							CEventLog::Log(
 								"content",
@@ -170,7 +170,8 @@ if(strlen($strWarning)<=0)
 $aMenu = array(
 	array(
 		"TEXT" => GetMessage("FILEMAN_BACK"),
-		"LINK" => "fileman_admin.php?".$addUrl."&site=".$site."&path=".UrlEncode($path)
+		"LINK" => "fileman_admin.php?".$addUrl."&site=".$site."&path=".UrlEncode($path),
+		"ICON" => "btn_list"
 	)
 );
 
@@ -272,7 +273,7 @@ if ($USER->CanDoFileOperation('fm_create_new_folder',$arPath))
 		)
 	);
 	$tabControl->End();
-	
+
 	if (COption::GetOptionString("fileman", "use_translit", true))
 	{
 		include_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/fileman/classes/general/fileman_utils.php");
@@ -287,9 +288,6 @@ if ($USER->CanDoFileOperation('fm_create_new_folder',$arPath))
 	}
 	?>
 	</form>
-	<?echo BeginNote();?>
-	<span class="required">*</span><font class="legendtext"> - <?=GetMessage("REQUIRED_FIELDS")?>
-	<?echo EndNote(); ?>
 	<?
 }
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");

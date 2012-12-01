@@ -48,6 +48,11 @@ $arClasses = array(
 	"CIBlockSectionRights" => "/classes/general/iblock_rights.php",
 	"CIBlockElementRights" => "/classes/general/iblock_rights.php",
 	"CIBlockRightsStorage" => "/classes/general/iblock_rights.php",
+	"Bitrix\\Iblock\\IblockEntity" => "/lib/iblock.php",
+	"Bitrix\\Iblock\\ElementEntity" => "/lib/element.php",
+	"Bitrix\\Iblock\\SectionElementEntity" => "/lib/sectionelement.php",
+	"Bitrix\\Iblock\\SectionEntity" => "/lib/section.php",
+	"CIBlockSectionPropertyLink" => "/classes/general/section_property.php",
 );
 
 if(IsModuleInstalled('bizproc'))
@@ -484,21 +489,21 @@ function GetIBlockDropDownList($IBLOCK_ID, $strTypeName, $strIBlockName, $arFilt
 		}
 	}
 
-	$html .= '<select name="'.htmlspecialchars($strTypeName).'" id="'.htmlspecialchars($strTypeName).'" OnChange="'.htmlspecialchars('OnTypeChanged(this, \''.CUtil::JSEscape($strIBlockName).'\')').'">'."\n";
+	$html .= '<select name="'.htmlspecialcharsbx($strTypeName).'" id="'.htmlspecialcharsbx($strTypeName).'" OnChange="'.htmlspecialcharsbx('OnTypeChanged(this, \''.CUtil::JSEscape($strIBlockName).'\')').'">'."\n";
 	foreach($arTypes as $key => $value)
 	{
 		if($IBLOCK_TYPE === false)
 			$IBLOCK_TYPE = $key;
-		$html .= '<option value="'.htmlspecialchars($key).'"'.($IBLOCK_TYPE===$key? ' selected': '').'>'.htmlspecialchars($value).'</option>'."\n";
+		$html .= '<option value="'.htmlspecialcharsbx($key).'"'.($IBLOCK_TYPE===$key? ' selected': '').'>'.htmlspecialcharsbx($value).'</option>'."\n";
 	}
 	$html .= "</select>\n";
 
 	$html .= "&nbsp;\n";
 
-	$html .= '<select name="'.htmlspecialchars($strIBlockName).'" id="'.htmlspecialchars($strIBlockName).'">'."\n";
+	$html .= '<select name="'.htmlspecialcharsbx($strIBlockName).'" id="'.htmlspecialcharsbx($strIBlockName).'">'."\n";
 	foreach($arIBlocks[$IBLOCK_TYPE] as $key => $value)
 	{
-		$html .= '<option value="'.htmlspecialchars($key).'"'.($IBLOCK_ID==$key? ' selected': '').'>'.htmlspecialchars($value).'</option>'."\n";
+		$html .= '<option value="'.htmlspecialcharsbx($key).'"'.($IBLOCK_ID==$key? ' selected': '').'>'.htmlspecialcharsbx($value).'</option>'."\n";
 	}
 	$html .= "</select>\n";
 
@@ -585,21 +590,21 @@ function GetIBlockDropDownListEx($IBLOCK_ID, $strTypeName, $strIBlockName, $arFi
 	$strAddType = trim($strAddType);
 	$strAddIBlock = trim($strAddIBlock);
 
-	$html .= '<select name="'.htmlspecialchars($strTypeName).'" id="'.htmlspecialchars($strTypeName).'" onchange="'.htmlspecialchars($onChangeType).'"'.($strAddType != '' ? ' '.$strAddType : '').'>'."\n";
+	$html .= '<select name="'.htmlspecialcharsbx($strTypeName).'" id="'.htmlspecialcharsbx($strTypeName).'" onchange="'.htmlspecialcharsbx($onChangeType).'"'.($strAddType != '' ? ' '.$strAddType : '').'>'."\n";
 	foreach($arTypes as $key => $value)
 	{
 		if($IBLOCK_TYPE === false)
 			$IBLOCK_TYPE = $key;
-		$html .= '<option value="'.htmlspecialchars($key).'"'.($IBLOCK_TYPE===$key? ' selected': '').'>'.htmlspecialchars($value).'</option>'."\n";
+		$html .= '<option value="'.htmlspecialcharsbx($key).'"'.($IBLOCK_TYPE===$key? ' selected': '').'>'.htmlspecialcharsbx($value).'</option>'."\n";
 	}
 	$html .= "</select>\n";
 
 	$html .= "&nbsp;\n";
 
-	$html .= '<select name="'.htmlspecialchars($strIBlockName).'" id="'.htmlspecialchars($strIBlockName).'"'.($onChangeIBlock != '' ? ' onchange="'.$onChangeIBlock.'"' : '').($strAddIBlock != '' ? ' '.$strAddIBlock : '').'>'."\n";
+	$html .= '<select name="'.htmlspecialcharsbx($strIBlockName).'" id="'.htmlspecialcharsbx($strIBlockName).'"'.($onChangeIBlock != '' ? ' onchange="'.$onChangeIBlock.'"' : '').($strAddIBlock != '' ? ' '.$strAddIBlock : '').'>'."\n";
 	foreach($arIBlocks[$IBLOCK_TYPE] as $key => $value)
 	{
-		$html .= '<option value="'.htmlspecialchars($key).'"'.($IBLOCK_ID==$key? ' selected': '').'>'.htmlspecialchars($value).'</option>'."\n";
+		$html .= '<option value="'.htmlspecialcharsbx($key).'"'.($IBLOCK_ID==$key? ' selected': '').'>'.htmlspecialcharsbx($value).'</option>'."\n";
 	}
 	$html .= "</select>\n";
 

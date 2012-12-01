@@ -62,4 +62,6 @@ $MESS["IBEL_E_RIGHTS_SECTION_TITLE"] = "Element access permissions";
 $MESS["IBEL_E_RIGHTS_FIELD"] = "Element access permissions";
 $MESS["IBEL_E_WARNING"] = "Warning.";
 $MESS["IBEL_E_TRANSLATION_SERVICE_NOT_CONFIGURED"] = "No external translation engine exist. Add a translation engine in the <a href=\"settings.php?mid=main\">Kernel module settings</a>.";
+$MESS["IBLOCK_EL_SAVE_AND_ADD"] = "Save and add";
+$MESS["IBEL_HIST"] = "Update history";
 ?>

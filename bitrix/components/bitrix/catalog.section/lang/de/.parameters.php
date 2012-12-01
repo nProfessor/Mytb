@@ -53,4 +53,7 @@ $MESS["CP_BCS_OFFERS_CART_PROPERTIES"] = "Eigenschaften der Produktvariante im W
 $MESS["CP_BCS_CONVERT_CURRENCY"] = "Preise in einer Währung anzeigen";
 $MESS["CP_BCS_CURRENCY_ID"] = "Währung in die die Preise konvertiert werden";
 $MESS["CP_BCS_OFFERS_LIMIT"] = "Maximale Anzahl anzuzeigender Produktvarianten (benutzen Sie 0, um alle anzuzeigen)";
+$MESS["CP_BCS_INCLUDE_SUBSECTIONS_ALL"] = "alle Unterbereiche";
+$MESS["CP_BCS_INCLUDE_SUBSECTIONS_ACTIVE"] = "aktive Unterbereiche";
+$MESS["CP_BCS_INCLUDE_SUBSECTIONS_NO"] = "nicht anzeigen";
 ?>

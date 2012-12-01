@@ -1,5 +1,6 @@
 <?
 if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true) die();
+CUtil::InitJSCore(array('popup'));
 
 CPageOption::SetOptionString("main", "nav_page_in_session", "N");
 
@@ -22,7 +23,8 @@ if($arParams["SECTION_ID"] > 0 && $arParams["SECTION_ID"]."" != $arParams["~SECT
 	return;
 }
 
-$arParams["INCLUDE_SUBSECTIONS"] = $arParams["INCLUDE_SUBSECTIONS"]!="N"? "Y": "N";
+if (!in_array($arParams["INCLUDE_SUBSECTIONS"], array('Y', 'A', 'N')))
+	$arParams["INCLUDE_SUBSECTIONS"] = 'Y';
 $arParams["SHOW_ALL_WO_SECTION"] = $arParams["SHOW_ALL_WO_SECTION"]==="Y";
 
 if(strlen($arParams["ELEMENT_SORT_FIELD"])<=0)
@@ -153,7 +155,7 @@ if (array_key_exists($arParams["ACTION_VARIABLE"], $_REQUEST) && array_key_exist
 		$action = strtoupper($_REQUEST[$arParams["ACTION_VARIABLE"]]);
 
 	$productID = intval($_REQUEST[$arParams["PRODUCT_ID_VARIABLE"]]);
-	if(($action == "ADD2BASKET" || $action == "BUY") && $productID > 0)
+	if(($action == "ADD2BASKET" || $action == "BUY" || $action == "SUBSCRIBE_PRODUCT") && $productID > 0)
 	{
 		if(CModule::IncludeModule("iblock") && CModule::IncludeModule("sale") && CModule::IncludeModule("catalog"))
 		{
@@ -198,7 +200,16 @@ if (array_key_exists($arParams["ACTION_VARIABLE"], $_REQUEST) && array_key_exist
 				}
 			}
 
-			if(!$strError && Add2BasketByProductID($productID, $QUANTITY, $product_properties))
+			$notifyOption = COption::GetOptionString("sale", "subscribe_prod", "");
+			$arNotify = unserialize($notifyOption);
+			
+			if ($action == "SUBSCRIBE_PRODUCT" && $arNotify[SITE_ID]['use'] == 'Y')
+			{
+				$arRewriteFields["SUBSCRIBE"] = "Y";
+				$arRewriteFields["CAN_BUY"] = "N";
+			}
+
+			if(!$strError && Add2BasketByProductID($productID, $QUANTITY, $arRewriteFields, $product_properties))
 			{
 				if($action == "BUY")
 					LocalRedirect($arParams["BASKET_URL"]);
@@ -372,8 +383,10 @@ if($this->StartResultCache(false, array($arrFilter, ($arParams["CACHE_GROUPS"]==
 		"ACTIVE" => "Y",
 		"CHECK_PERMISSIONS" => "Y",
 		"MIN_PERMISSION" => "R",
-		"INCLUDE_SUBSECTIONS" => $arParams["INCLUDE_SUBSECTIONS"],
+		"INCLUDE_SUBSECTIONS" => ($arParams["INCLUDE_SUBSECTIONS"] == 'N' ? 'N' : 'Y'),
 	);
+	if ($arParams["INCLUDE_SUBSECTIONS"] == 'A')
+		$arFilter["SECTION_GLOBAL_ACTIVE"] = "Y";
 
 	if($arParams["BY_LINK"]!=="Y")
 	{
@@ -382,7 +395,12 @@ if($this->StartResultCache(false, array($arrFilter, ($arParams["CACHE_GROUPS"]==
 		elseif(!$arParams["SHOW_ALL_WO_SECTION"])
 			$arFilter["SECTION_ID"] = 0;
 		else
-			unset($arFilter["INCLUDE_SUBSECTIONS"]);
+		{
+			if (is_set($arFilter, 'INCLUDE_SUBSECTIONS'))
+				unset($arFilter["INCLUDE_SUBSECTIONS"]);
+			if (is_set($arFilter, 'SECTION_GLOBAL_ACTIVE'))
+				unset($arFilter["SECTION_GLOBAL_ACTIVE"]);
+		}
 	}
 
 	if(is_array($arrFilter["OFFERS"]))
@@ -470,7 +488,7 @@ if($this->StartResultCache(false, array($arrFilter, ($arParams["CACHE_GROUPS"]==
 			$arItem["IBLOCK_ID"],
 			$arItem["ID"],
 			$arResult["ID"],
-			array("SECTION_BUTTONS"=>false, "SESSID"=>false)
+			array("SECTION_BUTTONS"=>false, "SESSID"=>false, "CATALOG"=>true)
 		);
 		$arItem["EDIT_LINK"] = $arButtons["edit"]["edit_element"]["ACTION_URL"];
 		$arItem["DELETE_LINK"] = $arButtons["edit"]["delete_element"]["ACTION_URL"];
@@ -524,9 +542,10 @@ if($this->StartResultCache(false, array($arrFilter, ($arParams["CACHE_GROUPS"]==
 		}
 		$arItem["CAN_BUY"] = CIBlockPriceTools::CanBuy($arParams["IBLOCK_ID"], $arResult["PRICES"], $arItem);
 
-		$arItem["BUY_URL"] = htmlspecialchars($APPLICATION->GetCurPageParam($arParams["ACTION_VARIABLE"]."=BUY&".$arParams["PRODUCT_ID_VARIABLE"]."=".$arItem["ID"], array($arParams["PRODUCT_ID_VARIABLE"], $arParams["ACTION_VARIABLE"])));
-		$arItem["ADD_URL"] = htmlspecialchars($APPLICATION->GetCurPageParam($arParams["ACTION_VARIABLE"]."=ADD2BASKET&".$arParams["PRODUCT_ID_VARIABLE"]."=".$arItem["ID"], array($arParams["PRODUCT_ID_VARIABLE"], $arParams["ACTION_VARIABLE"])));
-		$arItem["COMPARE_URL"] = htmlspecialchars($APPLICATION->GetCurPageParam("action=ADD_TO_COMPARE_LIST&id=".$arItem["ID"], array("action", "id")));
+		$arItem["BUY_URL"] = htmlspecialcharsbx($APPLICATION->GetCurPageParam($arParams["ACTION_VARIABLE"]."=BUY&".$arParams["PRODUCT_ID_VARIABLE"]."=".$arItem["ID"], array($arParams["PRODUCT_ID_VARIABLE"], $arParams["ACTION_VARIABLE"])));
+		$arItem["ADD_URL"] = htmlspecialcharsbx($APPLICATION->GetCurPageParam($arParams["ACTION_VARIABLE"]."=ADD2BASKET&".$arParams["PRODUCT_ID_VARIABLE"]."=".$arItem["ID"], array($arParams["PRODUCT_ID_VARIABLE"], $arParams["ACTION_VARIABLE"])));
+		$arItem["COMPARE_URL"] = htmlspecialcharsbx($APPLICATION->GetCurPageParam("action=ADD_TO_COMPARE_LIST&id=".$arItem["ID"], array("action", "id")));
+		$arItem["SUBSCRIBE_URL"] = htmlspecialcharsbx($APPLICATION->GetCurPageParam($arParams["ACTION_VARIABLE"]."=SUBSCRIBE_PRODUCT&id=".$arItem["ID"], array($arParams["PRODUCT_ID_VARIABLE"], $arParams["ACTION_VARIABLE"])));
 
 		$arItem["SECTION"]["PATH"] = array();
 		if($arParams["BY_LINK"]==="Y")
@@ -623,9 +642,10 @@ if($this->StartResultCache(false, array($arrFilter, ($arParams["CACHE_GROUPS"]==
 			{
 				if(array_key_exists($arOffer["LINK_ELEMENT_ID"], $arElementOffer))
 				{
-					$arOffer["BUY_URL"] = htmlspecialchars($APPLICATION->GetCurPageParam($arParams["ACTION_VARIABLE"]."=BUY&".$arParams["PRODUCT_ID_VARIABLE"]."=".$arOffer["ID"], array($arParams["PRODUCT_ID_VARIABLE"], $arParams["ACTION_VARIABLE"])));
-					$arOffer["ADD_URL"] = htmlspecialchars($APPLICATION->GetCurPageParam($arParams["ACTION_VARIABLE"]."=ADD2BASKET&".$arParams["PRODUCT_ID_VARIABLE"]."=".$arOffer["ID"], array($arParams["PRODUCT_ID_VARIABLE"], $arParams["ACTION_VARIABLE"])));
-					$arOffer["COMPARE_URL"] = htmlspecialchars($APPLICATION->GetCurPageParam("action=ADD_TO_COMPARE_LIST&id=".$arOffer["ID"], array($arParams["PRODUCT_ID_VARIABLE"], $arParams["ACTION_VARIABLE"])));
+					$arOffer["BUY_URL"] = htmlspecialcharsbx($APPLICATION->GetCurPageParam($arParams["ACTION_VARIABLE"]."=BUY&".$arParams["PRODUCT_ID_VARIABLE"]."=".$arOffer["ID"], array($arParams["PRODUCT_ID_VARIABLE"], $arParams["ACTION_VARIABLE"])));
+					$arOffer["ADD_URL"] = htmlspecialcharsbx($APPLICATION->GetCurPageParam($arParams["ACTION_VARIABLE"]."=ADD2BASKET&".$arParams["PRODUCT_ID_VARIABLE"]."=".$arOffer["ID"], array($arParams["PRODUCT_ID_VARIABLE"], $arParams["ACTION_VARIABLE"])));
+					$arOffer["COMPARE_URL"] = htmlspecialcharsbx($APPLICATION->GetCurPageParam("action=ADD_TO_COMPARE_LIST&id=".$arOffer["ID"], array($arParams["PRODUCT_ID_VARIABLE"], $arParams["ACTION_VARIABLE"])));
+					$arOffer["SUBSCRIBE_URL"] = htmlspecialcharsbx($APPLICATION->GetCurPageParam($arParams["ACTION_VARIABLE"]."=SUBSCRIBE_PRODUCT&id=".$arOffer["ID"], array($arParams["PRODUCT_ID_VARIABLE"], $arParams["ACTION_VARIABLE"])));
 
 					$arElementOffer[$arOffer["LINK_ELEMENT_ID"]][] = $arOffer;
 
@@ -726,7 +746,7 @@ if($USER->IsAuthorized())
 				$arParams["IBLOCK_ID"],
 				0,
 				$arResult["ID"],
-				array("RETURN_URL" =>  $arReturnUrl)
+				array("RETURN_URL" =>  $arReturnUrl, "CATALOG"=>true)
 			);
 
 			if($APPLICATION->GetShowIncludeAreas())

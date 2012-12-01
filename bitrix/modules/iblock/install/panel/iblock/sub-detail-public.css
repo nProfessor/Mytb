@@ -1,0 +1,28 @@
+.bx-core-adm-dialog .bx-core-adm-dialog-tabs .adm-detail-subsettings {
+	background:url("../main/images/bx-admin-sprite-small.png") no-repeat 2px -855px;
+	display:inline-block;
+	font-size:11px;
+	height:15px;
+	width:20px;
+	right:40px;
+	top:20px;
+	position:relative;
+}
+
+.bx-core-adm-dialog .bx-core-adm-dialog-tabs .adm-detail-subsettings-arrow {padding-right:0;}
+
+.bx-core-adm-dialog .bx-core-adm-dialog-tabs .adm-detail-subsettings-arrow:after {
+	background:url("../main/images/bx-admin-sprite-small.png") no-repeat 0 -3313px;
+	content:"";
+	height:3px;
+	width:5px;
+	right:0;
+	top:7px;
+	position:relative;
+}
+
+.bx-core-adm-dialog .bx-core-adm-dialog-tabs .adm-detail-subsettings:hover {
+	background-position: 4px -1683px;
+}
+
+.bx-core-adm-dialog .bx-core-adm-dialog-tabs .adm-detail-subsettings-arrow:hover:after {background-position:0 -3323px;}

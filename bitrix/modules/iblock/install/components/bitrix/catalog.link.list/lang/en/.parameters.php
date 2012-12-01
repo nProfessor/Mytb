@@ -31,4 +31,6 @@ $MESS["IBLOCK_SHOW_PRICE_COUNT"] = "Show price for quantity";
 $MESS["T_IBLOCK_DESC_PAGER_CATALOG"] = "Products";
 $MESS["IBLOCK_VAT_INCLUDE"] = "Include tax rate in price";
 $MESS["CP_BCLL_CACHE_GROUPS"] = "Respect Access Permissions";
+$MESS["CP_BCLL_CONVERT_CURRENCY"] = "Use only one currency to show prices";
+$MESS["CP_BCLL_CURRENCY_ID"] = "Convert all prices to currency";
 ?>

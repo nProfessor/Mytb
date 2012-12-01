@@ -65,7 +65,7 @@ while($arRes = $res->Fetch())
 ?>
 
 <form method="POST" action="<?= $APPLICATION->GetCurPage()?>?" name="ml_access_form">
-<input type="hidden" name="site" value="<?= htmlspecialchars($site) ?>">
+<input type="hidden" name="site" value="<?= htmlspecialcharsbx($site) ?>">
 <input type="hidden" name="saveperm" value="Y">
 <input type="hidden" name="lang" value="<?= LANG ?>">
 <?= bitrix_sessid_post()?>

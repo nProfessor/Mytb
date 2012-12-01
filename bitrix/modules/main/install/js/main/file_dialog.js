@@ -1,6 +1,4 @@
 // ################################      BXFileDialog  javascript class    ###############################//
-// PHP static class - /bitrix/modules/main/interface/admin_lib.php
-// PHP & JS scripts - /bitrix/modules/main/tools/file_dialog_new
 var BXFileDialog = function()
 {
 	this.name = 'BXFileDialog';
@@ -101,6 +99,10 @@ BXFileDialog.prototype =
 				top = parseInt(w.scrollTop + w.innerHeight / 2 - div.offsetHeight / 2);
 
 			jsFloatDiv.Show(div, left, top);
+			BX.addCustomEvent(window, 'onFileDialogLoaded', function(){
+				if (window.oBXDialogTree)
+					oBXDialogTree.SetPath(oConfig.path || UserConfig.path || '');
+			});
 		};
 		ShowWaitWindow();
 
@@ -111,14 +113,13 @@ BXFileDialog.prototype =
 			return ShowDialog();
 		}
 
-		CHttpRequest.Action = ShowDialog;
-		CHttpRequest.Send(this.RequestUrl + '&action=start&path=' + this.oConfig.path + '&add_to_menu=' + (this.oConfig.showAddToMenuTab ? '1' : ''));
+		BX.ajax.get(this.RequestUrl + '&action=start&path=' + this.oConfig.path + '&add_to_menu=' + (this.oConfig.showAddToMenuTab ? '1' : ''), ShowDialog);
 	},
 
 	CheckReConfig: function()
 	{
 		return !(
-			jsUtils.IsIE() ||
+			BX.browser.IsIE() ||
 			this.oConfig.operation != window.fd_config_cached.operation ||
 			this.oConfig.allowAllFiles != window.fd_config_cached.allowAllFiles ||
 			this.oConfig.select != window.fd_config_cached.select ||

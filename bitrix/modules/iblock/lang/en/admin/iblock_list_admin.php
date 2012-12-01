@@ -96,4 +96,7 @@ $MESS["IBLIST_A_OFFERS"] = "SKU";
 $MESS["IBLIST_NOT_SET"] = "(not set)";
 $MESS["IBLIST_A_DEACTIVATE"] = "Deactivate";
 $MESS["IBLIST_A_ACTIVATE"] = "Activate";
+$MESS["IBLIST_DEFAULT_VALUE"] = "default";
+$MESS["IBLIST_YES_VALUE"] = "yes";
+$MESS["IBLIST_NO_VALUE"] = "no";
 ?>

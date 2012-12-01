@@ -1,4 +1,4 @@
-(function(window) {
+;(function(window) {
 
 if (BX.PopupWindowManager)
 	return;
@@ -205,7 +205,7 @@ BX.PopupWindow.prototype.setButtons = function(buttons)
 		BX.remove(this.buttonsHr);
 	if (this.buttonsContainer)
 		BX.remove(this.buttonsContainer);
-	
+
 	if (this.buttons.length > 0 && this.contentContainer)
 	{
 		var newButtons = [];
@@ -342,7 +342,7 @@ BX.PopupWindow.prototype.setTitleBar = function(params)
 
 	this.titleBar.innerHTML = "";
 	this.titleBar.appendChild(params.content);
-	
+
 	if (this.params.draggable)
 	{
 		this.titleBar.parentNode.style.cursor = "move";
@@ -556,7 +556,7 @@ BX.PopupWindow.prototype.adjustPosition = function(bindOptions)
 		this.bindOptions = bindOptions;
 
 	var bindElementPos = this.getBindElementPos(this.bindElement);
-    
+
 	if (!this.bindOptions.forceBindPosition && this.bindElementPos != null &&
          bindElementPos.top == this.bindElementPos.top &&
          bindElementPos.left == this.bindElementPos.left
@@ -701,7 +701,7 @@ BX.PopupWindow.prototype._startDrag = function(event)
 
 	BX.bind(document, "mousemove", BX.proxy(this._moveDrag, this));
 	BX.bind(document, "mouseup", BX.proxy(this._stopDrag, this));
-	
+
 	if (document.body.setCapture)
 		document.body.setCapture();
 
@@ -739,8 +739,8 @@ BX.PopupWindow.prototype._moveDrag = function(event)
 BX.PopupWindow.prototype._stopDrag = function(event)
 {
 	if(document.body.releaseCapture)
-		document.body.releaseCapture();	
-		
+		document.body.releaseCapture();
+
 	BX.unbind(document, "mousemove", BX.proxy(this._moveDrag, this));
 	BX.unbind(document, "mouseup", BX.proxy(this._stopDrag, this));
 
@@ -764,7 +764,7 @@ BX.PopupWindow.setOptions = function(options)
 		return;
 
 	for (var option in options)
-		BX.PopupWindow.options[option] = options[option];	
+		BX.PopupWindow.options[option] = options[option];
 };
 
 BX.PopupWindow.getOption = function(option, defaultValue)
@@ -856,11 +856,28 @@ BX.PopupMenu = {
 
 	Data : {},
 	currentItem : null,
+	stack : [],
 
-	show : function(Id, bindElement, menuItems, params)
+	onkeypresslistener: null,
+
+	show : function(Id, bindElement, menuItems, params, level)
 	{
-		if (this.currentItem !== null)
-			this.currentItem.popupWindow.close();
+		if (!level)
+			level = 0;
+
+		if (level < this.stack.length)
+		{
+			for (var i = this.stack.length-1; i >= level; i--)
+			{
+				this.currentItem = this.stack.pop();
+
+				if (this.currentItem)
+					this.currentItem.popupWindow.close();
+
+				if (i > 0)
+					this.currentItem = this.stack[i-1];
+			}
+		}
 
 		if (!this.Data[Id])
 		{
@@ -869,37 +886,66 @@ BX.PopupMenu = {
 		}
 
 		this.currentItem = this.Data[Id];
+		this.stack[level] = this.currentItem;
+
 		this.currentItem.popupWindow.show();
+
+		if (!this.onkeypresslistener)
+		{
+			this.onkeypresslistener = BX.delegate(function(e) {
+				e = e || window.event;
+				if (e && e.keyCode == 27)
+				{
+					this.currentItem = this.stack.pop();
+
+					if (this.currentItem)
+						this.currentItem.popupWindow.close();
+
+					if (this.stack.length > 0)
+						this.currentItem = this.stack[this.stack.length - 1];
+				}
+			}, this);
+
+			BX.bind(document, 'keypress', this.onkeypresslistener);
+		}
 	},
 
 	__createPopup : function(node, menuItems, params)
 	{
 		var items = [];
-		for (var i = 0; i < menuItems.length; i++) 
+		for (var i = 0; i < menuItems.length; i++)
 		{
-
 			var item = menuItems[i];
-			if (!item || !item.text || !BX.type.isNotEmptyString(item.text))
+
+			if (!item)
 				continue;
 
 			if (i > 0)
-				items.push(BX.create("div", { props : { className : "popup-window-hr" }, children : [ BX.create("i", {}) ]}));
+				items.push(BX.create("div", { props : { className : "popup-window-hr" }, html:'<i></i>'}));
 
-			var a = BX.create("a", {
-				props : { className: "menu-popup-item" +  (BX.type.isNotEmptyString(item.className) ? " " + item.className : "")},
-				attrs : { title : item.title ? item.title : ""},
-				events : item.onclick && BX.type.isFunction(item.onclick) ? { click : BX.proxy(item.onclick, node) } : null,
-				html :  '<span class="menu-popup-item-left"></span><span class="menu-popup-item-icon"></span><span class="menu-popup-item-text">' + item.text + '</span><span class="menu-popup-item-right"></span>'
-			});
+			if (!!item.delimiter)
+			{
+				var a = BX.create('span', {props:{className:'popup-window-delimiter'},html:'<i></i>'});
+			}
+			else if (!!item.text && BX.type.isNotEmptyString(item.text))
+			{
 
-			if (item.href)
-				a.href = item.href;
+				var a = BX.create(!!item.href ? "a" : "span", {
+					props : { className: "menu-popup-item" +  (BX.type.isNotEmptyString(item.className) ? " " + item.className : "")},
+					attrs : { title : item.title ? item.title : "", onclick: item.onclick && BX.type.isString(item.onclick) ? item.onclick : null},
+					events : item.onclick && BX.type.isFunction(item.onclick) ? { click : BX.proxy(item.onclick, node) } : null,
+					html :  '<span class="menu-popup-item-left"></span><span class="menu-popup-item-icon"></span><span class="menu-popup-item-text">' + item.text + '</span><span class="menu-popup-item-right"></span>'
+				});
+
+				if (item.href)
+					a.href = item.href;
+			}
+
 			items.push(a);
-
 		}
 
 		var popupWindow = new BX.PopupWindow("menu-popup-" + node.id, node.bindElement, {
-			closeByEsc : typeof(params.closeByEsc) != "undefined" ? params.closeByEsc : true,
+			closeByEsc : false,
 			autoHide : typeof(params.autoHide) != "undefined" ? params.autoHide : true,
 			offsetTop : params.offsetTop ? params.offsetTop : 1,
 			offsetLeft : params.offsetLeft ? params.offsetLeft : 0,

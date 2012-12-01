@@ -425,6 +425,33 @@ class CAllUserTypeEntity extends CDBResult
 			$arFields["SETTINGS"] = array();
 		$arFields["SETTINGS"] = serialize($USER_FIELD_MANAGER->PrepareSettings(0, $arFields, $bCheckUserType));
 
+		// events
+		$rsEvents = GetModuleEvents("main", "OnBeforeUserTypeAdd");
+		while ($arEvent = $rsEvents->Fetch())
+		{
+			if (ExecuteModuleEventEx($arEvent, array(&$arFields))===false)
+			{
+				if($e = $APPLICATION->GetException())
+				{
+					return false;
+				}
+
+				$aMsg = array();
+				$aMsg[] = array(
+					"id"=>"FIELD_NAME",
+					"text"=>GetMessage("USER_TYPE_ADD_ERROR", array(
+						"#FIELD_NAME#"=>htmlspecialcharsbx($arFields["FIELD_NAME"]),
+						"#ENTITY_ID#"=>htmlspecialcharsbx($arFields["ENTITY_ID"]),
+					))
+				);
+
+				$e = new CAdminException($aMsg);
+				$APPLICATION->ThrowException($e);
+
+				return false;
+			}
+		}
+
 		if(is_object($USER_FIELD_MANAGER))
 			$USER_FIELD_MANAGER->CleanCache();
 
@@ -512,7 +539,7 @@ class CAllUserTypeEntity extends CDBResult
 	 */
 	function Update($ID, $arFields)
 	{
-		global $DB, $USER_FIELD_MANAGER, $CACHE_MANAGER;
+		global $DB, $USER_FIELD_MANAGER, $CACHE_MANAGER, $APPLICATION;
 		$ID = intval($ID);
 
 		unset($arFields["ENTITY_ID"]);
@@ -539,6 +566,33 @@ class CAllUserTypeEntity extends CDBResult
 			$arFields["EDIT_IN_LIST"]="Y";
 		if(array_key_exists("IS_SEARCHABLE", $arFields) && $arFields["IS_SEARCHABLE"]!=="Y")
 			$arFields["IS_SEARCHABLE"]="N";
+
+		// events
+		$rsEvents = GetModuleEvents("main", "OnBeforeUserTypeUpdate");
+		while ($arEvent = $rsEvents->Fetch())
+		{
+			if (ExecuteModuleEventEx($arEvent, array(&$arFields))===false)
+			{
+				if($e = $APPLICATION->GetException())
+				{
+					return false;
+				}
+
+				$aMsg = array();
+				$aMsg[] = array(
+					"id"=>"FIELD_NAME",
+					"text"=>GetMessage("USER_TYPE_UPDATE_ERROR", array(
+						"#FIELD_NAME#"=>htmlspecialcharsbx($arFields["FIELD_NAME"]),
+						"#ENTITY_ID#"=>htmlspecialcharsbx($arFields["ENTITY_ID"]),
+					))
+				);
+
+				$e = new CAdminException($aMsg);
+				$APPLICATION->ThrowException($e);
+
+				return false;
+			}
+		}
 
 		if(is_object($USER_FIELD_MANAGER))
 			$USER_FIELD_MANAGER->CleanCache();
@@ -593,12 +647,39 @@ class CAllUserTypeEntity extends CDBResult
 	 */
 	function Delete($ID)
 	{
-		global $DB, $CACHE_MANAGER, $USER_FIELD_MANAGER;
+		global $DB, $CACHE_MANAGER, $USER_FIELD_MANAGER, $APPLICATION;
 		$ID = intval($ID);
 
 		$rs = $this->GetList(array(), array("ID"=>$ID));
 		if($arField = $rs->Fetch())
 		{
+			// events
+			$rsEvents = GetModuleEvents("main", "OnBeforeUserTypeDelete");
+			while ($arEvent = $rsEvents->Fetch())
+			{
+				if (ExecuteModuleEventEx($arEvent, array(&$arField))===false)
+				{
+					if($e = $APPLICATION->GetException())
+					{
+						return false;
+					}
+
+					$aMsg = array();
+					$aMsg[] = array(
+						"id"=>"FIELD_NAME",
+						"text"=>GetMessage("USER_TYPE_DELETE_ERROR", array(
+							"#FIELD_NAME#"=>htmlspecialcharsbx($arField["FIELD_NAME"]),
+							"#ENTITY_ID#"=>htmlspecialcharsbx($arField["ENTITY_ID"]),
+						))
+					);
+
+					$e = new CAdminException($aMsg);
+					$APPLICATION->ThrowException($e);
+
+					return false;
+				}
+			}
+
 			if(is_object($USER_FIELD_MANAGER))
 				$USER_FIELD_MANAGER->CleanCache();
 
@@ -1212,9 +1293,13 @@ class CAllUserTypeManager
 		if($arUserField["USER_TYPE"])
 		{
 			if($this->GetRights($arUserField["ENTITY_ID"]) >= "W")
-				$strLabelHTML = '<a href="/bitrix/admin/userfield_edit.php?lang='.LANG.'&ID='.urlencode($arUserField["ID"]).'&back_url='.urlencode($APPLICATION->GetCurPageParam().'&tabControl_active_tab=user_fields_tab').'">'.htmlspecialcharsbx($arUserField["EDIT_FORM_LABEL"]? $arUserField["EDIT_FORM_LABEL"]: $arUserField["FIELD_NAME"]).'</a>'.($arUserField["MANDATORY"]=="Y"? '<span class="required">*</span>': '').':';
+				$edit_link = ($arUserField["HELP_MESSAGE"]? htmlspecialcharsex($arUserField["HELP_MESSAGE"]).'<br>': '').'<a href="'.htmlspecialcharsbx('/bitrix/admin/userfield_edit.php?lang='.LANG.'&ID='.$arUserField["ID"].'&back_url='.urlencode($APPLICATION->GetCurPageParam().'&tabControl_active_tab=user_fields_tab')).'">'.htmlspecialcharsex(GetMessage("MAIN_EDIT")).'</a>';
 			else
-				$strLabelHTML = htmlspecialcharsbx($arUserField["EDIT_FORM_LABEL"]? $arUserField["EDIT_FORM_LABEL"]: $arUserField["FIELD_NAME"]).($arUserField["MANDATORY"]=="Y"? '<span class="required">*</span>': '').':';
+				$edit_link = '';
+
+			$hintHTML = '<span id="hint_'.$arUserField["FIELD_NAME"].'"></span><script>BX.hint_replace(BX(\'hint_'.$arUserField["FIELD_NAME"].'\'), \''.CUtil::JSEscape($edit_link).'\');</script>&nbsp;';
+
+			$strLabelHTML = $hintHTML.htmlspecialcharsbx($arUserField["EDIT_FORM_LABEL"]? $arUserField["EDIT_FORM_LABEL"]: $arUserField["FIELD_NAME"]).($arUserField["MANDATORY"]=="Y"? '<span class="required">*</span>': '').':';
 
 			if(is_callable(array($arUserField["USER_TYPE"]["CLASS_NAME"], "geteditformhtml")))
 			{
@@ -1229,6 +1314,7 @@ class CAllUserTypeManager
 
 				if($arUserField["MULTIPLE"] == "N")
 				{
+					$valign = "";
 					$html = call_user_func_array(
 						array($arUserField["USER_TYPE"]["CLASS_NAME"], "geteditformhtml"),
 						array(
@@ -1236,10 +1322,11 @@ class CAllUserTypeManager
 							array(
 								"NAME" => $arUserField["FIELD_NAME"],
 								"VALUE" => is_array($form_value)? $form_value: htmlspecialcharsbx($form_value),
+								"VALIGN" => &$valign,
 							),
 						)
 					);
-					return '<tr><td valign="top" width="40%">'.$strLabelHTML.'</td><td width="60%">'.$html.'</td></tr>'.$js;
+					return '<tr><td'.($valign <> 'middle'? ' class="adm-detail-valign-top"':'').' width="40%">'.$strLabelHTML.'</td><td width="60%">'.$html.'</td></tr>'.$js;
 				}
 				elseif(is_callable(array($arUserField["USER_TYPE"]["CLASS_NAME"], "geteditformhtmlmulty")))
 				{
@@ -1259,7 +1346,7 @@ class CAllUserTypeManager
 							),
 						)
 					);
-					return '<tr><td valign="top">'.$strLabelHTML.'</td><td>'.$html.'</td></tr>'.$js;
+					return '<tr><td class="adm-detail-valign-top">'.$strLabelHTML.'</td><td>'.$html.'</td></tr>'.$js;
 				}
 				else
 				{
@@ -1289,7 +1376,7 @@ class CAllUserTypeManager
 					}
 					//Add multiple values support
 					$FIELD_NAME_X = str_replace('_', 'x', $arUserField["FIELD_NAME"]);
-					return '<tr><td valign="top">'.$strLabelHTML.'</td><td>'.
+					return '<tr><td class="adm-detail-valign-top">'.$strLabelHTML.'</td><td>'.
 						'<table id="table_'.$arUserField["FIELD_NAME"].'">'.$html.'<tr><td>'.call_user_func_array(
 						array($arUserField["USER_TYPE"]["CLASS_NAME"], "geteditformhtml"),
 						array(

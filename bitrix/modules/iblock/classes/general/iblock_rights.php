@@ -452,7 +452,8 @@ class CIBlockRights
 		foreach($arRights as $RIGHT_ID => $arRightSet)
 		{
 			if(
-				!array_key_exists($arRightSet["TASK_ID"], $arTasks)
+				!is_array($arRightSet["TASK_ID"])
+				&& !array_key_exists($arRightSet["TASK_ID"], $arTasks)
 				&& array_key_exists($RIGHT_ID, $arDBRights)
 			)
 				$arRights[$RIGHT_ID]["TASK_ID"] = $arDBRights[$RIGHT_ID]["TASK_ID"];
@@ -465,7 +466,7 @@ class CIBlockRights
 			$GROUP_CODE = $arRightSet["GROUP_CODE"];
 			$bInherit = true;//$arRightSet["DO_INHERIT"] == "Y";
 
-			if(strlen($GROUP_CODE) <= 0)
+			if(strlen($GROUP_CODE) <= 0 || is_array($arRightSet["TASK_ID"]))
 				continue;
 
 			if(!array_key_exists($arRightSet["TASK_ID"], $arTasks))

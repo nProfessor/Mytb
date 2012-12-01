@@ -80,7 +80,7 @@ while($arRes = $rsData->NavNext(true, "f_")):
 
 	if($f_BANNED == "N")
 	{
-		$row->AddViewField("BANNED", '<img src="/bitrix/images/perfmon/green.gif" hspace="4" alt="'.htmlspecialchars(GetMessage("PERFMON_ICOMPLETE_GREEN_ALT")).'" title="'.htmlspecialchars(GetMessage("PERFMON_ICOMPLETE_GREEN_ALT")).'" />');
+		$row->AddViewField("BANNED", '<span class="adm-lamp adm-lamp-in-list adm-lamp-green" title="'.htmlspecialcharsbx(GetMessage("PERFMON_ICOMPLETE_GREEN_ALT")).'"></span>');
 		if($isAdmin)
 		{
 			$arActions[] = array(
@@ -91,7 +91,7 @@ while($arRes = $rsData->NavNext(true, "f_")):
 	}
 	elseif($f_BANNED == "Y")
 	{
-		$row->AddViewField("BANNED", '<img src="/bitrix/images/perfmon/red.gif" hspace="4" alt="'.htmlspecialchars(GetMessage("PERFMON_ICOMPLETE_RED_ALT")).'" title="'.htmlspecialchars(GetMessage("PERFMON_ICOMPLETE_RED_ALT")).'" />');
+		$row->AddViewField("BANNED", '<span class="adm-lamp adm-lamp-in-list adm-lamp-red" title="'.htmlspecialcharsbx(GetMessage("PERFMON_ICOMPLETE_RED_ALT")).'"></span>');
 		$row->AddViewField("INDEX_NAME", GetMessage("PERFMON_ICOMPLETE_NO_INDEX"));
 		$arActions[] = array(
 			"TEXT" => GetMessage("PERFMON_ICOMPLETE_DELETE_BAN"),
@@ -100,7 +100,7 @@ while($arRes = $rsData->NavNext(true, "f_")):
 	}
 	else
 	{
-		$row->AddViewField("BANNED", '<img src="/bitrix/images/perfmon/yellow.gif" hspace="4" alt="'.htmlspecialchars(GetMessage("PERFMON_ICOMPLETE_YELLOW_ALT")).'" title="'.htmlspecialchars(GetMessage("PERFMON_ICOMPLETE_YELLOW_ALT")).'" />');
+		$row->AddViewField("BANNED",  '<span class="adm-lamp adm-lamp-in-list adm-lamp-yellow" title="'.htmlspecialcharsbx(GetMessage("PERFMON_ICOMPLETE_YELLOW_ALT")).'"></span>');
 	}
 
 	if(!empty($arActions))

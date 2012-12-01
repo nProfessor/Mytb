@@ -166,11 +166,17 @@ else
 $APPLICATION->SetTitle(($ID>0? GetMessage("USER_TYPE_EDIT_TITLE", array("#ID#"=>$ID)) : GetMessage("USER_TYPE_ADD_TITLE")));
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_after.php");
 
+// validate list_url
+if (!empty($list_url))
+{
+	$list_url = substr($list_url, 0, 1) === '/' ? $list_url : '/'.$list_url;
+}
+
 $aMenu = array(
 	array(
 		"TEXT"=>GetMessage("USER_TYPE_LIST"),
 		"TITLE"=>GetMessage("USER_TYPE_LIST_TITLE"),
-		"LINK"=>"userfield_admin.php?lang=".LANG,
+		"LINK"=>!empty($list_url)? $list_url : "userfield_admin.php?lang=".LANG,
 		"ICON"=>"btn_list",
 	)
 );
@@ -259,7 +265,7 @@ BX.ready(function(){
 				addNewRow('list_table');
 			}
 		}
-	
+
 	});
 
 });
@@ -278,8 +284,8 @@ $tabControl->BeginNextTab();
 		<td width="60%"><?=$ID?></td>
 	</tr>
 	<?endif?>
-	<tr>
-		<td width="40%"><span class="required">*</span><?=GetMessage("USERTYPE_USER_TYPE_ID")?>:</td>
+	<tr class="adm-detail-required-field">
+		<td width="40%"><?=GetMessage("USERTYPE_USER_TYPE_ID")?>:</td>
 		<td width="60%">
 			<?
 			if($ID > 0)
@@ -296,13 +302,13 @@ $tabControl->BeginNextTab();
 					$arr["reference"][] = $arUserType["DESCRIPTION"];
 					$arr["reference_id"][] = $arUserType["USER_TYPE_ID"];
 				}
-				echo SelectBoxFromArray("USER_TYPE_ID", $arr, $USER_TYPE_ID, "", 'OnChange="window.location=\''.htmlspecialcharsbx($APPLICATION->GetCurPageParam("", array("USER_TYPE_ID")).'&USER_TYPE_ID=').'\'+this.value"');
+				echo SelectBoxFromArray("USER_TYPE_ID", $arr, $USER_TYPE_ID, "", 'OnChange="'.htmlspecialcharsbx('window.location=\''.CUtil::JSEscape($APPLICATION->GetCurPageParam("", array("USER_TYPE_ID")).'&back_url='.urlencode($back_url).'&list_url='.urlencode($list_url).'&ENTITY_ID='.$ENTITY_ID.'&USER_TYPE_ID=').'\' + this.value').'"');
 			}
 			?>
 		</td>
 	</tr>
-	<tr>
-		<td><span class="required">*</span><?=GetMessage("USERTYPE_ENTITY_ID")?>:</td>
+	<tr class="adm-detail-required-field">
+		<td><?=GetMessage("USERTYPE_ENTITY_ID")?>:</td>
 		<td>
 			<?if($ID>0 || ($ENTITY_ID!="" && !$message)):?>
 				<?=$ENTITY_ID?>
@@ -312,8 +318,8 @@ $tabControl->BeginNextTab();
 			<?endif?>
 		</td>
 	</tr>
-	<tr>
-		<td><span class="required">*</span><?=GetMessage("USERTYPE_FIELD_NAME")?>:</td>
+	<tr class="adm-detail-required-field">
+		<td><?=GetMessage("USERTYPE_FIELD_NAME")?>:</td>
 		<td>
 			<?if($ID>0):?>
 				<?=$FIELD_NAME?>
@@ -420,8 +426,8 @@ $tabControl->BeginNextTab();
 <?if(is_object($obEnum)):
 	$tabControl->BeginNextTab();
 ?>
-	<tr valign="top">
-		<td><?=GetMessage("USER_TYPE_LIST_LABEL")?></td>
+	<tr>
+		<td class="adm-detail-valign-top"><?=GetMessage("USER_TYPE_LIST_LABEL")?></td>
 		<td>
 	<table border="0" cellspacing="0" cellpadding="0" class="internal" id="list_table">
 	<tr class="heading">
@@ -503,7 +509,7 @@ endif;
 $tabControl->Buttons(
 	array(
 		"disabled"=>$RIGHTS<"W",
-		"back_url"=>"userfield_admin.php?lang=".LANG,
+		"back_url"=>!empty($back_url) ? $back_url : "userfield_admin.php?lang=".LANG,
 
 	)
 );
@@ -513,6 +519,8 @@ $tabControl->Buttons(
 	<input type="hidden" name="ID" value="<?=$ID?>">
 <?endif;?>
 <input type="hidden" name="back_url" value="<?=htmlspecialcharsbx($back_url)?>">
+<input type="hidden" name="list_url" value="<?=htmlspecialcharsbx($list_url)?>">
+
 <?
 $tabControl->End();
 ?>
@@ -521,8 +529,5 @@ $tabControl->End();
 $tabControl->ShowWarnings("post_form", $message);
 ?>
 
-<?echo BeginNote();?>
-<span class="required">*</span><?echo GetMessage("REQUIRED_FIELDS")?>
-<?echo EndNote();?>
 
 <?require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");?>

@@ -46,4 +46,5 @@ $MESS["IBLOCK_CML2_LID_ERROR"] = "No sites were selected.";
 $MESS["IBLOCK_CML2_IMAGE_RESIZE"] = "Use Information Block Settings For Image Processing";
 $MESS["IBLOCK_CML2_ELEMENTS_LIST"] = "Jump to element list.";
 $MESS["IBLOCK_CML2_ACCESS_DENIED"] = "Access denied.";
+$MESS["IBLOCK_CML2_FILE_PROGRESS2"] = "Reading import file to temporary tables";
 ?>

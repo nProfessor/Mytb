@@ -87,4 +87,5 @@ $MESS["AddLITitle"] = "Add List Item (Enter)";
 $MESS["DelListItem"] = "Delete List Item";
 $MESS["ResizerTitle"] = "Resize";
 $MESS["CodeDel"] = "Click Shift+Del to delete the entire code fragment";
+$MESS["OnPasteProcessing"] = "Processing new text...";
 ?>

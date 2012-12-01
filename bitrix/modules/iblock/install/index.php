@@ -183,6 +183,7 @@ Class iblock extends CModule
 			CopyDirFiles($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/iblock/install/themes/", $_SERVER["DOCUMENT_ROOT"]."/bitrix/themes", true, true);
 			CopyDirFiles($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/iblock/install/components", $_SERVER["DOCUMENT_ROOT"]."/bitrix/components", true, true);
 			CopyDirFiles($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/iblock/install/gadgets", $_SERVER["DOCUMENT_ROOT"]."/bitrix/gadgets", true, true);
+			CopyDirFiles($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/iblock/install/panel/", $_SERVER["DOCUMENT_ROOT"]."/bitrix/panel", true, true);
 		}
 		return true;
 	}
@@ -195,6 +196,7 @@ Class iblock extends CModule
 			DeleteDirFilesEx("/bitrix/images/iblock/");//images
 			DeleteDirFiles($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/iblock/install/public/", $_SERVER["DOCUMENT_ROOT"]."/bitrix/");
 			DeleteDirFiles($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/iblock/install/themes/.default/", $_SERVER["DOCUMENT_ROOT"]."/bitrix/themes/.default");//css
+			DeleteDirFiles($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/iblock/install/panel/iblock/", $_SERVER["DOCUMENT_ROOT"]."/bitrix/panel/iblock/");//css sku
 			DeleteDirFilesEx("/bitrix/themes/.default/icons/iblock/");//icons
 			DeleteDirFilesEx("/bitrix/js/iblock/");//javascript
 		}
@@ -265,6 +267,7 @@ Class iblock extends CModule
 						"b_iblock_offers_tmp" => "PRODUCT_IBLOCK_ID",
 						"b_iblock_offers_tmp^" => "OFFERS_IBLOCK_ID",
 						"b_iblock_right^" => "ENTITY_ID",
+						"b_iblock_section_property" => "IBLOCK_ID",
 					)
 				),
 				"b_iblock_section" => array(
@@ -275,6 +278,7 @@ Class iblock extends CModule
 						"b_iblock_section_right" => "SECTION_ID",
 						"b_iblock_element_right" => "SECTION_ID",
 						"b_iblock_section_element" => "IBLOCK_SECTION_ID",
+						"b_iblock_section_property" => "SECTION_ID",
 					)
 				),
 				"b_iblock_element" => array(
@@ -291,6 +295,7 @@ Class iblock extends CModule
 						"b_iblock_element_property" => "IBLOCK_PROPERTY_ID",
 						"b_iblock_property_enum" => "PROPERTY_ID",
 						"b_iblock_section_element" => "ADDITIONAL_PROPERTY_ID",
+						"b_iblock_section_property" => "PROPERTY_ID",
 					)
 				),
 				"b_iblock_right" => array(

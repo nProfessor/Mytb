@@ -247,4 +247,5 @@ $MESS["IB_E_OF_ERR_SUBSCRIPTION"] = "Error saving the commercial catalog paramet
 $MESS["IB_E_OF_ERR_YANDEX_EXPORT"] = "Error saving the commercial catalog parameters: an information block must be explicitly marked as exporting to Yandex.market or not.";
 $MESS["IB_E_OF_ERR_VAT_ID"] = "Error saving the commercial catalog parameters: the tax rate is not specified.";
 $MESS["IB_E_OF_ERR_USED_SKU"] = "Error saving the commercial catalog parameters: an information block must be explicitly marked as having SKU's or not.";
+$MESS["IB_E_PROP_SECTION_PROPERTY"] = "Element edit page shows:";
 ?>

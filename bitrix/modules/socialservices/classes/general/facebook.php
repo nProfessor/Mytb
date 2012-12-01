@@ -16,49 +16,66 @@ class CSocServFacebook extends CSocServAuth
 
 	public function GetFormHtml($arParams)
 	{
-		$redirect_uri = CSocServUtil::GetCurUrl('auth_service_id='.self::ID);
-
+		$redirect_uri = CSocServUtil::GetCurUrl('auth_service_id='.self::ID.'&check_key='.$_SESSION["UNIQUE_KEY"]);
 		$appID = self::GetOption("facebook_appid");
 		$appSecret = self::GetOption("facebook_appsecret");
 
 		$fb = new CFacebookInterface($appID, $appSecret);
 		$url = $fb->GetAuthUrl($redirect_uri);
 
-		return '<a href="javascript:void(0)" onclick="BX.util.popup(\''.htmlspecialchars(CUtil::JSEscape($url)).'\', 580, 400)" class="bx-ss-button facebook-button"></span><span>'.GetMessage("socserv_fb_note").'</span></a>';
+		return '<a href="javascript:void(0)" onclick="BX.util.popup(\''.htmlspecialcharsbx(CUtil::JSEscape($url)).'\', 580, 400)" class="bx-ss-button facebook-button"></a><span class="bx-spacer"></span><span>'.GetMessage("socserv_fb_note").'</span>';
 	}
-
+	
 	public function Authorize()
 	{
 		$GLOBALS["APPLICATION"]->RestartBuffer();
 		$bSuccess = false;
-		if(isset($_REQUEST["code"]) && $_REQUEST["code"] <> '')
-		{
-			$redirect_uri = CSocServUtil::GetCurUrl('auth_service_id='.self::ID, array("code"));
 
-			$appID = self::GetOption("facebook_appid");
-			$appSecret = self::GetOption("facebook_appsecret");
-
-			$fb = new CFacebookInterface($appID, $appSecret, $_REQUEST["code"]);
-
-			if($fb->GetAccessToken($redirect_uri) !== false)
+			if(isset($_REQUEST["code"]) && $_REQUEST["code"] <> '')
 			{
-				$arFBUser = $fb->GetCurrentUser();
-				if(isset($arFBUser["id"]))
+				if(CSocServAuthManager::CheckUniqueKey())
 				{
-					$arFields = array(
-						'EXTERNAL_AUTH_ID' => self::ID,
-						'XML_ID' => $arFBUser["id"],
-						'LOGIN' => $arFBUser["email"],
-						'EMAIL' => $arFBUser["email"],
-						'NAME'=> $arFBUser["first_name"],
-						'LAST_NAME'=> $arFBUser["last_name"],
-					);
-					$bSuccess = $this->AuthorizeUser($arFields);
+				$redirect_uri = CSocServUtil::GetCurUrl('auth_service_id='.self::ID, array("code"));
+
+				$appID = self::GetOption("facebook_appid");
+				$appSecret = self::GetOption("facebook_appsecret");
+
+				$fb = new CFacebookInterface($appID, $appSecret, $_REQUEST["code"]);
+
+				if($fb->GetAccessToken($redirect_uri) !== false)
+				{
+					$arFBUser = $fb->GetCurrentUser();
+					if(isset($arFBUser["id"]))
+					{
+						$arFields = array(
+							'EXTERNAL_AUTH_ID' => self::ID,
+							'XML_ID' => $arFBUser["id"],
+							'LOGIN' => "FB_".$arFBUser["email"],
+							'EMAIL' => $arFBUser["email"],
+							'NAME'=> $arFBUser["first_name"],
+							'LAST_NAME'=> $arFBUser["last_name"],
+						);
+
+						if(isset($arFBUser['picture']['data']['url']) && self::CheckPhotoURI($arFBUser['picture']['data']['url']))
+							if ($arPic = CFile::MakeFileArray($arFBUser['picture']['data']['url']))
+								$arFields["PERSONAL_PHOTO"] = $arPic;
+						if(isset($arFBUser['birthday']))
+							if ($date = MakeTimeStamp($arFBUser['birthday'], "MM/DD/YYYY"))
+								$arFields["PERSONAL_BIRTHDAY"] = ConvertTimeStamp($date);
+						if(isset($arFBUser['gender']) && $arFBUser['gender'] != '')
+						{
+							if ($arFBUser['gender'] == 'male')
+								$arFields["PERSONAL_GENDER"] = 'M';
+							elseif ($arFBUser['gender'] == 'female')
+								$arFields["PERSONAL_GENDER"] = 'F';
+						}
+						$arFields["PERSONAL_WWW"] = "http://www.facebook.com/".$arFBUser["id"];
+						$bSuccess = $this->AuthorizeUser($arFields);
+					}
 				}
 			}
 		}
-
-		$aRemove = array("logout", "auth_service_error", "auth_service_id", "code", "error_reason", "error", "error_description");
+		$aRemove = array("logout", "auth_service_error", "auth_service_id", "code", "error_reason", "error", "error_description", "check_key");
 		$url = $GLOBALS['APPLICATION']->GetCurPageParam(($bSuccess? '':'auth_service_id='.self::ID.'&auth_service_error=1'), $aRemove);
 		echo '
 <script type="text/javascript">
@@ -80,7 +97,7 @@ class CFacebookInterface
 	protected $appSecret;
 	protected $code = false;
 	protected $access_token = false;
-
+	
 	public function __construct($appID, $appSecret, $code=false)
 	{
 		$this->appID = $appID;
@@ -92,7 +109,7 @@ class CFacebookInterface
 	{
 		return self::AUTH_URL."?client_id=".$this->appID."&scope=user_photos,user_birthday,email,publish_stream&display=popup&redirect_uri=".urlencode($redirect_uri);
 	}
-
+	
 	public function GetAccessToken($redirect_uri)
 	{
 		if($this->code === false)
@@ -109,14 +126,14 @@ class CFacebookInterface
 		}
 		return false;
 	}
-
+	
 	public function GetCurrentUser()
 	{
 		if($this->access_token === false)
 			return false;
 
-		$result = CHTTP::sGet(self::GRAPH_URL.'/me?access_token='.$this->access_token);
-
+		$result = CHTTP::sGet(self::GRAPH_URL.'/me?access_token='.$this->access_token."&fields=picture,id,name,first_name,last_name,gender,birthday,email");
+		
 		if(!defined("BX_UTF"))
 			$result = CharsetConverter::ConvertCharset($result, "utf-8", LANG_CHARSET);
 
