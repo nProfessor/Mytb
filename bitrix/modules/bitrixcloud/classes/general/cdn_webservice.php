@@ -1,6 +1,7 @@
 <?
 IncludeModuleLangFile(__FILE__);
-class CBitrixCloudCDNWebService
+
+class CBitrixCloudCDNWebService extends CBitrixCloudWebService
 {
 	private $domain = "";
 	/**
@@ -20,7 +21,7 @@ class CBitrixCloudCDNWebService
 	 * @return string
 	 *
 	 */
-	private function getActionURL($arParams = /*.(array[string]string).*/ array())
+	protected function getActionURL($arParams = /*.(array[string]string).*/ array())
 	{
 		$arErrors = /*.(array[int]string).*/ array();
 		$domainTmp = CBXPunycode::ToASCII($this->domain, $arErrors);
@@ -36,57 +37,6 @@ class CBitrixCloudCDNWebService
 			"encode" => true,
 		));
 		return $url;
-	}
-	/**
-	 * Returns action response XML
-	 *
-	 * @param string $action
-	 * @return CDataXML
-	 *
-	 */
-	private function action($action) /*. throws CBitrixCloudException .*/
-	{
-		global $APPLICATION;
-		$url = $this->getActionURL(array(
-			"action" => $action,
-		));
-		$server = new CHTTP;
-		$strXML = $server->Get($url);
-		if ($strXML === false)
-		{
-			$e = $APPLICATION->GetException();
-			if (is_object($e))
-				throw new CBitrixCloudException($e->GetString());
-			else
-				throw new CBitrixCloudException(GetMessage("BCL_CDN_WS_SERVER", array(
-					"#STATUS#" => "-1",
-				)));
-		}
-		if ($server->status != 200)
-		{
-			throw new CBitrixCloudException(GetMessage("BCL_CDN_WS_SERVER", array(
-				"#STATUS#" => (string)$server->status,
-			)));
-		}
-		$obXML = new CDataXML;
-		if (!$obXML->LoadString($strXML))
-		{
-			throw new CBitrixCloudException(GetMessage("BCL_CDN_WS_XML_PARSE", array(
-				"#CODE#" => "1",
-			)));
-		}
-		$node = $obXML->SelectNodes("/error/code");
-		if (is_object($node))
-		{
-			$error_code = $node->textContent();
-			if (HasMessage("BCL_CDN_WS_ERROR_".$error_code))
-				throw new CBitrixCloudException(GetMessage("BCL_CDN_WS_ERROR_".$error_code), $error_code);
-			else
-				throw new CBitrixCloudException(GetMessage("BCL_CDN_WS_SERVER", array(
-					"#STATUS#" => $error_code,
-				)), $error_code);
-		}
-		return $obXML;
 	}
 	/**
 	 *

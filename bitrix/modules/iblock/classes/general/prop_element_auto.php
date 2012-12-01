@@ -135,7 +135,7 @@ class CIBlockPropertyElementAutoComplete
 		$mxResult = self::GetPropertyValue($arProperty,$arValue);
 		if (true == is_array($mxResult))
 		{
-			$strResult = htmlspecialchars(str_replace($arBanSym,$arRepSym,$mxResult['~NAME'])).' ['.$mxResult['ID'].']';
+			$strResult = htmlspecialcharsbx(str_replace($arBanSym,$arRepSym,$mxResult['~NAME'])).' ['.$mxResult['ID'].']';
 		}
 		return $strResult;
 	}
@@ -158,7 +158,7 @@ class CIBlockPropertyElementAutoComplete
 				$mxResult = self::GetPropertyValue($arProperty,$arOneValue);
 				if (true == is_array($mxResult))
 				{
-					$arResult[$intPropertyValueID] = htmlspecialchars(str_replace($arBanSym,$arRepSym,$mxResult['~NAME'])).' ['.$mxResult['ID'].']';
+					$arResult[$intPropertyValueID] = htmlspecialcharsbx(str_replace($arBanSym,$arRepSym,$mxResult['~NAME'])).' ['.$mxResult['ID'].']';
 				}
 			}
 		}
@@ -196,7 +196,7 @@ class CIBlockPropertyElementAutoComplete
 			$mxElement = self::GetPropertyValue($arProperty,$arValue);
 			if (false == is_array($mxElement))
 			{
-				$strResult = '<input type="text" name="'.htmlspecialchars($strHTMLControlName["VALUE"]).'" id="'.$strHTMLControlName["VALUE"].'" value="" size="5">'.
+				$strResult = '<input type="text" name="'.htmlspecialcharsbx($strHTMLControlName["VALUE"]).'" id="'.$strHTMLControlName["VALUE"].'" value="" size="5">'.
 					'<input type="button" value="..." onClick="jsUtils.OpenWindow(\'iblock_element_search.php?lang='.LANGUAGE_ID.'&amp;IBLOCK_ID='.intval($arProperty["LINK_IBLOCK_ID"]).'&amp;n='.urlencode($strHTMLControlName["VALUE"]).'\', 600, 500);">'.
 					'&nbsp;<span id="sp_'.$strHTMLControlName["VALUE"].'" ></span>';
 			}
@@ -470,7 +470,16 @@ class CIBlockPropertyElementAutoComplete
 				$cache[$arValue['VALUE']] = $rsElements->GetNext(true,false);
 			}
 			if (true == is_array($cache[$arValue['VALUE']]))
-				$strResult = '<a href="'.$cache[$arValue['VALUE']]["DETAIL_PAGE_URL"].'">'.$cache[$arValue['VALUE']]["NAME"].'</a>';
+			{
+				if (isset($strHTMLControlName['MODE']) && 'CSV_EXPORT' == $strHTMLControlName['MODE'])
+				{
+					$strResult = $cache[$arValue['VALUE']]['ID'];
+				}
+				else
+				{
+					$strResult = '<a href="'.$cache[$arValue['VALUE']]["DETAIL_PAGE_URL"].'">'.$cache[$arValue['VALUE']]["NAME"].'</a>';
+				}
+			}
 		}
 		return $strResult;
 	}
@@ -556,35 +565,36 @@ class CIBlockPropertyElementAutoComplete
 		$arSettings = self::PrepareSettings($arFields);
 
 		return '<tr>
-		<td valign="top">'.GetMessage('BT_UT_EAUTOCOMPLETE_SETTING_VIEW').'</td>
-		<td>'.SelectBoxFromArray($strHTMLControlName["NAME"].'[VIEW]',self::GetPropertyViewsList(true),htmlspecialchars($arSettings['VIEW'])).'</td>
-		<tr>
-		<td valign="top">'.GetMessage('BT_UT_EAUTOCOMPLETE_SETTING_SHOW_ADD').'</td>
-		<td valign="top">'.InputType('checkbox',$strHTMLControlName["NAME"].'[SHOW_ADD]','Y',htmlspecialchars($arSettings["SHOW_ADD"])).'</td>
+		<td>'.GetMessage('BT_UT_EAUTOCOMPLETE_SETTING_VIEW').'</td>
+		<td>'.SelectBoxFromArray($strHTMLControlName["NAME"].'[VIEW]',self::GetPropertyViewsList(true),htmlspecialcharsbx($arSettings['VIEW'])).'</td>
 		</tr>
 		<tr>
-		<td valign="top">'.GetMessage('BT_UT_EAUTOCOMPLETE_SETTING_IBLOCK_MESS').'</td>
-		<td valign="top">'.InputType('checkbox',$strHTMLControlName["NAME"].'[IBLOCK_MESS]','Y',htmlspecialchars($arSettings["IBLOCK_MESS"])).'</td>
+		<td>'.GetMessage('BT_UT_EAUTOCOMPLETE_SETTING_SHOW_ADD').'</td>
+		<td>'.InputType('checkbox',$strHTMLControlName["NAME"].'[SHOW_ADD]','Y',htmlspecialcharsbx($arSettings["SHOW_ADD"])).'</td>
 		</tr>
 		<tr>
-		<td valign="top">'.GetMessage('BT_UT_EAUTOCOMPLETE_SETTING_MAX_WIDTH').'</td>
+		<td>'.GetMessage('BT_UT_EAUTOCOMPLETE_SETTING_IBLOCK_MESS').'</td>
+		<td>'.InputType('checkbox',$strHTMLControlName["NAME"].'[IBLOCK_MESS]','Y',htmlspecialcharsbx($arSettings["IBLOCK_MESS"])).'</td>
+		</tr>
+		<tr>
+		<td>'.GetMessage('BT_UT_EAUTOCOMPLETE_SETTING_MAX_WIDTH').'</td>
 		<td><input type="text" name="'.$strHTMLControlName["NAME"].'[MAX_WIDTH]" value="'.intval($arSettings['MAX_WIDTH']).'">&nbsp;'.GetMessage('BT_UT_EAUTOCOMPLETE_SETTING_COMMENT_MAX_WIDTH').'</td>
 		</tr>
 		<tr>
-		<td valign="top">'.GetMessage('BT_UT_EAUTOCOMPLETE_SETTING_MIN_HEIGHT').'</td>
+		<td>'.GetMessage('BT_UT_EAUTOCOMPLETE_SETTING_MIN_HEIGHT').'</td>
 		<td><input type="text" name="'.$strHTMLControlName["NAME"].'[MIN_HEIGHT]" value="'.intval($arSettings['MIN_HEIGHT']).'">&nbsp;'.GetMessage('BT_UT_EAUTOCOMPLETE_SETTING_COMMENT_MIN_HEIGHT').'</td>
 		</tr>
 		<tr>
-		<td valign="top">'.GetMessage('BT_UT_EAUTOCOMPLETE_SETTING_MAX_HEIGHT').'</td>
+		<td>'.GetMessage('BT_UT_EAUTOCOMPLETE_SETTING_MAX_HEIGHT').'</td>
 		<td><input type="text" name="'.$strHTMLControlName["NAME"].'[MAX_HEIGHT]" value="'.intval($arSettings['MAX_HEIGHT']).'">&nbsp;'.GetMessage('BT_UT_EAUTOCOMPLETE_SETTING_COMMENT_MAX_HEIGHT').'</td>
 		</tr>
 		<tr>
-		<td valign="top">'.GetMessage('BT_UT_EAUTOCOMPLETE_SETTING_BAN_SYMBOLS').'</td>
-		<td><input type="text" name="'.$strHTMLControlName["NAME"].'[BAN_SYM]" value="'.htmlspecialchars($arSettings['BAN_SYM']).'"></td>
+		<td>'.GetMessage('BT_UT_EAUTOCOMPLETE_SETTING_BAN_SYMBOLS').'</td>
+		<td><input type="text" name="'.$strHTMLControlName["NAME"].'[BAN_SYM]" value="'.htmlspecialcharsbx($arSettings['BAN_SYM']).'"></td>
 		</tr>
 		<tr>
-		<td valign="top">'.GetMessage('BT_UT_EAUTOCOMPLETE_SETTING_REP_SYMBOL').'</td>
-		<td>'.SelectBoxFromArray($strHTMLControlName["NAME"].'[REP_SYM]',self::GetReplaceSymList(true),htmlspecialchars($arSettings['REP_SYM'])).'&nbsp;<input type="text" name="'.$strHTMLControlName["NAME"].'[OTHER_REP_SYM]" size="1" maxlength="1" value="'.$arSettings['OTHER_REP_SYM'].'"></td>
+		<td>'.GetMessage('BT_UT_EAUTOCOMPLETE_SETTING_REP_SYMBOL').'</td>
+		<td>'.SelectBoxFromArray($strHTMLControlName["NAME"].'[REP_SYM]',self::GetReplaceSymList(true),htmlspecialcharsbx($arSettings['REP_SYM'])).'&nbsp;<input type="text" name="'.$strHTMLControlName["NAME"].'[OTHER_REP_SYM]" size="1" maxlength="1" value="'.$arSettings['OTHER_REP_SYM'].'"></td>
 		</tr>
 		';
 	}

@@ -1,6 +1,6 @@
 function BXFMSearch(Params)
 {
-	this.bInited = this.Init(Params);
+	this.Init(Params);
 }
 
 BXFMSearch.prototype = {
@@ -181,7 +181,8 @@ BXFMSearch.prototype = {
 
 		// Clean old enties in search result table
 		this.Request('clean_old', {}, false, false);
-		return true;
+
+		this.bInited = true;
 	},
 
 	OnOpen: function(Params)
@@ -248,6 +249,9 @@ BXFMSearch.prototype = {
 	{
 		if (!e)
 			e = window.event;
+
+		if (window.oBXFileDialog && window.oBXFileDialog.bOpened)
+			return;
 
 		if (oSearchDialog.isOpen && e.keyCode == 13)
 			return this.Search();
@@ -1212,8 +1216,7 @@ BXFMServerPerm.prototype = {
 
 function BXFMCopy(Params)
 {
-	//this.Params = Params;
-	this.bInited = this.Init(Params);
+	this.Init(Params);
 }
 
 BXFMCopy.prototype = {
@@ -1224,8 +1227,8 @@ BXFMCopy.prototype = {
 
 		this.oCopyDialog = Params.oCopyDialog;
 		BX.addClass(this.oCopyDialog.PARTS.CONTENT, "bx-fm-copy-dialog");
-		BX.cleanNode(this.oCopyDialog.PARTS.CONTENT);
-		this.oCopyDialog.PARTS.CONTENT.appendChild(BX('bx_copy_dialog'));
+		BX.cleanNode(this.oCopyDialog.PARTS.CONTENT_DATA);
+		this.oCopyDialog.PARTS.CONTENT_DATA.appendChild(BX('bx_copy_dialog'));
 		this.arLastPathes = Params.arLastPathes;
 
 		var _this = this;
@@ -1316,7 +1319,7 @@ BXFMCopy.prototype = {
 
 		BX.addCustomEvent(this.oCopyDialog, 'onWindowUnRegister', BX.proxy(this.OnClose, this));
 
-		return true;
+		this.bInited = true;
 	},
 
 	OnOpen: function(Params)
@@ -1376,6 +1379,9 @@ BXFMCopy.prototype = {
 	{
 		if (!e)
 			e = window.event;
+
+		if (window.oBXFileDialog && window.oBXFileDialog.bOpened)
+			return;
 
 		if (this.oCopyDialog.isOpen && e.keyCode == 13 && (!this.oAskUserDialog || !this.oAskUserDialog.isOpen))
 			return this.Process();
@@ -1562,6 +1568,8 @@ BXFMCopy.prototype = {
 
 				_this.pAskToAllCont = pAskPialog.appendChild(BX.create("DIV", {props: {className: "bx-copy-to-all" }, html: "<table><tr><td><input type='checkbox' id='bx_copy_ask_to_all'></td><td><label  for='bx_copy_ask_to_all'>" + FM_MESS.ToAll + "</label></td></tr></table>"}));
 				_this.oAskUserDialog.adjustSizeEx();
+
+				BX.adminPanel.modifyFormElements(pAskPialog);
 			}, 50);
 
 			this.pAskFileName = BX("bx_copy_ask_file_name");
@@ -1761,9 +1769,7 @@ var BXFMInpSel = function(Params)
 
 function BXFMPack(Params)
 {
-	//this.Params = Params;
-	this.bInited = this.Init(Params);
-
+	this.Init(Params);
 }
 
 BXFMPack.prototype =
@@ -1775,8 +1781,8 @@ BXFMPack.prototype =
 
 		this.oPackDialog = Params.oPackDialog;
 		BX.addClass(this.oPackDialog.PARTS.CONTENT, "bx-fm-pack-dialog");
-		BX.cleanNode(this.oPackDialog.PARTS.CONTENT);
-		this.oPackDialog.PARTS.CONTENT.appendChild(BX('bx_pack_dialog'));
+		BX.cleanNode(this.oPackDialog.PARTS.CONTENT_DATA);
+		this.oPackDialog.PARTS.CONTENT_DATA.appendChild(BX('bx_pack_dialog'));
 		this.arLastPathes = Params.arLastPathes;
 
 		this.pPackCancel = BX("cancel-pack");
@@ -1883,7 +1889,7 @@ BXFMPack.prototype =
 
 		});
 
-		return true;
+		this.bInited = true;
 	},
 
 	OnOpen: function(Params)
@@ -1989,6 +1995,9 @@ BXFMPack.prototype =
 		if (!e)
 			e = window.event;
 
+		if (window.oBXFileDialog && window.oBXFileDialog.bOpened)
+			return;
+
 		if (this.oPackDialog.isOpen && e.keyCode == 13 && (!this.oAskUserDialog || !this.oAskUserDialog.isOpen))
 			return this.Process();
 	},
@@ -2091,11 +2100,11 @@ BXFMPack.prototype =
 				}
 				else if (window.BXFM_archiveFNameError)
 				{
-					alert(FM_MESS.PackFNameError);					
+					alert(FM_MESS.PackFNameError);
 					BX('ok-pack').disabled = false;
-					window.BXFM_archiveFNameError = null;		
-					_this.forceClose = true;			
-					_this.oPackDialog.Close();				
+					window.BXFM_archiveFNameError = null;
+					_this.forceClose = true;
+					_this.oPackDialog.Close();
 				}
 				else
 				{
@@ -2574,6 +2583,9 @@ BXFMInpSel.prototype = {
 		if (this.bDenyOpenPopup)
 			return true;
 
+		if (window.oBXFileDialog && window.oBXFileDialog.bOpened)
+			return;
+
 		this.bCheckValue = true;
 
 		if (!e)
@@ -2737,7 +2749,7 @@ BXFMSiteSel.prototype = {
 		for (i = 0; i < l; i++)
 		{
 			site = this.sites[i];
-			pRow = this.Popup.appendChild(BX.create("DIV", {
+			pRow = this.Popup.appendChild(BX.create("SPAN", {
 				props: {id: 'bx_' + this.id + '_' + i, title: BX.util.htmlspecialchars(site.text), className: 'bxfm-site-sel-it'},
 				events: {
 					mouseover: function(){BX.addClass(this, 'bxfm-ss-over');},
@@ -2783,6 +2795,8 @@ BXFMSiteSel.prototype = {
 	{
 		if (!e)
 			e = window.event;
+		if (window.oBXFileDialog && window.oBXFileDialog.bOpened)
+			return;
 		if (e.keyCode == 27)
 			return this.ClosePopup();
 	}
@@ -2917,6 +2931,8 @@ BXFMArcTypeSel.prototype = {
 	{
 		if (!e)
 			e = window.event;
+		if (window.oBXFileDialog && window.oBXFileDialog.bOpened)
+			return;
 		if (e.keyCode == 27)
 			return this.ClosePopup();
 	}

@@ -53,4 +53,7 @@ $MESS["CP_BCS_OFFERS_CART_PROPERTIES"] = "SKU Properties In Shopping Cart";
 $MESS["CP_BCS_CONVERT_CURRENCY"] = "Use only one currency to show prices";
 $MESS["CP_BCS_CURRENCY_ID"] = "Convert all prices to currency";
 $MESS["CP_BCS_OFFERS_LIMIT"] = "Maximum SKU's to Show (use 0 to show all)";
+$MESS["CP_BCS_INCLUDE_SUBSECTIONS_ALL"] = "all subsections";
+$MESS["CP_BCS_INCLUDE_SUBSECTIONS_ACTIVE"] = "active subsections";
+$MESS["CP_BCS_INCLUDE_SUBSECTIONS_NO"] = "don't show";
 ?>

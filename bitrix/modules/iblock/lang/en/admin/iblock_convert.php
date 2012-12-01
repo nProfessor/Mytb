@@ -16,4 +16,5 @@ $MESS["IBCONV_FINALIZE2"] = "Completing transfer of property values for elements
 $MESS["IBCONV_FINISHED"] = "Process of transferring property values for elements is completed.";
 $MESS["IBCONV_TABLE_CREATION_ERROR"] = "Error creating tables for storing properties.";
 $MESS["IBCONV_FINISHED_HREF"] = "Return to the information block edit form.";
+$MESS["IBCONV_TOO_MANY_PROPERTIES"] = "Too many properties (over #NUM#). Cannot convert.";
 ?>

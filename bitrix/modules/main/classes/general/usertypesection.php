@@ -50,7 +50,7 @@ class CUserTypeIBlockSection extends CUserTypeEnum
 		if(CModule::IncludeModule('iblock'))
 		{
 			$result .= '
-			<tr valign="top">
+			<tr>
 				<td>'.GetMessage("USER_TYPE_IBSEC_DISPLAY").':</td>
 				<td>
 					'.GetIBlockDropDownList($iblock_id, $arHtmlControl["NAME"].'[IBLOCK_TYPE_ID]', $arHtmlControl["NAME"].'[IBLOCK_ID]').'
@@ -61,7 +61,7 @@ class CUserTypeIBlockSection extends CUserTypeEnum
 		else
 		{
 			$result .= '
-			<tr valign="top">
+			<tr>
 				<td>'.GetMessage("USER_TYPE_IBSEC_DISPLAY").':</td>
 				<td>
 					<input type="text" size="6" name="'.$arHtmlControl["NAME"].'[IBLOCK_ID]" value="'.htmlspecialcharsbx($value).'">
@@ -86,7 +86,7 @@ class CUserTypeIBlockSection extends CUserTypeEnum
 		if(($iblock_id > 0) && CModule::IncludeModule('iblock'))
 		{
 			$result .= '
-			<tr valign="top">
+			<tr>
 				<td>'.GetMessage("USER_TYPE_IBSEC_DEFAULT_VALUE").':</td>
 				<td>
 					<select name="'.$arHtmlControl["NAME"].'[DEFAULT_VALUE]" size="5">
@@ -111,7 +111,7 @@ class CUserTypeIBlockSection extends CUserTypeEnum
 		else
 		{
 			$result .= '
-			<tr valign="top">
+			<tr>
 				<td>'.GetMessage("USER_TYPE_IBSEC_DEFAULT_VALUE").':</td>
 				<td>
 					<input type="text" size="8" name="'.$arHtmlControl["NAME"].'[DEFAULT_VALUE]" value="'.htmlspecialcharsbx($value).'">
@@ -127,8 +127,8 @@ class CUserTypeIBlockSection extends CUserTypeEnum
 		else
 			$value = "LIST";
 		$result .= '
-		<tr valign="top">
-			<td>'.GetMessage("USER_TYPE_ENUM_DISPLAY").':</td>
+		<tr>
+			<td class="adm-detail-valign-top">'.GetMessage("USER_TYPE_ENUM_DISPLAY").':</td>
 			<td>
 				<label><input type="radio" name="'.$arHtmlControl["NAME"].'[DISPLAY]" value="LIST" '.("LIST"==$value? 'checked="checked"': '').'>'.GetMessage("USER_TYPE_IBSEC_LIST").'</label><br>
 				<label><input type="radio" name="'.$arHtmlControl["NAME"].'[DISPLAY]" value="CHECKBOX" '.("CHECKBOX"==$value? 'checked="checked"': '').'>'.GetMessage("USER_TYPE_IBSEC_CHECKBOX").'</label><br>
@@ -143,7 +143,7 @@ class CUserTypeIBlockSection extends CUserTypeEnum
 		else
 			$value = 5;
 		$result .= '
-		<tr valign="top">
+		<tr>
 			<td>'.GetMessage("USER_TYPE_IBSEC_LIST_HEIGHT").':</td>
 			<td>
 				<input type="text" name="'.$arHtmlControl["NAME"].'[LIST_HEIGHT]" size="10" value="'.$value.'">
@@ -152,7 +152,7 @@ class CUserTypeIBlockSection extends CUserTypeEnum
 		';
 
 		$result .= '
-		<tr valign="top">
+		<tr>
 			<td>'.GetMessage("USER_TYPE_IBSEC_ACTIVE_FILTER").':</td>
 			<td>
 				<input type="checkbox" name="'.$arHtmlControl["NAME"].'[ACTIVE_FILTER]" value="Y" '.($ACTIVE_FILTER=="Y"? 'checked="checked"': '').'>

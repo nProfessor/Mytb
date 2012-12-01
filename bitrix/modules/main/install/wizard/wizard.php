@@ -90,7 +90,6 @@ class WelcomeStep extends CWizardStep
 			$this->content .= $bxProductConfig["product_wizard"]["welcome_text"];
 		else
 			$this->content .= (isset($arWizardConfig["welcomeText"]) ? $arWizardConfig["welcomeText"] : InstallGetMessage("FIRST_PAGE"));
-		$wizard =& $this->GetWizard();
 	}
 
 	function unformat($str)
@@ -149,7 +148,6 @@ class AgreementStep4VM extends CWizardStep
 	function InitStep()
 	{
 		$this->SetStepID("agreement");
-//		$this->SetPrevStep("welcome");
 		$this->SetNextStep("check_license_key");
 		$this->SetNextCaption(InstallGetMessage("NEXT_BUTTON"));
 		$this->SetPrevCaption(InstallGetMessage("PREVIOUS_BUTTON"));
@@ -173,8 +171,6 @@ class AgreementStep4VM extends CWizardStep
 		$this->content = '<iframe name="license_text" src="/license.html" width="100%" height="250" border="0" frameBorder="1" scrolling="yes"></iframe><br /><br />';
 		$this->content .= $this->ShowCheckboxField("agree_license", "Y", Array("id" => "agree_license_id", "tabindex" => "1"));
 		$this->content .= '&nbsp;<label for="agree_license_id">'.InstallGetMessage("LICENSE_AGREE_PROMT").'</label>';
-
-		$wizard =& $this->GetWizard();
 		$this->content .= '<script type="text/javascript">setTimeout(function() {document.getElementById("agree_license_id").focus();}, 500);</script>';
 	}
 
@@ -373,6 +369,7 @@ class DBTypeStep extends CWizardStep
 	function ShowStep()
 	{
 		$wizard =& $this->GetWizard();
+
 		if (BXInstallServices::SetSession())
 			$this->content .= '<input type="hidden" name="'.ini_get("session.name").'" value="'.session_id().'" />';
 
@@ -520,7 +517,7 @@ class RequirementStep extends CWizardStep
 	var $memoryRecommend = 64;
 	var $diskSizeMin = 50;
 
-	var $phpMinVersion = "5.0.0";
+	var $phpMinVersion = "5.3.0";
 	var $apacheMinVersion = "1.3";
 	var $iisMinVersion = "5.0.0";
 
@@ -534,8 +531,6 @@ class RequirementStep extends CWizardStep
 		$this->SetNextCaption(InstallGetMessage("NEXT_BUTTON"));
 		$this->SetPrevCaption(InstallGetMessage("PREVIOUS_BUTTON"));
 		$this->SetTitle(InstallGetMessage("INS_STEP4_TITLE"));
-
-		$wizard =& $this->GetWizard();
 	}
 
 	function OnPostForm()
@@ -594,14 +589,6 @@ class RequirementStep extends CWizardStep
 			return false;
 		}
 
-/*
-		if ($this->GetPHPSetting("allow_call_time_pass_reference") != "ON")
-		{
-			$this->SetError(InstallGetMessage("INST_ALLOW_CALL_REFERENCE"));
-			return false;
-		}
-*/
-
 		$arDBTypes = BXInstallServices::GetDBTypes();
 		if (!array_key_exists($dbType, $arDBTypes) || $arDBTypes[$dbType] === false)
 		{
@@ -652,6 +639,7 @@ class RequirementStep extends CWizardStep
 			return "<b><span style=\"color:green\">".$resultText."</span></b>";
 		elseif (strtoupper($type) == "NOTE" || strtoupper($type) == "N")
 			return "<b><span style=\"color:black\">".$resultText."</span></b>";
+		return "";
 	}
 
 	function CheckServerVersion(&$serverName, &$serverVersion, &$serverMinVersion)
@@ -665,7 +653,7 @@ class RequirementStep extends CWizardStep
 		$serverVersion = "";
 		$serverMinVersion = "";
 
-		if (!function_exists("preg_match") || !preg_match("#^([a-zA-Z-]+).*?([\d]+\.[\d]+(\.[\d]+)?)#i", $serverSoftware, $arMatch))
+		if (!function_exists("preg_match") || !preg_match("#^([a-zA-Z-]+).*?([\\d]+\\.[\\d]+(\\.[\\d]+)?)#i", $serverSoftware, $arMatch))
 			return null;
 
 		$serverName = $arMatch[1];
@@ -852,18 +840,7 @@ RewriteRule ^.+\.php$ /bitrix/httest/404.php
 		<tr>
 			<td colspan="3"><b>'.InstallGetMessage("SC_PHP_SETTINGS").'</b></td>
 		</tr>';
-/*
-		<tr>
-			<td valign="top">&nbsp; - allow_call_time_pass_reference</td>
-			<td valign="top">'.InstallGetMessage("SC_TURN_ON").'</td>
-			<td valign="top">
-					'.($this->GetPHPSetting("allow_call_time_pass_reference")=="ON" ?
-						$this->ShowResult(InstallGetMessage("SC_TURN_ON"), "OK") :
-						$this->ShowResult(InstallGetMessage("SC_TURN_OFF"), "ERROR")
-					).'
-			</td>
-		</tr>
-*/
+
 		$this->content .= '
 		<tr>
 			<td valign="top">&nbsp; - safe mode</td>
@@ -1446,13 +1423,13 @@ class CreateDBStep extends CWizardStep
 		if ($arVersion = mysql_fetch_assoc($dbResult))
 		{
 			$mysqlVersion = trim($arVersion["ver"]);
-			if (!BXInstallServices::VersionCompare($mysqlVersion, "4.1.11"))
+			if (!BXInstallServices::VersionCompare($mysqlVersion, "5.0.0"))
 			{
 				$this->SetError(InstallGetMessage("SC_DB_VERS_MYSQL_ER"));
 				return false;
 			}
 
-			$this->needCodePage = true; //BXInstallServices::VersionCompare($mysqlVersion, "4.1.2");
+			$this->needCodePage = true;
 
 			if (!$this->needCodePage && $this->utf8)
 			{
@@ -1521,9 +1498,6 @@ class CreateDBStep extends CWizardStep
 					$this->SetError(InstallGetMessage("ERR_CREATE_USER")." ".$error);
 					return false;
 				}
-
-				//if ($mysqlVersion !== false && BXInstallServices::VersionCompare($mysqlVersion, "4.1.1") && !BXInstallServices::VersionCompare(mysql_get_client_info(), "4.1.1"))
-				//	@mysql_query("SET PASSWORD FOR '".addslashes($this->dbUser)."'@'".$host."' = OLD_PASSWORD('".addslashes($this->dbPassword)."')", $dbConn);
 			}
 			elseif ($this->createDatabase)
 			{
@@ -1567,10 +1541,6 @@ class CreateDBStep extends CWizardStep
 				@mysql_query("SET NAMES '".$codePage."'", $dbConn);
 			}
 		}
-
-		//Set InnoDB
-		//if (strlen($this->createDBType) > 0)
-			//@mysql_query("SET table_type = '".$this->createDBType."'", $dbConn);
 
 		return true;
 	}
@@ -1917,7 +1887,7 @@ class CreateDBStep extends CWizardStep
 			$after_conn = "<"."?\n".
 				(strlen($codePage) > 0 ? "$"."DB->Query(\"SET NAMES '".$codePage."'\");\n" : "").
 				($this->sqlMode !== false ? "$"."DB->Query(\"SET sql_mode='".$this->sqlMode."'\");\n" : "").
-				($this->utf ? "$"."DB->Query('SET collation_connection = \"utf8_unicode_ci\"');\n" : "").
+				($this->utf8 ? "$"."DB->Query('SET collation_connection = \"utf8_unicode_ci\"');\n" : "").
 				"?".">";
 
 		}
@@ -2519,7 +2489,7 @@ class CreateModulesStep extends CWizardStep
 			$MESS = array_merge($MESS, $SAVED_MESS);
 
 			if (strtolower($DB->type)=="mysql" && defined("MYSQL_TABLE_TYPE") && strlen(MYSQL_TABLE_TYPE)>0)
-				$DB->Query("SET table_type = '".MYSQL_TABLE_TYPE."'", true);
+				$DB->Query("SET storage_engine = '".MYSQL_TABLE_TYPE."'", true);
 
 			//Lang files
 			global $MESS;
@@ -4470,19 +4440,6 @@ elseif (BXInstallServices::IsShortInstall() && BXInstallServices::CheckShortInst
 	if (BXInstallServices::GetDemoWizard() === false)
 		$arSteps[] = "FinishStep";
 }
-//if (BXInstallServices::IsShortInstall() && BXInstallServices::CheckShortInstall())
-//{
-//	$arSteps = Array();
-//
-//	if (!defined("TRIAL_VERSION"))
-//		$arSteps[] = "CheckLicenseKey";
-//
-//	$arSteps[] = "CreateModulesStep";
-//	$arSteps[] = "CreateAdminStep";
-//
-//	if (BXInstallServices::GetDemoWizard() === false)
-//		$arSteps[] = "FinishStep";
-//}
 else
 {
 	//Full installation

@@ -159,7 +159,6 @@ if (count($arParams["SHOW_FIELDS"]) > 0)
 					if (IntVal($val) > 0)
 					{
 						$iSize = 150;
-						$val = "";
 						$imageFile = CFile::GetFileArray($val);
 						if ($imageFile !== false)
 						{

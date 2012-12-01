@@ -65,7 +65,7 @@ class CUserTypeFile
 		else
 			$value = 20;
 		$result .= '
-		<tr valign="top">
+		<tr>
 			<td>'.GetMessage("USER_TYPE_FILE_SIZE").':</td>
 			<td>
 				<input type="text" name="'.$arHtmlControl["NAME"].'[SIZE]" size="20"  maxlength="20" value="'.$value.'">
@@ -85,7 +85,7 @@ class CUserTypeFile
 		else
 			$height = 0;
 		$result .= '
-		<tr valign="top">
+		<tr>
 			<td>'.GetMessage("USER_TYPE_FILE_WIDTH_AND_HEIGHT").':</td>
 			<td>
 				<input type="text" name="'.$arHtmlControl["NAME"].'[LIST_WIDTH]" size="7"  maxlength="20" value="'.$width.'">
@@ -101,7 +101,7 @@ class CUserTypeFile
 		else
 			$value = 0;
 		$result .= '
-		<tr valign="top">
+		<tr>
 			<td>'.GetMessage("USER_TYPE_FILE_MAX_SHOW_SIZE").':</td>
 			<td>
 				<input type="text" name="'.$arHtmlControl["NAME"].'[MAX_SHOW_SIZE]" size="20"  maxlength="20" value="'.$value.'">
@@ -115,7 +115,7 @@ class CUserTypeFile
 		else
 			$value = 0;
 		$result .= '
-		<tr valign="top">
+		<tr>
 			<td>'.GetMessage("USER_TYPE_FILE_MAX_ALLOWED_SIZE").':</td>
 			<td>
 				<input type="text" name="'.$arHtmlControl["NAME"].'[MAX_ALLOWED_SIZE]" size="20"  maxlength="20" value="'.$value.'">
@@ -126,7 +126,7 @@ class CUserTypeFile
 		{
 			$value = htmlspecialcharsbx($GLOBALS[$arHtmlControl["NAME"]]["EXTENSIONS"]);
 			$result .= '
-			<tr valign="top">
+			<tr>
 				<td>'.GetMessage("USER_TYPE_FILE_EXTENSIONS").':</td>
 				<td>
 					<input type="text" size="20" name="'.$arHtmlControl["NAME"].'[EXTENSIONS]" value="'.$value.'">
@@ -145,7 +145,7 @@ class CUserTypeFile
 				foreach($arExt as $ext=>$flag)
 					$value[] = htmlspecialcharsbx($ext);
 			$result .= '
-			<tr valign="top">
+			<tr>
 				<td>'.GetMessage("USER_TYPE_FILE_EXTENSIONS").':</td>
 				<td>
 					<input type="text" size="20" name="'.$arHtmlControl["NAME"].'[EXTENSIONS]" value="'.implode(", ", $value).'">

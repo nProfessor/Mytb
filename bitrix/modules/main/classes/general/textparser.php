@@ -20,7 +20,8 @@ class CTextParser
 		$this->parser_nofollow = "N";
 		$this->link_target = "_blank";
 		$this->smiles = array();
-		$this->allow = array("HTML" => "N", "ANCHOR" => "Y", "BIU" => "Y", "IMG" => "Y", "QUOTE" => "Y", "CODE" => "Y", "FONT" => "Y", "LIST" => "Y", "SMILES" => "Y", "NL2BR" => "N", "VIDEO" => "Y", "TABLE" => "Y", "CUT_ANCHOR" => "N", "ALIGN" => "Y");
+		$this->MaxAnchorLength = 40;
+		$this->allow = array("HTML" => "N", "ANCHOR" => "Y", "BIU" => "Y", "IMG" => "Y", "QUOTE" => "Y", "CODE" => "Y", "FONT" => "Y", "LIST" => "Y", "SMILES" => "Y", "NL2BR" => "N", "VIDEO" => "Y", "TABLE" => "Y", "CUT_ANCHOR" => "N", "SHORT_ANCHOR" => "N", "ALIGN" => "Y");
 	}
 
 	function convertText($text)
@@ -157,7 +158,7 @@ class CTextParser
 		if ($this->allow["ANCHOR"]=="Y")
 		{
 			$word_separator = str_replace(array("\]", "\["), "", $this->word_separator);
-			$text = preg_replace("/(?<=^|[".$word_separator."]|\s)(?<!\\[nomodify\\]|<nomodify>)((http|https|news|ftp|aim|mailto):\\/\\/[._:a-z0-9@-].*?)(?=[\\s'\"{}]|&quot;|\$)/is".BX_UTF_PCRE_MODIFIER,
+			$text = preg_replace("/(?<=^|[".$word_separator."]|\s)(?<!\\[nomodify\\]|<nomodify>)((http|https|news|ftp|aim|mailto):\\/\\/[._:a-z0-9@-].*?)(?=[\\s'\"{}\[\]]|&quot;|\$)/is".BX_UTF_PCRE_MODIFIER,
 				"[url]\\1[/url]", $text);
 		}
 
@@ -194,8 +195,8 @@ class CTextParser
 					break;
 				case "ANCHOR":
 					$arUrlPatterns = array(
-						"/\[url\]( (?: [^\[\]]*? (?: \[ [^\]]+? \] )* [^\[\]]*? )*? )\[\/url\]/ixe".BX_UTF_PCRE_MODIFIER,
-						"/\[url\s*=\s*( (?: [^\[\]]*? (?: \[ [^\]]+? \] )* [^\[\]]*? )* )\s*\](.*?)\[\/url\]/ixes".BX_UTF_PCRE_MODIFIER);
+						"/\[url\]( (?: [^\[\]]*? (?: \[ [^\]]+? \] )*? [^\[\]]*? )*? )\[\/url\]/ixe".BX_UTF_PCRE_MODIFIER,
+						"/\[url\s*=\s*( (?: [^\[\]]*? (?: \[ [^\]]+? \] )*? [^\[\]]*? )* )\s*\](.*?)\[\/url\]/ixes".BX_UTF_PCRE_MODIFIER);
 						//              ^---------------------------------------------^ - allow not nested [] in url
 
 					if($this->allow["CUT_ANCHOR"] != "Y")
@@ -628,6 +629,7 @@ class CTextParser
 		if (!$bErrorIMG && !preg_match("/^(http|https|ftp|\/)/i".BX_UTF_PCRE_MODIFIER, $url))
 			$bErrorIMG = True;
 
+		$url = htmlspecialcharsbx($url);
 		if ($bErrorIMG)
 			return "[img]".$url."[/img]";
 
@@ -732,7 +734,8 @@ class CTextParser
 		if(strlen(trim($text)) <= 0)
 			$text = $url;
 
-		$bCutUrl = false;
+		$bShortUrl = ($this->allow["SHORT_ANCHOR"] == "Y") ? true : false;
+
 		$text = str_replace("\\\"", "\"", $text);
 		$end = "";
 		if (preg_match("/([\.,\?]|&#33;)$/".BX_UTF_PCRE_MODIFIER, $url, $match))
@@ -759,20 +762,20 @@ class CTextParser
 			return $pref.$text." (".$url.")".$end;
 
 		if (preg_match("/^<img\s+src/i".BX_UTF_PCRE_MODIFIER, $text))
-			$bCutUrl = False;
+			$bShortUrl = False;
 		$text = preg_replace(
 			array("/&amp;/i".BX_UTF_PCRE_MODIFIER, "/javascript:/i".BX_UTF_PCRE_MODIFIER),
 			array("&", "javascript&#58; "), $text);
-		if ($bCutUrl && strlen($text) < 55)
-			$bCutUrl = False;
-		if ($bCutUrl && !preg_match("/^(http|ftp|https|news):\/\//i".BX_UTF_PCRE_MODIFIER, $text))
-			$bCutUrl = False;
+		if ($bShortUrl && strlen($text) < $this->MaxAnchorLength)
+			$bShortUrl = False;
+		if ($bShortUrl && !preg_match("/^(http|ftp|https|news):\/\//i".BX_UTF_PCRE_MODIFIER, $text))
+			$bShortUrl = False;
 
-		if ($bCutUrl)
+		if ($bShortUrl)
 		{
 			$stripped = preg_replace("/^(http|ftp|https|news):\/\/(\S+)$/i".BX_UTF_PCRE_MODIFIER, "\\2", $text);
 			$uri_type = preg_replace("/^(http|ftp|https|news):\/\/(\S+)$/i".BX_UTF_PCRE_MODIFIER, "\\1", $text);
-			$text = $uri_type.'://'.substr($stripped, 0, 30).'...'.substr($stripped, -10);
+			$text = $uri_type.'://'.substr($stripped, 0, $this->MaxAnchorLength).'...'.substr($stripped, -10);
 		}
 
 		return $pref.($this->parser_nofollow == "Y" ? '<noindex>' : '').'<a href="'.$url.'" target="'.$this->link_target.'"'.($this->parser_nofollow == "Y" ? ' rel="nofollow"' : '').'>'.$text.'</a>'.($this->parser_nofollow == "Y" ? '</noindex>' : '').$end;
@@ -784,6 +787,13 @@ class CTextParser
 			return false;
 
 		ob_start();
+		if (
+			defined("BX_MOBILE_LOG") 
+			&& BX_MOBILE_LOG === true
+		)
+		{
+			?><div onclick="return BX.eventCancelBubble(event);"><?
+		}
 		$GLOBALS["APPLICATION"]->IncludeComponent(
 			"bitrix:player", "",
 			Array(
@@ -816,7 +826,16 @@ class CTextParser
 				"ADVANCED_MODE_SETTINGS" => "N",
 				"BUFFER_LENGTH" => "10",
 				"DOWNLOAD_LINK" => "",
-				"DOWNLOAD_LINK_TARGET" => "_self"));
+				"DOWNLOAD_LINK_TARGET" => "_self"
+			)
+		);
+		if (
+			defined("BX_MOBILE_LOG") 
+			&& BX_MOBILE_LOG === true
+		)
+		{
+			?></div><?
+		}
 		$video = ob_get_contents();
 		ob_end_clean();
 		return $video;

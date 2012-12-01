@@ -1,5 +1,7 @@
-(function(window){
-if (window.BX.ajax) return;
+;(function(window){
+
+if (window.BX.ajax)
+	return;
 
 var
 	BX = window.BX,
@@ -508,39 +510,51 @@ BX.ajax.post = function(url, data, callback)
 }
 
 /* load and execute external file script with onload emulation */
-BX.ajax.loadScriptAjax = function(script_src, callback)
+BX.ajax.loadScriptAjax = function(script_src, callback, bPreload)
 {
 	if (BX.type.isArray(script_src))
 	{
 		for (var i=0,len=script_src.length;i<len;i++)
-			BX.ajax.loadScriptAjax(script_src[i], callback);
+		{
+			BX.ajax.loadScriptAjax(script_src[i], callback, bPreload);
+		}
 	}
 	else
 	{
-		if (r.script_self.test(script_src)) return;
-		if (r.script_self_window.test(script_src) && BX.CWindow) return;
-		if (r.script_self_admin.test(script_src) && BX.admin) return;
+		var script_src_test = script_src.replace(/\.js\?.*/, '.js');
 
-		if (!loadedScripts[script_src])
+		if (r.script_self.test(script_src_test)) return;
+		if (r.script_self_window.test(script_src_test) && BX.CWindow) return;
+		if (r.script_self_admin.test(script_src_test) && BX.admin) return;
+
+		if (typeof loadedScripts[script_src_test] == 'undefined')
 		{
-			return BX.ajax({
-				url: script_src,
-				method: 'GET',
-				dataType: 'script',
-				processData: true,
-				emulateOnload: false,
-				async: false,
-				start: true,
-				onsuccess: function(result) {
-					loadedScripts[script_src] = result;
-					if (callback)
-						callback(result);
-				}
-			});
+			if (!!bPreload)
+			{
+				loadedScripts[script_src_test] = '';
+				return BX.loadScript(script_src);
+			}
+			else
+			{
+				return BX.ajax({
+					url: script_src,
+					method: 'GET',
+					dataType: 'script',
+					processData: true,
+					emulateOnload: false,
+					async: false,
+					start: true,
+					onsuccess: function(result) {
+						loadedScripts[script_src_test] = result;
+						if (callback)
+							callback(result);
+					}
+				});
+			}
 		}
 		else if (callback)
 		{
-			callback(loadedScripts[script_src]);
+			callback(loadedScripts[script_src_test]);
 		}
 	}
 }
@@ -1147,4 +1161,6 @@ BX.ajax.FormData.prototype.send = function(url, callbackOk, callbackProgress, ca
 
 	return this.xhr;
 }
+
+BX.onCustomEvent('onAjaxFailure', BX.debug);
 })(window)

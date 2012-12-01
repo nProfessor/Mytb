@@ -146,7 +146,7 @@
 			_this.FastPoll();
 		});
 		BX.bind(this.pInput, "paste", BX.proxy(this.FastPoll, this));
-		BX.bind(this.pInput, "cut", this.Action(this.ReplaceSelection, this));
+		BX.bind(this.pInput, "cut", this.Action(function(){_this.ReplaceSelection("");}, this));
 
 		setTimeout(BX.proxy(this.OnFocus,this), 20);
 
@@ -481,7 +481,7 @@
 			{
 				firstBracket.Clear();
 				if (secondBracket)
-				 	secondBracket.Clear();
+					secondBracket.Clear();
 			}, this);
 		},
 
@@ -590,7 +590,7 @@
 		SetIETASelection: function(start, end)
 		{
 			var
-				val = this.GetTAValue(),
+				val = this.GetTAValue().replace(/\r/g, ""),
 				nbLineStart = val.substr(0, start).split("\n").length - 1,
 				nbLineEnd = val.substr(0, end).split("\n").length - 1,
 				range = document.selection.createRange();
@@ -724,8 +724,14 @@
 		SetValue: function(code)
 		{
 			var top = {line: 0, ch: 0};
-			this.UpdateLines(top, {line: this.oDoc.size - 1, ch: this.GetLine(this.oDoc.size - 1).text.length},
-				this.ExplodeLines(code), top, top);
+			this.UpdateLines(
+				top,
+				{
+					line: this.oDoc.size - 1,
+					ch: this.GetLine(this.oDoc.size - 1).text.length
+				},
+				this.ExplodeLines(code), top, top
+			);
 			this.updateInput = true;
 		},
 
@@ -809,7 +815,7 @@
 					res = res.compareEndPoints("StartToEnd", res) != 0;
 				return res;
 			}
-		),
+			),
 
 		ExplodeLines: ("\n\nb".split(/\n/).length == 3 ?
 			function (s)
@@ -845,7 +851,7 @@
 				}
 				return res;
 			}
-		),
+			),
 
 		HightlightFrag: function(from, to, className)
 		{
@@ -2245,7 +2251,7 @@
 
 
 //					if (BX.browser.IsDoctype())
-						pEl.style.width = (right ? (clientWidth - right - left) : clientWidth) + "px";
+					pEl.style.width = (right ? (clientWidth - right - left) : clientWidth) + "px";
 //					else
 //						pEl.style.right = right + "px";
 
@@ -2317,7 +2323,7 @@
 			for (n = target; n != this.pInnerContHL; n = n.parentNode)
 				if (n.parentNode == this.pLineNumText)
 					return BX.PreventDefault(e);
-					//return e_preventDefault(e);
+			//return e_preventDefault(e);
 
 			var start = this.PosFromMouse(e);
 			if (mouseButton(e) == 2)
@@ -2334,7 +2340,7 @@
 			{
 				if (target == this.pScroller)
 					BX.PreventDefault(e);
-					//e_preventDefault(e);
+				//e_preventDefault(e);
 				return;
 			}
 
@@ -2458,7 +2464,7 @@
 
 
 		OnDoubleClick: function(e)
-		{ // !!!!!!!!!!!
+		{
 //			for (var n = e_target(e); n != this.pInnerContHL; n = n.parentNode)
 //				if (n.parentNode == this.pLineNumText)
 //					return BX.PreventDefault(e);
@@ -2526,15 +2532,15 @@
 					function(b){return _this.DoHandleBinding(b, true);},
 					stop
 				)
-				||
-				this.LookupKey(
-					name,
-					function (b){
-						if (typeof b == "string" && /^go[A-Z]/.test(b))
-							return _this.DoHandleBinding(b);
-					},
-					stop
-				);
+					||
+					this.LookupKey(
+						name,
+						function (b){
+							if (typeof b == "string" && /^go[A-Z]/.test(b))
+								return _this.DoHandleBinding(b);
+						},
+						stop
+					);
 			}
 			else
 			{
@@ -2710,6 +2716,7 @@
 
 		ReplaceSelection: function(code, collapse)
 		{
+			var _this = this;
 			this.ReplaceRange1(this.ExplodeLines(code), this.oSel.from, this.oSel.to, function (end)
 			{
 				if (collapse == "end")
@@ -3223,7 +3230,7 @@
 						cur = this.GetCursor(),
 						text = this.GetLineText(cur.line),
 						firstNonWS = Math.max(0, text.search(/\S/));
-						this.SetCursor(cur.line, cur.ch <= firstNonWS && cur.ch ? 0 : firstNonWS, true);
+					this.SetCursor(cur.line, cur.ch <= firstNonWS && cur.ch ? 0 : firstNonWS, true);
 				}, this),
 				goLineEnd: BX.proxy(function(){this.DoSelection({line: this.GetCursor().line}, null, true);}, this),
 				goLineUp: BX.proxy(function(){this.MoveV(-1, "line");}, this),
@@ -3374,7 +3381,7 @@
 				taSel = this.GetTASelection(),
 				from = taSel.start,
 				to = taSel.end,
-				source = this.GetTAValue(),
+				source = this.GetTAValue().replace(/\r/g, ""),
 				txt = source.substring(from, to),
 				posFrom = from,
 				posTo = to;
@@ -4022,14 +4029,11 @@
 				st.length = pos;
 				changed = true;
 			}
-			if (pos && st[pos - 2] != prevWord) changed = true;
-			// Short lines with simple highlights return null, and are
-			// counted as changed by the driver because they are likely to
-			// highlight the same way in various contexts.
+			if (pos && st[pos - 2] != prevWord)
+				changed = true;
+
 			return changed || (st.length < 5 && this.text.length < 10 ? null : false);
 		},
-		// Fetch the parser token for a given character. Useful for hacks
-		// that want to inspect the syntax status (say, for completion).
 		getTokenAt: function (syntax, status, tabSize, ch)
 		{
 			var
@@ -4127,7 +4131,8 @@
 						html.appendChild(anchor);
 						var cut = wrapAt - outPos;
 						span_(anchor, BX.browser.IsOpera() ? text.slice(cut, cut + 1) : text.slice(cut), style);
-						if (BX.browser.IsOpera()) span_(html, text.slice(cut + 1), style);
+						if (BX.browser.IsOpera())
+							span_(html, text.slice(cut + 1), style);
 						wrapAt--;
 						outPos += l;
 					}
@@ -4362,7 +4367,7 @@
 			for (i = 0; i < this.children.length; ++i)
 			{
 				child = this.children[i],
-				sz = child.GetSize();
+					sz = child.GetSize();
 				if (at < sz)
 				{
 					rm = Math.min(n, sz - at), oldHeight = child.height;
@@ -4459,7 +4464,7 @@
 			}
 
 			while (_this.children.length > 10);
-				_this.parent.CheckSpill();
+			_this.parent.CheckSpill();
 		},
 
 		Iteration: function (from, to, op)
@@ -4708,1778 +4713,1778 @@
 
 	// ************* Syntaxes defenitions *************
 	{
-	var Syntaxes = {};
+		var Syntaxes = {};
 
-	function copySyntaxStatus(syntax, status)
-	{
-		if (status === true)
-			return status;
-
-		if (syntax.copyStatus)
-			return syntax.copyStatus(status);
-
-		var newStatus = {}, n;
-		for (n in status)
+		function copySyntaxStatus(syntax, status)
 		{
-			var val = status[n];
-			if (val instanceof Array)
-				val = val.concat([]);
-			newStatus[n] = val;
-		}
-		return newStatus;
-	}
+			if (status === true)
+				return status;
 
-	function prepareKeywords(arr)
-	{
-		var keys = {}, i;
-		for (i = 0; i < arr.length; ++i)
-			keys[arr[i]] = true;
-		return keys;
-	}
+			if (syntax.copyStatus)
+				return syntax.copyStatus(status);
 
-	Syntaxes.html = function()
-	{
-		var
-			indentUnit = 4,
-			arTags = {
-				autoSelfClosers: prepareKeywords(['area', 'base', 'br', 'col', 'command', 'embed', 'frame', 'hr', 'img', 'input', 'keygen', 'link', 'meta', 'param', 'source', 'track', 'wbr']),
-				implicitlyClosed: prepareKeywords(['dd', 'li', 'optgroup', 'option', 'p', 'rp', 'rt', 'tbody', 'td', 'tfoot', 'th', 'tr']),
-				contextGrabbers: {
-					dd: prepareKeywords(['dd', 'dt']),
-					dt: prepareKeywords(['dd', 'dt']),
-					li: prepareKeywords(['li']),
-					option: prepareKeywords(['option', 'optgroup']),
-					optgroup: prepareKeywords(['optgroup']),
-					p: prepareKeywords(['address', 'article', 'aside', 'blockquote', 'dir', 'div', 'dl', 'fieldset', 'footer', 'form','h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'header', 'hgroup', 'hr', 'menu', 'nav', 'ol', 'p', 'pre', 'section', 'table', 'ul']),
-					rp: prepareKeywords(['rp', 'rt']),
-					rt: prepareKeywords(['rp', 'rt']),
-					tbody: prepareKeywords(['tbody', 'tfoot']),
-					td: prepareKeywords(['td', 'th']),
-					tfoot: prepareKeywords(['tbody']),
-					th: prepareKeywords(['td', 'th']),
-					thead: prepareKeywords(['tbody', 'tfoot']),
-					tr: prepareKeywords(['tr'])
-				},
-				doNotIndent: prepareKeywords(['pre']),
-				allowUnquoted: true,
-				allowMissing: true
-			},
-			tagName, type;
-
-		function InsideText(stream, status)
-		{
-			function chain(parser)
+			var newStatus = {}, n;
+			for (n in status)
 			{
-				status.tokenize = parser;
-				return parser(stream, status);
+				var val = status[n];
+				if (val instanceof Array)
+					val = val.concat([]);
+				newStatus[n] = val;
 			}
+			return newStatus;
+		}
 
-			var ch = stream.next(), c, bAtom;
-			if (ch == "<")
+		function prepareKeywords(arr)
+		{
+			var keys = {}, i;
+			for (i = 0; i < arr.length; ++i)
+				keys[arr[i]] = true;
+			return keys;
+		}
+
+		Syntaxes.html = function()
+		{
+			var
+				indentUnit = 4,
+				arTags = {
+					autoSelfClosers: prepareKeywords(['area', 'base', 'br', 'col', 'command', 'embed', 'frame', 'hr', 'img', 'input', 'keygen', 'link', 'meta', 'param', 'source', 'track', 'wbr']),
+					implicitlyClosed: prepareKeywords(['dd', 'li', 'optgroup', 'option', 'p', 'rp', 'rt', 'tbody', 'td', 'tfoot', 'th', 'tr']),
+					contextGrabbers: {
+						dd: prepareKeywords(['dd', 'dt']),
+						dt: prepareKeywords(['dd', 'dt']),
+						li: prepareKeywords(['li']),
+						option: prepareKeywords(['option', 'optgroup']),
+						optgroup: prepareKeywords(['optgroup']),
+						p: prepareKeywords(['address', 'article', 'aside', 'blockquote', 'dir', 'div', 'dl', 'fieldset', 'footer', 'form','h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'header', 'hgroup', 'hr', 'menu', 'nav', 'ol', 'p', 'pre', 'section', 'table', 'ul']),
+						rp: prepareKeywords(['rp', 'rt']),
+						rt: prepareKeywords(['rp', 'rt']),
+						tbody: prepareKeywords(['tbody', 'tfoot']),
+						td: prepareKeywords(['td', 'th']),
+						tfoot: prepareKeywords(['tbody']),
+						th: prepareKeywords(['td', 'th']),
+						thead: prepareKeywords(['tbody', 'tfoot']),
+						tr: prepareKeywords(['tr'])
+					},
+					doNotIndent: prepareKeywords(['pre']),
+					allowUnquoted: true,
+					allowMissing: true
+				},
+				tagName, type;
+
+			function InsideText(stream, status)
 			{
-				if (stream.eat("!"))
+				function chain(parser)
 				{
-					if (stream.eat("["))
+					status.tokenize = parser;
+					return parser(stream, status);
+				}
+
+				var ch = stream.next(), c, bAtom;
+				if (ch == "<")
+				{
+					if (stream.eat("!"))
 					{
-						return stream.match("CDATA[") ? chain(InsideBlock("atom", "]]>")) : null;
+						if (stream.eat("["))
+						{
+							return stream.match("CDATA[") ? chain(InsideBlock("atom", "]]>")) : null;
+						}
+						else if (stream.match("--"))
+						{
+							return chain(InsideBlock("comment", "-->"));
+						}
+						else if (stream.match("DOCTYPE", true, true))
+						{
+							stream.eatWhile(/[\w\._\-]/);
+							return chain(Doctype(1));
+						}
+						else
+						{
+							return null;
+						}
 					}
-					else if (stream.match("--"))
-					{
-						return chain(InsideBlock("comment", "-->"));
-					}
-					else if (stream.match("DOCTYPE", true, true))
+					else if (stream.eat("?"))
 					{
 						stream.eatWhile(/[\w\._\-]/);
-						return chain(Doctype(1));
+						status.tokenize = InsideBlock("meta", "?>");
+						return "meta";
 					}
 					else
 					{
-						return null;
+						type = stream.eat("/") ? "closeTag" : "openTag";
+						stream.eatSpace();
+						tagName = "";
+						while ((c = stream.eat(/[^\s\u00a0=<>\"\'\/?]/)))
+							tagName += c;
+						status.tokenize = InsideTag;
+						return "tag";
 					}
 				}
-				else if (stream.eat("?"))
+				else if (ch == "&")
 				{
-					stream.eatWhile(/[\w\._\-]/);
-					status.tokenize = InsideBlock("meta", "?>");
-					return "meta";
+					var bAtom;
+					if (stream.eat("#"))
+						bAtom = stream.eat("x") ? (stream.eatWhile(/[a-fA-F\d]/) && stream.eat(";")) : (stream.eatWhile(/[\d]/) && stream.eat(";"));
+					else
+						bAtom = stream.eatWhile(/[\w\.\-:]/) && stream.eat(";");
+
+					return bAtom ? "atom" : "error";
 				}
 				else
 				{
-					type = stream.eat("/") ? "closeTag" : "openTag";
-					stream.eatSpace();
-					tagName = "";
-					while ((c = stream.eat(/[^\s\u00a0=<>\"\'\/?]/)))
-						tagName += c;
-					status.tokenize = InsideTag;
+					stream.eatWhile(/[^&<]/);
+					return null;
+				}
+			}
+
+			function InsideTag(stream, status)
+			{
+				var ch = stream.next();
+				if (ch == ">" || (ch == "/" && stream.eat(">")))
+				{
+					status.tokenize = InsideText;
+					type = ch == ">" ? "endTag" : "selfcloseTag";
 					return "tag";
 				}
-			}
-			else if (ch == "&")
-			{
-				var bAtom;
-				if (stream.eat("#"))
-					bAtom = stream.eat("x") ? (stream.eatWhile(/[a-fA-F\d]/) && stream.eat(";")) : (stream.eatWhile(/[\d]/) && stream.eat(";"));
+				else if (ch == "=")
+				{
+					type = "equals";
+					return null;
+				}
+				else if (/[\'\"]/.test(ch))
+				{
+					status.tokenize = InsideAttr(ch);
+					return status.tokenize(stream, status);
+				}
 				else
-					bAtom = stream.eatWhile(/[\w\.\-:]/) && stream.eat(";");
-
-				return bAtom ? "atom" : "error";
-			}
-			else
-			{
-				stream.eatWhile(/[^&<]/);
-				return null;
-			}
-		}
-
-		function InsideTag(stream, status)
-		{
-			var ch = stream.next();
-			if (ch == ">" || (ch == "/" && stream.eat(">")))
-			{
-				status.tokenize = InsideText;
-				type = ch == ">" ? "endTag" : "selfcloseTag";
-				return "tag";
-			}
-			else if (ch == "=")
-			{
-				type = "equals";
-				return null;
-			}
-			else if (/[\'\"]/.test(ch))
-			{
-				status.tokenize = InsideAttr(ch);
-				return status.tokenize(stream, status);
-			}
-			else
-			{
-				stream.eatWhile(/[^\s\u00a0=<>\"\'\/?]/);
-				return "word";
-			}
-		}
-
-		function InsideAttr(quote)
-		{
-			return function(stream, status)
-			{
-				while (!stream.eol())
 				{
-					if (stream.next() == quote)
-					{
-						status.tokenize = InsideTag;
-						break;
-					}
+					stream.eatWhile(/[^\s\u00a0=<>\"\'\/?]/);
+					return "word";
 				}
-				return "string";
-			};
-		}
+			}
 
-		function InsideBlock(style, terminator)
-		{
-			return function(stream, status) {
-				while (!stream.eol()) {
-					if (stream.match(terminator)) {
-						status.tokenize = InsideText;
-						break;
-					}
-					stream.next();
-				}
-				return style;
-			};
-		}
-
-		function Doctype(depth)
-		{
-			return function(stream, status)
+			function InsideAttr(quote)
 			{
-				var ch;
-				while ((ch = stream.next()) != null)
+				return function(stream, status)
 				{
-					if (ch == "<")
+					while (!stream.eol())
 					{
-						status.tokenize = Doctype(depth + 1);
-						return status.tokenize(stream, status);
-					} else if (ch == ">")
-					{
-						if (depth == 1)
+						if (stream.next() == quote)
 						{
-							status.tokenize = InsideText;
+							status.tokenize = InsideTag;
 							break;
-						} else
-						{
-							status.tokenize = Doctype(depth - 1);
-							return status.tokenize(stream, status);
 						}
 					}
-				}
-				return "meta";
-			};
-		}
-
-		var curState, setStyle;
-		function pass()
-		{
-			for (var i = arguments.length - 1; i >= 0; i--)
-				curState.cc.push(arguments[i]);
-		}
-		function cont()
-		{
-			pass.apply(null, arguments);
-			return true;
-		}
-
-		function pushContext(tagName, startOfLine)
-		{
-			var noIndent = arTags.doNotIndent.hasOwnProperty(tagName) || (curState.context && curState.context.noIndent);
-			curState.context =
-			{
-				prev: curState.context,
-				tagName: tagName,
-				indent: curState.indented,
-				startOfLine: startOfLine,
-				noIndent: noIndent
-			};
-		}
-
-		function popContext()
-		{
-			if (curState.context)
-				curState.context = curState.context.prev;
-		}
-
-		function element(type)
-		{
-			if (type == "openTag")
-			{
-				curState.tagName = tagName;
-				return cont(attributes, endtag(curState.startOfLine));
-			}
-			else if (type == "closeTag")
-			{
-				var err = false;
-				if (curState.context)
-				{
-					if (curState.context.tagName != tagName)
-					{
-						if (arTags.implicitlyClosed.hasOwnProperty(curState.context.tagName.toLowerCase()))
-							popContext();
-						err = !curState.context || curState.context.tagName != tagName;
-					}
-				}
-				else
-				{
-					err = true;
-				}
-				if (err)
-					setStyle = "error";
-				return cont(endclosetag(err));
-			}
-			return cont();
-		}
-
-		function endtag(startOfLine)
-		{
-			return function(type)
-			{
-				if (type == "selfcloseTag" || (type == "endTag" && arTags.autoSelfClosers.hasOwnProperty(curState.tagName.toLowerCase())))
-				{
-					maybePopContext(curState.tagName.toLowerCase());
-					return cont();
-				}
-				if (type == "endTag")
-				{
-					maybePopContext(curState.tagName.toLowerCase());
-					pushContext(curState.tagName, startOfLine);
-					return cont();
-				}
-				return cont();
-			};
-		}
-
-		function endclosetag(err)
-		{
-			return function(type)
-			{
-				if (err)
-					setStyle = "error";
-				if (type == "endTag")
-				{
-					popContext();
-					return cont();
-				}
-				setStyle = "error";
-				return cont(arguments.callee);
-			};
-		}
-		function maybePopContext(nextTagName)
-		{
-			var parentTagName;
-			while (true)
-			{
-				if (!curState.context)
-					return;
-				parentTagName = curState.context.tagName.toLowerCase();
-				if (!arTags.contextGrabbers.hasOwnProperty(parentTagName) || !arTags.contextGrabbers[parentTagName].hasOwnProperty(nextTagName))
-					return;
-				popContext();
-			}
-		}
-
-		function attributes(type)
-		{
-			if (type == "word")
-			{
-				setStyle = "attribute";
-				return cont(attribute, attributes);
-			}
-
-			if (type == "endTag" || type == "selfcloseTag")
-				return pass();
-
-			setStyle = "error";
-			return cont(attributes);
-		}
-
-		function attribute(type)
-		{
-			if (type == "equals")
-				return cont(attvalue, attributes);
-			if (!arTags.allowMissing)
-				setStyle = "error";
-			return (type == "endTag" || type == "selfcloseTag") ? pass() : cont();
-		}
-
-		function attvalue(type)
-		{
-			if (type == "string")
-				return cont(attvaluemaybe);
-			if (type == "word" && arTags.allowUnquoted)
-			{
-				setStyle = "string";
-				return cont();
-			}
-			setStyle = "error";
-			return (type == "endTag" || type == "selfCloseTag") ? pass() : cont();
-		}
-
-		function attvaluemaybe(type)
-		{
-			return type == "string" ? cont(attvaluemaybe) : pass();
-		}
-
-		return {
-			startStatus: function()
-			{
-				return {
-					tokenize: InsideText,
-					cc: [],
-					indented: 0,
-					startOfLine: true,
-					tagName: null,
-					context: null
+					return "string";
 				};
-			},
-			HandleChar: function(stream, status)
-			{
-				if (stream.sol())
-				{
-					status.startOfLine = true;
-					status.indented = stream.indentation();
-				}
-				if (stream.eatSpace()) return null;
+			}
 
-				setStyle = type = tagName = null;
-				var style = status.tokenize(stream, status);
-				status.type = type;
-				if ((style || type) && style != "comment")
-				{
-					curState = status;
-					while (true)
-					{
-						var comb = status.cc.pop() || element;
-						if (comb(type || style))
+			function InsideBlock(style, terminator)
+			{
+				return function(stream, status) {
+					while (!stream.eol()) {
+						if (stream.match(terminator)) {
+							status.tokenize = InsideText;
 							break;
+						}
+						stream.next();
 					}
-				}
-				status.startOfLine = false;
-				return setStyle || style;
-			},
+					return style;
+				};
+			}
 
-			Indent: function(status, textAfter, fullLine)
+			function Doctype(depth)
 			{
-				var context = status.context;
-				if ((status.tokenize != InsideTag && status.tokenize != InsideText) || context && context.noIndent)
-					return fullLine ? fullLine.match(/^(\s*)/)[0].length : 0;
-
-				if (context && /^<\//.test(textAfter))
-					context = context.prev;
-				while (context && !context.startOfLine)
-					context = context.prev;
-				if (context)
-					return context.indent + indentUnit;
-				else
-					return 0;
-			},
-
-			compareStates: function(a, b)
-			{
-				if (a.indented != b.indented || a.tokenize != b.tokenize)
-					return false;
-				for (var ca = a.context, cb = b.context; ; ca = ca.prev, cb = cb.prev)
+				return function(stream, status)
 				{
-					if (!ca || !cb)
-						return ca == cb;
-					if (ca.tagName != cb.tagName || ca.indent != cb.indent)
-						return false;
+					var ch;
+					while ((ch = stream.next()) != null)
+					{
+						if (ch == "<")
+						{
+							status.tokenize = Doctype(depth + 1);
+							return status.tokenize(stream, status);
+						} else if (ch == ">")
+						{
+							if (depth == 1)
+							{
+								status.tokenize = InsideText;
+								break;
+							} else
+							{
+								status.tokenize = Doctype(depth - 1);
+								return status.tokenize(stream, status);
+							}
+						}
+					}
+					return "meta";
+				};
+			}
+
+			var curState, setStyle;
+			function pass()
+			{
+				for (var i = arguments.length - 1; i >= 0; i--)
+					curState.cc.push(arguments[i]);
+			}
+			function cont()
+			{
+				pass.apply(null, arguments);
+				return true;
+			}
+
+			function pushContext(tagName, startOfLine)
+			{
+				var noIndent = arTags.doNotIndent.hasOwnProperty(tagName) || (curState.context && curState.context.noIndent);
+				curState.context =
+				{
+					prev: curState.context,
+					tagName: tagName,
+					indent: curState.indented,
+					startOfLine: startOfLine,
+					noIndent: noIndent
+				};
+			}
+
+			function popContext()
+			{
+				if (curState.context)
+					curState.context = curState.context.prev;
+			}
+
+			function element(type)
+			{
+				if (type == "openTag")
+				{
+					curState.tagName = tagName;
+					return cont(attributes, endtag(curState.startOfLine));
 				}
-			},
+				else if (type == "closeTag")
+				{
+					var err = false;
+					if (curState.context)
+					{
+						if (curState.context.tagName != tagName)
+						{
+							if (arTags.implicitlyClosed.hasOwnProperty(curState.context.tagName.toLowerCase()))
+								popContext();
+							err = !curState.context || curState.context.tagName != tagName;
+						}
+					}
+					else
+					{
+						err = true;
+					}
+					if (err)
+						setStyle = "error";
+					return cont(endclosetag(err));
+				}
+				return cont();
+			}
 
-			magicSym: "/"
-		};
-	};
+			function endtag(startOfLine)
+			{
+				return function(type)
+				{
+					if (type == "selfcloseTag" || (type == "endTag" && arTags.autoSelfClosers.hasOwnProperty(curState.tagName.toLowerCase())))
+					{
+						maybePopContext(curState.tagName.toLowerCase());
+						return cont();
+					}
+					if (type == "endTag")
+					{
+						maybePopContext(curState.tagName.toLowerCase());
+						pushContext(curState.tagName, startOfLine);
+						return cont();
+					}
+					return cont();
+				};
+			}
 
-	Syntaxes.js = function()
-	{
-		var indentUnit = 4;
-		var parserConfig = {};
-		var arKeywords = function()
-		{
-			function getKeyWord(type) {return {type: type, style: "keyword"};}
-			var
-				keyA = getKeyWord("keyword a"),
-				keyB = getKeyWord("keyword b"),
-				keyC = getKeyWord("keyword c"),
-				keyVar = getKeyWord("var"),
-				operator = getKeyWord("operator"),
-				atom = {type: "atom", style: "atom"};
+			function endclosetag(err)
+			{
+				return function(type)
+				{
+					if (err)
+						setStyle = "error";
+					if (type == "endTag")
+					{
+						popContext();
+						return cont();
+					}
+					setStyle = "error";
+					return cont(arguments.callee);
+				};
+			}
+			function maybePopContext(nextTagName)
+			{
+				var parentTagName;
+				while (true)
+				{
+					if (!curState.context)
+						return;
+					parentTagName = curState.context.tagName.toLowerCase();
+					if (!arTags.contextGrabbers.hasOwnProperty(parentTagName) || !arTags.contextGrabbers[parentTagName].hasOwnProperty(nextTagName))
+						return;
+					popContext();
+				}
+			}
+
+			function attributes(type)
+			{
+				if (type == "word")
+				{
+					setStyle = "attribute";
+					return cont(attribute, attributes);
+				}
+
+				if (type == "endTag" || type == "selfcloseTag")
+					return pass();
+
+				setStyle = "error";
+				return cont(attributes);
+			}
+
+			function attribute(type)
+			{
+				if (type == "equals")
+					return cont(attvalue, attributes);
+				if (!arTags.allowMissing)
+					setStyle = "error";
+				return (type == "endTag" || type == "selfcloseTag") ? pass() : cont();
+			}
+
+			function attvalue(type)
+			{
+				if (type == "string")
+					return cont(attvaluemaybe);
+				if (type == "word" && arTags.allowUnquoted)
+				{
+					setStyle = "string";
+					return cont();
+				}
+				setStyle = "error";
+				return (type == "endTag" || type == "selfCloseTag") ? pass() : cont();
+			}
+
+			function attvaluemaybe(type)
+			{
+				return type == "string" ? cont(attvaluemaybe) : pass();
+			}
 
 			return {
-				"if": keyA, "while": keyA, "with": keyA,
-				"else": keyB, "do": keyB, "try": keyB, "finally": keyB,
-				"return": keyC, "break": keyC, "continue": keyC, "new": keyC, "delete": keyC, "throw": keyC,
-				"var": keyVar, "const": keyVar, "let": keyVar,
-				"function": getKeyWord("function"),
-				"catch": getKeyWord("catch"), "for": getKeyWord("for"), "switch": getKeyWord("switch"), "case": getKeyWord("case"), "default": getKeyWord("default"),
-				"in": operator, "typeof": operator, "instanceof": operator,
-				"true": atom, "false": atom, "null": atom, "undefined": atom, "NaN": atom, "Infinity": atom
-			};
-		}();
-
-		var isOperatorChar = /[+\-*&%=<>!?|]/;
-
-		function chain(stream, status, f)
-		{
-			status.tokenize = f;
-			return f(stream, status);
-		}
-
-		function nextUntilUnescaped(stream, end)
-		{
-			var escaped = false, next;
-			while ((next = stream.next()) != null)
-			{
-				if (next == end && !escaped)
-					return false;
-				escaped = !escaped && next == "\\";
-			}
-			return escaped;
-		}
-
-		var type, content;
-		function retStyle(tp, style, cont)
-		{
-			type = tp;
-			content = cont;
-			return style;
-		}
-
-		function jsTokenBase(stream, status)
-		{
-			var
-				result,
-				ch = stream.next();
-			if (ch == '"' || ch == "'")
-			{
-				result = chain(stream, status, jsTokenString(ch));
-			}
-			else if (/[\[\]{}\(\),;\:\.]/.test(ch))
-			{
-				result = retStyle(ch);
-			}
-			else if (ch == "0" && stream.eat(/x/i))
-			{
-				stream.eatWhile(/[\da-f]/i);
-				result = retStyle("number", "number");
-			}
-			else if (/\d/.test(ch) || ch == "-" && stream.eat(/\d/))
-			{
-				stream.match(/^\d*(?:\.\d*)?(?:[eE][+\-]?\d+)?/);
-				result = retStyle("number", "number");
-			}
-			else if (ch == "/")
-			{
-				if (stream.eat("*"))
+				startStatus: function()
 				{
-					result = chain(stream, status, jsTokenComment);
+					return {
+						tokenize: InsideText,
+						cc: [],
+						indented: 0,
+						startOfLine: true,
+						tagName: null,
+						context: null
+					};
+				},
+				HandleChar: function(stream, status)
+				{
+					if (stream.sol())
+					{
+						status.startOfLine = true;
+						status.indented = stream.indentation();
+					}
+					if (stream.eatSpace()) return null;
+
+					setStyle = type = tagName = null;
+					var style = status.tokenize(stream, status);
+					status.type = type;
+					if ((style || type) && style != "comment")
+					{
+						curState = status;
+						while (true)
+						{
+							var comb = status.cc.pop() || element;
+							if (comb(type || style))
+								break;
+						}
+					}
+					status.startOfLine = false;
+					return setStyle || style;
+				},
+
+				Indent: function(status, textAfter, fullLine)
+				{
+					var context = status.context;
+					if ((status.tokenize != InsideTag && status.tokenize != InsideText) || context && context.noIndent)
+						return fullLine ? fullLine.match(/^(\s*)/)[0].length : 0;
+
+					if (context && /^<\//.test(textAfter))
+						context = context.prev;
+					while (context && !context.startOfLine)
+						context = context.prev;
+					if (context)
+						return context.indent + indentUnit;
+					else
+						return 0;
+				},
+
+				compareStates: function(a, b)
+				{
+					if (a.indented != b.indented || a.tokenize != b.tokenize)
+						return false;
+					for (var ca = a.context, cb = b.context; ; ca = ca.prev, cb = cb.prev)
+					{
+						if (!ca || !cb)
+							return ca == cb;
+						if (ca.tagName != cb.tagName || ca.indent != cb.indent)
+							return false;
+					}
+				},
+
+				magicSym: "/"
+			};
+		};
+
+		Syntaxes.js = function()
+		{
+			var indentUnit = 4;
+			var parserConfig = {};
+			var arKeywords = function()
+			{
+				function getKeyWord(type) {return {type: type, style: "keyword"};}
+				var
+					keyA = getKeyWord("keyword a"),
+					keyB = getKeyWord("keyword b"),
+					keyC = getKeyWord("keyword c"),
+					keyVar = getKeyWord("var"),
+					operator = getKeyWord("operator"),
+					atom = {type: "atom", style: "atom"};
+
+				return {
+					"if": keyA, "while": keyA, "with": keyA,
+					"else": keyB, "do": keyB, "try": keyB, "finally": keyB,
+					"return": keyC, "break": keyC, "continue": keyC, "new": keyC, "delete": keyC, "throw": keyC,
+					"var": keyVar, "const": keyVar, "let": keyVar,
+					"function": getKeyWord("function"),
+					"catch": getKeyWord("catch"), "for": getKeyWord("for"), "switch": getKeyWord("switch"), "case": getKeyWord("case"), "default": getKeyWord("default"),
+					"in": operator, "typeof": operator, "instanceof": operator,
+					"true": atom, "false": atom, "null": atom, "undefined": atom, "NaN": atom, "Infinity": atom
+				};
+			}();
+
+			var isOperatorChar = /[+\-*&%=<>!?|]/;
+
+			function chain(stream, status, f)
+			{
+				status.tokenize = f;
+				return f(stream, status);
+			}
+
+			function nextUntilUnescaped(stream, end)
+			{
+				var escaped = false, next;
+				while ((next = stream.next()) != null)
+				{
+					if (next == end && !escaped)
+						return false;
+					escaped = !escaped && next == "\\";
 				}
-				else if (stream.eat("/"))
+				return escaped;
+			}
+
+			var type, content;
+			function retStyle(tp, style, cont)
+			{
+				type = tp;
+				content = cont;
+				return style;
+			}
+
+			function jsTokenBase(stream, status)
+			{
+				var
+					result,
+					ch = stream.next();
+				if (ch == '"' || ch == "'")
+				{
+					result = chain(stream, status, jsTokenString(ch));
+				}
+				else if (/[\[\]{}\(\),;\:\.]/.test(ch))
+				{
+					result = retStyle(ch);
+				}
+				else if (ch == "0" && stream.eat(/x/i))
+				{
+					stream.eatWhile(/[\da-f]/i);
+					result = retStyle("number", "number");
+				}
+				else if (/\d/.test(ch) || ch == "-" && stream.eat(/\d/))
+				{
+					stream.match(/^\d*(?:\.\d*)?(?:[eE][+\-]?\d+)?/);
+					result = retStyle("number", "number");
+				}
+				else if (ch == "/")
+				{
+					if (stream.eat("*"))
+					{
+						result = chain(stream, status, jsTokenComment);
+					}
+					else if (stream.eat("/"))
+					{
+						stream.skipToEnd();
+						result = retStyle("comment", "comment");
+					}
+					else if (status.reAllowed)
+					{
+						nextUntilUnescaped(stream, "/");
+						stream.eatWhile(/[gimy]/); // 'y' is "sticky" option in Mozilla
+						result = retStyle("regexp", "string-2");
+					}
+					else
+					{
+						stream.eatWhile(isOperatorChar);
+						result = retStyle("operator", null, stream.current());
+					}
+				}
+				else if (ch == "#")
 				{
 					stream.skipToEnd();
-					result = retStyle("comment", "comment");
+					result = retStyle("error", "error");
 				}
-				else if (status.reAllowed)
-				{
-					nextUntilUnescaped(stream, "/");
-					stream.eatWhile(/[gimy]/); // 'y' is "sticky" option in Mozilla
-					result = retStyle("regexp", "string-2");
-				}
-				else
+				else if (isOperatorChar.test(ch))
 				{
 					stream.eatWhile(isOperatorChar);
 					result = retStyle("operator", null, stream.current());
 				}
-			}
-			else if (ch == "#")
-			{
-				stream.skipToEnd();
-				result = retStyle("error", "error");
-			}
-			else if (isOperatorChar.test(ch))
-			{
-				stream.eatWhile(isOperatorChar);
-				result = retStyle("operator", null, stream.current());
-			}
-			else
-			{
-				stream.eatWhile(/[\w\$_]/);
-				var
-					word = stream.current(),
-					known = arKeywords.propertyIsEnumerable(word) && arKeywords[word];
-				result = known && status.kwAllowed ? retStyle(known.type, known.style || known.type, word) : retStyle("variable", "variable", word);
-			}
-
-			return result;
-		}
-
-		function jsTokenString(quote)
-		{
-			return function(stream, status)
-			{
-				if (!nextUntilUnescaped(stream, quote))
-					status.tokenize = jsTokenBase;
-				return retStyle("string", "string");
-			};
-		}
-
-		function jsTokenComment(stream, status)
-		{
-			var maybeEnd = false, ch;
-			while (ch = stream.next())
-			{
-				if (ch == "/" && maybeEnd)
-				{
-					status.tokenize = jsTokenBase;
-					break;
-				}
-				maybeEnd = (ch == "*");
-			}
-			return retStyle("comment", "comment");
-		}
-
-		// Parser
-		var atomicTypes = {"atom": true, "number": true, "variable": true, "string": true, "regexp": true};
-
-		function JSLexical(indented, column, type, align, prev, info)
-		{
-			this.indented = indented;
-			this.column = column;
-			this.type = type;
-			this.prev = prev;
-			this.info = info;
-			if (align != null)
-				this.align = align;
-		}
-
-		function inScope(status, varname)
-		{
-			for (var v = status.localVars; v; v = v.next)
-				if (v.name == varname)
-					return true;
-		}
-
-		function parseJS(status, style, type, content, stream)
-		{
-			var cc = status.cc;
-			cx.status = status; cx.stream = stream; cx.marked = null, cx.cc = cc;
-
-			if (!status.lexical.hasOwnProperty("align"))
-				status.lexical.align = true;
-
-			while(true)
-			{
-				var combinator = cc.length ? cc.pop() : statement;
-				if (combinator(type, content))
-				{
-					while(cc.length && cc[cc.length - 1].lex)
-						cc.pop()();
-					if (cx.marked)
-						return cx.marked;
-					if (type == "variable" && inScope(status, content))
-						return "variable-2";
-					return style;
-				}
-			}
-		}
-
-		var cx = {status: null, column: null, marked: null, cc: null};
-		function pass()
-		{
-			for (var i = arguments.length - 1; i >= 0; i--)
-				cx.cc.push(arguments[i]);
-		}
-
-		function cont()
-		{
-			pass.apply(null, arguments);
-			return true;
-		}
-
-		function register(varname)
-		{
-			var status = cx.status;
-			if (status.context)
-			{
-				cx.marked = "def";
-				for (var v = status.localVars; v; v = v.next)
-					if (v.name == varname)
-						return;
-				status.localVars = {name: varname, next: status.localVars};
-			}
-		}
-
-		// Combinators
-		var defaultVars = {name: "this", next: {name: "arguments"}};
-
-		function pushcontext()
-		{
-			if (!cx.status.context)
-				cx.status.localVars = defaultVars;
-
-			cx.status.context =
-			{
-				prev: cx.status.context,
-				vars: cx.status.localVars
-			};
-		}
-
-		function popcontext()
-		{
-			cx.status.localVars = cx.status.context.vars;
-			cx.status.context = cx.status.context.prev;
-		}
-
-		function pushlex(type, info)
-		{
-			var result = function()
-			{
-				var status = cx.status;
-				status.lexical = new JSLexical(status.indented, cx.stream.column(), type, null, status.lexical, info);
-			};
-			result.lex = true;
-			return result;
-		}
-
-		function poplex()
-		{
-			var status = cx.status;
-			if (status.lexical.prev)
-			{
-				if (status.lexical.type == ")")
-					status.indented = status.lexical.indented;
-				status.lexical = status.lexical.prev;
-			}
-		}
-		poplex.lex = true;
-
-		function expect(wanted)
-		{
-			return function expecting(type)
-			{
-				if (type == wanted)
-					return cont();
-				else if (wanted == ";")
-					return pass();
 				else
-					return cont(arguments.callee);
-			};
-		}
-
-		function statement(type)
-		{
-			if (type == "var")
-				return cont(pushlex("vardef"), vardef1, expect(";"), poplex);
-			if (type == "keyword a")
-				return cont(pushlex("form"), expression, statement, poplex);
-			if (type == "keyword b")
-				return cont(pushlex("form"), statement, poplex);
-			if (type == "{")
-				return cont(pushlex("}"), block, poplex);
-			if (type == ";")
-				return cont();
-			if (type == "function")
-				return cont(functiondef);
-			if (type == "for")
-				return cont(pushlex("form"), expect("("), pushlex(")"), forspec1, expect(")"),poplex, statement, poplex);
-			if (type == "variable")
-				return cont(pushlex("stat"), maybelabel);
-			if (type == "switch")
-				return cont(pushlex("form"), expression, pushlex("}", "switch"), expect("{"), block, poplex, poplex);
-			if (type == "case")
-				return cont(expression, expect(":"));
-			if (type == "default")
-				return cont(expect(":"));
-			if (type == "catch")
-				return cont(pushlex("form"), pushcontext, expect("("), funarg, expect(")"), statement, poplex, popcontext);
-			return pass(pushlex("stat"), expression, expect(";"), poplex);
-		}
-
-		function expression(type)
-		{
-			if (atomicTypes.hasOwnProperty(type))
-				return cont(maybeoperator);
-			if (type == "function")
-				return cont(functiondef);
-			if (type == "keyword c")
-				return cont(maybeexpression);
-			if (type == "(")
-				return cont(pushlex(")"), maybeexpression, expect(")"), poplex, maybeoperator);
-			if (type == "operator")
-				return cont(expression);
-			if (type == "[")
-				return cont(pushlex("]"), commasep(expression, "]"), poplex, maybeoperator);
-			if (type == "{")
-				return cont(pushlex("}"), commasep(objprop, "}"), poplex, maybeoperator);
-			return cont();
-		}
-		function maybeexpression(type)
-		{
-			if (type.match(/[,;\}\)\]]/))
-				return pass();
-			return pass(expression);
-		}
-
-		function maybeoperator(type, value)
-		{
-			if (type == "operator" && /\+\+|--/.test(value))
-				return cont(maybeoperator);
-			if (type == "operator" && value == "?")
-				return cont(expression, expect(":"), expression);
-			if (type == ";")
-				return;
-			if (type == "(")
-				return cont(pushlex(")"), commasep(expression, ")"), poplex, maybeoperator);
-			if (type == ".")
-				return cont(property, maybeoperator);
-			if (type == "[")
-				return cont(pushlex("]"), expression, expect("]"), poplex, maybeoperator);
-		}
-
-		function maybelabel(type)
-		{
-			if (type == ":")
-				return cont(poplex, statement);
-			return pass(maybeoperator, expect(";"), poplex);
-		}
-
-		function property(type)
-		{
-			if (type == "variable")
-			{
-				cx.marked = "property";
-				return cont();
-			}
-		}
-
-		function objprop(type)
-		{
-			if (type == "variable")
-				cx.marked = "property";
-			if (atomicTypes.hasOwnProperty(type))
-				return cont(expect(":"), expression);
-		}
-
-		function commasep(what, end)
-		{
-			function proceed(type)
-			{
-				if (type == ",")
-					return cont(what, proceed);
-				if (type == end)
-					return cont();
-				return cont(expect(end));
-			}
-
-			return function commaSeparated(type)
-			{
-				if (type == end)
-					return cont();
-				else
-					return pass(what, proceed);
-			};
-		}
-
-		function block(type)
-		{
-			if (type == "}")
-				return cont();
-			return pass(statement, block);
-		}
-
-		function vardef1(type, value)
-		{
-			if (type == "variable")
-			{
-				register(value);
-				return cont(vardef2);
-			}
-			return cont();
-		}
-
-		function vardef2(type, value)
-		{
-			if (value == "=")
-				return cont(expression, vardef2);
-			if (type == ",")
-				return cont(vardef1);
-		}
-
-		function forspec1(type)
-		{
-			if (type == "var")
-				return cont(vardef1, forspec2);
-			if (type == ";")
-				return pass(forspec2);
-			if (type == "variable")
-				return cont(formaybein);
-			return pass(forspec2);
-		}
-
-		function formaybein(type, value)
-		{
-			if (value == "in")
-				return cont(expression);
-			return cont(maybeoperator, forspec2);
-		}
-
-		function forspec2(type, value)
-		{
-			if (type == ";")
-				return cont(forspec3);
-			if (value == "in")
-				return cont(expression);
-			return cont(expression, expect(";"), forspec3);
-		}
-
-		function forspec3(type)
-		{
-			if (type != ")")
-				cont(expression);
-		}
-
-		function functiondef(type, value)
-		{
-			if (type == "variable")
-			{
-				register(value);
-				return cont(functiondef);
-			}
-
-			if (type == "(")
-				return cont(pushlex(")"), pushcontext, commasep(funarg, ")"), poplex, statement, popcontext);
-		}
-
-		function funarg(type, value)
-		{
-			if (type == "variable")
-			{
-				register(value);
-				return cont();
-			}
-		}
-
-		return {
-			startStatus: function(basecolumn) {
-				return {
-					tokenize: jsTokenBase,
-					reAllowed: true,
-					kwAllowed: true,
-					cc: [],
-					lexical: new JSLexical((basecolumn || 0) - indentUnit, 0, "block", false),
-					localVars: parserConfig.localVars,
-					context: parserConfig.localVars && {vars: parserConfig.localVars},
-					indented: 0
-				};
-			},
-
-			HandleChar: function(stream, status)
-			{
-				if (stream.sol())
 				{
-					if (!status.lexical.hasOwnProperty("align"))
-						status.lexical.align = false;
-					status.indented = stream.indentation();
+					stream.eatWhile(/[\w\$_]/);
+					var
+						word = stream.current(),
+						known = arKeywords.propertyIsEnumerable(word) && arKeywords[word];
+					result = known && status.kwAllowed ? retStyle(known.type, known.style || known.type, word) : retStyle("variable", "variable", word);
 				}
-
-				if (stream.eatSpace())
-					return null;
-				var style = status.tokenize(stream, status);
-				if (type == "comment")
-					return style;
-				status.reAllowed = !!(type == "operator" || type == "keyword c" || type.match(/^[\[{}\(,;:]$/));
-				status.kwAllowed = type != '.';
-				return parseJS(status, style, type, content, stream);
-			},
-
-			Indent: function(status, textAfter)
-			{
-				if (status.tokenize != jsTokenBase)
-					return 0;
-				var
-					firstChar = textAfter && textAfter.charAt(0),
-					lexical = status.lexical;
-
-				if (lexical.type == "stat" && firstChar == "}")
-					lexical = lexical.prev;
-
-				var
-					type = lexical.type,
-					closing = firstChar == type,
-					res = lexical.indented + (closing ? 0 : indentUnit);
-
-				if (type == "vardef")
-					res = lexical.indented + 4;
-				else if (type == "form" && firstChar == "{")
-					res = lexical.indented;
-				else if (type == "stat" || type == "form")
-					res = lexical.indented + indentUnit;
-				else if (lexical.info == "switch" && !closing)
-					res = lexical.indented + (/^(?:case|default)\b/.test(textAfter) ? indentUnit : 2 * indentUnit);
-				else if (lexical.align)
-					res = lexical.column + (closing ? 0 : 1);
-
-				return res;
-			},
-
-			magicSym: ":{}"
-		};
-	};
-
-	Syntaxes.sql = function()
-	{
-		var
-			indentUnit = 4,
-			curPunc,
-			ops = new RegExp("^(?:" + "str|lang|langmatches|datatype|bound|sameterm|isiri|isuri|isblank|isliteral|union|a" + ")$", "i"),
-			keywords = new RegExp("^(?:" + "ACCESSIBLE|ALTER|AS|BEFORE|BINARY|BY|CASE|CHARACTER|COLUMN|CONTINUE|CROSS|CURRENT_TIMESTAMP|DATABASE|DAY_MICROSECOND|DEC|DEFAULT|DESC|DISTINCT|DOUBLE|EACH|ENCLOSED|EXIT|FETCH|FLOAT8|FOREIGN|GRANT|HIGH_PRIORITY|HOUR_SECOND|IN|INNER|INSERT|INT2|INT8|INTO|JOIN|KILL|LEFT|LINEAR|LOCALTIME|LONG|LOOP|MATCH|MEDIUMTEXT|MINUTE_SECOND|NATURAL|NULL|OPTIMIZE|OR|OUTER|PRIMARY|RANGE|READ_WRITE|REGEXP|REPEAT|RESTRICT|RIGHT|SCHEMAS|SENSITIVE|SHOW|SPECIFIC|SQLSTATE|SQL_CALC_FOUND_ROWS|STARTING|TERMINATED|TINYINT|TRAILING|UNDO|UNLOCK|USAGE|UTC_DATE|VALUES|VARCHARACTER|WHERE|WRITE|ZEROFILL|ALL|AND|ASENSITIVE|BIGINT|BOTH|CASCADE|CHAR|COLLATE|CONSTRAINT|CREATE|CURRENT_TIME|CURSOR|DAY_HOUR|DAY_SECOND|DECLARE|DELETE|DETERMINISTIC|DIV|DUAL|ELSEIF|EXISTS|FALSE|FLOAT4|FORCE|FULLTEXT|HAVING|HOUR_MINUTE|IGNORE|INFILE|INSENSITIVE|INT1|INT4|INTERVAL|ITERATE|KEYS|LEAVE|LIMIT|LOAD|LOCK|LONGTEXT|MASTER_SSL_VERIFY_SERVER_CERT|MEDIUMINT|MINUTE_MICROSECOND|MODIFIES|NO_WRITE_TO_BINLOG|ON|OPTIONALLY|OUT|PRECISION|PURGE|READS|REFERENCES|RENAME|REQUIRE|REVOKE|SCHEMA|SELECT|SET|SPATIAL|SQLEXCEPTION|SQL_BIG_RESULT|SSL|TABLE|TINYBLOB|TO|TRUE|UNIQUE|UPDATE|USING|UTC_TIMESTAMP|VARCHAR|WHEN|WITH|YEAR_MONTH|ADD|ANALYZE|ASC|BETWEEN|BLOB|CALL|CHANGE|CHECK|CONDITION|CONVERT|CURRENT_DATE|CURRENT_USER|DATABASES|DAY_MINUTE|DECIMAL|DELAYED|DESCRIBE|DISTINCTROW|DROP|ELSE|ESCAPED|EXPLAIN|FLOAT|FOR|FROM|GROUP|HOUR_MICROSECOND|IF|INDEX|INOUT|INT|INT3|INTEGER|IS|KEY|LEADING|LIKE|LINES|LOCALTIMESTAMP|LONGBLOB|LOW_PRIORITY|MEDIUMBLOB|MIDDLEINT|MOD|NOT|NUMERIC|OPTION|ORDER|OUTFILE|PROCEDURE|READ|REAL|RELEASE|REPLACE|RETURN|RLIKE|SECOND_MICROSECOND|SEPARATOR|SMALLINT|SQL|SQLWARNING|SQL_SMALL_RESULT|STRAIGHT_JOIN|THEN|TINYTEXT|TRIGGER|UNION|UNSIGNED|USE|UTC_TIME|VARBINARY|VARYING|WHILE|XOR|FULL|COLUMNS|MIN|MAX|STDEV|COUNT" + ")$", "i"),
-			operatorChars = /[*+\-<>=&|]/;
-
-		function tokenBase(stream, status)
-		{
-			var ch = stream.next();
-			curPunc = null;
-			if (ch == "$" || ch == "?")
-			{
-				stream.match(/^[\w\d]*/);
-				return "variable-2";
-			}
-			else if (ch == "<" && !stream.match(/^[\s\u00a0=]/, false))
-			{
-				stream.match(/^[^\s\u00a0>]*>?/);
-				return "atom";
-			}
-			else if (ch == "\"" || ch == "'")
-			{
-				status.tokenize = tokenLiteral(ch);
-				return status.tokenize(stream, status);
-			}
-			else if (ch == "`")
-			{
-				status.tokenize = tokenOpLiteral(ch);
-				return status.tokenize(stream, status);
-			}
-			else if (/[{}\(\),\.;\[\]]/.test(ch))
-			{
-				curPunc = ch;
-				return null;
-			}
-			else if (ch == "-")
-			{
-				var ch2 = stream.next();
-				if (ch2=="-")
-				{
-					stream.skipToEnd();
-					return "comment";
-				}
-			}
-			else if (operatorChars.test(ch))
-			{
-				stream.eatWhile(operatorChars);
-				return null;
-			}
-			else if (ch == ":")
-			{
-				stream.eatWhile(/[\w\d\._\-]/);
-				return "atom";
-			}
-			else
-			{
-				stream.eatWhile(/[_\w\d]/);
-				if (stream.eat(":"))
-				{
-					stream.eatWhile(/[\w\d_\-]/);
-					return "atom";
-				}
-
-				var word = stream.current(), type;
-				if (ops.test(word))
-					return null;
-				else if (keywords.test(word))
-					return "keyword";
-				else
-					return "variable";
-			}
-		}
-
-		function tokenLiteral(quote)
-		{
-			return function(stream, status)
-			{
-				var escaped = false, ch;
-				while ((ch = stream.next()) != null)
-				{
-					if (ch == quote && !escaped)
-					{
-						status.tokenize = tokenBase;
-						break;
-					}
-					escaped = !escaped && ch == "\\";
-				}
-				return "string";
-			};
-		}
-
-		function tokenOpLiteral(quote)
-		{
-			return function(stream, status)
-			{
-				var escaped = false, ch;
-				while ((ch = stream.next()) != null)
-				{
-					if (ch == quote && !escaped)
-					{
-						status.tokenize = tokenBase;
-						break;
-					}
-					escaped = !escaped && ch == "\\";
-				}
-				return "variable-2";
-			};
-		}
-
-
-		function pushContext(status, type, col)
-		{
-			status.context = {prev: status.context, indent: status.indent, col: col, type: type};
-		}
-
-		function popContext(status)
-		{
-			status.indent = status.context.indent;
-			status.context = status.context.prev;
-		}
-
-		return {
-			startStatus: function(base)
-			{
-				return {
-					tokenize: tokenBase,
-					context: null,
-					indent: 0,
-					col: 0
-				};
-			},
-
-			HandleChar: function(stream, status)
-			{
-				if (stream.sol())
-				{
-					if (status.context && status.context.align == null)
-						status.context.align = false;
-					status.indent = stream.indentation();
-				}
-				if (stream.eatSpace())
-					return null;
-				var style = status.tokenize(stream, status);
-
-				if (style != "comment" && status.context && status.context.align == null && status.context.type != "pattern")
-					status.context.align = true;
-
-				if (curPunc == "(")
-				{
-					pushContext(status, ")", stream.column());
-				}
-				else if (curPunc == "[")
-				{
-					pushContext(status, "]", stream.column());
-				}
-				else if (curPunc == "{")
-				{
-					pushContext(status, "}", stream.column());
-				}
-				else if (/[\]\}\)]/.test(curPunc))
-				{
-					while (status.context && status.context.type == "pattern")
-						popContext(status);
-					if (status.context && curPunc == status.context.type)
-						popContext(status);
-				}
-				else if (curPunc == "." && status.context && status.context.type == "pattern")
-				{
-					popContext(status);
-				}
-				else if (/atom|string|variable/.test(style) && status.context)
-				{
-					if (/[\}\]]/.test(status.context.type))
-					{
-						pushContext(status, "pattern", stream.column());
-					}
-					else if (status.context.type == "pattern" && !status.context.align)
-					{
-						status.context.align = true;
-						status.context.col = stream.column();
-					}
-				}
-
-				return style;
-			},
-
-			Indent: function(status, textAfter)
-			{
-				var
-					firstChar = textAfter && textAfter.charAt(0),
-					context = status.context;
-
-				if (/[\]\}]/.test(firstChar))
-				{
-					while (context && context.type == "pattern")
-						context = context.prev;
-				}
-
-				var
-					closing = context && firstChar == context.type,
-					result = context.indent + (closing ? 0 : indentUnit);
-
-				if (!context)
-					result = 0;
-				else if (context.type == "pattern")
-					result = context.col;
-				else if (context.align)
-					result = context.col + (closing ? 0 : 1);
 
 				return result;
 			}
-		};
-	};
 
-	Syntaxes.phpcore = function()
-	{
-		var
-			indentUnit = 4,
-			keywords =  prepareKeywords(['echo', 'include', 'require', 'include_once', 'require_once','for', 'foreach', 'as', 'endswitch', 'return', 'break', 'continue', 'null', '__LINE__', '__FILE__', 'var', 'default', 'function', 'class', 'new', '&amp;new', 'this', '__FUNCTION__', '__CLASS__', '__METHOD__', 'PHP_VERSION', 'E_ERROR', 'E_WARNING','E_PARSE', 'E_NOTICE', 'E_CORE_ERROR', 'E_CORE_WARNING', 'E_COMPILE_ERROR', 'E_COMPILE_WARNING', 'E_USER_ERROR', 'E_USER_WARNING', 'E_USER_NOTICE', 'E_ALL', 'abstract', 'array']),
-			blockKeywords = prepareKeywords(['catch', 'do', 'else', 'elseif', 'for', 'foreach', 'if', 'switch', 'try', 'while', 'endwhile', 'endif', 'case']),
-			atoms = prepareKeywords(['true', 'false', 'null', 'TRUE', 'FALSE', 'NULL']),
-			hooks = {
-				"$": function (stream, status)
+			function jsTokenString(quote)
+			{
+				return function(stream, status)
 				{
-					stream.eatWhile(/[\w\$_]/);
-					return "variable-2";
-				},
-				"<": function (stream, status)
+					if (!nextUntilUnescaped(stream, quote))
+						status.tokenize = jsTokenBase;
+					return retStyle("string", "string");
+				};
+			}
+
+			function jsTokenComment(stream, status)
+			{
+				var maybeEnd = false, ch;
+				while (ch = stream.next())
 				{
-					if (stream.match(/<</))
+					if (ch == "/" && maybeEnd)
 					{
-						stream.eatWhile(/[\w\.]/);
-						var delimiter = stream.current().slice(3);
-						status.tokenize = function (stream, status)
-						{
-							if (stream.match(delimiter))
-								status.tokenize = null;
-							else
-								stream.skipToEnd();
-							return "string";
-						};
-						return status.tokenize(stream, status);
+						status.tokenize = jsTokenBase;
+						break;
 					}
-					return false;
-				},
-				"#": function (stream, status)
+					maybeEnd = (ch == "*");
+				}
+				return retStyle("comment", "comment");
+			}
+
+			// Parser
+			var atomicTypes = {"atom": true, "number": true, "variable": true, "string": true, "regexp": true};
+
+			function JSLexical(indented, column, type, align, prev, info)
+			{
+				this.indented = indented;
+				this.column = column;
+				this.type = type;
+				this.prev = prev;
+				this.info = info;
+				if (align != null)
+					this.align = align;
+			}
+
+			function inScope(status, varname)
+			{
+				for (var v = status.localVars; v; v = v.next)
+					if (v.name == varname)
+						return true;
+			}
+
+			function parseJS(status, style, type, content, stream)
+			{
+				var cc = status.cc;
+				cx.status = status; cx.stream = stream; cx.marked = null, cx.cc = cc;
+
+				if (!status.lexical.hasOwnProperty("align"))
+					status.lexical.align = true;
+
+				while(true)
 				{
-					while (!stream.eol() && !stream.match("?>", false))
-						stream.next();
-					return "comment";
-				},
-				"/": function (stream, status)
-				{
-					if (stream.eat("/"))
+					var combinator = cc.length ? cc.pop() : statement;
+					if (combinator(type, content))
 					{
-						while (!stream.eol() && !stream.match("?>", false)) stream.next();
+						while(cc.length && cc[cc.length - 1].lex)
+							cc.pop()();
+						if (cx.marked)
+							return cx.marked;
+						if (type == "variable" && inScope(status, content))
+							return "variable-2";
+						return style;
+					}
+				}
+			}
+
+			var cx = {status: null, column: null, marked: null, cc: null};
+			function pass()
+			{
+				for (var i = arguments.length - 1; i >= 0; i--)
+					cx.cc.push(arguments[i]);
+			}
+
+			function cont()
+			{
+				pass.apply(null, arguments);
+				return true;
+			}
+
+			function register(varname)
+			{
+				var status = cx.status;
+				if (status.context)
+				{
+					cx.marked = "def";
+					for (var v = status.localVars; v; v = v.next)
+						if (v.name == varname)
+							return;
+					status.localVars = {name: varname, next: status.localVars};
+				}
+			}
+
+			// Combinators
+			var defaultVars = {name: "this", next: {name: "arguments"}};
+
+			function pushcontext()
+			{
+				if (!cx.status.context)
+					cx.status.localVars = defaultVars;
+
+				cx.status.context =
+				{
+					prev: cx.status.context,
+					vars: cx.status.localVars
+				};
+			}
+
+			function popcontext()
+			{
+				cx.status.localVars = cx.status.context.vars;
+				cx.status.context = cx.status.context.prev;
+			}
+
+			function pushlex(type, info)
+			{
+				var result = function()
+				{
+					var status = cx.status;
+					status.lexical = new JSLexical(status.indented, cx.stream.column(), type, null, status.lexical, info);
+				};
+				result.lex = true;
+				return result;
+			}
+
+			function poplex()
+			{
+				var status = cx.status;
+				if (status.lexical.prev)
+				{
+					if (status.lexical.type == ")")
+						status.indented = status.lexical.indented;
+					status.lexical = status.lexical.prev;
+				}
+			}
+			poplex.lex = true;
+
+			function expect(wanted)
+			{
+				return function expecting(type)
+				{
+					if (type == wanted)
+						return cont();
+					else if (wanted == ";")
+						return pass();
+					else
+						return cont(arguments.callee);
+				};
+			}
+
+			function statement(type)
+			{
+				if (type == "var")
+					return cont(pushlex("vardef"), vardef1, expect(";"), poplex);
+				if (type == "keyword a")
+					return cont(pushlex("form"), expression, statement, poplex);
+				if (type == "keyword b")
+					return cont(pushlex("form"), statement, poplex);
+				if (type == "{")
+					return cont(pushlex("}"), block, poplex);
+				if (type == ";")
+					return cont();
+				if (type == "function")
+					return cont(functiondef);
+				if (type == "for")
+					return cont(pushlex("form"), expect("("), pushlex(")"), forspec1, expect(")"),poplex, statement, poplex);
+				if (type == "variable")
+					return cont(pushlex("stat"), maybelabel);
+				if (type == "switch")
+					return cont(pushlex("form"), expression, pushlex("}", "switch"), expect("{"), block, poplex, poplex);
+				if (type == "case")
+					return cont(expression, expect(":"));
+				if (type == "default")
+					return cont(expect(":"));
+				if (type == "catch")
+					return cont(pushlex("form"), pushcontext, expect("("), funarg, expect(")"), statement, poplex, popcontext);
+				return pass(pushlex("stat"), expression, expect(";"), poplex);
+			}
+
+			function expression(type)
+			{
+				if (atomicTypes.hasOwnProperty(type))
+					return cont(maybeoperator);
+				if (type == "function")
+					return cont(functiondef);
+				if (type == "keyword c")
+					return cont(maybeexpression);
+				if (type == "(")
+					return cont(pushlex(")"), maybeexpression, expect(")"), poplex, maybeoperator);
+				if (type == "operator")
+					return cont(expression);
+				if (type == "[")
+					return cont(pushlex("]"), commasep(expression, "]"), poplex, maybeoperator);
+				if (type == "{")
+					return cont(pushlex("}"), commasep(objprop, "}"), poplex, maybeoperator);
+				return cont();
+			}
+			function maybeexpression(type)
+			{
+				if (type.match(/[,;\}\)\]]/))
+					return pass();
+				return pass(expression);
+			}
+
+			function maybeoperator(type, value)
+			{
+				if (type == "operator" && /\+\+|--/.test(value))
+					return cont(maybeoperator);
+				if (type == "operator" && value == "?")
+					return cont(expression, expect(":"), expression);
+				if (type == ";")
+					return;
+				if (type == "(")
+					return cont(pushlex(")"), commasep(expression, ")"), poplex, maybeoperator);
+				if (type == ".")
+					return cont(property, maybeoperator);
+				if (type == "[")
+					return cont(pushlex("]"), expression, expect("]"), poplex, maybeoperator);
+			}
+
+			function maybelabel(type)
+			{
+				if (type == ":")
+					return cont(poplex, statement);
+				return pass(maybeoperator, expect(";"), poplex);
+			}
+
+			function property(type)
+			{
+				if (type == "variable")
+				{
+					cx.marked = "property";
+					return cont();
+				}
+			}
+
+			function objprop(type)
+			{
+				if (type == "variable")
+					cx.marked = "property";
+				if (atomicTypes.hasOwnProperty(type))
+					return cont(expect(":"), expression);
+			}
+
+			function commasep(what, end)
+			{
+				function proceed(type)
+				{
+					if (type == ",")
+						return cont(what, proceed);
+					if (type == end)
+						return cont();
+					return cont(expect(end));
+				}
+
+				return function commaSeparated(type)
+				{
+					if (type == end)
+						return cont();
+					else
+						return pass(what, proceed);
+				};
+			}
+
+			function block(type)
+			{
+				if (type == "}")
+					return cont();
+				return pass(statement, block);
+			}
+
+			function vardef1(type, value)
+			{
+				if (type == "variable")
+				{
+					register(value);
+					return cont(vardef2);
+				}
+				return cont();
+			}
+
+			function vardef2(type, value)
+			{
+				if (value == "=")
+					return cont(expression, vardef2);
+				if (type == ",")
+					return cont(vardef1);
+			}
+
+			function forspec1(type)
+			{
+				if (type == "var")
+					return cont(vardef1, forspec2);
+				if (type == ";")
+					return pass(forspec2);
+				if (type == "variable")
+					return cont(formaybein);
+				return pass(forspec2);
+			}
+
+			function formaybein(type, value)
+			{
+				if (value == "in")
+					return cont(expression);
+				return cont(maybeoperator, forspec2);
+			}
+
+			function forspec2(type, value)
+			{
+				if (type == ";")
+					return cont(forspec3);
+				if (value == "in")
+					return cont(expression);
+				return cont(expression, expect(";"), forspec3);
+			}
+
+			function forspec3(type)
+			{
+				if (type != ")")
+					cont(expression);
+			}
+
+			function functiondef(type, value)
+			{
+				if (type == "variable")
+				{
+					register(value);
+					return cont(functiondef);
+				}
+
+				if (type == "(")
+					return cont(pushlex(")"), pushcontext, commasep(funarg, ")"), poplex, statement, popcontext);
+			}
+
+			function funarg(type, value)
+			{
+				if (type == "variable")
+				{
+					register(value);
+					return cont();
+				}
+			}
+
+			return {
+				startStatus: function(basecolumn) {
+					return {
+						tokenize: jsTokenBase,
+						reAllowed: true,
+						kwAllowed: true,
+						cc: [],
+						lexical: new JSLexical((basecolumn || 0) - indentUnit, 0, "block", false),
+						localVars: parserConfig.localVars,
+						context: parserConfig.localVars && {vars: parserConfig.localVars},
+						indented: 0
+					};
+				},
+
+				HandleChar: function(stream, status)
+				{
+					if (stream.sol())
+					{
+						if (!status.lexical.hasOwnProperty("align"))
+							status.lexical.align = false;
+						status.indented = stream.indentation();
+					}
+
+					if (stream.eatSpace())
+						return null;
+					var style = status.tokenize(stream, status);
+					if (type == "comment")
+						return style;
+					status.reAllowed = !!(type == "operator" || type == "keyword c" || type.match(/^[\[{}\(,;:]$/));
+					status.kwAllowed = type != '.';
+					return parseJS(status, style, type, content, stream);
+				},
+
+				Indent: function(status, textAfter)
+				{
+					if (status.tokenize != jsTokenBase)
+						return 0;
+					var
+						firstChar = textAfter && textAfter.charAt(0),
+						lexical = status.lexical;
+
+					if (lexical.type == "stat" && firstChar == "}")
+						lexical = lexical.prev;
+
+					var
+						type = lexical.type,
+						closing = firstChar == type,
+						res = lexical.indented + (closing ? 0 : indentUnit);
+
+					if (type == "vardef")
+						res = lexical.indented + 4;
+					else if (type == "form" && firstChar == "{")
+						res = lexical.indented;
+					else if (type == "stat" || type == "form")
+						res = lexical.indented + indentUnit;
+					else if (lexical.info == "switch" && !closing)
+						res = lexical.indented + (/^(?:case|default)\b/.test(textAfter) ? indentUnit : 2 * indentUnit);
+					else if (lexical.align)
+						res = lexical.column + (closing ? 0 : 1);
+
+					return res;
+				},
+
+				magicSym: ":{}"
+			};
+		};
+
+		Syntaxes.sql = function()
+		{
+			var
+				indentUnit = 4,
+				curPunc,
+				ops = new RegExp("^(?:" + "str|lang|langmatches|datatype|bound|sameterm|isiri|isuri|isblank|isliteral|union|a" + ")$", "i"),
+				keywords = new RegExp("^(?:" + "ACCESSIBLE|ALTER|AS|BEFORE|BINARY|BY|CASE|CHARACTER|COLUMN|CONTINUE|CROSS|CURRENT_TIMESTAMP|DATABASE|DAY_MICROSECOND|DEC|DEFAULT|DESC|DISTINCT|DOUBLE|EACH|ENCLOSED|EXIT|FETCH|FLOAT8|FOREIGN|GRANT|HIGH_PRIORITY|HOUR_SECOND|IN|INNER|INSERT|INT2|INT8|INTO|JOIN|KILL|LEFT|LINEAR|LOCALTIME|LONG|LOOP|MATCH|MEDIUMTEXT|MINUTE_SECOND|NATURAL|NULL|OPTIMIZE|OR|OUTER|PRIMARY|RANGE|READ_WRITE|REGEXP|REPEAT|RESTRICT|RIGHT|SCHEMAS|SENSITIVE|SHOW|SPECIFIC|SQLSTATE|SQL_CALC_FOUND_ROWS|STARTING|TERMINATED|TINYINT|TRAILING|UNDO|UNLOCK|USAGE|UTC_DATE|VALUES|VARCHARACTER|WHERE|WRITE|ZEROFILL|ALL|AND|ASENSITIVE|BIGINT|BOTH|CASCADE|CHAR|COLLATE|CONSTRAINT|CREATE|CURRENT_TIME|CURSOR|DAY_HOUR|DAY_SECOND|DECLARE|DELETE|DETERMINISTIC|DIV|DUAL|ELSEIF|EXISTS|FALSE|FLOAT4|FORCE|FULLTEXT|HAVING|HOUR_MINUTE|IGNORE|INFILE|INSENSITIVE|INT1|INT4|INTERVAL|ITERATE|KEYS|LEAVE|LIMIT|LOAD|LOCK|LONGTEXT|MASTER_SSL_VERIFY_SERVER_CERT|MEDIUMINT|MINUTE_MICROSECOND|MODIFIES|NO_WRITE_TO_BINLOG|ON|OPTIONALLY|OUT|PRECISION|PURGE|READS|REFERENCES|RENAME|REQUIRE|REVOKE|SCHEMA|SELECT|SET|SPATIAL|SQLEXCEPTION|SQL_BIG_RESULT|SSL|TABLE|TINYBLOB|TO|TRUE|UNIQUE|UPDATE|USING|UTC_TIMESTAMP|VARCHAR|WHEN|WITH|YEAR_MONTH|ADD|ANALYZE|ASC|BETWEEN|BLOB|CALL|CHANGE|CHECK|CONDITION|CONVERT|CURRENT_DATE|CURRENT_USER|DATABASES|DAY_MINUTE|DECIMAL|DELAYED|DESCRIBE|DISTINCTROW|DROP|ELSE|ESCAPED|EXPLAIN|FLOAT|FOR|FROM|GROUP|HOUR_MICROSECOND|IF|INDEX|INOUT|INT|INT3|INTEGER|IS|KEY|LEADING|LIKE|LINES|LOCALTIMESTAMP|LONGBLOB|LOW_PRIORITY|MEDIUMBLOB|MIDDLEINT|MOD|NOT|NUMERIC|OPTION|ORDER|OUTFILE|PROCEDURE|READ|REAL|RELEASE|REPLACE|RETURN|RLIKE|SECOND_MICROSECOND|SEPARATOR|SMALLINT|SQL|SQLWARNING|SQL_SMALL_RESULT|STRAIGHT_JOIN|THEN|TINYTEXT|TRIGGER|UNION|UNSIGNED|USE|UTC_TIME|VARBINARY|VARYING|WHILE|XOR|FULL|COLUMNS|MIN|MAX|STDEV|COUNT" + ")$", "i"),
+				operatorChars = /[*+\-<>=&|]/;
+
+			function tokenBase(stream, status)
+			{
+				var ch = stream.next();
+				curPunc = null;
+				if (ch == "$" || ch == "?")
+				{
+					stream.match(/^[\w\d]*/);
+					return "variable-2";
+				}
+				else if (ch == "<" && !stream.match(/^[\s\u00a0=]/, false))
+				{
+					stream.match(/^[^\s\u00a0>]*>?/);
+					return "atom";
+				}
+				else if (ch == "\"" || ch == "'")
+				{
+					status.tokenize = tokenLiteral(ch);
+					return status.tokenize(stream, status);
+				}
+				else if (ch == "`")
+				{
+					status.tokenize = tokenOpLiteral(ch);
+					return status.tokenize(stream, status);
+				}
+				else if (/[{}\(\),\.;\[\]]/.test(ch))
+				{
+					curPunc = ch;
+					return null;
+				}
+				else if (ch == "-")
+				{
+					var ch2 = stream.next();
+					if (ch2=="-")
+					{
+						stream.skipToEnd();
 						return "comment";
 					}
-					return false;
 				}
-			},
-			multiLineStrings = true,
-			isOperatorChar = /[+\-*&%=<>!?|\/]/,
-			curPunc;
-
-		function tokenBase(stream, status)
-		{
-			var ch = stream.next();
-			if (hooks[ch])
-			{
-				var result = hooks[ch](stream, status);
-				if (result !== false)
-					return result;
-			}
-
-			if (ch == '"' || ch == "'")
-			{
-				status.tokenize = tokenString(ch);
-				return status.tokenize(stream, status);
-			}
-			if (/[\[\]{}\(\),;\:\.]/.test(ch))
-			{
-				curPunc = ch;
-				return null;
-			}
-			if (/\d/.test(ch))
-			{
-				stream.eatWhile(/[\w\.]/);
-				return "number";
-			}
-			if (ch == "/")
-			{
-				if (stream.eat("*"))
+				else if (operatorChars.test(ch))
 				{
-					status.tokenize = tokenComment;
-					return tokenComment(stream, status);
+					stream.eatWhile(operatorChars);
+					return null;
 				}
-				if (stream.eat("/"))
+				else if (ch == ":")
 				{
-					stream.skipToEnd();
-					return "comment";
+					stream.eatWhile(/[\w\d\._\-]/);
+					return "atom";
 				}
-			}
-			if (isOperatorChar.test(ch))
-			{
-				stream.eatWhile(isOperatorChar);
-				return "operator";
-			}
-			stream.eatWhile(/[\w\$_]/);
-			var cur = stream.current();
-			if (keywords.propertyIsEnumerable(cur))
-			{
-				if (blockKeywords.propertyIsEnumerable(cur))
-					curPunc = "newstatement";
-				return "keyword";
-			}
-			if (atoms.propertyIsEnumerable(cur))
-				return "atom";
-			return "variable";
-		}
-
-		function tokenString(quote)
-		{
-			return function(stream, status)
-			{
-				var
-					escaped = false,
-					next,
-					end = false;
-				while ((next = stream.next()) != null)
+				else
 				{
-					if (next == quote && !escaped)
+					stream.eatWhile(/[_\w\d]/);
+					if (stream.eat(":"))
 					{
-						end = true;
-						break;
+						stream.eatWhile(/[\w\d_\-]/);
+						return "atom";
 					}
-					escaped = !escaped && next == "\\";
-				}
-				if (end || !(escaped || multiLineStrings))
-					status.tokenize = null;
-				return "string";
-			};
-		}
 
-		function tokenComment(stream, status)
+					var word = stream.current(), type;
+					if (ops.test(word))
+						return null;
+					else if (keywords.test(word))
+						return "keyword";
+					else
+						return "variable";
+				}
+			}
+
+			function tokenLiteral(quote)
+			{
+				return function(stream, status)
+				{
+					var escaped = false, ch;
+					while ((ch = stream.next()) != null)
+					{
+						if (ch == quote && !escaped)
+						{
+							status.tokenize = tokenBase;
+							break;
+						}
+						escaped = !escaped && ch == "\\";
+					}
+					return "string";
+				};
+			}
+
+			function tokenOpLiteral(quote)
+			{
+				return function(stream, status)
+				{
+					var escaped = false, ch;
+					while ((ch = stream.next()) != null)
+					{
+						if (ch == quote && !escaped)
+						{
+							status.tokenize = tokenBase;
+							break;
+						}
+						escaped = !escaped && ch == "\\";
+					}
+					return "variable-2";
+				};
+			}
+
+
+			function pushContext(status, type, col)
+			{
+				status.context = {prev: status.context, indent: status.indent, col: col, type: type};
+			}
+
+			function popContext(status)
+			{
+				status.indent = status.context.indent;
+				status.context = status.context.prev;
+			}
+
+			return {
+				startStatus: function(base)
+				{
+					return {
+						tokenize: tokenBase,
+						context: null,
+						indent: 0,
+						col: 0
+					};
+				},
+
+				HandleChar: function(stream, status)
+				{
+					if (stream.sol())
+					{
+						if (status.context && status.context.align == null)
+							status.context.align = false;
+						status.indent = stream.indentation();
+					}
+					if (stream.eatSpace())
+						return null;
+					var style = status.tokenize(stream, status);
+
+					if (style != "comment" && status.context && status.context.align == null && status.context.type != "pattern")
+						status.context.align = true;
+
+					if (curPunc == "(")
+					{
+						pushContext(status, ")", stream.column());
+					}
+					else if (curPunc == "[")
+					{
+						pushContext(status, "]", stream.column());
+					}
+					else if (curPunc == "{")
+					{
+						pushContext(status, "}", stream.column());
+					}
+					else if (/[\]\}\)]/.test(curPunc))
+					{
+						while (status.context && status.context.type == "pattern")
+							popContext(status);
+						if (status.context && curPunc == status.context.type)
+							popContext(status);
+					}
+					else if (curPunc == "." && status.context && status.context.type == "pattern")
+					{
+						popContext(status);
+					}
+					else if (/atom|string|variable/.test(style) && status.context)
+					{
+						if (/[\}\]]/.test(status.context.type))
+						{
+							pushContext(status, "pattern", stream.column());
+						}
+						else if (status.context.type == "pattern" && !status.context.align)
+						{
+							status.context.align = true;
+							status.context.col = stream.column();
+						}
+					}
+
+					return style;
+				},
+
+				Indent: function(status, textAfter)
+				{
+					var
+						firstChar = textAfter && textAfter.charAt(0),
+						context = status.context;
+
+					if (/[\]\}]/.test(firstChar))
+					{
+						while (context && context.type == "pattern")
+							context = context.prev;
+					}
+
+					var
+						closing = context && firstChar == context.type,
+						result = context.indent + (closing ? 0 : indentUnit);
+
+					if (!context)
+						result = 0;
+					else if (context.type == "pattern")
+						result = context.col;
+					else if (context.align)
+						result = context.col + (closing ? 0 : 1);
+
+					return result;
+				}
+			};
+		};
+
+		Syntaxes.phpcore = function()
 		{
 			var
-				maybeEnd = false,
-				ch;
-			while (ch = stream.next())
+				indentUnit = 4,
+				keywords =  prepareKeywords(['echo', 'include', 'require', 'include_once', 'require_once','for', 'foreach', 'as', 'endswitch', 'return', 'break', 'continue', 'null', '__LINE__', '__FILE__', 'var', 'default', 'function', 'class', 'new', '&amp;new', 'this', '__FUNCTION__', '__CLASS__', '__METHOD__', 'PHP_VERSION', 'E_ERROR', 'E_WARNING','E_PARSE', 'E_NOTICE', 'E_CORE_ERROR', 'E_CORE_WARNING', 'E_COMPILE_ERROR', 'E_COMPILE_WARNING', 'E_USER_ERROR', 'E_USER_WARNING', 'E_USER_NOTICE', 'E_ALL', 'abstract', 'array']),
+				blockKeywords = prepareKeywords(['catch', 'do', 'else', 'elseif', 'for', 'foreach', 'if', 'switch', 'try', 'while', 'endwhile', 'endif', 'case']),
+				atoms = prepareKeywords(['true', 'false', 'null', 'TRUE', 'FALSE', 'NULL']),
+				hooks = {
+					"$": function (stream, status)
+					{
+						stream.eatWhile(/[\w\$_]/);
+						return "variable-2";
+					},
+					"<": function (stream, status)
+					{
+						if (stream.match(/<</))
+						{
+							stream.eatWhile(/[\w\.]/);
+							var delimiter = stream.current().slice(3);
+							status.tokenize = function (stream, status)
+							{
+								if (stream.match(delimiter))
+									status.tokenize = null;
+								else
+									stream.skipToEnd();
+								return "string";
+							};
+							return status.tokenize(stream, status);
+						}
+						return false;
+					},
+					"#": function (stream, status)
+					{
+						while (!stream.eol() && !stream.match("?>", false))
+							stream.next();
+						return "comment";
+					},
+					"/": function (stream, status)
+					{
+						if (stream.eat("/"))
+						{
+							while (!stream.eol() && !stream.match("?>", false)) stream.next();
+							return "comment";
+						}
+						return false;
+					}
+				},
+				multiLineStrings = true,
+				isOperatorChar = /[+\-*&%=<>!?|\/]/,
+				curPunc;
+
+			function tokenBase(stream, status)
 			{
-				if (ch == "/" && maybeEnd)
+				var ch = stream.next();
+				if (hooks[ch])
 				{
-					status.tokenize = null;
-					break;
+					var result = hooks[ch](stream, status);
+					if (result !== false)
+						return result;
 				}
-				maybeEnd = (ch == "*");
-			}
-			return "comment";
-		}
 
-		function JCContext(indented, column, type, align, prev)
-		{
-			this.indented = indented;
-			this.column = column;
-			this.type = type;
-			this.align = align;
-			this.prev = prev;
-		}
-
-		function pushContext(status, col, type)
-		{
-			return status.context = new JCContext(status.indented, col, type, null, status.context);
-		}
-
-		function popContext(status)
-		{
-			var t = status.context.type;
-			if (t == ")" || t == "]" || t == "}")
-				status.indented = status.context.indented;
-			return status.context = status.context.prev;
-		}
-
-		// Interface
-		return {
-			startStatus: function(basecolumn)
-			{
-				return {
-					tokenize: null,
-					context: new JCContext((basecolumn || 0) - indentUnit, 0, "top", false),
-					indented: 0,
-					startOfLine: true
-				};
-			},
-
-			HandleChar: function(stream, status)
-			{
-				var ctx = status.context;
-				if (stream.sol())
+				if (ch == '"' || ch == "'")
 				{
-					if (ctx.align == null)
-						ctx.align = false;
-					status.indented = stream.indentation();
-					status.startOfLine = true;
+					status.tokenize = tokenString(ch);
+					return status.tokenize(stream, status);
 				}
-				if (stream.eatSpace())
+				if (/[\[\]{}\(\),;\:\.]/.test(ch))
+				{
+					curPunc = ch;
 					return null;
-				curPunc = null;
-				var style = (status.tokenize || tokenBase)(stream, status);
+				}
+				if (/\d/.test(ch))
+				{
+					stream.eatWhile(/[\w\.]/);
+					return "number";
+				}
+				if (ch == "/")
+				{
+					if (stream.eat("*"))
+					{
+						status.tokenize = tokenComment;
+						return tokenComment(stream, status);
+					}
+					if (stream.eat("/"))
+					{
+						stream.skipToEnd();
+						return "comment";
+					}
+				}
+				if (isOperatorChar.test(ch))
+				{
+					stream.eatWhile(isOperatorChar);
+					return "operator";
+				}
+				stream.eatWhile(/[\w\$_]/);
+				var cur = stream.current();
+				if (keywords.propertyIsEnumerable(cur))
+				{
+					if (blockKeywords.propertyIsEnumerable(cur))
+						curPunc = "newstatement";
+					return "keyword";
+				}
+				if (atoms.propertyIsEnumerable(cur))
+					return "atom";
+				return "variable";
+			}
 
-				if (style == "comment" || style == "meta")
-					return style;
-				if (ctx.align == null)
-					ctx.align = true;
-
-				if ((curPunc == ";" || curPunc == ":") && ctx.type == "statement")
-				{
-					popContext(status);
-				}
-				else if (curPunc == "{")
-				{
-					pushContext(status, stream.column(), "}");
-				}
-				else if (curPunc == "[")
-				{
-					pushContext(status, stream.column(), "]");
-				}
-				else if (curPunc == "(")
-				{
-					pushContext(status, stream.column(), ")");
-				}
-				else if (curPunc == "}")
-				{
-					while (ctx.type == "statement")
-						ctx = popContext(status);
-					if (ctx.type == "}")
-						ctx = popContext(status);
-					while (ctx.type == "statement")
-						ctx = popContext(status);
-				}
-				else if (curPunc == ctx.type)
-				{
-					popContext(status);
-				}
-				else if (ctx.type == "}" || ctx.type == "top" || (ctx.type == "statement" && curPunc == "newstatement"))
-				{
-					pushContext(status, stream.column(), "statement");
-				}
-				status.startOfLine = false;
-				return style;
-			},
-
-			Indent: function(status, textAfter)
+			function tokenString(quote)
 			{
-				if (status.tokenize != tokenBase && status.tokenize != null)
-					return 0;
+				return function(stream, status)
+				{
+					var
+						escaped = false,
+						next,
+						end = false;
+					while ((next = stream.next()) != null)
+					{
+						if (next == quote && !escaped)
+						{
+							end = true;
+							break;
+						}
+						escaped = !escaped && next == "\\";
+					}
+					if (end || !(escaped || multiLineStrings))
+						status.tokenize = null;
+					return "string";
+				};
+			}
+
+			function tokenComment(stream, status)
+			{
 				var
-					ctx = status.context,
-					firstChar = textAfter && textAfter.charAt(0);
+					maybeEnd = false,
+					ch;
+				while (ch = stream.next())
+				{
+					if (ch == "/" && maybeEnd)
+					{
+						status.tokenize = null;
+						break;
+					}
+					maybeEnd = (ch == "*");
+				}
+				return "comment";
+			}
 
-				if (ctx.type == "statement" && firstChar == "}")
-					ctx = ctx.prev;
+			function JCContext(indented, column, type, align, prev)
+			{
+				this.indented = indented;
+				this.column = column;
+				this.type = type;
+				this.align = align;
+				this.prev = prev;
+			}
 
-				if (ctx.type == "statement")
-					return ctx.indented + (firstChar == "{" ? 0 : indentUnit);
-				else if (ctx.align)
-					return ctx.column + (firstChar == ctx.type ? 0 : 1);
-				else
-					return ctx.indented + (firstChar == ctx.type ? 0 : indentUnit);
-			},
+			function pushContext(status, col, type)
+			{
+				return status.context = new JCContext(status.indented, col, type, null, status.context);
+			}
 
-			magicSym: "{}"
+			function popContext(status)
+			{
+				var t = status.context.type;
+				if (t == ")" || t == "]" || t == "}")
+					status.indented = status.context.indented;
+				return status.context = status.context.prev;
+			}
+
+			// Interface
+			return {
+				startStatus: function(basecolumn)
+				{
+					return {
+						tokenize: null,
+						context: new JCContext((basecolumn || 0) - indentUnit, 0, "top", false),
+						indented: 0,
+						startOfLine: true
+					};
+				},
+
+				HandleChar: function(stream, status)
+				{
+					var ctx = status.context;
+					if (stream.sol())
+					{
+						if (ctx.align == null)
+							ctx.align = false;
+						status.indented = stream.indentation();
+						status.startOfLine = true;
+					}
+					if (stream.eatSpace())
+						return null;
+					curPunc = null;
+					var style = (status.tokenize || tokenBase)(stream, status);
+
+					if (style == "comment" || style == "meta")
+						return style;
+					if (ctx.align == null)
+						ctx.align = true;
+
+					if ((curPunc == ";" || curPunc == ":") && ctx.type == "statement")
+					{
+						popContext(status);
+					}
+					else if (curPunc == "{")
+					{
+						pushContext(status, stream.column(), "}");
+					}
+					else if (curPunc == "[")
+					{
+						pushContext(status, stream.column(), "]");
+					}
+					else if (curPunc == "(")
+					{
+						pushContext(status, stream.column(), ")");
+					}
+					else if (curPunc == "}")
+					{
+						while (ctx.type == "statement")
+							ctx = popContext(status);
+						if (ctx.type == "}")
+							ctx = popContext(status);
+						while (ctx.type == "statement")
+							ctx = popContext(status);
+					}
+					else if (curPunc == ctx.type)
+					{
+						popContext(status);
+					}
+					else if (ctx.type == "}" || ctx.type == "top" || (ctx.type == "statement" && curPunc == "newstatement"))
+					{
+						pushContext(status, stream.column(), "statement");
+					}
+					status.startOfLine = false;
+					return style;
+				},
+
+				Indent: function(status, textAfter)
+				{
+					if (status.tokenize != tokenBase && status.tokenize != null)
+						return 0;
+					var
+						ctx = status.context,
+						firstChar = textAfter && textAfter.charAt(0);
+
+					if (ctx.type == "statement" && firstChar == "}")
+						ctx = ctx.prev;
+
+					if (ctx.type == "statement")
+						return ctx.indented + (firstChar == "{" ? 0 : indentUnit);
+					else if (ctx.align)
+						return ctx.column + (firstChar == ctx.type ? 0 : 1);
+					else
+						return ctx.indented + (firstChar == ctx.type ? 0 : indentUnit);
+				},
+
+				magicSym: "{}"
+			};
 		};
-	};
 
-	Syntaxes.css = function()
-	{
-		var indentUnit = 4, type;
-		var keywords = prepareKeywords(["above", "absolute", "activeborder", "activecaption", "afar", "after-white-space", "ahead", "alias", "all", "all-scroll", "alternate", "always", "amharic", "amharic-abegede", "antialiased", "appworkspace", "arabic-indic", "armenian", "asterisks","auto", "avoid", "background", "backwards", "baseline", "below", "bidi-override", "binary", "bengali", "blink", "block", "block-axis", "bold", "bolder", "border", "border-box", "both", "bottom", "break-all", "break-word", "button", "button-bevel", "buttonface", "buttonhighlight", "buttonshadow", "buttontext", "cambodian", "capitalize", "caps-lock-indicator", "caption", "captiontext", "caret", "cell", "center", "checkbox", "circle", "cjk-earthly-branch", "cjk-heavenly-stem", "cjk-ideographic", "clear", "clip", "close-quote", "col-resize", "collapse", "compact", "condensed", "contain", "content", "content-box", "context-menu", "continuous", "copy", "cover", "crop", "cross", "crosshair", "currentcolor", "cursive", "dashed", "decimal", "decimal-leading-zero", "default", "default-button", "destination-atop", "destination-in", "destination-out", "destination-over", "devanagari", "disc", "discard", "document", "dot-dash", "dot-dot-dash", "dotted", "double", "down", "e-resize", "ease", "ease-in", "ease-in-out", "ease-out", "element", "ellipsis", "embed", "end", "ethiopic", "ethiopic-abegede", "ethiopic-abegede-am-et", "ethiopic-abegede-gez", "ethiopic-abegede-ti-er", "ethiopic-abegede-ti-et", "ethiopic-halehame-aa-er", "ethiopic-halehame-aa-et", "ethiopic-halehame-am-et", "ethiopic-halehame-gez", "ethiopic-halehame-om-et", "ethiopic-halehame-sid-et", "ethiopic-halehame-so-et", "ethiopic-halehame-ti-er", "ethiopic-halehame-ti-et", "ethiopic-halehame-tig", "ew-resize", "expanded", "extra-condensed", "extra-expanded", "fantasy", "fast", "fill", "fixed", "flat", "footnotes", "forwards", "from", "geometricPrecision", "georgian", "graytext", "groove", "gujarati", "gurmukhi", "hand", "hangul", "hangul-consonant", "hebrew", "help", "hidden", "hide", "higher", "highlight", "highlighttext", "hiragana", "hiragana-iroha", "horizontal", "hsl", "hsla", "icon", "ignore", "inactiveborder", "inactivecaption", "inactivecaptiontext", "infinite", "infobackground", "infotext", "inherit", "initial", "inline", "inline-axis", "inline-block", "inline-table", "inset", "inside", "intrinsic", "invert", "italic", "justify", "kannada", "katakana", "katakana-iroha", "khmer", "landscape", "lao", "large", "larger", "left", "level", "lighter", "line-through", "linear", "lines", "list-item", "listbox", "listitem", "local", "logical", "loud", "lower", "lower-alpha", "lower-armenian", "lower-greek", "lower-hexadecimal", "lower-latin", "lower-norwegian", "lower-roman", "lowercase", "ltr", "malayalam", "match", "medium", "menu", "menulist", "menulist-button", "menulist-text", "menulist-textfield", "menutext", "message-box", "middle", "min-intrinsic", "mix", "mongolian", "monospace", "move", "multiple", "myanmar", "n-resize", "narrower", "navy", "ne-resize", "nesw-resize", "no-close-quote", "no-drop", "no-open-quote", "no-repeat", "none", "normal", "not-allowed", "nowrap", "ns-resize", "nw-resize", "nwse-resize", "oblique", "octal", "open-quote", "optimizeLegibility", "optimizeSpeed", "oriya", "oromo", "outset", "outside", "overlay", "overline", "padding", "padding-box", "painted", "paused", "persian", "plus-darker", "plus-lighter", "pointer", "portrait", "pre", "pre-line", "pre-wrap", "preserve-3d", "progress", "push-button", "radio", "read-only", "read-write", "read-write-plaintext-only", "relative", "repeat", "repeat-x", "repeat-y", "reset", "reverse", "rgb", "rgba", "ridge", "right", "round", "row-resize", "rtl", "run-in", "running", "s-resize", "sans-serif", "scroll", "scrollbar", "se-resize", "semi-condensed", "semi-expanded", "separate", "serif", "show", "sidama", "single", "skip-white-space", "slide", "slider-horizontal", "slider-vertical", "sliderthumb-horizontal", "sliderthumb-vertical", "slow","small", "small-caps", "small-caption", "smaller", "solid", "somali", "source-atop", "source-in", "source-out", "source-over", "space", "square", "square-button", "start", "static", "status-bar", "stretch", "stroke", "sub", "subpixel-antialiased", "super", "sw-resize", "table", "table-caption", "table-cell", "table-column", "table-column-group", "table-footer-group", "table-header-group", "table-row", "table-row-group", "telugu", "text", "text-bottom", "text-top", "textarea", "textfield", "thai", "thick", "thin", "threeddarkshadow", "threedface", "threedhighlight", "threedlightshadow", "threedshadow", "tibetan", "tigre", "tigrinya-er", "tigrinya-er-abegede", "tigrinya-et", "tigrinya-et-abegede", "to", "top", "transparent", "ultra-condensed", "ultra-expanded", "underline", "up", "upper-alpha", "upper-armenian", "upper-greek", "upper-hexadecimal", "upper-latin", "upper-norwegian", "upper-roman", "uppercase", "urdu", "url", "vertical", "vertical-text", "visible", "visibleFill", "visiblePainted", "visibleStroke", "visual", "w-resize", "wait", "wave", "white", "wider", "window", "windowframe", "windowtext", "x-large", "x-small", "xor", "xx-large", "xx-small", "yellow"]);
-
-		function retStyle(style, tp)
+		Syntaxes.css = function()
 		{
-			type = tp;
-			return style;
-		}
+			var indentUnit = 4, type;
+			var keywords = prepareKeywords(["above", "absolute", "activeborder", "activecaption", "afar", "after-white-space", "ahead", "alias", "all", "all-scroll", "alternate", "always", "amharic", "amharic-abegede", "antialiased", "appworkspace", "arabic-indic", "armenian", "asterisks","auto", "avoid", "background", "backwards", "baseline", "below", "bidi-override", "binary", "bengali", "blink", "block", "block-axis", "bold", "bolder", "border", "border-box", "both", "bottom", "break-all", "break-word", "button", "button-bevel", "buttonface", "buttonhighlight", "buttonshadow", "buttontext", "cambodian", "capitalize", "caps-lock-indicator", "caption", "captiontext", "caret", "cell", "center", "checkbox", "circle", "cjk-earthly-branch", "cjk-heavenly-stem", "cjk-ideographic", "clear", "clip", "close-quote", "col-resize", "collapse", "compact", "condensed", "contain", "content", "content-box", "context-menu", "continuous", "copy", "cover", "crop", "cross", "crosshair", "currentcolor", "cursive", "dashed", "decimal", "decimal-leading-zero", "default", "default-button", "destination-atop", "destination-in", "destination-out", "destination-over", "devanagari", "disc", "discard", "document", "dot-dash", "dot-dot-dash", "dotted", "double", "down", "e-resize", "ease", "ease-in", "ease-in-out", "ease-out", "element", "ellipsis", "embed", "end", "ethiopic", "ethiopic-abegede", "ethiopic-abegede-am-et", "ethiopic-abegede-gez", "ethiopic-abegede-ti-er", "ethiopic-abegede-ti-et", "ethiopic-halehame-aa-er", "ethiopic-halehame-aa-et", "ethiopic-halehame-am-et", "ethiopic-halehame-gez", "ethiopic-halehame-om-et", "ethiopic-halehame-sid-et", "ethiopic-halehame-so-et", "ethiopic-halehame-ti-er", "ethiopic-halehame-ti-et", "ethiopic-halehame-tig", "ew-resize", "expanded", "extra-condensed", "extra-expanded", "fantasy", "fast", "fill", "fixed", "flat", "footnotes", "forwards", "from", "geometricPrecision", "georgian", "graytext", "groove", "gujarati", "gurmukhi", "hand", "hangul", "hangul-consonant", "hebrew", "help", "hidden", "hide", "higher", "highlight", "highlighttext", "hiragana", "hiragana-iroha", "horizontal", "hsl", "hsla", "icon", "ignore", "inactiveborder", "inactivecaption", "inactivecaptiontext", "infinite", "infobackground", "infotext", "inherit", "initial", "inline", "inline-axis", "inline-block", "inline-table", "inset", "inside", "intrinsic", "invert", "italic", "justify", "kannada", "katakana", "katakana-iroha", "khmer", "landscape", "lao", "large", "larger", "left", "level", "lighter", "line-through", "linear", "lines", "list-item", "listbox", "listitem", "local", "logical", "loud", "lower", "lower-alpha", "lower-armenian", "lower-greek", "lower-hexadecimal", "lower-latin", "lower-norwegian", "lower-roman", "lowercase", "ltr", "malayalam", "match", "medium", "menu", "menulist", "menulist-button", "menulist-text", "menulist-textfield", "menutext", "message-box", "middle", "min-intrinsic", "mix", "mongolian", "monospace", "move", "multiple", "myanmar", "n-resize", "narrower", "navy", "ne-resize", "nesw-resize", "no-close-quote", "no-drop", "no-open-quote", "no-repeat", "none", "normal", "not-allowed", "nowrap", "ns-resize", "nw-resize", "nwse-resize", "oblique", "octal", "open-quote", "optimizeLegibility", "optimizeSpeed", "oriya", "oromo", "outset", "outside", "overlay", "overline", "padding", "padding-box", "painted", "paused", "persian", "plus-darker", "plus-lighter", "pointer", "portrait", "pre", "pre-line", "pre-wrap", "preserve-3d", "progress", "push-button", "radio", "read-only", "read-write", "read-write-plaintext-only", "relative", "repeat", "repeat-x", "repeat-y", "reset", "reverse", "rgb", "rgba", "ridge", "right", "round", "row-resize", "rtl", "run-in", "running", "s-resize", "sans-serif", "scroll", "scrollbar", "se-resize", "semi-condensed", "semi-expanded", "separate", "serif", "show", "sidama", "single", "skip-white-space", "slide", "slider-horizontal", "slider-vertical", "sliderthumb-horizontal", "sliderthumb-vertical", "slow","small", "small-caps", "small-caption", "smaller", "solid", "somali", "source-atop", "source-in", "source-out", "source-over", "space", "square", "square-button", "start", "static", "status-bar", "stretch", "stroke", "sub", "subpixel-antialiased", "super", "sw-resize", "table", "table-caption", "table-cell", "table-column", "table-column-group", "table-footer-group", "table-header-group", "table-row", "table-row-group", "telugu", "text", "text-bottom", "text-top", "textarea", "textfield", "thai", "thick", "thin", "threeddarkshadow", "threedface", "threedhighlight", "threedlightshadow", "threedshadow", "tibetan", "tigre", "tigrinya-er", "tigrinya-er-abegede", "tigrinya-et", "tigrinya-et-abegede", "to", "top", "transparent", "ultra-condensed", "ultra-expanded", "underline", "up", "upper-alpha", "upper-armenian", "upper-greek", "upper-hexadecimal", "upper-latin", "upper-norwegian", "upper-roman", "uppercase", "urdu", "url", "vertical", "vertical-text", "visible", "visibleFill", "visiblePainted", "visibleStroke", "visual", "w-resize", "wait", "wave", "white", "wider", "window", "windowframe", "windowtext", "x-large", "x-small", "xor", "xx-large", "xx-small", "yellow"]);
 
-		function tokenBase(stream, status)
-		{
-			var ch = stream.next();
-			if (ch == "@")
+			function retStyle(style, tp)
 			{
-				stream.eatWhile(/[\w\\\-]/);
-				return retStyle("meta", stream.current());
+				type = tp;
+				return style;
 			}
-			else if (ch == "/" && stream.eat("*"))
-			{
-				status.tokenize = tokenCComment;
-				return tokenCComment(stream, status);
-			}
-			else if (ch == "<" && stream.eat("!"))
-			{
-				status.tokenize = tokenSGMLComment;
-				return tokenSGMLComment(stream, status);
-			}
-			else if (ch == "=")
-			{
-				return retStyle(null, "compare");
-			}
-			else if ((ch == "~" || ch == "|") && stream.eat("="))
-			{
-				return retStyle(null, "compare");
-			}
-			else if (ch == "\"" || ch == "'")
-			{
-				status.tokenize = tokenString(ch);
-				return status.tokenize(stream, status);
-			}
-			else if (ch == "#")
-			{
-				stream.eatWhile(/[\w\\\-]/);
-				return retStyle("atom", "hash");
-			}
-			else if (ch == "!")
-			{
-				stream.match(/^\s*\w*/);
-				return retStyle("keyword", "important");
-			}
-			else if (/\d/.test(ch))
-			{
-				stream.eatWhile(/[\w.%]/);
-				return retStyle("number", "unit");
-			}
-			else if (/[,.+>*\/]/.test(ch))
-			{
-				return retStyle(null, "select-op");
-			}
-			else if (/[;{}:\[\]\(\)]/.test(ch))
-			{
-				return retStyle(null, ch);
-			}
-			else
-			{
-				stream.eatWhile(/[\w\\\-]/);
-				return retStyle("variable", "variable");
-			}
-		}
 
-		function tokenCComment(stream, status)
-		{
-			var maybeEnd = false, ch;
-			while ((ch = stream.next()) != null)
+			function tokenBase(stream, status)
 			{
-				if (maybeEnd && ch == "/")
+				var ch = stream.next();
+				if (ch == "@")
 				{
-					status.tokenize = tokenBase;
-					break;
+					stream.eatWhile(/[\w\\\-]/);
+					return retStyle("meta", stream.current());
 				}
-				maybeEnd = (ch == "*");
-			}
-			return retStyle("comment", "comment");
-		}
-
-		function tokenSGMLComment(stream, status)
-		{
-			var dashes = 0, ch;
-			while ((ch = stream.next()) != null)
-			{
-				if (dashes >= 2 && ch == ">")
+				else if (ch == "/" && stream.eat("*"))
 				{
-					status.tokenize = tokenBase;
-					break;
+					status.tokenize = tokenCComment;
+					return tokenCComment(stream, status);
 				}
-				dashes = (ch == "-") ? dashes + 1 : 0;
+				else if (ch == "<" && stream.eat("!"))
+				{
+					status.tokenize = tokenSGMLComment;
+					return tokenSGMLComment(stream, status);
+				}
+				else if (ch == "=")
+				{
+					return retStyle(null, "compare");
+				}
+				else if ((ch == "~" || ch == "|") && stream.eat("="))
+				{
+					return retStyle(null, "compare");
+				}
+				else if (ch == "\"" || ch == "'")
+				{
+					status.tokenize = tokenString(ch);
+					return status.tokenize(stream, status);
+				}
+				else if (ch == "#")
+				{
+					stream.eatWhile(/[\w\\\-]/);
+					return retStyle("atom", "hash");
+				}
+				else if (ch == "!")
+				{
+					stream.match(/^\s*\w*/);
+					return retStyle("keyword", "important");
+				}
+				else if (/\d/.test(ch))
+				{
+					stream.eatWhile(/[\w.%]/);
+					return retStyle("number", "unit");
+				}
+				else if (/[,.+>*\/]/.test(ch))
+				{
+					return retStyle(null, "select-op");
+				}
+				else if (/[;{}:\[\]\(\)]/.test(ch))
+				{
+					return retStyle(null, ch);
+				}
+				else
+				{
+					stream.eatWhile(/[\w\\\-]/);
+					return retStyle("variable", "variable");
+				}
 			}
-			return retStyle("comment", "comment");
-		}
 
-		function tokenString(quote)
-		{
-			return function(stream, status)
+			function tokenCComment(stream, status)
 			{
-				var escaped = false, ch;
+				var maybeEnd = false, ch;
 				while ((ch = stream.next()) != null)
 				{
-					if (ch == quote && !escaped)
+					if (maybeEnd && ch == "/")
+					{
+						status.tokenize = tokenBase;
 						break;
-					escaped = !escaped && ch == "\\";
+					}
+					maybeEnd = (ch == "*");
 				}
-				if (!escaped)
-					status.tokenize = tokenBase;
-				return retStyle("string", "string");
+				return retStyle("comment", "comment");
+			}
+
+			function tokenSGMLComment(stream, status)
+			{
+				var dashes = 0, ch;
+				while ((ch = stream.next()) != null)
+				{
+					if (dashes >= 2 && ch == ">")
+					{
+						status.tokenize = tokenBase;
+						break;
+					}
+					dashes = (ch == "-") ? dashes + 1 : 0;
+				}
+				return retStyle("comment", "comment");
+			}
+
+			function tokenString(quote)
+			{
+				return function(stream, status)
+				{
+					var escaped = false, ch;
+					while ((ch = stream.next()) != null)
+					{
+						if (ch == quote && !escaped)
+							break;
+						escaped = !escaped && ch == "\\";
+					}
+					if (!escaped)
+						status.tokenize = tokenBase;
+					return retStyle("string", "string");
+				};
+			}
+
+			return {
+				startStatus: function(base)
+				{
+					return {tokenize: tokenBase,
+						baseIndent: base || 0,
+						stack: []};
+				},
+
+				HandleChar: function(stream, status)
+				{
+					if (stream.eatSpace())
+						return null;
+					var style = status.tokenize(stream, status);
+
+					var context = status.stack[status.stack.length-1];
+					if (type == "hash" && context != "rule")
+					{
+						style = "string-2";
+					}
+					else if (style == "variable")
+					{
+						if (context == "rule")
+							style = keywords[stream.current()] ? "keyword" : "number";
+						else if (!context || context == "@media{")
+							style = "tag";
+					}
+
+					if (context == "rule" && /^[\{\};]$/.test(type))
+					{
+						status.stack.pop();
+					}
+					if (type == "{")
+					{
+						if (context == "@media")
+							status.stack[status.stack.length-1] = "@media{";
+						else
+							status.stack.push("{");
+					}
+					else if (type == "}")
+					{
+						status.stack.pop();
+					}
+					else if (type == "@media")
+					{
+						status.stack.push("@media");
+					}
+					else if (context == "{" && type != "comment")
+					{
+						status.stack.push("rule");
+					}
+					return style;
+				},
+
+				Indent: function(status, textAfter)
+				{
+					var n = status.stack.length;
+					if (/^\}/.test(textAfter))
+						n -= status.stack[status.stack.length-1] == "rule" ? 2 : 1;
+					return status.baseIndent + n * indentUnit;
+				},
+
+				magicSym: "}"
 			};
-		}
-
-		return {
-			startStatus: function(base)
-			{
-				return {tokenize: tokenBase,
-					baseIndent: base || 0,
-					stack: []};
-			},
-
-			HandleChar: function(stream, status)
-			{
-				if (stream.eatSpace())
-					return null;
-				var style = status.tokenize(stream, status);
-
-				var context = status.stack[status.stack.length-1];
-				if (type == "hash" && context != "rule")
-				{
-					style = "string-2";
-				}
-				else if (style == "variable")
-				{
-					if (context == "rule")
-						style = keywords[stream.current()] ? "keyword" : "number";
-					else if (!context || context == "@media{")
-						style = "tag";
-				}
-
-				if (context == "rule" && /^[\{\};]$/.test(type))
-				{
-					status.stack.pop();
-				}
-				if (type == "{")
-				{
-					if (context == "@media")
-						status.stack[status.stack.length-1] = "@media{";
-					else
-						status.stack.push("{");
-				}
-				else if (type == "}")
-				{
-					status.stack.pop();
-				}
-				else if (type == "@media")
-				{
-					status.stack.push("@media");
-				}
-				else if (context == "{" && type != "comment")
-				{
-					status.stack.push("rule");
-				}
-				return style;
-			},
-
-			Indent: function(status, textAfter)
-			{
-				var n = status.stack.length;
-				if (/^\}/.test(textAfter))
-					n -= status.stack[status.stack.length-1] == "rule" ? 2 : 1;
-				return status.baseIndent + n * indentUnit;
-			},
-
-			magicSym: "}"
 		};
-	};
 
-	Syntaxes.php = function ()
-	{
-		var
-			parserConfig = {},
-			syntHtml = Syntaxes.html(),
-			syntJs = Syntaxes.js(),
-			syntCss = Syntaxes.css(),
-			syntPhp = Syntaxes.phpcore();
-
-		function dispatch(stream, status)
+		Syntaxes.php = function ()
 		{
 			var
-				style,
-				isPHP = status.syntax == "php";
+				parserConfig = {},
+				syntHtml = Syntaxes.html(),
+				syntJs = Syntaxes.js(),
+				syntCss = Syntaxes.css(),
+				syntPhp = Syntaxes.phpcore();
 
-			if (stream.sol() && status.pending != '"')
-				status.pending = null;
-
-			if (status.curSyntax == syntHtml)
+			function dispatch(stream, status)
 			{
-				if (stream.match(/^<\?\w*/))
-				{
-					status.curSyntax = syntPhp;
-					status.curState = status.php;
-					status.curClose = "?>";
-					status.syntax = "php";
-					return "meta";
-				}
-
-				if (status.pending == '"')
-				{
-					while (!stream.eol() && stream.next() != '"')
-					{
-					}
-					style = "string";
-				}
-				else if (status.pending && stream.pos < status.pending.end)
-				{
-					stream.pos = status.pending.end;
-					style = status.pending.style;
-				}
-				else
-				{
-					style = syntHtml.HandleChar(stream, status.curState);
-				}
-
-				status.pending = null;
 				var
-					cur = stream.current(),
-					openPHP = cur.search(/<\?/);
-				if (openPHP != -1)
+					style,
+					isPHP = status.syntax == "php";
+
+				if (stream.sol() && status.pending != '"')
+					status.pending = null;
+
+				if (status.curSyntax == syntHtml)
 				{
-					if (style == "string" && /\"$/.test(cur) && !/\?>/.test(cur))
-						status.pending = '"';
+					if (stream.match(/^<\?\w*/))
+					{
+						status.curSyntax = syntPhp;
+						status.curState = status.php;
+						status.curClose = "?>";
+						status.syntax = "php";
+						return "meta";
+					}
+
+					if (status.pending == '"')
+					{
+						while (!stream.eol() && stream.next() != '"')
+						{
+						}
+						style = "string";
+					}
+					else if (status.pending && stream.pos < status.pending.end)
+					{
+						stream.pos = status.pending.end;
+						style = status.pending.style;
+					}
 					else
-						status.pending = {end: stream.pos, style: style};
-					stream.backUp(cur.length - openPHP);
+					{
+						style = syntHtml.HandleChar(stream, status.curState);
+					}
+
+					status.pending = null;
+					var
+						cur = stream.current(),
+						openPHP = cur.search(/<\?/);
+					if (openPHP != -1)
+					{
+						if (style == "string" && /\"$/.test(cur) && !/\?>/.test(cur))
+							status.pending = '"';
+						else
+							status.pending = {end: stream.pos, style: style};
+						stream.backUp(cur.length - openPHP);
+					}
+					else if (style == "tag" && stream.current() == ">" && status.curState.context)
+					{
+						if (/^script$/i.test(status.curState.context.tagName))
+						{
+							status.curSyntax = syntJs;
+							status.curState = syntJs.startStatus(syntHtml.Indent(status.curState, ""));
+							status.curClose = /^<\/\s*script\s*>/i;
+							status.syntax = "js";
+						}
+						else if (/^style$/i.test(status.curState.context.tagName))
+						{
+							status.curSyntax = syntCss;
+							status.curState = syntCss.startStatus(syntHtml.Indent(status.curState, ""));
+							status.curClose = /^<\/\s*style\s*>/i;
+							status.syntax = "css";
+						}
+					}
+					return style;
 				}
-				else if (style == "tag" && stream.current() == ">" && status.curState.context)
+				else if ((!isPHP || status.php.tokenize == null) && stream.match(status.curClose, isPHP))
 				{
-					if (/^script$/i.test(status.curState.context.tagName))
-					{
-						status.curSyntax = syntJs;
-						status.curState = syntJs.startStatus(syntHtml.Indent(status.curState, ""));
-						status.curClose = /^<\/\s*script\s*>/i;
-						status.syntax = "js";
-					}
-					else if (/^style$/i.test(status.curState.context.tagName))
-					{
-						status.curSyntax = syntCss;
-						status.curState = syntCss.startStatus(syntHtml.Indent(status.curState, ""));
-						status.curClose = /^<\/\s*style\s*>/i;
-						status.syntax = "css";
-					}
+					status.curSyntax = syntHtml;
+					status.curState = status.html;
+					status.curClose = null;
+					status.syntax = "html";
+					return isPHP ? "meta" : dispatch(stream, status);
 				}
-				return style;
-			}
-			else if ((!isPHP || status.php.tokenize == null) && stream.match(status.curClose, isPHP))
-			{
-				status.curSyntax = syntHtml;
-				status.curState = status.html;
-				status.curClose = null;
-				status.syntax = "html";
-				return isPHP ? "meta" : dispatch(stream, status);
-			}
-			else
-			{
-				return status.curSyntax.HandleChar(stream, status.curState);
-			}
-		}
-
-		return {
-			startStatus: function ()
-			{
-				var html = syntHtml.startStatus();
-				return {
-					html: html,
-					php: syntPhp.startStatus(),
-					curSyntax: parserConfig.startOpen ? syntPhp : syntHtml,
-					curState: parserConfig.startOpen ? syntPhp.startStatus() : html,
-					curClose: parserConfig.startOpen ? /^\?>/ : null,
-					syntax: parserConfig.startOpen ? "php" : "html",
-					pending: null
-				};
-			},
-
-			copyStatus: function (status)
-			{
-				var
-					html = status.html,
-					htmlNew = copySyntaxStatus(syntHtml, html),
-					php = status.php,
-					phpNew = copySyntaxStatus(syntPhp, php),
-					cur;
-
-				if (status.curState == html)
-					cur = htmlNew;
-				else if (status.curState == php)
-					cur = phpNew;
 				else
-					cur = copySyntaxStatus(status.curSyntax, status.curState);
+				{
+					return status.curSyntax.HandleChar(stream, status.curState);
+				}
+			}
 
-				return {
-					html: htmlNew,
-					php: phpNew,
-					curSyntax: status.curSyntax,
-					curState: cur,
-					curClose: status.curClose,
-					syntax: status.syntax,
-					pending: status.pending
-				};
-			},
+			return {
+				startStatus: function ()
+				{
+					var html = syntHtml.startStatus();
+					return {
+						html: html,
+						php: syntPhp.startStatus(),
+						curSyntax: parserConfig.startOpen ? syntPhp : syntHtml,
+						curState: parserConfig.startOpen ? syntPhp.startStatus() : html,
+						curClose: parserConfig.startOpen ? /^\?>/ : null,
+						syntax: parserConfig.startOpen ? "php" : "html",
+						pending: null
+					};
+				},
 
-			HandleChar: dispatch,
+				copyStatus: function (status)
+				{
+					var
+						html = status.html,
+						htmlNew = copySyntaxStatus(syntHtml, html),
+						php = status.php,
+						phpNew = copySyntaxStatus(syntPhp, php),
+						cur;
 
-			Indent: function (status, textAfter)
-			{
-				if ((status.curSyntax != syntPhp && /^\s*<\//.test(textAfter)) || (status.curSyntax == syntPhp && /^\?>/.test(textAfter)))
-					return syntHtml.Indent(status.html, textAfter);
-				return status.curSyntax.Indent(status.curState, textAfter);
-			},
+					if (status.curState == html)
+						cur = htmlNew;
+					else if (status.curState == php)
+						cur = phpNew;
+					else
+						cur = copySyntaxStatus(status.curSyntax, status.curState);
 
-			magicSym: "/{}:"
+					return {
+						html: htmlNew,
+						php: phpNew,
+						curSyntax: status.curSyntax,
+						curState: cur,
+						curClose: status.curClose,
+						syntax: status.syntax,
+						pending: status.pending
+					};
+				},
+
+				HandleChar: dispatch,
+
+				Indent: function (status, textAfter)
+				{
+					if ((status.curSyntax != syntPhp && /^\s*<\//.test(textAfter)) || (status.curSyntax == syntPhp && /^\?>/.test(textAfter)))
+						return syntHtml.Indent(status.html, textAfter);
+					return status.curSyntax.Indent(status.curState, textAfter);
+				},
+
+				magicSym: "/{}:"
+			};
 		};
-	};
 	}
 	// -- ************* Syntaxes defenitions *************
 
@@ -6536,4 +6541,4 @@
 		}
 	};
 
-})();
+})(); 

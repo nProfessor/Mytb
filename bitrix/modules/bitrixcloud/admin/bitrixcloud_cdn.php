@@ -32,6 +32,8 @@ if ($REQUEST_METHOD == "POST" && ($save != "" || $apply != "" || $bitrixcloud_si
 {
 	if ($save != "" || $apply != "")
 	{
+		CAdminNotify::DeleteByTag("bitrixcloud_off");
+
 		$server_name = trim($_POST["server_name"]);
 		if ($server_name == "")
 		{
@@ -89,30 +91,18 @@ if (CBitrixCloudCDN::IsActive())
 			$cdn_config->updateQuota();
 
 		$cdn_quota = $cdn_config->getQuota();
-		if ($cdn_quota->getAllowedSize() > 0.0 && $cdn_quota->getTrafficSize() > 0.0)
+		if ($cdn_quota->getAllowedSize() > 0.0 || $cdn_quota->getTrafficSize() > 0.0)
 		{
-			if ($cdn_quota->getTrafficSize() < $cdn_quota->getAllowedSize())
-			{ ?>
-				<p><b><?echo GetMessage("BCL_CDN_USAGE", array(
+			CAdminMessage::ShowMessage(array(
+				"TYPE" => "PROGRESS",
+				"DETAILS" => '<p><b>'.GetMessage("BCL_CDN_USAGE", array(
 					"#TRAFFIC#" => CFile::FormatSize($cdn_quota->getTrafficSize()),
 					"#ALLOWED#" => CFile::FormatSize($cdn_quota->getAllowedSize()),
-				)); ?></b></p>
-				<div class="bitrixcloud-cdn-chart">
-				<span class="bitrixcloud-cdn-chart-bar-green" style="width:<?echo round(($cdn_quota->getTrafficSize() / $cdn_quota->getAllowedSize()) * 100); ?>%"></span>
-				</div>
-			<?
-			}
-			else
-			{ ?>
-				<p><b><?echo GetMessage("BCL_CDN_USAGE", array(
-					"#TRAFFIC#" => CFile::FormatSize($cdn_quota->getTrafficSize()),
-					"#ALLOWED#" => CFile::FormatSize($cdn_quota->getAllowedSize()),
-				)); ?></b></p>
-				<div class="bitrixcloud-cdn-chart">
-				<span class="bitrixcloud-cdn-chart-bar-yellow" style="width:100%"></span>
-				</div>
-			<?
-			}
+				)).'</b></p>#PROGRESS_BAR#',
+				"HTML" => true,
+				"PROGRESS_TOTAL" => $cdn_quota->getAllowedSize(),
+				"PROGRESS_VALUE" => $cdn_quota->getTrafficSize(),
+			));
 		}
 	}
 	catch (Exception $e)
@@ -144,7 +134,7 @@ $tabControl->BeginNextTab();
 	<td width="40%">
 		<label for="cdn_active"><?echo GetMessage("BCL_TURN_ON"); ?>:</label>
 	</td>
-	<td>
+	<td width="60%">
 		<input type="hidden" name="cdn_active" value="N">
 		<input type="checkbox" id="cdn_active" name="cdn_active" value="Y" <?echo $active ? 'checked="checked"' : '' ?>>
 	</td>
@@ -169,7 +159,7 @@ else
 		<td width="40%">
 			<label for="site_admin"><?echo GetMessage("BCL_ADMIN_PANEL"); ?>:</label>
 		</td>
-		<td>
+		<td width="60%">
 			<input type="checkbox" id="site_admin" name="site[admin]" value="y" <?echo (empty($sites) || isset($sites["admin"])) ? 'checked="checked"' : '' ?>>
 		</td>
 	</tr>
@@ -180,22 +170,22 @@ while ($arSite = $rsSites->Fetch())
 ?>
 	<tr>
 		<td>
-			<label for="site_<?echo htmlspecialchars($arSite["LID"]); ?>"><?echo htmlspecialcharsEx($arSite["NAME"]." [".$arSite["LID"]."]"); ?>:</label>
+			<label for="site_<?echo htmlspecialcharsbx($arSite["LID"]); ?>"><?echo htmlspecialcharsEx($arSite["NAME"]." [".$arSite["LID"]."]"); ?>:</label>
 		</td>
 		<td>
-			<input type="checkbox" id="site_<?echo htmlspecialchars($arSite["LID"]); ?>" name="site[<?echo htmlspecialchars($arSite["LID"]); ?>]" value="y" <?echo (empty($sites) || isset($sites[$arSite["LID"]])) ? 'checked="checked"' : '' ?>>
+			<input type="checkbox" id="site_<?echo htmlspecialcharsbx($arSite["LID"]); ?>" name="site[<?echo htmlspecialcharsbx($arSite["LID"]); ?>]" value="y" <?echo (empty($sites) || isset($sites[$arSite["LID"]])) ? 'checked="checked"' : '' ?>>
 		</td>
 	</tr>
 <?
 }
 $tabControl->BeginNextTab();
 ?>
-	<tr>
+	<tr class="adm-detail-required-field">
 		<td width="40%">
-			<span class="required">*</span><?echo GetMessage("BCL_SERVER_URL"); ?>:
+			<?echo GetMessage("BCL_SERVER_URL");?>:
 		</td>
-		<td>
-			<input type="text" name="server_name" value="<?echo htmlspecialchars($server_name); ?>">
+		<td width="60%">
+			<input type="text" name="server_name" value="<?echo htmlspecialcharsbx($server_name); ?>">
 		</td>
 	</tr>
 <?

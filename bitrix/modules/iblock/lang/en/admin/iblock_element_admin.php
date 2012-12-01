@@ -92,4 +92,7 @@ $MESS["IBEL_A_ACCESS_DENIED_STATUS"] = "You do not have enough permissions to ed
 $MESS["IBEL_A_OFFERS"] = "SKU";
 $MESS["IBEL_A_DEACTIVATE"] = "Deactivate";
 $MESS["IBEL_A_ACTIVATE"] = "Activate";
+$MESS["IBEL_DEFAULT_VALUE"] = "default";
+$MESS["IBEL_YES_VALUE"] = "yes";
+$MESS["IBEL_NO_VALUE"] = "no";
 ?>

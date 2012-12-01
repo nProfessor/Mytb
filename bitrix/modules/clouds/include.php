@@ -1,6 +1,9 @@
 <?
 /*.require_module 'standard';.*/
 /*.require_module 'bitrix_main';.*/
+/**
+ * @global CDatabase $DB
+ */
 if(!defined("CACHED_b_clouds_file_bucket")) define("CACHED_b_clouds_file_bucket", 360000);
 
 $db_type = strtolower($DB->type);

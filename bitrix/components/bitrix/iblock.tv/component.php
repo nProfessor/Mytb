@@ -89,7 +89,7 @@ if(!class_exists("__ciblocktv"))
 	{
 		function Prepare($Value)
 		{
-			return str_replace(array("\r\n", "\r", "\n"), array("<br>", "<br>", "<br>"), CUtil::addslashes(htmlspecialchars($Value)));
+			return str_replace(array("\r\n", "\r", "\n"), array("<br>", "<br>", "<br>"), CUtil::addslashes(htmlspecialcharsbx($Value)));
 		}
 	}
 }

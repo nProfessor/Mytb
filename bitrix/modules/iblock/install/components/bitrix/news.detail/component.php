@@ -273,7 +273,7 @@ if(isset($arResult["ID"]))
 	$arTitleOptions = null;
 	if(CModule::IncludeModule("iblock"))
 	{
-		CIBlockElement::CounterInc($arParams["ELEMENT_ID"]);
+		CIBlockElement::CounterInc($arResult["ID"]);
 
 		if($USER->IsAuthorized())
 		{

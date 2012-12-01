@@ -40,6 +40,7 @@ class _CIBElement
 								$arProp["VALUE"]  = $arEnum["VALUE"];
 							$arProp["VALUE_ENUM"] = $arProp["VALUE"];
 							$arProp["VALUE_XML_ID"]  = htmlspecialcharsex($arEnum["XML_ID"]);
+							$arProp["VALUE_SORT"] = $arEnum["SORT"];
 						}
 						else
 						{
@@ -74,9 +75,15 @@ class _CIBElement
 							{
 								$arEnum = CIBlockPropertyEnum::GetByID($key);
 								if($arEnum!==false)
+								{
 									$xml_id = htmlspecialcharsex($arEnum["XML_ID"]);
+									$sort = $arEnum["SORT"];
+								}
 								else
+								{
 									$xml_id = false;
+									$sort = false;
+								}
 
 								if(is_array($arProp["VALUE"]))
 								{
@@ -88,6 +95,7 @@ class _CIBElement
 									else
 										$arProp["VALUE"][] = $val;
 									$arProp["VALUE_XML_ID"][] = $xml_id;
+									$arProp["VALUE_SORT"][] = $sort;
 								}
 								else
 								{
@@ -98,6 +106,7 @@ class _CIBElement
 									else
 										$arProp["VALUE"] = array($val);
 									$arProp["VALUE_XML_ID"] = array($xml_id);
+									$arProp["VALUE_SORT"] = array($sort);
 								}
 							}
 						}
@@ -200,6 +209,7 @@ class _CIBElement
 								$arTemp["VALUE_ENUM_ID"][] = $arProp["VALUE_ENUM_ID"];
 								$arTemp["VALUE_ENUM"][] = $arProp["VALUE_ENUM"];
 								$arTemp["VALUE_XML_ID"][] = $arProp["VALUE_XML_ID"];
+								//$arTemp["VALUE_SORT"][] = $arProp["VALUE_SORT"];
 							}
 						}
 						else
@@ -214,6 +224,7 @@ class _CIBElement
 								$arTemp["VALUE_ENUM_ID"] = array($arProp["VALUE_ENUM_ID"]);
 								$arTemp["VALUE_ENUM"] = array($arProp["VALUE_ENUM"]);
 								$arTemp["VALUE_XML_ID"] = array($arProp["VALUE_XML_ID"]);
+								$arTemp["VALUE_SORT"] = array($arProp["VALUE_SORT"]);
 							}
 						}
 					}
@@ -238,6 +249,7 @@ class _CIBElement
 							$arProp["VALUE_ENUM_ID"] = array($arProp["VALUE_ENUM_ID"]);
 							$arProp["VALUE_ENUM"] = array($arProp["VALUE_ENUM"]);
 							$arProp["VALUE_XML_ID"] = array($arProp["VALUE_XML_ID"]);
+							$arTemp["VALUE_SORT"] = array($arProp["VALUE_SORT"]);
 						}
 					}
 					else
@@ -252,6 +264,7 @@ class _CIBElement
 							$arProp["VALUE_ENUM_ID"] = false;
 							$arProp["VALUE_ENUM"] = false;
 							$arProp["VALUE_XML_ID"] = false;
+							$arTemp["VALUE_SORT"] = false;
 						}
 					}
 					$arAllProps[$PIND] = $arProp;

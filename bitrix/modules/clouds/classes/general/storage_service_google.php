@@ -48,20 +48,20 @@ class CCloudStorageService_GoogleStorage
 		if(!is_array($arSettings))
 			$arSettings = array("PROJECT_ID" => "", "ACCESS_KEY" => "", "SECRET_KEY" => "");
 
-		$htmlID = htmlspecialchars($this->GetID());
+		$htmlID = htmlspecialcharsbx($this->GetID());
 
 		$result = '
-		<tr id="SETTINGS_0_'.$htmlID.'" style="display:'.($cur_SERVICE_ID == $this->GetID() || !$bServiceSet? '': 'none').'" class="settings-tr">
-			<td><span class="required">*</span>'.GetMessage("CLO_STORAGE_GOOGLE_EDIT_PROJECT_ID").':</td>
-			<td><input type="hidden" name="SETTINGS['.$htmlID.'][PROJECT_ID]" id="'.$htmlID.'PROJECT_ID" value="'.htmlspecialchars($arSettings['PROJECT_ID']).'"><input type="text" size="55" name="'.$htmlID.'INP_" id="'.$htmlID.'INP_PROJECT_ID" value="'.htmlspecialchars($arSettings['PROJECT_ID']).'" '.($arBucket['READ_ONLY'] == 'Y'? '"disabled"': '').' onchange="BX(\''.$htmlID.'PROJECT_ID\').value = this.value"></td>
+		<tr id="SETTINGS_0_'.$htmlID.'" style="display:'.($cur_SERVICE_ID == $this->GetID() || !$bServiceSet? '': 'none').'" class="settings-tr adm-detail-required-field">
+			<td>'.GetMessage("CLO_STORAGE_GOOGLE_EDIT_PROJECT_ID").':</td>
+			<td><input type="hidden" name="SETTINGS['.$htmlID.'][PROJECT_ID]" id="'.$htmlID.'PROJECT_ID" value="'.htmlspecialcharsbx($arSettings['PROJECT_ID']).'"><input type="text" size="55" name="'.$htmlID.'INP_" id="'.$htmlID.'INP_PROJECT_ID" value="'.htmlspecialcharsbx($arSettings['PROJECT_ID']).'" '.($arBucket['READ_ONLY'] == 'Y'? '"disabled"': '').' onchange="BX(\''.$htmlID.'PROJECT_ID\').value = this.value"></td>
 		</tr>
-		<tr id="SETTINGS_1_'.$htmlID.'" style="display:'.($cur_SERVICE_ID == $this->GetID() || !$bServiceSet? '': 'none').'" class="settings-tr">
-			<td><span class="required">*</span>'.GetMessage("CLO_STORAGE_GOOGLE_EDIT_ACCESS_KEY").':</td>
-			<td><input type="hidden" name="SETTINGS['.$htmlID.'][ACCESS_KEY]" id="'.$htmlID.'ACCESS_KEY" value="'.htmlspecialchars($arSettings['ACCESS_KEY']).'"><input type="text" size="55" name="'.$htmlID.'INP_ACCESS_KEY" id="'.$htmlID.'INP_ACCESS_KEY" value="'.htmlspecialchars($arSettings['ACCESS_KEY']).'" '.($arBucket['READ_ONLY'] == 'Y'? '"disabled"': '').' onchange="BX(\''.$htmlID.'ACCESS_KEY\').value = this.value"></td>
+		<tr id="SETTINGS_1_'.$htmlID.'" style="display:'.($cur_SERVICE_ID == $this->GetID() || !$bServiceSet? '': 'none').'" class="settings-tr adm-detail-required-field">
+			<td>'.GetMessage("CLO_STORAGE_GOOGLE_EDIT_ACCESS_KEY").':</td>
+			<td><input type="hidden" name="SETTINGS['.$htmlID.'][ACCESS_KEY]" id="'.$htmlID.'ACCESS_KEY" value="'.htmlspecialcharsbx($arSettings['ACCESS_KEY']).'"><input type="text" size="55" name="'.$htmlID.'INP_ACCESS_KEY" id="'.$htmlID.'INP_ACCESS_KEY" value="'.htmlspecialcharsbx($arSettings['ACCESS_KEY']).'" '.($arBucket['READ_ONLY'] == 'Y'? '"disabled"': '').' onchange="BX(\''.$htmlID.'ACCESS_KEY\').value = this.value"></td>
 		</tr>
-		<tr id="SETTINGS_2_'.$htmlID.'" style="display:'.($cur_SERVICE_ID == $this->GetID() || !$bServiceSet? '': 'none').'" class="settings-tr">
-			<td><span class="required">*</span>'.GetMessage("CLO_STORAGE_GOOGLE_EDIT_SECRET_KEY").':</td>
-			<td><input type="hidden" name="SETTINGS['.$htmlID.'][SECRET_KEY]" id="'.$htmlID.'SECRET_KEY" value="'.htmlspecialchars($arSettings['SECRET_KEY']).'"><input type="text" size="55" name="'.$htmlID.'INP_SECRET_KEY" id="'.$htmlID.'INP_SECRET_KEY" value="'.htmlspecialchars($arSettings['SECRET_KEY']).'" autocomplete="off" '.($arBucket['READ_ONLY'] == 'Y'? '"disabled"': '').' onchange="BX(\''.$htmlID.'SECRET_KEY\').value = this.value"></td>
+		<tr id="SETTINGS_2_'.$htmlID.'" style="display:'.($cur_SERVICE_ID == $this->GetID() || !$bServiceSet? '': 'none').'" class="settings-tr adm-detail-required-field">
+			<td>'.GetMessage("CLO_STORAGE_GOOGLE_EDIT_SECRET_KEY").':</td>
+			<td><input type="hidden" name="SETTINGS['.$htmlID.'][SECRET_KEY]" id="'.$htmlID.'SECRET_KEY" value="'.htmlspecialcharsbx($arSettings['SECRET_KEY']).'"><input type="text" size="55" name="'.$htmlID.'INP_SECRET_KEY" id="'.$htmlID.'INP_SECRET_KEY" value="'.htmlspecialcharsbx($arSettings['SECRET_KEY']).'" autocomplete="off" '.($arBucket['READ_ONLY'] == 'Y'? '"disabled"': '').' onchange="BX(\''.$htmlID.'SECRET_KEY\').value = this.value"></td>
 		</tr>
 		<tr id="SETTINGS_3_'.$htmlID.'" style="display:'.($cur_SERVICE_ID == $this->GetID() || !$bServiceSet? '': 'none').'" class="settings-tr">
 			<td>&nbsp;</td>

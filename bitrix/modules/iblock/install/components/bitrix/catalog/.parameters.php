@@ -111,6 +111,9 @@ $arComponentParameters = array(
 		"ALSO_BUY_SETTINGS" => array(
 			"NAME" => GetMessage("T_IBLOCK_DESC_ALSO_BUY_SETTINGS"),
 		),
+		"STORE_SETTINGS" => array(
+			"NAME" => GetMessage("T_IBLOCK_DESC_STORE_SETTINGS"),
+		),
 		"OFFERS_SETTINGS" => array(
 			"NAME" => GetMessage("CP_BC_OFFERS_SETTINGS"),
 		),
@@ -192,6 +195,12 @@ $arComponentParameters = array(
 			"TYPE" => "CHECKBOX",
 			"DEFAULT" => "Y",
 		),
+		"SECTION_TOP_DEPTH" => array(
+			"PARENT" => "SECTIONS_SETTINGS",
+			"NAME" => GetMessage('CP_BC_SECTION_TOP_DEPTH'),
+			"TYPE" => "STRING",
+			"DEFAULT" => "2",
+		),
 		"PAGE_ELEMENT_COUNT" => array(
 			"PARENT" => "LIST_SETTINGS",
 			"NAME" => GetMessage("IBLOCK_PAGE_ELEMENT_COUNT"),
@@ -240,7 +249,12 @@ $arComponentParameters = array(
 		"INCLUDE_SUBSECTIONS" => array(
 			"PARENT" => "LIST_SETTINGS",
 			"NAME" => GetMessage("CP_BC_INCLUDE_SUBSECTIONS"),
-			"TYPE" => "CHECKBOX",
+			"TYPE" => "LIST",
+			"VALUES" => array(
+				"Y" => GetMessage('CP_BC_INCLUDE_SUBSECTIONS_ALL'),
+				"A" => GetMessage('CP_BC_INCLUDE_SUBSECTIONS_ACTIVE'),
+				"N" => GetMessage('CP_BC_INCLUDE_SUBSECTIONS_NO'),
+			),
 			"DEFAULT" => "Y",
 		),
 		"LIST_META_KEYWORDS" => array(
@@ -424,6 +438,19 @@ $arComponentParameters = array(
 			"REFRESH" => "Y",
 		),
 
+		"USE_STORE" => Array(
+			"PARENT" => "STORE_SETTINGS",
+			"NAME" => GetMessage("T_IBLOCK_DESC_USE_STORE"),
+			"TYPE" => "CHECKBOX",
+			"DEFAULT" => "N",
+			"REFRESH" => "Y",
+		),
+		"USE_ELEMENT_COUNTER" => array(
+			"PARENT" => "ADDITIONAL_SETTINGS",
+			"NAME" => GetMessage('CP_BC_USE_ELEMENT_COUNTER'),
+			"TYPE" => "CHECKBOX",
+			"DEFAULT" => "Y"
+		),
 	),
 );
 CIBlockParameters::AddPagerSettings($arComponentParameters, GetMessage("T_IBLOCK_DESC_PAGER_CATALOG"), true, true);
@@ -720,6 +747,52 @@ elseif($arCurrentValues["USE_REVIEW"]=="Y")
 	);
 }
 
+
+if (CModule::IncludeModule('catalog') && $arCurrentValues["USE_STORE"]=='Y')
+{
+	$arComponentParameters["PARAMETERS"]['USE_STORE_PHONE'] = array(
+		'PARENT' => 'STORE_SETTINGS',
+		'NAME' => GetMessage('USE_STORE_PHONE'),
+		'TYPE' => 'CHECKBOX',
+		'DEFAULT' => 'N',
+	);
+
+	$arComponentParameters["PARAMETERS"]['USE_STORE_SCHEDULE'] = array(
+		'PARENT' => 'STORE_SETTINGS',
+		'NAME' => GetMessage('USE_STORE_SCHEDULE'),
+		'TYPE' => 'CHECKBOX',
+		'DEFAULT' => 'N',
+	);
+	$arComponentParameters["PARAMETERS"]['USE_MIN_AMOUNT'] = array(
+		'PARENT' => 'STORE_SETTINGS',
+		'NAME' => GetMessage('USE_MIN_AMOUNT'),
+		'TYPE' => 'CHECKBOX',
+		'DEFAULT' => 'Y',
+		"REFRESH" => "Y",
+	);
+	if ($arCurrentValues['USE_MIN_AMOUNT']!="N")
+	{
+		$arComponentParameters["PARAMETERS"]["MIN_AMOUNT"] = array(
+				"PARENT" => "STORE_SETTINGS",
+				"NAME"		=> GetMessage("MIN_AMOUNT"),
+				"TYPE"		=> "STRING",
+				"DEFAULT"	=> 10,
+			);
+	}
+	$arComponentParameters["PARAMETERS"]['STORE_PATH'] = array(
+		'PARENT' => 'STORE_SETTINGS',
+		'NAME' => GetMessage('STORE_PATH'),
+		"TYPE"		=> "STRING",
+		"DEFAULT"	=> "store/#store_id#",
+	);
+	$arComponentParameters["PARAMETERS"]['MAIN_TITLE'] = array(
+		'PARENT' => 'STORE_SETTINGS',
+		'NAME' => GetMessage('MAIN_TITLE'),
+		"TYPE"		=> "STRING",
+		"DEFAULT"	=> GetMessage('MAIN_TITLE_VALUE'),
+	);
+}
+
 if(!IsModuleInstalled("sale"))
 {
 	unset($arComponentParameters["PARAMETERS"]["USE_ALSO_BUY"]);
@@ -740,6 +813,9 @@ elseif($arCurrentValues["USE_ALSO_BUY"]=="Y")
 			"DEFAULT"	=> 2
 		);
 }
+
+
+
 
 if (CModule::IncludeModule('catalog') && CModule::IncludeModule('currency'))
 {
@@ -765,6 +841,7 @@ if (CModule::IncludeModule('catalog') && CModule::IncludeModule('currency'))
 			'TYPE' => 'LIST',
 			'VALUES' => $arCurrencyList,
 			'DEFAULT' => CCurrency::GetBaseCurrency(),
+			"ADDITIONAL_VALUES" => "Y",
 		);
 	}
 }

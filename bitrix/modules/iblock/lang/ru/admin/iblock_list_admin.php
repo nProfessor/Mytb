@@ -96,4 +96,7 @@ $MESS["IBLIST_A_OFFERS"] = "Торговые предложения";
 $MESS["IBLIST_NOT_SET"] = "(не установлено)";
 $MESS["IBLIST_A_DEACTIVATE"] = "Деактивировать";
 $MESS["IBLIST_A_ACTIVATE"] = "Активировать";
+$MESS["IBLIST_DEFAULT_VALUE"] = "по умолчанию";
+$MESS["IBLIST_YES_VALUE"] = "да";
+$MESS["IBLIST_NO_VALUE"] = "нет";
 ?>

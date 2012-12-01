@@ -80,9 +80,9 @@ else
 			CFileman::DeleteFile(Array($site, $path."/.section.php"));
 
 		if($USER->CanDoFileOperation('fm_edit_permission',$arPath))
-		{			
+		{
 			$arPermissions=Array();
-			$db_groups = CGroup::GetList($order="sort", $by="asc");			
+			$db_groups = CGroup::GetList($order="sort", $by="asc");
 			while($arGroup = $db_groups->Fetch())
 			{
 				$gperm = isset($_POST["g_".$arGroup["ID"]]) ? $_POST["g_".$arGroup["ID"]] : '';
@@ -106,9 +106,9 @@ else
 						else
 							$gperm = 'T_'.$gperm;
 					}
-				}				
+				}
 					$arPermissions[$arGroup["ID"]] = $gperm;
-			}			
+			}
 			//$gperm = $g_ALL;
 			$gperm = $_POST['g_ALL'];
 			if ($gperm == 'NOT_REF')
@@ -122,7 +122,7 @@ else
 				else
 					$gperm = 'T_'.$gperm;
 			}
-			$arPermissions["*"] = $gperm;			
+			$arPermissions["*"] = $gperm;
 			$APPLICATION->SetFileAccessPermission(Array($site, $path), $arPermissions);
 		}
 
@@ -161,7 +161,8 @@ require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_aft
 $aMenu = array(
 	array(
 		"TEXT" => GetMessage("FILEMAN_FOLDER_BACK"),
-		"LINK" => "fileman_admin.php?".$addUrl."&site=".$site."&path=".UrlEncode($path)
+		"LINK" => "fileman_admin.php?".$addUrl."&site=".$site."&path=".UrlEncode($path),
+		"ICON" => "btn_list"
 	)
 );
 
@@ -191,13 +192,13 @@ if(strlen($strWarning)<=0):
 ?>
 
 <form method="POST" action="<?echo $APPLICATION->GetCurPage()?>?" name="fnew_folder">
-<input type="hidden" name="logical" value="<?=htmlspecialchars($logical)?>">
+<input type="hidden" name="logical" value="<?=htmlspecialcharsbx($logical)?>">
 <?echo GetFilterHiddens("filter_");?>
 <input type="hidden" name="save" value="Y">
 <input type="hidden" name="lang" value="<?echo LANG?>">
 <input type="hidden" name="site" value="<?echo $site?>">
-<input type="hidden" name="back_url" value="<?echo htmlspecialchars($back_url);?>">
-<input type="hidden" name="path" value="<?echo htmlspecialchars($path)?>">
+<input type="hidden" name="back_url" value="<?echo htmlspecialcharsbx($back_url);?>">
+<input type="hidden" name="path" value="<?echo htmlspecialcharsbx($path)?>">
 <?=bitrix_sessid_post()?>
 
 <?
@@ -214,7 +215,7 @@ $tabControl->Begin();
 			<?echo GetMessage("FILEMAN_FOLDER_SECTION_NAME")?>
 		</td>
 		<td width="60%">
-			<input type="text" name="sectionname" value="<?echo htmlspecialchars($f_SECTIONNAME)?>" size="50" maxlength="255">
+			<input type="text" name="sectionname" value="<?echo htmlspecialcharsbx($f_SECTIONNAME)?>" size="50" maxlength="255">
 		</td>
 	</tr>
 	<tr class="heading">
@@ -253,15 +254,15 @@ $tabControl->Begin();
 						<tr>
 							<td>
 								<?if($bPredefinedProperty):?>
-									<input type="hidden" name="CODE_<?echo $ind;?>" value="<?echo htmlspecialchars($f_CODE);?>">
-									<input type="text" name="CODE_NAME_<?echo $ind;?>" value="<?echo htmlspecialchars($f_CODE_NAME);?>" size="30" readonly style='background-color:#F1F1F1;'>
+									<input type="hidden" name="CODE_<?echo $ind;?>" value="<?echo htmlspecialcharsbx($f_CODE);?>">
+									<input type="text" name="CODE_NAME_<?echo $ind;?>" value="<?echo htmlspecialcharsbx($f_CODE_NAME);?>" size="30" readonly style='background-color:#F1F1F1;'>
 									<!--<?echo $f_CODE_NAME;?>-->
 								<?else:?>
-									<input type="text" name="CODE_<?echo $ind;?>" value="<?echo htmlspecialchars($f_CODE);?>" size="30">
+									<input type="text" name="CODE_<?echo $ind;?>" value="<?echo htmlspecialcharsbx($f_CODE);?>" size="30">
 								<?endif;?>
 							</td>
 							<td>
-								<input type="text" name="VALUE_<?echo $ind;?>" value="<?echo htmlspecialchars($f_VALUE);?>" size="60">
+								<input type="text" name="VALUE_<?echo $ind;?>" value="<?echo htmlspecialcharsbx($f_VALUE);?>" size="60">
 							</td>
 						</tr>
 						<?
@@ -290,19 +291,19 @@ $tabControl->Begin();
 						$ind++;
 						?>
 						<tr>
-							<td valign="top">
+							<td>
 								<?if($bPredefinedProperty):?>
-									<input type="hidden" name="CODE_<?echo $ind;?>" value="<?echo htmlspecialchars($f_CODE);?>">
-									<input type="text" name="CODE_NAME_<?echo $ind;?>" value="<?echo htmlspecialchars($f_CODE_NAME);?>" size="30" readonly style='background-color:#F1F1F1;'>
+									<input type="hidden" name="CODE_<?echo $ind;?>" value="<?echo htmlspecialcharsbx($f_CODE);?>">
+									<input type="text" name="CODE_NAME_<?echo $ind;?>" value="<?echo htmlspecialcharsbx($f_CODE_NAME);?>" size="30" readonly style='background-color:#F1F1F1;'>
 									<!--<?echo $f_CODE_NAME;?>-->
 								<?else:?>
-									<input type="text" name="CODE_<?echo $ind;?>" value="<?echo htmlspecialchars($f_CODE);?>" size="30">
+									<input type="text" name="CODE_<?echo $ind;?>" value="<?echo htmlspecialcharsbx($f_CODE);?>" size="30">
 								<?endif;?>
 							</td>
-							<td valign="top"><input type="text" name="VALUE_<?echo $ind;?>" value="<?echo htmlspecialchars($f_VALUE);?>" size="60"><?
+							<td><input type="text" name="VALUE_<?echo $ind;?>" value="<?echo htmlspecialcharsbx($f_VALUE);?>" size="60"><?
 								if($APPLICATION->GetDirProperty($f_CODE, Array($site, $path)) && strlen($f_VALUE)<=0)
 								{
-									?><br><small><b><?echo GetMessage("FILEMAN_FOLDER_CURVAL")?></b> <?echo htmlspecialchars($APPLICATION->GetDirProperty($f_CODE, Array($site, $path)));?></small><?
+									?><br><small><b><?echo GetMessage("FILEMAN_FOLDER_CURVAL")?></b> <?echo htmlspecialcharsbx($APPLICATION->GetDirProperty($f_CODE, Array($site, $path)));?></small><?
 								}
 								?></td>
 						</tr>
@@ -320,14 +321,14 @@ $tabControl->Begin();
 						$f_VALUE = "";
 						?>
 						<tr>
-							<td valign="top">
-								<input type="hidden" name="CODE_<?echo $ind;?>" value="<?echo htmlspecialchars($f_CODE);?>">
-								<input type="text" name="CODE_NAME_<?echo $ind;?>" value="<?echo htmlspecialchars($f_CODE_NAME);?>" size="30" readonly style='background-color:#F1F1F1;'>
+							<td>
+								<input type="hidden" name="CODE_<?echo $ind;?>" value="<?echo htmlspecialcharsbx($f_CODE);?>">
+								<input type="text" name="CODE_NAME_<?echo $ind;?>" value="<?echo htmlspecialcharsbx($f_CODE_NAME);?>" size="30" readonly style='background-color:#F1F1F1;'>
 							</td>
-							<td valign="top"><input type="text" name="VALUE_<?echo $ind;?>" value="<?echo htmlspecialchars($f_VALUE);?>" size="60"><?
+							<td><input type="text" name="VALUE_<?echo $ind;?>" value="<?echo htmlspecialcharsbx($f_VALUE);?>" size="60"><?
 								if($APPLICATION->GetDirProperty($f_CODE, Array($site, $path)))
 								{
-									?><br><small><b><?echo GetMessage("FILEMAN_FOLDER_CURVAL")?></b> <?echo htmlspecialchars($APPLICATION->GetDirProperty($f_CODE, Array($site, $path)));?></small><?
+									?><br><small><b><?echo GetMessage("FILEMAN_FOLDER_CURVAL")?></b> <?echo htmlspecialcharsbx($APPLICATION->GetDirProperty($f_CODE, Array($site, $path)));?></small><?
 								}
 								?></td>
 						</tr>
@@ -397,7 +398,7 @@ $tabControl->Begin();
 					'title' => GetMessage("FILEMAN_FOLDER_ACCESS_INHERIT"),
 					'letter' => 'N'
 				);
-				
+
 				//**** Inherit access level *******
 				if($path=="/")
 					$inh_perm = $CUR_PERM["/"]["*"];
@@ -458,11 +459,11 @@ $tabControl->Begin();
 					//	continue;
 					//}
 				?>
-				<tr valign="top">
-					<td align="left">
+				<tr>
+					<td>
 						[<a href="/bitrix/admin/group_edit.php?ID=<?=$g_ID?>&lang=<?=LANGUAGE_ID?>"><?=$g_ID?></a>]&nbsp;<?echo $g_NAME?>:
 					</td>
-					<td align="left" nowrap>
+					<td>
 						<?
 						// Inherit access level
 						if ($inh_taskId == 'NOT_REF')
@@ -481,7 +482,7 @@ $tabControl->Begin();
 						<?
 						foreach ($arPermTypes as $id => $ar):?>
 							<option value="<?=$id?>"<?if($id == $taskId)echo" selected";?>>
-							<?echo htmlspecialchars($ar['title'])?>
+							<?echo htmlspecialcharsbx($ar['title'])?>
 							<?if($id=="NOT_REF")
 								echo "[".$arPermTypes[$pr_taskId]['title']."]";?>
 							</option>
@@ -490,20 +491,20 @@ $tabControl->Begin();
 					</td>
 				</tr>
 				<?endwhile;?>
-				<tr valign="top">
-					<td align="left">
+				<tr>
+					<td>
 						<?echo GetMessage("FILEMAN_FOLDER_ACCESS_FOR_INHERIT")?>:
 					</td>
-					<td align="left" nowrap>
+					<td>
 						<select name="g_ALL">
 						<?
 						foreach ($arPermTypes as $id => $ar):
 						?>
 							<option value="<?=$id?>"<?if($id == $inh_taskId) echo" selected";?>>
-							<?echo htmlspecialchars($ar['title'])?>
+							<?echo htmlspecialcharsbx($ar['title'])?>
 							<?if($id=="NOT_REF")
-								echo "[".$arPermTypes[$pr_taskId]['title']."]";?>	
-							</option>						
+								echo "[".$arPermTypes[$pr_taskId]['title']."]";?>
+							</option>
 						<?endforeach;?>
 						</select>
 					</td>

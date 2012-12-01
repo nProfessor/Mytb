@@ -3,7 +3,7 @@ require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admi
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/fileman/prolog.php");
 
 $APPLICATION->SetAdditionalCSS('/bitrix/js/fileman/medialib/medialib_admin.css');
-?><script type="text/javascript" src="/bitrix/js/fileman/medialib/core_admin.js"></script><?
+$APPLICATION->AddHeadScript('/bitrix/js/fileman/medialib/core_admin.js');
 
 IncludeModuleLangFile(__FILE__);
 CModule::IncludeModule("fileman");
@@ -31,10 +31,10 @@ if (isset($_REQUEST['type']) && intVal($_REQUEST['type']) > 0 ) // && check_bitr
 	for ($i = 0, $l = count($arMLTypes); $i < $l; $i++)
 	{
 		if ($arMLTypes[$i]['id'] == $_REQUEST['type'])
-		{			
+		{
 			$curTypeInd = $i;
 			$curType = $arMLTypes[$i];
-			CUserOptions::SetOption("fileman", "medialib_def_type", $arMLTypes[$i]['id']);			
+			CUserOptions::SetOption("fileman", "medialib_def_type", $arMLTypes[$i]['id']);
 			break;
 		}
 	}
@@ -95,7 +95,7 @@ if ($bCols && $exParams['arCountPerm']['new_item'] > 0)
 
 	$aContext[] = Array(
 		"TEXT" => GetMessage("FM_ML_MASS_UPLOAD"),
-		"ICON" => "btn_mass_upload",
+		//"ICON" => "btn_mass_upload",
 		"LINK" => "fileman_medialib_upload.php?lang=".LANGUAGE_ID."&type=".$curType['id']."&".bitrix_sessid_get(),
 		"TITLE" => GetMessage("FM_ML_MASS_UPLOAD_TITLE")
 	);
@@ -122,7 +122,7 @@ if (($bCols && $exParams['arCountPerm']['access'] > 0) || CMedialib::CanDoOperat
 {
 	$aContext[] = Array(
 		"TEXT" => GetMessage("FM_ML_ACCESS"),
-		"ICON" => "btn_access",
+		//"ICON" => "btn_access",
 		"LINK" => "fileman_medialib_access.php?lang=".LANGUAGE_ID."&".bitrix_sessid_get(),
 		"TITLE" => GetMessage("FM_ML_ACCESS_TITLE")
 	);
@@ -132,7 +132,7 @@ if ($USER->CanDoOperation('fileman_view_all_settings'))
 {
 	$aContext[] = Array(
 		"TEXT" => GetMessage("FM_ML_MANAGE_TYPES"),
-		"ICON" => "btn_type_config",
+		//"ICON" => "btn_type_config",
 		"LINK" => "/bitrix/admin/settings.php?mid=fileman&tabControl_active_tab=edit5&lang=".LANGUAGE_ID."&".bitrix_sessid_get(),
 		"TITLE" => GetMessage("FM_ML_MANAGE_TYPES_TITLE")
 	);
@@ -140,7 +140,7 @@ if ($USER->CanDoOperation('fileman_view_all_settings'))
 
 if (count($aContext) > 0)
 {
-	$menu = new CAdminContextMenu($aContext);
+	$menu = new CAdminContextMenuList($aContext);
 	$menu->Show();
 }
 

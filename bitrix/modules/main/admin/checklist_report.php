@@ -21,7 +21,7 @@ $checklist = new CCheckList($arReportID);
 $arPoints = $checklist->GetPoints();
 $arStates = array();
 
-if($_REQUEST["ACTION"] == "INFO" && $_REQUEST["TEST_ID"] && $arPoints[$_REQUEST["TEST_ID"]]):?>
+if($_REQUEST["ACTION"] == "INFO" && $_REQUEST["TEST_ID"] && $arPoints[$_REQUEST["TEST_ID"]]){?>
 	<?
 	$arTestID = $_REQUEST["TEST_ID"];
 	$arPosition = 0;
@@ -36,19 +36,19 @@ if($_REQUEST["ACTION"] == "INFO" && $_REQUEST["TEST_ID"] && $arPoints[$_REQUEST[
 		$display="inline-block";
 	else
 		$display="none";
-	$APPLICATION->RestartBuffer();?>
-	<div id="test_detail_content" style="z-index: 1000; position: absolute; top:10px;min-width:700px;">
-		<span class="bx-check-list-dit"><?=$arPosition.GetMessage("CL_FROM").$arTotal?></span>
-		<div class="bx-core-admin-dialog-content">
-			<div class="bx-core-admin-dialog-head" style="display: block;">
-				<div class="bx-core-dialog-head-content">
-					<span id="tabs" class="tabs">
-						<a class="tab-container-selected" id="tab_cont_edit1"><span class="tab-left"><span class="tab-right"><?=GetMessage("CL_TAB_TEST");?></span></span></a>
-						<a class="tab-container" id="tab_cont_edit2" ><span class="tab-left"><span class="tab-right"><?=GetMessage("CL_TAB_DESC");?></span></span></a>
-					</span>
-				</div>
-			</div>
-			<div style="margin:3px;" class="edit-tab-inner" id="edit1" style="display:block;">
+	$APPLICATION->RestartBuffer();
+	
+	$aTabs = array(
+			array("DIV" => "edit1", "TAB" => GetMessage("CL_TAB_TEST"), "ICON" => "checklist_detail", "TITLE" => GetMessage("CL_TAB_TEST")),
+			array("DIV" => "edit2", "TAB" => GetMessage("CL_TAB_DESC"), "ICON" => "checklist_detail", "TITLE" => GetMessage('CL_TAB_DESC')),
+		);
+		$tabControl = new CAdminTabControl("tabControl", $aTabs);
+		
+		
+	$tabControl->Begin();
+
+	$tabControl->BeginNextTab();
+?>
 				<div class="checklist-popup-test">
 					<span class="checklist-popup-name-test"><?=GetMessage("CL_TEST_NAME");?>:</span>
 					<span class="checklist-popup-test-text"><?=$arPoints[$arTestID]["NAME"];?>(<?=$arTestID;?>)</span>
@@ -87,8 +87,10 @@ if($_REQUEST["ACTION"] == "INFO" && $_REQUEST["TEST_ID"] && $arPoints[$_REQUEST[
 						</div>
 					</div>
 				</div>
-			</div>
-			<div style="display:none;margin:3px;" class="edit-tab-inner" id="edit2">
+			<?
+
+$tabControl->BeginNextTab();
+?>
 				<div class="checklist-popup-test">
 					<div class="checklist-popup-name-test"><?=GetMessage("CL_TAB_DESC");?></div>
 					<div class="checklist-popup-test-text">
@@ -119,9 +121,6 @@ if($_REQUEST["ACTION"] == "INFO" && $_REQUEST["TEST_ID"] && $arPoints[$_REQUEST[
 						<div class="checklist-popup-test-text"></div>
 					</div>
 				<?endif;?>
-			</div>
-		</div>
-	</div>
 	<script>
 	var arStatus = "<?=$arPoints[$arTestID]["STATE"]["STATUS"]?>";
 
@@ -143,12 +142,6 @@ if($_REQUEST["ACTION"] == "INFO" && $_REQUEST["TEST_ID"] && $arPoints[$_REQUEST[
 	BX.addClass(BX("bcenter"),"checklist-popup-tes-"+style+"-c");
 	BX.addClass(BX("bright"),"checklist-popup-tes-"+style+"-r");
 
-	BX("check_list_comments").style.display = "block";
-	var tabs = BX.findChildren(BX('tabs'), {tagName:'a'}, false);
-	var blocks=[BX('edit1'), BX('edit2')];
-		for(var i=0; i < tabs.length;i++){
-			tabs[i].onclick=function(){popup_tabs(this, this.id)};
-		}
 	if (BX('performer_comment_area').innerHTML.length<=0)
 	{
 		BX('performer_comment_area').style.color="#999";
@@ -197,8 +190,11 @@ if($_REQUEST["ACTION"] == "INFO" && $_REQUEST["TEST_ID"] && $arPoints[$_REQUEST[
 */
 
 	</script>
+<?
+$tabControl->End();
+?>	
 	<?die();?>
-<?endif;?>
+<?}?>
 
 
 <?if (!$arReport = $checklist->GetReportInfo()):
@@ -242,6 +238,7 @@ else:
 //////////////////////PREPARE_END/////////////////////
 /////////////////////////////////////////////////////////
 ?>
+<div class="checklist-body-1024">
 	<div class="checklist-wrapper checklist-result">
 			<div class="checklist-top-info">
 				<div class="checklist-top-text"><?=GetMessage("CL_REPORT_INFO");?></div>
@@ -250,14 +247,6 @@ else:
 						<tr>
 							<td><span class="checklist-top-info-test checklist-testlist-grey"><?=GetMessage("CL_REPORT_DATE")?></span></td>
 							<td><span class="checklist-top-info-test"><?=$arReport["INFO"]["DATE_CREATE"]?></span></td>
-						</tr>
-						<tr>
-							<td><span class="checklist-top-info-test checklist-testlist-grey"><?=GetMessage("CL_TESTER")?></span></td>
-							<td><span class="checklist-top-info-test right">
-							<?if ($arPictureSrc):?>
-								<img width="30px" src="<?=$arPictureSrc;?>"/>
-							<?endif;?>
-							<?=htmlspecialcharsbx($arReport["INFO"]["COMPANY_NAME"]);?> (<?=htmlspecialcharsbx($arReport["INFO"]["TESTER"]);?>)</span></td>
 						</tr>
 					</table>
 					<div class="checklist-top-info-result-right">
@@ -319,6 +308,7 @@ else:
 			</ul>
 			<a class="checklist-result-back" href="/bitrix/admin/checklist.php?lang=<?=LANG;?>"><?=GetMessage("CL_BACK_TO_CHECKLIST");?></a>
 		</div>
+	</div>
 <?endif;?>
 	<script type="text/javascript">
 
@@ -401,7 +391,8 @@ else:
 					{
 						title: head_name+" - "+testID,
 						head: "",
-						content_url: "/bitrix/admin/checklist_report.php?ACTION=INFO&TEST_ID="+testID+"&ID=<?=$arReportID;?>&lang=<?=LANG;?>",
+						content_url: "/bitrix/admin/checklist_report.php?ACTION=INFO&TEST_ID="+testID+"&ID=<?=$arReportID;?>&lang=<?=LANG;?>&bxpublic=Y",
+						opt_context_ctrl: true,
 						icon: "head-block",
 						resizable: true,
 						draggable: true,
@@ -454,7 +445,7 @@ else:
 				current = next;
 			ShowWaitWindow();
 			BX.ajax.post(
-				"/bitrix/admin/checklist_report.php?ACTION=INFO&TEST_ID="+arStates["POINTS"][current].TEST_ID+"&lang=<?=LANG;?>"+"&ID="+<?=$arReportID;?>,
+				"/bitrix/admin/checklist_report.php?bxpublic=Y&ACTION=INFO&TEST_ID="+arStates["POINTS"][current].TEST_ID+"&lang=<?=LANG;?>"+"&ID="+<?=$arReportID;?>+"&<?=bitrix_sessid_get()?>",
 				data,
 				function(data)
 				{
@@ -569,4 +560,5 @@ else:
 	}
 	BX.addCustomEvent("onAfterDetailReportShow", XSSReportModifier);
 	</script>
+
 <?require($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/include/epilog_admin.php");?>

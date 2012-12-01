@@ -100,34 +100,51 @@ class COpenIDClient
 
 	function Validate()
 	{
-		if ($arOpenidServerTags = $this->GetOpenIDServerTags($_GET['openid_identity']))
+		if(CSocServAuthManager::CheckUniqueKey())
 		{
-			$arParams = array(
-				'openid.assoc_handle' => $_GET['openid_assoc_handle'],
-				'openid.signed' => $_GET['openid_signed'],
-				'openid.sig' => $_GET['openid_sig'],
-			);
-			$arSigned = explode(',', $_GET['openid_signed']);
-			foreach ($arSigned as $s)
-				$arParams['openid.' . $s] = $_GET['openid_' . str_replace('.', '_', $s)];
-
-			$arParams['openid.mode'] = 'check_authentication';
-
-			$str = CHTTP::sPost($arOpenidServerTags['server'], $arParams, true);
-
-			if (preg_match('/is_valid\s*\:\s*true/' . BX_UTF_PCRE_MODIFIER, $str))
+			if ($arOpenidServerTags = $this->GetOpenIDServerTags($_GET['openid_identity']))
 			{
-				return array(
+				$arParams = array(
+					'openid.assoc_handle' => $_GET['openid_assoc_handle'],
+					'openid.signed' => $_GET['openid_signed'],
+					'openid.sig' => $_GET['openid_sig'],
+				);
+				$arSigned = explode(',', $_GET['openid_signed']);
+				foreach ($arSigned as $s)
+					$arParams['openid.' . $s] = $_GET['openid_' . str_replace('.', '_', $s)];
+
+				$arParams['openid.mode'] = 'check_authentication';
+
+				$str = CHTTP::sPost($arOpenidServerTags['server'], $arParams, true);
+
+				if (preg_match('/is_valid\s*\:\s*true/' . BX_UTF_PCRE_MODIFIER, $str))
+				{
+					return array(
 						'server' => $arOpenidServerTags['server'],
 						'identity' => $_GET['openid_identity']
 					);
-			}
-			else
-			{
-				$GLOBALS['APPLICATION']->ThrowException(GetMessage('OPENID_CLIENT_ERROR_AUTH'));
+				}
+				else
+				{
+					$GLOBALS['APPLICATION']->ThrowException(GetMessage('OPENID_CLIENT_ERROR_AUTH'));
+				}
 			}
 		}
+		self::CleanParam('ERROR');
+		$GLOBALS['APPLICATION']->ThrowException(GetMessage('OPENID_CLIENT_ERROR_AUTH'));
 		return false;
+	}
+
+	function CleanParam($state=false)
+	{
+		$arKillParams = array("check_key");
+		foreach (array_keys($_GET) as $k)
+			if (strpos($k, 'openid_') === 0)
+				$arKillParams[] = $k;
+		if ($state == 'ERROR')
+			$GLOBALS['APPLICATION']->ThrowException(GetMessage('OPENID_CLIENT_ERROR_AUTH'));
+		$redirect_url = $GLOBALS['APPLICATION']->GetCurPageParam(($state == 'ERROR' ? 'auth_service_error=1' : ''), $arKillParams, false);
+		LocalRedirect($redirect_url, true);
 	}
 
 	function Authorize()
@@ -141,6 +158,7 @@ class COpenIDClient
 				'XML_ID' => $arOpenID['identity'],
 				'PASSWORD' => randString(30),
 				'LID' => SITE_ID,
+				"PERSONAL_WWW" => $arOpenID['identity'],
 			);
 			if (array_key_exists('openid_sreg_email', $_GET))
 				$arFields['EMAIL'] = $_GET['openid_sreg_email'];
@@ -184,43 +202,67 @@ class COpenIDClient
 
 			$USER_ID = 0;
 
-			$rsUsers = $USER->GetList($B, $O, array('XML_ID' => $arFields['XML_ID'], 'EXTERNAL_AUTH_ID' => $arFields['EXTERNAL_AUTH_ID']));
-			if ($arUser = $rsUsers->Fetch())
+			if($GLOBALS["USER"]->IsAuthorized() && $GLOBALS["USER"]->GetID())
 			{
-				$USER_ID = $arUser['ID'];
+				CSocServAuthDB::Add($arFields);
+				self::CleanParam();
 			}
 			else
 			{
-				$def_group = COption::GetOptionString('main', 'new_user_registration_def_group', '');
-				if($def_group != '')
-					$arFields['GROUP_ID'] = explode(',', $def_group);
+				$dbUsersOld = $GLOBALS["USER"]->GetList($by, $ord, array('XML_ID'=>$arFields['XML_ID'], 'EXTERNAL_AUTH_ID'=>$arFields['EXTERNAL_AUTH_ID'], 'ACTIVE'=>'Y'), array('NAV_PARAMS'=>array("nTopCount"=>"1")));
+				$dbUsersNew = $GLOBALS["USER"]->GetList($by, $ord, array('XML_ID'=>$arFields['XML_ID'], 'EXTERNAL_AUTH_ID'=>'socservices', 'ACTIVE'=>'Y'),  array('NAV_PARAMS'=>array("nTopCount"=>"1")));
+				$dbSocUser = CSocServAuthDB::GetList(array(),array('XML_ID'=>$arFields['XML_ID'], 'EXTERNAL_AUTH_ID'=>$arFields['EXTERNAL_AUTH_ID']),false,false,array("USER_ID"));
+				if($arUser = $dbSocUser->Fetch())
+				{
+					$USER_ID = $arUser["USER_ID"];
+				}
+				elseif ($arUser = $dbUsersOld->Fetch())
+				{
+					$USER_ID = $arUser['ID'];
+				}
+				elseif($arUser = $dbUsersNew->Fetch())
+				{
+					$USER_ID = $arUser["ID"];
+				}
+				elseif(COption::GetOptionString("main", "new_user_registration", "N") == "Y")
+				{
+					$def_group = COption::GetOptionString('main', 'new_user_registration_def_group', '');
+					if($def_group != '')
+						$arFields['GROUP_ID'] = explode(',', $def_group);
 
-				$rsEvents = GetModuleEvents('main', 'OnBeforeOpenIDUserAdd');
-				while ($arEvent = $rsEvents->Fetch())
-					$arFields = ExecuteModuleEventEx($arEvent, array($arFields));
+					$rsEvents = GetModuleEvents('main', 'OnBeforeOpenIDUserAdd');
+					while ($arEvent = $rsEvents->Fetch())
+						$arFields = ExecuteModuleEventEx($arEvent, array($arFields));
 
-				if ( !($USER_ID = $USER->Add($arFields)) )
-					return false;
-			}
-			if (intval($USER_ID) > 0)
-			{
-				$USER->Authorize($USER_ID);
+					$arFieldsUser = $arFields;
+					$arFieldsUser["EXTERNAL_AUTH_ID"] = "socservices";
+					if(!($USER_ID = $GLOBALS["USER"]->Add($arFieldsUser)))
+						return false;
+					$arFields['CAN_DELETE'] = 'N';
+					$arFields['USER_ID'] = $USER_ID;
+					CSocServAuthDB::Add($arFields);
+					unset($arFields['CAN_DELETE']);
+				}
+				if (intval($USER_ID) > 0)
+				{
+					$USER->Authorize($USER_ID);
 
-				$arKillParams = array("auth_service_id");
-				foreach (array_keys($_GET) as $k)
-					if (strpos($k, 'openid_') === 0)
-						$arKillParams[] = $k;
+					$arKillParams = array("auth_service_id", "check_key");
+					foreach (array_keys($_GET) as $k)
+						if (strpos($k, 'openid_') === 0)
+							$arKillParams[] = $k;
 
-				$redirect_url = $APPLICATION->GetCurPageParam('', $arKillParams, false);
+					$redirect_url = $APPLICATION->GetCurPageParam('', $arKillParams, false);
 
-				$rsEvents = GetModuleEvents('main', 'OnBeforeOpenIDAuthFinalRedirect');
-				while ($arEvent = $rsEvents->Fetch())
-					$redirect_url = ExecuteModuleEventEx($arEvent, array($redirect_url, $USER_ID, $arFields));
+					$rsEvents = GetModuleEvents('main', 'OnBeforeOpenIDAuthFinalRedirect');
+					while ($arEvent = $rsEvents->Fetch())
+						$redirect_url = ExecuteModuleEventEx($arEvent, array($redirect_url, $USER_ID, $arFields));
 
-				if ($redirect_url)
-					LocalRedirect($redirect_url, true);
+					if ($redirect_url)
+						LocalRedirect($redirect_url, true);
 
-				return $USER_ID;
+					return $USER_ID;
+				}
 			}
 		}
 		return false;
@@ -229,13 +271,10 @@ class COpenIDClient
 	/*public static*/
 	function GetOpenIDAuthStep($request_var='OPENID_IDENTITY')
 	{
-		if (COption::GetOptionString('main', 'new_user_registration', 'N') == 'Y')
-		{
-			if (array_key_exists('openid_mode', $_GET) && $_GET['openid_mode'] == 'id_res')
-				return 2;
-			elseif ($_SERVER['REQUEST_METHOD'] == 'POST' && array_key_exists($request_var, $_REQUEST) && strlen($_REQUEST[$request_var]))
-				return 1;
-		}
+		if (array_key_exists('openid_mode', $_GET) && $_GET['openid_mode'] == 'id_res')
+			return 2;
+		elseif ($_SERVER['REQUEST_METHOD'] == 'POST' && array_key_exists($request_var, $_REQUEST) && strlen($_REQUEST[$request_var]))
+			return 1;
 		return 0;
 	}
 }

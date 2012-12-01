@@ -210,15 +210,15 @@ function Conf(ob)
 </script>
 <form method="POST" action="<?= $APPLICATION->GetCurPage()?>?" name="faform">
 <?= GetFilterHiddens("filter_");?>
-<input type="hidden" name="site" value="<?= htmlspecialchars($site) ?>">
-<input type="hidden" name="logical" value="<?=htmlspecialchars($logical)?>">
-<input type="hidden" name="path" value="<?= htmlspecialchars($path) ?>">
+<input type="hidden" name="site" value="<?= htmlspecialcharsbx($site) ?>">
+<input type="hidden" name="logical" value="<?=htmlspecialcharsbx($logical)?>">
+<input type="hidden" name="path" value="<?= htmlspecialcharsbx($path) ?>">
 <input type="hidden" name="saveperm" value="Y">
 <input type="hidden" name="lang" value="<?= LANG?>">
 <?=bitrix_sessid_post()?>
 <?for($i = 0; $i < $filesCount; $i++):?>
 	<?$ii = $arFiles[$i];if(strtoupper(LANG_CHARSET) != "UTF-8")$ii = $GLOBALS["APPLICATION"]->ConvertCharset($ii, LANG_CHARSET, "UTF-8");?>
-	<input type="hidden" name="files[]" value="<?= htmlspecialchars($ii)?>">
+	<input type="hidden" name="files[]" value="<?= htmlspecialcharsbx($ii)?>">
 <?endfor?>
 
 <?
@@ -239,11 +239,11 @@ $tabControl->Begin();
 		{
 			echo GetMessage("FILEMAN_ACCESS_FOLDERS_FILES").'<br>';
 			for($i = 0; $i < $filesCount; $i++)
-				echo '&quot;'.htmlspecialchars($APPLICATION->UnJSEscape($arFiles[$i])).'&quot;<br>';
+				echo '&quot;'.htmlspecialcharsbx($APPLICATION->UnJSEscape($arFiles[$i])).'&quot;<br>';
 		}
 		else
 		{
-			echo GetMessage("FILEMAN_ACCESS_FILE")." &quot;".htmlspecialchars($APPLICATION->UnJSEscape($arFiles[0]))."&quot;";
+			echo GetMessage("FILEMAN_ACCESS_FILE")." &quot;".htmlspecialcharsbx($APPLICATION->UnJSEscape($arFiles[0]))."&quot;";
 		}
 		?>
 	</td>
@@ -328,7 +328,7 @@ $tabControl->Begin();
 				<option value=""><?= GetMessage("FILEMAN_ACCESS_LEVEL_NOTCH")?></option>
 				<?foreach ($arPermTypes as $id => $ar):?>
 					<option value="<?=$id?>"<?if(($id == $taskId) && !$bDiff) echo" selected";?>>
-					<?echo htmlspecialchars($ar['title']);
+					<?echo htmlspecialcharsbx($ar['title']);
 					if($id == "NOT_REF" && !$bDiff)
 						echo "[".$arPermTypes[$pr_taskId]['title']."]";?>
 					</option>
@@ -405,7 +405,7 @@ $tabControl->Begin();
 				<option value=""><?= GetMessage("FILEMAN_ACCESS_LEVEL_NOTCH")?></option>
 				<?foreach ($arPermTypes as $id => $ar):?>
 					<option value="<?=$id?>"<?if(($id == $taskId) && !$bDiff) echo" selected";?>>
-					<?echo htmlspecialchars($ar['title'])?>
+					<?echo htmlspecialcharsbx($ar['title'])?>
 					<?if($id=="NOT_REF")
 						echo "[".$arPermTypes[$pr_taskId]['title']."]";?>
 					</option>

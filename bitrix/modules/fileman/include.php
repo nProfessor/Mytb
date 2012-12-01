@@ -6,9 +6,10 @@ CModule::AddAutoloadClasses(
 		"CLightHTMLEditor" => "classes/general/light_editor.php",
 		"CEditorUtils" => "classes/general/editor_utils.php",
 		"CMedialib" => "classes/general/medialib.php",
-		"CMedialibTabControl" => "classes/general/medialib.php",
 		"CEventFileman" => "classes/general/fileman_event_list.php",
-		"CCodeEditor" => "classes/general/code_editor.php"
+		"CCodeEditor" => "classes/general/code_editor.php",
+		"CFileInput" => "classes/general/file_input.php",
+		"CMedialibTabControl" => "classes/general/medialib.php"
 	)
 );
 
@@ -18,4 +19,9 @@ include_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/fileman/fileman.php");
 include_once($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/classes/".$GLOBALS["DBType"]."/favorites.php");
 include_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/fileman/properties.php");
 
+
+CJSCore::RegisterExt('file_input', array(
+	'js' => '/bitrix/js/fileman/core_file_input.js',
+	'lang' => '/bitrix/modules/fileman/lang/'.LANGUAGE_ID.'/classes/general/file_input.php'
+));
 ?>

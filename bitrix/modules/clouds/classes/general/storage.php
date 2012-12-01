@@ -478,6 +478,8 @@ class CCloudStorage
 
 	function MoveFile($arFile, $obTargetBucket)
 	{
+		$io = CBXVirtualIo::GetInstance();
+
 		//Try to find suitable bucket for the file
 		$bucket = CCloudStorage::FindBucketForFile($arFile, $arFile["FILE_NAME"]);
 		if(!is_object($bucket))
@@ -498,9 +500,6 @@ class CCloudStorage
 
 		if($arFile["FILE_SIZE"] > $bucket->GetService()->GetMinUploadPartSize())
 		{
-			$temp_file = CTempFile::GetDirectoryName(2, "clouds").bx_basename($arFile["FILE_NAME"]);
-			CheckDirPath($temp_file);
-
 			$obUpload = new CCloudStorageUpload($filePath);
 			if(!$obUpload->isStarted())
 			{
@@ -519,34 +518,42 @@ class CCloudStorage
 						return CCloudStorage::FILE_SKIPPED;
 				}
 
-				if(!copy($ar["tmp_name"], $temp_file))
+				$temp_file = CTempFile::GetDirectoryName(2, "clouds").bx_basename($arFile["FILE_NAME"]);
+				$temp_fileX =  $io->GetPhysicalName($temp_file);
+				CheckDirPath($temp_fileX);
+
+				if(!copy($io->GetPhysicalName($ar["tmp_name"]), $temp_fileX))
 					return CCloudStorage::FILE_SKIPPED;
 
-				if($obUpload->Start($bucket->ID, $arFile["FILE_SIZE"], $arFile["CONTENT_TYPE"]))
+				if($obUpload->Start($bucket->ID, $arFile["FILE_SIZE"], $arFile["CONTENT_TYPE"], $temp_file))
 					return CCloudStorage::FILE_PARTLY_UPLOADED;
 				else
 					return CCloudStorage::FILE_SKIPPED;
 			}
 			else
 			{
-				$fp = fopen($temp_file, "rb");
+				$temp_file = $obUpload->getTempFileName();
+				$temp_fileX =  $io->GetPhysicalName($temp_file);
+
+				$fp = fopen($temp_fileX, "rb");
 				if(!is_resource($fp))
 					return CCloudStorage::FILE_SKIPPED;
 
 				$pos = $obUpload->getPos();
-				if($pos > filesize($temp_file))
+				if($pos > filesize($temp_fileX))
 				{
 					if($obUpload->Finish())
 					{
-						$bucket->IncFileCounter(filesize($temp_file));
+						$bucket->IncFileCounter(filesize($temp_fileX));
 
 						if($arFile["HANDLER_ID"])
 							CCloudStorage::OnFileDelete($arFile);
 						else
 						{
 							$ar = CFile::MakeFileArray($arFile["ID"]);
-							unlink($ar["tmp_name"]);
-							@rmdir(substr($ar["tmp_name"], 0, -strlen(bx_basename($ar["tmp_name"]))));
+							$fileNameX = $io->GetPhysicalName($ar["tmp_name"]);
+							unlink($fileNameX);
+							@rmdir(substr($fileNameX, 0, -strlen(bx_basename($fileNameX))));
 						}
 
 						return CCloudStorage::FILE_MOVED;
@@ -782,13 +789,9 @@ class CCloudStorage
 			"sort" => 150,
 			"text" => GetMessage("CLO_STORAGE_MENU"),
 			"title" => GetMessage("CLO_STORAGE_TITLE"),
-			"url" => "clouds_index.php?lang=".LANGUAGE_ID,
 			"icon" => "clouds_menu_icon",
 			"page_icon" => "clouds_page_icon",
 			"items_id" => "menu_clouds",
-			"more_url" => array(
-				"clouds_index.php",
-			),
 			"items" => array()
 		);
 

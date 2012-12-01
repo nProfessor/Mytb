@@ -1268,7 +1268,7 @@ class blogTextParser1
 					$code = preg_quote(str_replace(array("\x5C"), array("&#092;"), $code));
 
 					$image = preg_quote(str_replace("'", "\\'", $row["IMAGE"]));
-					$description = preg_quote(htmlspecialchars($row["DESCRIPTION"], ENT_QUOTES), "/");
+					$description = preg_quote(htmlspecialcharsbx($row["DESCRIPTION"], ENT_QUOTES), "/");
 
 					$arPattern[] = "/(?<=[^\w&])$patt(?=.\W|\W.|\W$)/ei".BX_UTF_PCRE_MODIFIER;
 					$arReplace[] = "\$this->convert_emoticon('$code', '$image', '$description', '$serverName')";
@@ -1381,8 +1381,8 @@ class blogTextParser1
 					$fileSrc = "http://".$serverName.$arS["SRC"];
 				else
 					$fileSrc = $arS["SRC"];
-				$text = str_replace("[IMG ID=$IMAGE_ID]", htmlspecialchars($f["TITLE"])." (IMG: ".$fileSrc." )", $text);
-				$text = str_replace("[img id=$IMAGE_ID]", htmlspecialchars($f["TITLE"])." (IMG: ".$fileSrc." )", $text);
+				$text = str_replace("[IMG ID=$IMAGE_ID]", htmlspecialcharsbx($f["TITLE"])." (IMG: ".$fileSrc." )", $text);
+				$text = str_replace("[img id=$IMAGE_ID]", htmlspecialcharsbx($f["TITLE"])." (IMG: ".$fileSrc." )", $text);
 			}
 		}
 

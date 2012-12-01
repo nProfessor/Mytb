@@ -775,7 +775,7 @@ BXHTMLEditor.prototype.SetEditorContent = function(sContent)
 	if(BX.browser.IsIE())
 		addAdvEvent(this.pEditorDocument.body, 'paste', window['onPaste_'+this.name]);
 	//else
-		addAdvEvent(this.pEditorDocument, 'keydown', window['onKeyDown_'+this.name]);
+	addAdvEvent(this.pEditorDocument, 'keydown', window['onKeyDown_'+this.name]);
 
 	//addEvent(this.pEditorDocument, 'mouseup', function (e){_this.OnClick(e);});
 	//addEvent(this.pEditorDocument, 'keyup', function (e){_this.OnClick(e); _this.OnChange("keyup", "");});
@@ -967,7 +967,10 @@ BXHTMLEditor.prototype.PasteAsText = function(text)
 BXHTMLEditor.prototype.CleanWordText = function(text, arParams)
 {
 	text = text.replace(/<(P|B|U|I|STRIKE)>&nbsp;<\/\1>/g, ' ');
-	text = text.replace(/<o:p>[\s\S]*?<\/o:p>/ig, "&nbsp;");
+	text = text.replace(/<o:p>([\s\S]*?)<\/o:p>/ig, "$1");
+	//text = text.replace(/<o:p>[\s\S]*?<\/o:p>/ig, "&nbsp;");
+
+	text = text.replace(/<span[^>]*display:\s*?none[^>]*>([\s\S]*?)<\/span>/gi, ''); // Hide spans with display none
 
 	text = text.replace(/<!--\[[\s\S]*?\]-->/ig, ""); //<!--[.....]-->	-	<!--[if gte mso 9]>...<![endif]-->
 	text = text.replace(/<!\[[\s\S]*?\]>/ig, "");		//	<! [if !vml]>
@@ -978,6 +981,12 @@ BXHTMLEditor.prototype.CleanWordText = function(text, arParams)
 	text = text.replace(/<\/?[a-z1-9]+:[^>]*>/gi, "");	//<o:p...>, </o:p>
 	text = text.replace(/<([a-z1-9]+[^>]*) class=([^ |>]*)(.*?>)/gi, "<$1$3");
 	text = text.replace(/<([a-z1-9]+[^>]*) [a-z]+:[a-z]+=([^ |>]*)(.*?>)/gi, "<$1$3"); //	xmlns:v="urn:schemas-microsoft-com:vml"
+
+	if (arParams.spaces)
+	{
+		text = text.replace(/&nbsp;/ig, ' ');
+		text = text.replace(/\s+?/gi, ' ');
+	}
 
 	// Remove mso-xxx styles.
 	text = text.replace(/\s*mso-[^:]+:[^;"]+;?/gi, "");
@@ -1025,10 +1034,28 @@ BXHTMLEditor.prototype.CleanWordText = function(text, arParams)
 	while (text.toLowerCase().indexOf('<span') != -1 && text.toLowerCase().indexOf('</span>') != -1 && iter++ < 20)
 		text = text.replace(/<span[^>]*?>([\s\S]*?)<\/span>/gi, '$1');
 
+	var
+		_text,
+		i, tag, arFormatTags = ['b', 'strong', 'i', 'u', 'font', 'span', 'strike'];
+
+	while (true)
+	{
+		_text = text;
+		for (i in arFormatTags)
+		{
+			tag = arFormatTags[i];
+			text = text.replace(new RegExp('<' + tag + '[^>]*?>(\\s*?)<\\/' + tag + '>', 'gi'), '$1');
+			text = text.replace(new RegExp('<\\/' + tag + '[^>]*?>(\\s*?)<' + tag + '>', 'gi'), '$1');
+		}
+
+		if (_text == text)
+			break;
+	}
+
 	// Remove empty tags
-	text = text.replace(/<([^\s>]+)[^>]*>[\s\n\t\r]*<\/\1>/g, '');
-	text = text.replace(/<([^\s>]+)[^>]*>\s*<\/\1>/g, '');
-	text = text.replace(/<([^\s>]+)[^>]*>\s*<\/\1>/g, '');
+	text = text.replace(/<(?:[^\s>]+)[^>]*>([\s\n\t\r]*)<\/\1>/g, "$1");
+	text = text.replace(/<(?:[^\s>]+)[^>]*>(\s*)<\/\1>/g, "$1");
+	text = text.replace(/<(?:[^\s>]+)[^>]*>(\s*)<\/\1>/g, "$1");
 
 	//text = text.replace(/<\/?xml[^>]*>/gi, "");	//<xml...>, </xml...>
 	text = text.replace(/<xml[^>]*?(?:>\s*?<\/xml)?(?:\/?)?>/ig, '');
@@ -1036,16 +1063,8 @@ BXHTMLEditor.prototype.CleanWordText = function(text, arParams)
 	text = text.replace(/<link[^>]*?(?:>\s*?<\/link)?(?:\/?)?>/ig, '');
 	text = text.replace(/<style[\s\S]*?<\/style>/ig, '');
 
-	if (arParams.spaces)
-	{
-		text = text.replace(/&nbsp;/ig, ' ');
-		text = text.replace(/\s+?/gi, ' ');
-	}
-
 	if (arParams.tableAtr)
-	{
 		text = text.replace(/<table([\s\S]*?)>/gi, "<table>");
-	}
 
 	if (arParams.trtdAtr)
 	{
@@ -1360,7 +1379,7 @@ BXHTMLEditor.prototype.OnKeyDown = function (e)
 
 	// Ctrl + V or Shift + Ins
 	if ((e.ctrlKey && key == 86) ||
-	((this._bShiftPressed || e.shiftKey) && key == 45))
+		((this._bShiftPressed || e.shiftKey) && key == 45))
 		this.OnCtrlV();
 };
 
@@ -2353,140 +2372,140 @@ function BXContextMenuOnclick(e)
 
 // function GarbageCollector()
 // {
-	// return;
-	// try{
-		// for (var el in ar_PROP_ELEMENTS)
-		// {
-			// for (var prop in ar_PROP_ELEMENTS[el].arElements)
-				// ar_PROP_ELEMENTS[el].arElements[prop] = null;
+// return;
+// try{
+// for (var el in ar_PROP_ELEMENTS)
+// {
+// for (var prop in ar_PROP_ELEMENTS[el].arElements)
+// ar_PROP_ELEMENTS[el].arElements[prop] = null;
 
-			// try
-			// {
-				// ar_PROP_ELEMENTS[el].pCellProps = null;
-				// ar_PROP_ELEMENTS[el].pCellProps = null;
-				// ar_PROP_ELEMENTS[el].pCellPath = null;
-				// ar_PROP_ELEMENTS[el].parentCell = null;
-				// ar_PROP_ELEMENTS[el].oOldSelected = null;
-				// ar_PROP_ELEMENTS[el].parentCell = null;
-				// ar_PROP_ELEMENTS[el].pTaskbarSet = null;
-				// ar_PROP_ELEMENTS[el].oOldPropertyPanelElement = null;
-				// ar_PROP_ELEMENTS[el].pWnd = null;
-				// ar_PROP_ELEMENTS[el].pDataCell = null;
-				// ar_PROP_ELEMENTS[el].pTitleRow = null;
-				// ar_PROP_ELEMENTS[el].pMainObj = null;
-				// if (ar_PROP_ELEMENTS[el].pHtmlElement)
-					// ar_PROP_ELEMENTS[el].pHtmlElement = null;
-			// }
-			// catch (e) {}
-		// }
+// try
+// {
+// ar_PROP_ELEMENTS[el].pCellProps = null;
+// ar_PROP_ELEMENTS[el].pCellProps = null;
+// ar_PROP_ELEMENTS[el].pCellPath = null;
+// ar_PROP_ELEMENTS[el].parentCell = null;
+// ar_PROP_ELEMENTS[el].oOldSelected = null;
+// ar_PROP_ELEMENTS[el].parentCell = null;
+// ar_PROP_ELEMENTS[el].pTaskbarSet = null;
+// ar_PROP_ELEMENTS[el].oOldPropertyPanelElement = null;
+// ar_PROP_ELEMENTS[el].pWnd = null;
+// ar_PROP_ELEMENTS[el].pDataCell = null;
+// ar_PROP_ELEMENTS[el].pTitleRow = null;
+// ar_PROP_ELEMENTS[el].pMainObj = null;
+// if (ar_PROP_ELEMENTS[el].pHtmlElement)
+// ar_PROP_ELEMENTS[el].pHtmlElement = null;
+// }
+// catch (e) {}
+// }
 
-		// ar_PROP_ELEMENTS = null;
+// ar_PROP_ELEMENTS = null;
 
-		// Clean pMainObj
-		// this.Clean();
+// Clean pMainObj
+// this.Clean();
 
-		// for (var el in ar_BXButtonS)
-		// {
-			// ar_BXButtonS[el].pWnd = null;
-			// ar_BXButtonS[el].pMainObj = null;
-		// }
-		// ar_BXButtonS = null;
+// for (var el in ar_BXButtonS)
+// {
+// ar_BXButtonS[el].pWnd = null;
+// ar_BXButtonS[el].pMainObj = null;
+// }
+// ar_BXButtonS = null;
 
-		// for (var el in ar_BXTaskbarS)
-		// {
-			// ar_BXTaskbarS[el].pWnd = null;
-			// ar_BXTaskbarS[el].pMainObj = null;
-			// ar_BXTaskbarS[el].pDataCell = null;
-			// ar_BXTaskbarS[el].pTitleRow = null;
-		// }
-		// ar_BXTaskbarS = null;
+// for (var el in ar_BXTaskbarS)
+// {
+// ar_BXTaskbarS[el].pWnd = null;
+// ar_BXTaskbarS[el].pMainObj = null;
+// ar_BXTaskbarS[el].pDataCell = null;
+// ar_BXTaskbarS[el].pTitleRow = null;
+// }
+// ar_BXTaskbarS = null;
 
 
-		// for (var el in ar_BXTaskbarSetS)
-		// {
-			// ar_BXTaskbarSetS[el].pWnd = null;
-			// ar_BXTaskbarSetS[el].pMainObj = null;
-			// if (ar_BXTaskbarSetS[el].pParent)
-				// ar_BXTaskbarSetS[el].pParent = null;
+// for (var el in ar_BXTaskbarSetS)
+// {
+// ar_BXTaskbarSetS[el].pWnd = null;
+// ar_BXTaskbarSetS[el].pMainObj = null;
+// if (ar_BXTaskbarSetS[el].pParent)
+// ar_BXTaskbarSetS[el].pParent = null;
 
-			// ar_BXTaskbarSetS[el].pMainCell = null;
-			// ar_BXTaskbarSetS[el].pMoveColumn = null;
+// ar_BXTaskbarSetS[el].pMainCell = null;
+// ar_BXTaskbarSetS[el].pMoveColumn = null;
 
-			// ar_BXTaskbarSetS[el].pTaskbarsTable = null;
-			// ar_BXTaskbarSetS[el].pBottomColumn = null;
-			// ar_BXTaskbarSetS[el].pDataColumn = null;
+// ar_BXTaskbarSetS[el].pTaskbarsTable = null;
+// ar_BXTaskbarSetS[el].pBottomColumn = null;
+// ar_BXTaskbarSetS[el].pDataColumn = null;
 
-			// ar_BXTaskbarSetS[el].pMoveImg = null;
-		// }
-		// ar_BXTaskbarSetS = null;
+// ar_BXTaskbarSetS[el].pMoveImg = null;
+// }
+// ar_BXTaskbarSetS = null;
 
-		// for (var el in ar_BXToolbarSetS)
-		// {
-			// ar_BXToolbarSetS[el].pWnd = null;
-			// ar_BXToolbarSetS[el].pMainObj = null;
-			// if (ar_BXToolbarSetS[el].pParent)
-				// ar_BXToolbarSetS[el].pParent = null;
-			// ar_BXToolbarSetS[el].pMoveImg = null;
-			// ar_BXToolbarSetS[el].pMoveColumn = null;
-		// }
-		// ar_BXToolbarSetS = null;
+// for (var el in ar_BXToolbarSetS)
+// {
+// ar_BXToolbarSetS[el].pWnd = null;
+// ar_BXToolbarSetS[el].pMainObj = null;
+// if (ar_BXToolbarSetS[el].pParent)
+// ar_BXToolbarSetS[el].pParent = null;
+// ar_BXToolbarSetS[el].pMoveImg = null;
+// ar_BXToolbarSetS[el].pMoveColumn = null;
+// }
+// ar_BXToolbarSetS = null;
 
-		// for (var el in ar_BXToolbarS)
-		// {
-			// ar_BXToolbarS[el].pWnd.pObj = null;
-			// ar_BXToolbarS[el].pWnd = null;
-			// ar_BXToolbarS[el].pMainObj.pWnd = null;
-			// ar_BXToolbarS[el].pIconsTable.pObj = null;
-			// ar_BXToolbarS[el].pIconsTable = null;
-			// ar_BXToolbarS[el].pTitleRow = null;
-			// ar_BXToolbarS[el].pMainObj = null;
-			// ar_BXToolbarS[el].arButtons = null;
-			// ar_BXToolbarS[el].pToolbarSet = null;
-		// }
-		// ar_BXToolbarS = null;
+// for (var el in ar_BXToolbarS)
+// {
+// ar_BXToolbarS[el].pWnd.pObj = null;
+// ar_BXToolbarS[el].pWnd = null;
+// ar_BXToolbarS[el].pMainObj.pWnd = null;
+// ar_BXToolbarS[el].pIconsTable.pObj = null;
+// ar_BXToolbarS[el].pIconsTable = null;
+// ar_BXToolbarS[el].pTitleRow = null;
+// ar_BXToolbarS[el].pMainObj = null;
+// ar_BXToolbarS[el].arButtons = null;
+// ar_BXToolbarS[el].pToolbarSet = null;
+// }
+// ar_BXToolbarS = null;
 
-		// for (var el in ar_BXPropertiesTaskbarS)
-		// {
-			// ar_BXPropertiesTaskbarS[el].pDataCell = null;
-			// ar_BXPropertiesTaskbarS[el].pCellPath = null;
-			// ar_BXPropertiesTaskbarS[el].pCellProps = null;
-			// ar_BXPropertiesTaskbarS[el].pMainObj = null;
-		// }
+// for (var el in ar_BXPropertiesTaskbarS)
+// {
+// ar_BXPropertiesTaskbarS[el].pDataCell = null;
+// ar_BXPropertiesTaskbarS[el].pCellPath = null;
+// ar_BXPropertiesTaskbarS[el].pCellProps = null;
+// ar_BXPropertiesTaskbarS[el].pMainObj = null;
+// }
 
-		// for (var el in ar_CustomElementS)
-		// {
-			// ar_CustomElementS[el].pDocument = null;
-			// ar_CustomElementS[el].pMainObj = null;
-			// ar_CustomElementS[el].pFrame = null;
-			// ar_CustomElementS[el].pDiv = null;
-		// }
-		// ar_CustomElementS = null;
+// for (var el in ar_CustomElementS)
+// {
+// ar_CustomElementS[el].pDocument = null;
+// ar_CustomElementS[el].pMainObj = null;
+// ar_CustomElementS[el].pFrame = null;
+// ar_CustomElementS[el].pDiv = null;
+// }
+// ar_CustomElementS = null;
 
-		// Cleaning events
-		// for (var i=ar_EVENTS.length-1; i>=0; i--)
-		// {
-			// var el = ar_EVENTS[i][0];
-			// var evname = ar_EVENTS[i][1];
-			// var func = ar_EVENTS[i][2];
+// Cleaning events
+// for (var i=ar_EVENTS.length-1; i>=0; i--)
+// {
+// var el = ar_EVENTS[i][0];
+// var evname = ar_EVENTS[i][1];
+// var func = ar_EVENTS[i][2];
 
-			// el["on"+evname] = null;
-			// el = null;
-		// }
-		// ar_EVENTS = null;
+// el["on"+evname] = null;
+// el = null;
+// }
+// ar_EVENTS = null;
 
-		// var floatDiv = BX("BX_editor_dialog");
-		// if(floatDiv)
-			// floatDiv.parentNode.removeChild(floatDiv);
+// var floatDiv = BX("BX_editor_dialog");
+// if(floatDiv)
+// floatDiv.parentNode.removeChild(floatDiv);
 
-		// pDocument = null;
-		// pMainObj = null;
+// pDocument = null;
+// pMainObj = null;
 
-		// for (var el in GLOBAL_pMainObj)
-			// GLOBAL_pMainObj[el] = null;
+// for (var el in GLOBAL_pMainObj)
+// GLOBAL_pMainObj[el] = null;
 
-		// GLOBAL_pMainObj = null;
-	// }
-	// catch (e){}
+// GLOBAL_pMainObj = null;
+// }
+// catch (e){}
 // }
 
 
@@ -2536,8 +2555,8 @@ function BXStyles(pMainObj)
 function OnUnload(e)
 {
 	//try{
-		//for (var ind in pBXEventDispatcher.arEditors)
-		//	GarbageCollector.apply(pBXEventDispatcher.arEditors[ind]);
+	//for (var ind in pBXEventDispatcher.arEditors)
+	//	GarbageCollector.apply(pBXEventDispatcher.arEditors[ind]);
 	//} catch(e){}
 }
 

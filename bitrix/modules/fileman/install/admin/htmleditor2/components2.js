@@ -11,9 +11,9 @@ function BXComponents2Taskbar()
 
 		this.pMainObj.C2Parser = new C2Parser(this.pMainObj, this);
 		this.C2Parser = this.pMainObj.C2Parser;
+		this.icon = 'components';
+		this.iconDiv.className = 'tb_icon bxed-taskbar-icon-' + this.icon;
 
-		this.icon_class = 'tb_icon_components2';
-		this.iconDiv.className = 'tb_icon ' + this.icon_class;
 		this.pHeaderTable.setAttribute("__bxtagname", "_taskbar_cached"); // need for correct context menu for taskbar title
 		if (lca)
 			_$LCAContentParser_execed = false;
@@ -1548,7 +1548,7 @@ function BXComponents2Taskbar()
 				OnLoad: function()
 				{
 					var
-						div = window.oBXEditorDialog.PARTS.CONTENT,
+						div = window.oBXEditorDialog.PARTS.CONTENT_DATA,
 						id = pObj.params.pElement.id,
 						pElement_temp = pObj.pMainObj.CreateElement('IMG', {id: 'temp_c2_dialog_id'});
 

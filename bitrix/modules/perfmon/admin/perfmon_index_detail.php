@@ -232,15 +232,14 @@ $tabControl->Begin();
 $tabControl->BeginNextTab();
 ?>
 	<tr>
-		<td colspan="3" align="center">
+		<td colspan="2">
 		<?echo BeginNote(), GetMessage("PERFMON_IDETAIL_TABLE_NOTE"), EndNote(), "<br>";?>
-		<td>
+		</td>
 	</tr>
 	<tr class="heading">
-		<td colspan="3"><?echo GetMessage("PERFMON_IDETAIL_QUERY")?></td>
+		<td colspan="2"><?echo GetMessage("PERFMON_IDETAIL_QUERY")?></td>
 	</tr>
 	<tr>
-		<td>&nbsp;</td>
 		<td colspan="2"><?echo str_replace(
 			array(" ", "\n"),
 			array(" &nbsp;", "<br>"),
@@ -248,26 +247,25 @@ $tabControl->BeginNextTab();
 		);?></td>
 	</tr>
 	<tr class="heading">
-		<td colspan="3"><?echo GetMessage("PERFMON_IDETAIL_TABLE_STAT")?></td>
+		<td colspan="2"><?echo GetMessage("PERFMON_IDETAIL_TABLE_STAT")?></td>
 	</tr>
 	<tr>
-		<td width="50%" colspan="2"><?echo GetMessage("PERFMON_IDETAIL_TABLE_NAME")?>:</td>
-		<td width="50%"><?echo htmlspecialcharsex($arSuggest["TABLE_NAME"]);?></td>
+		<td width="40%"><?echo GetMessage("PERFMON_IDETAIL_TABLE_NAME")?>:</td>
+		<td width="60%"><?echo htmlspecialcharsex($arSuggest["TABLE_NAME"]);?></td>
 	</tr>
 	<tr>
-		<td colspan="2"><?echo GetMessage("PERFMON_IDETAIL_TABLE_SIZE")?>:</td>
+		<td><?echo GetMessage("PERFMON_IDETAIL_TABLE_SIZE")?>:</td>
 		<td><?echo htmlspecialcharsex(CFile::FormatSize($arTableStat["TABLE_SIZE"]));?></td>
 	</tr>
 	<tr>
-		<td colspan="2"><?echo GetMessage("PERFMON_IDETAIL_TABLE_ROWS")?>:</td>
+		<td><?echo GetMessage("PERFMON_IDETAIL_TABLE_ROWS")?>:</td>
 		<td><?echo htmlspecialcharsex($arTableStat["TABLE_ROWS"]);?></td>
 	</tr>
 	<tr class="heading">
-		<td colspan="3"><?echo GetMessage("PERFMON_IDETAIL_TABLE_STRUCT")?></td>
+		<td colspan="2"><?echo GetMessage("PERFMON_IDETAIL_TABLE_STRUCT")?></td>
 	</tr>
-	<tr valign="top">
-		<td>&nbsp;</td>
-		<td align="right">
+	<tr>
+		<td align="right" class="adm-detail-valign-top">
 			<table class="internal">
 			<tr class="heading">
 				<td><?echo GetMessage("PERFMON_IDETAIL_TABLE_COLUMN")?></td>
@@ -284,8 +282,8 @@ $tabControl->BeginNextTab();
 			<?endforeach?>
 			</table>
 		</td>
-		<td align="left">
-			<table class="internal">
+		<td align="left" class="adm-detail-valign-top">
+			<table class="internal" style="width:100%">
 			<tr class="heading">
 				<td><?echo GetMessage("PERFMON_IDETAIL_INDEX_NAME")?></td>
 				<td><?echo GetMessage("PERFMON_IDETAIL_INDEX_COLUMNS")?></td>
@@ -298,7 +296,7 @@ $tabControl->BeginNextTab();
 						$arIndexColumnsTmp2[$i] = "<b>".$arIndexColumnsTmp2[$i]."</b>";
 			?>
 			<tr valign="top">
-				<td><?echo htmlspecialchars($index_name)?></td>
+				<td><?echo htmlspecialcharsbx($index_name)?></td>
 				<td><?echo implode("<br>", $arIndexColumnsTmp2)?></td>
 			</tr>
 			<?endforeach?>
@@ -309,9 +307,9 @@ $tabControl->BeginNextTab();
 $tabControl->BeginNextTab();
 ?>
 	<tr>
-		<td colspan="2" align="center">
+		<td>
 		<?echo BeginNote(), GetMessage("PERFMON_IDETAIL_QUERY_TAB_NOTE"), EndNote(), "<br>";?>
-		<table class="internal">
+		<table class="internal" style="width:100%">
 		<tr class="heading">
 			<td><?echo GetMessage("PERFMON_IDETAIL_QUERY")?></td>
 			<?foreach(explode(",", $arSuggest["COLUMN_NAMES"]) as $column_name):?>
@@ -319,7 +317,7 @@ $tabControl->BeginNextTab();
 			<?endforeach?>
 		</tr>
 		<?foreach($arQueries as $arQuery):?>
-		<tr valign="top">
+		<tr>
 			<td align="left"><?
 				echo str_replace(
 					array(" ", "\n"),
@@ -328,7 +326,7 @@ $tabControl->BeginNextTab();
 				);
 			?></td>
 			<?foreach($arQuery["STAT"] as $column_name => $ratio):?>
-			<td align="center"><?
+			<td style="text-align:center"><?
 				if(isset($arQuery["WHERE"][$column_name]))
 					echo htmlspecialcharsEx($arQuery["WHERE"][$column_name]);
 				else
@@ -350,15 +348,14 @@ $tabControl->BeginNextTab();
 $tabControl->BeginNextTab();
 ?>
 	<tr>
-		<td colspan="3" align="center">
+		<td colspan="2" align="center">
 		<?echo BeginNote(), GetMessage("PERFMON_IDETAIL_INDEX_NOTE"), EndNote(), "<br>";?>
 		</td>
 	</tr>
 	<tr class="heading">
-		<td colspan="3"><?echo GetMessage("PERFMON_IDETAIL_QUERY")?></td>
+		<td colspan="2"><?echo GetMessage("PERFMON_IDETAIL_QUERY")?></td>
 	</tr>
 	<tr>
-		<td width="1%">&nbsp;</td>
 		<td colspan="2"><?echo str_replace(
 			array(" ", "\n"),
 			array(" &nbsp;", "<br>"),
@@ -366,10 +363,10 @@ $tabControl->BeginNextTab();
 		);?></td>
 	</tr>
 	<tr class="heading">
-		<td colspan="3"><?echo GetMessage("PERFMON_IDETAIL_EXPLAIN_BEFORE")?></td>
+		<td colspan="2"><?echo GetMessage("PERFMON_IDETAIL_EXPLAIN_BEFORE")?></td>
 	</tr>
 	<tr>
-		<td colspan="3" align="center">
+		<td colspan="2" align="center">
 			<table class="internal">
 				<tr class="heading">
 					<td><?echo GetMessage("PERFMON_IDETAIL_F_SELECT_TYPE");?></td>
@@ -399,15 +396,15 @@ $tabControl->BeginNextTab();
 		</td>
 	</tr>
 	<tr>
-		<td colspan="2" width="50%"><?echo GetMessage("PERFMON_IDETAIL_AVG_QUERY_TIME")?>:</td>
+		<td width="50%"><?echo GetMessage("PERFMON_IDETAIL_AVG_QUERY_TIME")?>:</td>
 		<td width="50%"><?echo str_replace(" ", "&nbsp;", number_format($arSuggest["SQL_TIME"]/$arSuggest["SQL_COUNT"], 6, ".", " "))?></td>
 	</tr>
 	<tr class="heading">
-		<td colspan="3"><?echo GetMessage("PERFMON_IDETAIL_INDEX")?></td>
+		<td colspan="2"><?echo GetMessage("PERFMON_IDETAIL_INDEX")?></td>
 	</tr>
 	<?if($IndexExists == ""):?>
 		<tr>
-			<td colspan="2"><?echo GetMessage("PERFMON_IDETAIL_CREATE_INDEX_DDL")?>:</td>
+			<td><?echo GetMessage("PERFMON_IDETAIL_CREATE_INDEX_DDL")?>:</td>
 			<?
 				$prefix = substr("ix_perf_".$arSuggest["TABLE_NAME"], 0, 27)."_";
 				$i = 1;
@@ -418,29 +415,30 @@ $tabControl->BeginNextTab();
 			?>
 			<td>
 				<?echo htmlspecialcharsEx($ddl)?>
-				<input type="hidden" name="ddl" value="<?echo htmlspecialchars($ddl)?>">
-				<input type="hidden" name="index_name" value="<?echo htmlspecialchars($prefix.$i)?>">
+				<input type="hidden" name="ddl" value="<?echo htmlspecialcharsbx($ddl)?>">
+				<input type="hidden" name="index_name" value="<?echo htmlspecialcharsbx($prefix.$i)?>">
 				<input type="hidden" name="ID" value="<?echo $ID?>">
 			</td>
 		</tr>
 		<?if($isAdmin)
 		{?>
 		<tr>
-			<td colspan="2">&nbsp;</td>
-			<td>
-				<input type="submit" value="<?echo GetMessage("PERFMON_IDETAIL_CREATE_INDEX")?>" name="create_index">
-				<?echo GetMessage("PERFMON_IDETAIL_OR")?>
-				<input type="submit" value="<?echo GetMessage("PERFMON_IDETAIL_BAN_INDEX")?>" name="ban_index"></td>
+			<td>&nbsp;</td>
+			<td valign="middle">
+				<input type="submit" value="<?echo GetMessage("PERFMON_IDETAIL_CREATE_INDEX")?>" name="create_index" class="adm-btn-green">
+				<span style="line-height:27px"><?echo GetMessage("PERFMON_IDETAIL_OR")?></span>
+				<input type="submit" value="<?echo GetMessage("PERFMON_IDETAIL_BAN_INDEX")?>" name="ban_index">
+			</td>
 		</tr>
 		<?}
 		?>
 	<?else:?>
 		<tr>
-			<td colspan="2"><?echo GetMessage("PERFMON_IDETAIL_CREATED_INDEX_DDL")?>:</td>
+			<td><?echo GetMessage("PERFMON_IDETAIL_CREATED_INDEX_DDL")?>:</td>
 			<td><?echo "CREATE INDEX ".$IndexExists." ON ".$arSuggest["TABLE_NAME"]."(".implode(", ", $arIndexes[$IndexExists]).")"?></td>
 		</tr>
 		<tr>
-			<td colspan="2"><?echo GetMessage("PERFMON_IDETAIL_DROP_INDEX_DDL")?>:</td>
+			<td><?echo GetMessage("PERFMON_IDETAIL_DROP_INDEX_DDL")?>:</td>
 			<?
 //				$prefix = substr("ix_perf_".$arSuggest["TABLE_NAME"], 0, 27)."_";
 //				$i = 1;
@@ -451,14 +449,14 @@ $tabControl->BeginNextTab();
 			?>
 			<td>
 				<?echo htmlspecialcharsEx($ddl)?>
-				<input type="hidden" name="ddl" value="<?echo htmlspecialchars($ddl)?>">
+				<input type="hidden" name="ddl" value="<?echo htmlspecialcharsbx($ddl)?>">
 				<input type="hidden" name="ID" value="<?echo $ID?>">
 			</td>
 		</tr>
 		<?if($isAdmin)
 		{?>
 		<tr>
-			<td colspan="2">&nbsp;</td>
+			<td>&nbsp;</td>
 			<td>
 				<input type="submit" value="<?echo GetMessage("PERFMON_IDETAIL_DROP_INDEX")?>" name="drop_index">
 			</td>
@@ -466,10 +464,10 @@ $tabControl->BeginNextTab();
 		<?}
 		?>
 		<tr class="heading">
-			<td colspan="3"><?echo GetMessage("PERFMON_IDETAIL_EXPLAIN_AFTER")?></td>
+			<td colspan="2"><?echo GetMessage("PERFMON_IDETAIL_EXPLAIN_AFTER")?></td>
 		</tr>
 		<tr>
-			<td colspan="3" align="center">
+			<td colspan="2" align="center">
 				<table class="internal">
 					<tr class="heading">
 						<td><?echo GetMessage("PERFMON_IDETAIL_F_SELECT_TYPE");?></td>
@@ -512,23 +510,16 @@ $tabControl->BeginNextTab();
 			$ratio = ($arSuggest["SQL_TIME"]/$arSuggest["SQL_COUNT"])/($etime-$stime);
 		?>
 		<tr>
-			<td colspan="2"><?echo GetMessage("PERFMON_IDETAIL_QUERY_TIME")?>:</td>
+			<td><?echo GetMessage("PERFMON_IDETAIL_QUERY_TIME")?>:</td>
 			<td><?echo str_replace(" ", "&nbsp;", number_format($etime - $stime, 6, ".", " "))?></td>
 		</tr>
 		<?if($ratio > 1){?>
 		<tr>
-			<td colspan="2"><?echo GetMessage("PERFMON_IDETAIL_GAIN")?>:</td>
+			<td><?echo GetMessage("PERFMON_IDETAIL_GAIN")?>:</td>
 			<td><font class="notetext"><?echo str_replace(" ", "&nbsp;", number_format($ratio*100, 2, ".", " ")), "%"?></font></td>
 		</tr>
 		<?}?>
 	<?endif;?>
-<?
-//$tabControl->Buttons(
-//	array(
-//		"back_url"=>"perfmon_index_detail.php?lang=".LANGUAGE_ID,
-//	)
-//);
-?>
 <?echo bitrix_sessid_post();?>
 <input type="hidden" name="lang" value="<?echo LANGUAGE_ID?>">
 <input type="hidden" name="ID" value="<?echo $ID?>">

@@ -108,7 +108,7 @@ class CIBlockPropertyMapGoogle extends CIBlockPropertyMapInterface
 			$GLOBALS['googleMapLastNumber']=0;
 
 		if ($strHTMLControlName["MODE"] != "FORM_FILL")
-			return '<input type="text" name="'.htmlspecialchars($strHTMLControlName['VALUE']).'" value="'.htmlspecialchars($value['VALUE']).'" />';
+			return '<input type="text" name="'.htmlspecialcharsbx($strHTMLControlName['VALUE']).'" value="'.htmlspecialcharsbx($value['VALUE']).'" />';
 
 		if (strlen($value['VALUE']) > 0)
 		{
@@ -160,14 +160,16 @@ class CIBlockPropertyMapGoogle extends CIBlockPropertyMapInterface
 
 //http://jabber.bx/view.php?id=17908
 ?>
-<script type="text/javascript">	 
-	var tabArea = BX.findParent(BX("BX_GMAP_<?=$MAP_ID?>"),{className:'edit-tab-inner'});
-	var tabButton = BX("tab_cont_"+tabArea.id);	
-	BX.bind(tabButton,"click", function() { BXMapGoogleAfterShow("<?=$MAP_ID?>"); });		
+<script type="text/javascript">
+BX.ready(function(){
+	var tabArea = BX.findParent(BX("BX_GMAP_<?=$MAP_ID?>"),{className:/edit-tab-inner|adm-detail-content/});
+	var tabButton = BX("tab_cont_"+tabArea.id);
+	BX.bind(tabButton,"click", function() { BXMapGoogleAfterShow("<?=$MAP_ID?>"); });
+});
 </script>
 
 <div id="bx_address_search_control_<?echo $MAP_ID?>" style="display: none;"><?echo GetMessage('IBLOCK_PROP_MAP_GOOGLE_SEARCH')?><input type="text" name="bx_address_<?echo $MAP_ID?>" id="bx_address_<?echo $MAP_ID?>" value="" style="width: 300px;" autocomplete="off" /></div>
-<input type="hidden" id="value_<?echo $MAP_ID;?>" name="<?=htmlspecialchars($strHTMLControlName["VALUE"])?>" value="<?=htmlspecialcharsEx($value["VALUE"])?>" />
+<input type="hidden" id="value_<?echo $MAP_ID;?>" name="<?=htmlspecialcharsbx($strHTMLControlName["VALUE"])?>" value="<?=htmlspecialcharsEx($value["VALUE"])?>" />
 <script type="text/javascript">
 window.jsAdminGoogleMess = {
 	nothing_found: '<?echo CUtil::JSEscape(GetMessage('IBLOCK_PROP_MAP_GOOGLE_NOTHING_FOUND'))?>'
@@ -181,10 +183,10 @@ function BXWaitForMap_<?echo $MAP_ID?>()
 	else
 	{
 		window.obPoint_<?echo $MAP_ID?> = null;
-		google.maps.event.addListener(window.GLOBAL_arMapObjects['<?echo $MAP_ID?>'], 'dblclick', setPointValue_<?echo $MAP_ID?>);	
+		google.maps.event.addListener(window.GLOBAL_arMapObjects['<?echo $MAP_ID?>'], 'dblclick', setPointValue_<?echo $MAP_ID?>);
 		var searchInput = BX('bx_address_<?echo $MAP_ID?>');
 		BX.bind(searchInput,"keydown", jsGoogleCESearch_<?echo $MAP_ID;?>.setTypingStarted);
-		BX.bind(searchInput,"contextmenu", jsGoogleCESearch_<?echo $MAP_ID;?>.setTypingStarted);		
+		BX.bind(searchInput,"contextmenu", jsGoogleCESearch_<?echo $MAP_ID;?>.setTypingStarted);
 <?
 		if ($bHasValue):
 ?>
@@ -293,7 +295,7 @@ var jsGoogleCESearch_<?echo $MAP_ID;?> = {
 	{
 		if (null == e)
 			e = window.event;
-		
+
 		if (e.keyCode == 13)
 		{
 			jsGoogleCESearch_<?echo $MAP_ID;?>.doSearch();
@@ -308,7 +310,7 @@ var jsGoogleCESearch_<?echo $MAP_ID;?> = {
 			if (e.type=="contextmenu")
 					jsGoogleCESearch_<?echo $MAP_ID;?>.timerDelay=3000;
 			else
-					jsGoogleCESearch_<?echo $MAP_ID;?>.timerDelay=1000;	
+					jsGoogleCESearch_<?echo $MAP_ID;?>.timerDelay=1000;
 
 			jsGoogleCESearch_<?echo $MAP_ID;?>.hideResults();
 
@@ -347,7 +349,7 @@ var jsGoogleCESearch_<?echo $MAP_ID;?> = {
 	},
 
 	__generateOutput: function()
-	{	
+	{
 		jsGoogleCESearch_<?echo $MAP_ID;?>.obOut = document.body.appendChild(document.createElement('UL'));
 		jsGoogleCESearch_<?echo $MAP_ID;?>.obOut.className = 'bx-google-address-search-results';
 		jsGoogleCESearch_<?echo $MAP_ID;?>.setResultsCoordinates();
@@ -479,7 +481,7 @@ var jsGoogleCESearch_<?echo $MAP_ID;?> = {
 	}
 
 	function GetPublicViewHTML($arProperty, $value, $arParams)
-	{		
+	{
 		$s = '';
 		if(strlen($value["VALUE"])>0)
 		{
@@ -547,7 +549,7 @@ class CIBlockPropertyMapYandex extends CIBlockPropertyMapInterface
 ?>
 <div id="key_input_control_<?echo $MAP_ID?>">
 		<?echo str_replace('#DOMAIN#', $strDomain, GetMessage('IBLOCK_PROP_MAP_YANDEX_NO_KEY_MESSAGE'))?><br /><br />
-		<?echo GetMessage('IBLOCK_PROP_MAP_YANDEX_NO_KEY')?><input type="text" name="map_yandex_key_<?echo $MAP_ID?>" id="map_yandex_key_<?echo $MAP_ID?>" /> <input type="button" value="<?echo htmlspecialchars(GetMessage('IBLOCK_PROP_MAP_YANDEX_NO_KEY_BUTTON'))?>" onclick="setYandexKey('<?echo $strDomain?>', 'map_yandex_key_<?echo $MAP_ID?>')" /> <input type="button" value="<?echo htmlspecialchars(GetMessage('IBLOCK_PROP_MAP_YANDEX_SAVE_KEY_BUTTON'))?>" onclick="saveYandexKey('<?echo $strDomain?>', 'map_yandex_key_<?echo $MAP_ID?>')" />
+		<?echo GetMessage('IBLOCK_PROP_MAP_YANDEX_NO_KEY')?><input type="text" name="map_yandex_key_<?echo $MAP_ID?>" id="map_yandex_key_<?echo $MAP_ID?>" /> <input type="button" value="<?echo htmlspecialcharsbx(GetMessage('IBLOCK_PROP_MAP_YANDEX_NO_KEY_BUTTON'))?>" onclick="setYandexKey('<?echo $strDomain?>', 'map_yandex_key_<?echo $MAP_ID?>')" /> <input type="button" value="<?echo htmlspecialcharsbx(GetMessage('IBLOCK_PROP_MAP_YANDEX_SAVE_KEY_BUTTON'))?>" onclick="saveYandexKey('<?echo $strDomain?>', 'map_yandex_key_<?echo $MAP_ID?>')" />
 </div>
 <div id="key_input_message_<?echo $MAP_ID?>" style="display: none;"><?echo GetMessage('IBLOCK_PROP_MAP_YANDEX_NO_KEY_OKMESSAGE')?></div>
 <?
@@ -591,7 +593,7 @@ function saveYandexKey(domain, input)
 
 		// TODO: remove this later to use in property default value setting
 		if ($strHTMLControlName["MODE"] != "FORM_FILL")
-			return '<input type="text" name="'.htmlspecialchars($strHTMLControlName['VALUE']).'" value="'.htmlspecialchars($value['VALUE']).'" />';
+			return '<input type="text" name="'.htmlspecialcharsbx($strHTMLControlName['VALUE']).'" value="'.htmlspecialcharsbx($value['VALUE']).'" />';
 
 		if (strlen($value['VALUE']) > 0)
 		{
@@ -655,14 +657,16 @@ function saveYandexKey(domain, input)
 
 //http://jabber.bx/view.php?id=17908
 ?>
-<script type="text/javascript">	
-	var tabArea = BX.findParent(BX("BX_YMAP_<?=$MAP_ID?>"),{className:'edit-tab-inner'});	
-	var tabButton = BX("tab_cont_"+tabArea.id);	
-	BX.bind(tabButton,"click", function() { BXMapYandexAfterShow("<?=$MAP_ID?>"); });		
+<script type="text/javascript">
+BX.ready(function(){
+	var tabArea = BX.findParent(BX("BX_YMAP_<?=$MAP_ID?>"),{className:/edit-tab-inner|adm-detail-content/});
+	var tabButton = BX("tab_cont_"+tabArea.id);
+	BX.bind(tabButton,"click", function() { BXMapYandexAfterShow("<?=$MAP_ID?>"); });
+});
 </script>
 
 <div id="bx_address_search_control_<?echo $MAP_ID?>" style="display: none;"><?echo GetMessage('IBLOCK_PROP_MAP_YANDEX_SEARCH')?><input type="text" name="bx_address_<?echo $MAP_ID?>" id="bx_address_<?echo $MAP_ID?>" value="" style="width: 300px;" autocomplete="off" /></div>
-<input type="hidden" id="value_<?echo $MAP_ID;?>" name="<?=htmlspecialchars($strHTMLControlName["VALUE"])?>" value="<?=htmlspecialcharsEx($value["VALUE"])?>" />
+<input type="hidden" id="value_<?echo $MAP_ID;?>" name="<?=htmlspecialcharsbx($strHTMLControlName["VALUE"])?>" value="<?=htmlspecialcharsEx($value["VALUE"])?>" />
 <script type="text/javascript">
 window.jsAdminYandexMess = {
 	nothing_found: '<?echo CUtil::JSEscape(GetMessage('IBLOCK_PROP_MAP_YANDEX_NOTHING_FOUND'))?>'
@@ -670,13 +674,13 @@ window.jsAdminYandexMess = {
 jsUtils.loadCSSFile('/bitrix/components/bitrix/map.yandex.view/settings/settings.css');
 
 function BXWaitForMap_<?echo $MAP_ID?>()
-{	
+{
 	window.obPoint_<?echo $MAP_ID?> = null;
 
 	window.GLOBAL_arMapObjects['<?echo $MAP_ID?>'].events.add('dblclick', setPointValue_<?echo $MAP_ID?>);
 	var searchInput = BX('bx_address_<?echo $MAP_ID?>');
 	BX.bind(searchInput,"keydown", jsYandexCESearch_<?echo $MAP_ID;?>.setTypingStarted);
-	BX.bind(searchInput,"contextmenu", jsYandexCESearch_<?echo $MAP_ID;?>.setTypingStarted);		
+	BX.bind(searchInput,"contextmenu", jsYandexCESearch_<?echo $MAP_ID;?>.setTypingStarted);
 
 <?
 			if ($bHasValue):
@@ -757,6 +761,7 @@ function updatePointPosition_<?echo $MAP_ID?>(obPoint)
 }
 
 var jsYandexCESearch_<?echo $MAP_ID;?> = {
+
 	bInited: false,
 
 	map: null,
@@ -784,7 +789,7 @@ var jsYandexCESearch_<?echo $MAP_ID;?> = {
 	},
 
 	setTypingStarted: function(e)
-	{		
+	{
 		if (null == e)
 			e = window.event;
 
@@ -798,12 +803,12 @@ var jsYandexCESearch_<?echo $MAP_ID;?> = {
 		else
 		{
 			if (!jsYandexCESearch_<?echo $MAP_ID;?>.bInited)
-				jsYandexCESearch_<?echo $MAP_ID;?>.__init(this);			
+				jsYandexCESearch_<?echo $MAP_ID;?>.__init(this);
 
 			if (e.type=="contextmenu")
 					jsYandexCESearch_<?echo $MAP_ID;?>.timerDelay=3000;
 			else
-					jsYandexCESearch_<?echo $MAP_ID;?>.timerDelay=1000;	
+					jsYandexCESearch_<?echo $MAP_ID;?>.timerDelay=1000;
 
 			if (null != jsYandexCESearch_<?echo $MAP_ID;?>.timerID)
 				clearTimeout(jsYandexCESearch_<?echo $MAP_ID;?>.timerID);
@@ -814,7 +819,7 @@ var jsYandexCESearch_<?echo $MAP_ID;?> = {
 
 	doSearch: function()
 	{
-		this.strLastSearch = jsUtils.trim(jsYandexCESearch_<?echo $MAP_ID;?>.obInput.value);		
+		this.strLastSearch = jsUtils.trim(jsYandexCESearch_<?echo $MAP_ID;?>.obInput.value);
 
 		if (this.strLastSearch.length > 1)
 		{
@@ -832,7 +837,7 @@ var jsYandexCESearch_<?echo $MAP_ID;?> = {
 
 	setResultsCoordinates: function()
 	{
-		var obPos = jsUtils.GetRealPos(jsYandexCESearch_<?echo $MAP_ID;?>.obInput);		
+		var obPos = jsUtils.GetRealPos(jsYandexCESearch_<?echo $MAP_ID;?>.obInput);
 		jsYandexCESearch_<?echo $MAP_ID;?>.obOut.style.top = (obPos.bottom + 2) + 'px';
 		jsYandexCESearch_<?echo $MAP_ID;?>.obOut.style.left = obPos.left + 'px';
 	},
@@ -840,7 +845,7 @@ var jsYandexCESearch_<?echo $MAP_ID;?> = {
 	__generateOutput: function()
 	{
 		jsYandexCESearch_<?echo $MAP_ID;?>.obOut = document.body.appendChild(document.createElement('UL'));
-		jsYandexCESearch_<?echo $MAP_ID;?>.obOut.className = 'bx-yandex-address-search-results';		
+		jsYandexCESearch_<?echo $MAP_ID;?>.obOut.className = 'bx-yandex-address-search-results';
 	},
 
 	__searchResultsLoad: function(res)
@@ -957,7 +962,6 @@ var jsYandexCESearch_<?echo $MAP_ID;?> = {
 	function GetPublicViewHTML($arProperty, $value, $arParams)
 	{
 		$s = '';
-
 		if ($arParams['MODE'] == 'CSV_EXPORT')
 		{
 			if (strlen($value["VALUE"])>0)
@@ -986,7 +990,7 @@ var jsYandexCESearch_<?echo $MAP_ID;?> = {
 								),
 							),
 						)),
-						'MAP_ID' => 'MAP_YANDEX_VIEW_'.$arProperty['IBLOCK_ID'].'_'.$arProperty['ID'],
+						'MAP_ID' => 'MAP_YANDEX_VIEW_'.$arProperty['IBLOCK_ID'].'_'.$arProperty['ID'].'_'.rand(),
 						'DEV_MODE' => 'Y',
 					),
 					false, array('HIDE_ICONS' => 'Y')
@@ -1019,7 +1023,7 @@ class CVideoProperty
 			"CONTROLBAR" => "bottom",
 			"AUTOSTART" => "N",
 			"VOLUME" => "90",
-			"SKIN" => "",			
+			"SKIN" => "",
 			"FLASHVARS" => "",
 			"WMODE_FLV" => "transparent",
 			"BGCOLOR" => "FFFFFF",
@@ -1123,8 +1127,8 @@ jsUtils.loadJSFile("/bitrix/components/bitrix/player/js/prop_skin_selector.js", 
 
 	// Try to imitate CUSTOM-parameter in component params dialog
 	ComponentPropsSkinSelector({
-		popertyID : "SKIN",		
-		getElements : function(){return {SKIN_PATH: {value: "<?= CVideoProperty::GetSkinPath()?>"}};},		
+		popertyID : "SKIN",
+		getElements : function(){return {SKIN_PATH: {value: "<?= CVideoProperty::GetSkinPath()?>"}};},
 		oInput : document.getElementById("bx_player_skin_input"),
 		oCont : document.getElementById("bx_player_skin_cell"),
 		data : '<?= CUtil::JSEscape(CUtil::PhpToJSObject(array($arSkins, array('NoPreview' => GetMessage("IBLOCK_PROP_VIDEO_NO_PREVIEW"))))) ?>'
@@ -1188,7 +1192,7 @@ jsUtils.loadJSFile("/bitrix/components/bitrix/player/js/prop_skin_selector.js", 
 	}
 
 	function BaseGetEditFormHTML($set, $val, $name, $controlMode=false)
-	{	
+	{
 		global $APPLICATION;
 		$id = str_replace(array("[","]",":"), "_", $name);
 		$path = $val["path"];
@@ -1217,10 +1221,10 @@ table.bx-video-prop-tbl img.spacer{display:block;float:left;height:1px;margin-to
 </style>
 
 <table class="bx-video-prop-tbl">
-	<tr class="bx-prop-main-title"><td colSpan="2"><?= GetMessage('IBLOCK_PROP_VIDEO_PARAMS_TITLE')?></td></tr>	
+	<tr class="bx-prop-main-title"><td colSpan="2"><?= GetMessage('IBLOCK_PROP_VIDEO_PARAMS_TITLE')?></td></tr>
 	<? if ($controlMode != "iblock_element_admin"): ?>
 		<? if(strlen($path) > 0):?>
-			<tr class="bx-prop-sub-title"><td colSpan="2"><?= GetMessage('IBLOCK_PROP_VIDEO_PARAMS_TITLE_VIEW')?></td></tr>		
+			<tr class="bx-prop-sub-title"><td colSpan="2"><?= GetMessage('IBLOCK_PROP_VIDEO_PARAMS_TITLE_VIEW')?></td></tr>
 			<tr>
 				<td colSpan="2" style="text-align: center;">
 		<?$APPLICATION->IncludeComponent(
@@ -1236,7 +1240,7 @@ table.bx-video-prop-tbl img.spacer{display:block;float:left;height:1px;margin-to
 					"FILE_AUTHOR" => $val['author'],
 					"FILE_DATE" => $val['date'],
 					"FILE_DESCRIPTION" => $val['desc'],
-					"SKIN_PATH" => CVideoProperty::GetSkinPath(),			
+					"SKIN_PATH" => CVideoProperty::GetSkinPath(),
 					"SKIN" => $set["SKIN"],
 					"CONTROLBAR" => $set["CONTROLBAR"],
 					"WMODE" => $set["WMODE_FLV"],
@@ -1330,15 +1334,15 @@ table.bx-video-prop-tbl img.spacer{display:block;float:left;height:1px;margin-to
 			</div>
 			</td>
 		</tr>
-	<?else:?>		
-		<tr>		
+	<?else:?>
+		<tr>
 			<td class="bx-pr-title"><?= GetMessage('IBLOCK_PROP_VIDEO_FILE')?>:</td>
 			<td>
-				<div id="bx_video_path_div_<?= $id?>" class="bx-path-div">					
-					<input type="text" size="25" value="<?= htmlspecialcharsex($path)?>" size="30" name="<?= $name?>[PATH]"/>					
+				<div id="bx_video_path_div_<?= $id?>" class="bx-path-div">
+					<input type="text" size="25" value="<?= htmlspecialcharsex($path)?>" size="30" name="<?= $name?>[PATH]"/>
 				</div>
-			</td>			
-		</tr>		
+			</td>
+		</tr>
 	<?endif;?>
 
 	<tr>
@@ -1541,7 +1545,7 @@ function ChangeOrLeaveFile<?= $id?>(bChange)
 	}
 
 	function BaseCheckFields($val)
-	{						
+	{
 		$arErrors = array();
 
 		if (!is_array($val))
@@ -1551,7 +1555,7 @@ function ChangeOrLeaveFile<?= $id?>(bChange)
 		if ($val["B_NEW_FILE"] != "N" && isset($val["FILE"])) //
 		{
 			if($val["FILE"]["error"] == 1 || $val["FILE"]["error"] == 2)
-				$arErrors[] = GetMessage("IBLOCK_PROP_VIDEO_SIZE_ERROR", Array('#FILE_NAME#' => $pathto))."\n";		
+				$arErrors[] = GetMessage("IBLOCK_PROP_VIDEO_SIZE_ERROR", Array('#FILE_NAME#' => $pathto))."\n";
 
 			if(strlen($val["FILE"]["tmp_name"]) > 0)
 			{
@@ -1562,7 +1566,7 @@ function ChangeOrLeaveFile<?= $id?>(bChange)
 				if(strlen($ext) == 0 || HasScriptExtension($name) || substr($name, 0, 1) == ".")
 					$arErrors[] = GetMessage("IBLOCK_PROP_VIDEO_INCORRECT_EXT", array("#EXT#" => strtoupper($ext)));
 				elseif (!is_uploaded_file($val["FILE"]["tmp_name"]))
-					$arErrors[] = GetMessage("IBLOCK_PROP_VIDEO_UPLOAD_ERROR");			
+					$arErrors[] = GetMessage("IBLOCK_PROP_VIDEO_UPLOAD_ERROR");
 				else
 				{
 					$quota = new CDiskQuota();
@@ -1605,7 +1609,7 @@ function ChangeOrLeaveFile<?= $id?>(bChange)
 		"FILE_DATE" => $val['date'],
 		"FILE_DESCRIPTION" => $val['desc'],
 		"SKIN_PATH" => CIBlockPropertyVideo::GetSkinPath(),
-		"SKIN" => $set["SKIN"],		
+		"SKIN" => $set["SKIN"],
 		"CONTROLBAR" => $set["CONTROLBAR"],
 		"WMODE" => $set["WMODE_FLV"],
 		"WMODE_WMV" => $set["WMODE_WMV"],
@@ -1690,7 +1694,7 @@ if (!function_exists('getSkinsEx'))
 
 			$arSkins = array_merge($arSkins,getSkinsFromDir($path.'/'.$skinDir));
 		}
-		return $arSkins;		
+		return $arSkins;
 	}
 
 	function getSkinsFromDir($path) //http://jabber.bx/view.php?id=28856
@@ -1698,7 +1702,7 @@ if (!function_exists('getSkinsEx'))
 		$basePath = $_SERVER["DOCUMENT_ROOT"].Rel2Abs("/", $path);
 		$arSkinExt = array('swf', 'zip');
 		$arPreviewExt = array('png', 'gif', 'jpg', 'jpeg');
-		$prExtCnt = count($arPreviewExt);		
+		$prExtCnt = count($arPreviewExt);
 		$arSkins = Array();
 		$handle  = @opendir($basePath);
 
@@ -1723,7 +1727,7 @@ if (!function_exists('getSkinsEx'))
 				{
 					if (file_exists($basePath.'/'.$name.'.'.$arPreviewExt[$i]))
 					{
-						$Skin['preview'] = $name.'.'.$arPreviewExt[$i];						
+						$Skin['preview'] = $name.'.'.$arPreviewExt[$i];
 						break;
 					}
 				}
@@ -1758,9 +1762,9 @@ class CIBlockPropertyVideo extends CVideoProperty
 	}
 
 	function GetPropertyFieldHtml($arProperty, $value, $strHTMLControlName)
-	{		
+	{
 		$dbVal = CUserTypeVideo::BaseConvertToDB($value["VALUE"]);
-		$val = CUserTypeVideo::BaseConvertFromDB($dbVal);		
+		$val = CUserTypeVideo::BaseConvertFromDB($dbVal);
 		return CIBlockPropertyVideo::BaseGetEditFormHTML($arProperty["USER_TYPE_SETTINGS"], $val, $strHTMLControlName["VALUE"], $strHTMLControlName["MODE"]);
 	}
 

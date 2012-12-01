@@ -96,7 +96,7 @@ if($this->StartResultCache(false, array($arParams["CACHE_GROUPS"]==="N"? false: 
 			if(substr($k, 0, 1)!=="~")
 			{
 				$arResult["~".$k] = $v;
-				$arResult[$k] = htmlspecialchars($v);
+				$arResult[$k] = htmlspecialcharsbx($v);
 			}
 		}
 	}
@@ -137,7 +137,7 @@ if($this->StartResultCache(false, array($arParams["CACHE_GROUPS"]==="N"? false: 
 				if(substr($k, 0, 1)!=="~")
 				{
 					$arResult["SECTION"]["~".$k] = $v;
-					$arResult["SECTION"][$k] = htmlspecialchars($v);
+					$arResult["SECTION"][$k] = htmlspecialcharsbx($v);
 				}
 			}
 		}
@@ -241,8 +241,8 @@ if($this->StartResultCache(false, array($arParams["CACHE_GROUPS"]==="N"? false: 
 		$arNodesElement = array();
 		foreach($arElement as $code => $value)
 			$arNodesElement["#".$code."#"] = $value;
-		$arNodesElement["#PREVIEW_TEXT#"] = htmlspecialchars($arNodesElement["#PREVIEW_TEXT#"]);
-		$arNodesElement["#DETAIL_TEXT#"] = htmlspecialchars($arNodesElement["#DETAIL_TEXT#"]);
+		$arNodesElement["#PREVIEW_TEXT#"] = htmlspecialcharsbx($arNodesElement["#PREVIEW_TEXT#"]);
+		$arNodesElement["#DETAIL_TEXT#"] = htmlspecialcharsbx($arNodesElement["#DETAIL_TEXT#"]);
 		foreach($arProperties as $code=>$arProperty)
 			$arNodesElement["#".$code."#"] = $arProperty["VALUE"];
 		$arNodesSearch = array_keys($arNodesElement);
@@ -259,7 +259,7 @@ if($this->StartResultCache(false, array($arParams["CACHE_GROUPS"]==="N"? false: 
 			$arItem["title"] = str_replace($arNodesSearch, $arNodesReplace, $arResult["NODES"]["title"]);
 		else
 			$arItem["title"] = $arElement["NAME"];
-		$arItem["title"] = htmlspecialchars(htmlspecialcharsback($arItem["title"]));
+		$arItem["title"] = htmlspecialcharsbx(htmlspecialcharsback($arItem["title"]));
 
 		if(strlen($arResult["NODES"]["link"])>0)
 			$arItem["link"] = str_replace($arNodesSearch, $arNodesReplace, $arResult["NODES"]["link"]);
@@ -271,7 +271,7 @@ if($this->StartResultCache(false, array($arParams["CACHE_GROUPS"]==="N"? false: 
 		if(strlen($arResult["NODES"]["description"])>0)
 			$arItem["description"] = str_replace($arNodesSearch, $arNodesReplace, $arResult["NODES"]["description"]);
 		else
-			$arItem["description"]=htmlspecialchars(($arElement["PREVIEW_TEXT"] || $arParams["YANDEX"]) ? $arElement["PREVIEW_TEXT"] : $arElement["DETAIL_TEXT"]);
+			$arItem["description"]=htmlspecialcharsbx(($arElement["PREVIEW_TEXT"] || $arParams["YANDEX"]) ? $arElement["PREVIEW_TEXT"] : $arElement["DETAIL_TEXT"]);
 
 		if(strlen($arResult["NODES"]["enclosure"])>0)
 		{
@@ -304,13 +304,13 @@ if($this->StartResultCache(false, array($arParams["CACHE_GROUPS"]==="N"? false: 
 			$rsNavChain = CIBlockSection::GetNavChain($arResult["ID"], $arElement["IBLOCK_SECTION_ID"]);
 			while($arNavChain = $rsNavChain->Fetch())
 			{
-				$arItem["category"] .= htmlspecialchars($arNavChain["NAME"])."/";
+				$arItem["category"] .= htmlspecialcharsbx($arNavChain["NAME"])."/";
 			}
 		}
 
 		if($arParams["YANDEX"])
 		{
-			$arItem["full-text"] = htmlspecialchars(htmlspecialcharsback($arElement["DETAIL_TEXT"]));
+			$arItem["full-text"] = htmlspecialcharsbx(htmlspecialcharsback($arElement["DETAIL_TEXT"]));
 		}
 
 		if(strlen($arResult["NODES"]["pubDate"])>0)
@@ -345,6 +345,6 @@ else
 {
 	$contents = ob_get_contents();
 	ob_end_clean();
-	echo "<pre>",htmlspecialchars($contents),"</pre>";
+	echo "<pre>",htmlspecialcharsbx($contents),"</pre>";
 }
 ?>

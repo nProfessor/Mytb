@@ -206,15 +206,24 @@ class CLightHTMLEditor // LHE
 			BX.loadScript(arScripts, function()
 			{
 				// Place to add user script
-				try{
-				<?= $scripts?>
-				}catch(e){alert('Errors in customization scripts! ' + e);}
-				top.<?=$this->jsObjName?> = window.<?=$this->jsObjName?> = new window.JCLightHTMLEditor(<?=CUtil::PhpToJSObject($this->JSConfig)?>);
+				try
+				{
+					<?= $scripts?>
+				}
+				catch(e)
+				{
+					alert('Errors in customization scripts! ' + e);
+				}
+
+				if(typeof(JCLightHTMLEditor.items['<?= $this->Id?>']) === 'undefined')
+				{
+					top.<?=$this->jsObjName?> = window.<?=$this->jsObjName?> = new window.JCLightHTMLEditor(<?=CUtil::PhpToJSObject($this->JSConfig)?>);
+				}
 			});
 		}
 
 		<?if(!$this->bInitByJS):?>
-		BX.ready(function()	{LoadLHE_<?=$this->Id?>();});
+		BX.ready(function()	{ LoadLHE_<?=$this->Id?>();});
 		<?endif;?>
 
 		</script><?

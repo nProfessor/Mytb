@@ -1128,18 +1128,20 @@ BXContextMenu.prototype.BuildItems = function(arMenuItems, arParams, contTbl, pa
 				}
 
 				oTable.onmouseout = function(e){this.className = 'popupitem';};
-				oTable.onclick = function(e)
+
+				oTable.onclick = function()
 				{
 					__this.pMainObj.SetFocus();
 					var res = false;
-					if (BX.browser.IsIE()) //Restore selection for IE
-						BXSelectRange(__this.oPrevRange, __this.pMainObj.pEditorDocument, __this.pMainObj.pEditorWindow);
+					try{
+						if (BX.browser.IsIE() && !BX.browser.IsIE9()) //Restore selection for IE
+							BXSelectRange(__this.oPrevRange, __this.pMainObj.pEditorDocument, __this.pMainObj.pEditorWindow);
+					}catch(e){}
 
-					if (this.handler)
-						if(this.handler(arParams) !== false)
-							res = true;
+					if (this.handler && typeof this.handler == 'function' && this.handler(arParams) !== false)
+						res = true;
 
-					if (!res)
+					if (!res && this.cmd)
 						res = this.pMainObj.executeCommand(this.cmd);
 
 					__this.pMainObj.SetFocus();

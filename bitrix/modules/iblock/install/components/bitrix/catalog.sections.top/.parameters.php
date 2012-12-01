@@ -311,6 +311,7 @@ if (CModule::IncludeModule('catalog') && CModule::IncludeModule('currency'))
 			'TYPE' => 'LIST',
 			'VALUES' => $arCurrencyList,
 			'DEFAULT' => CCurrency::GetBaseCurrency(),
+			"ADDITIONAL_VALUES" => "Y",
 		);
 	}
 }

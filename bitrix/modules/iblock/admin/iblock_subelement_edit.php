@@ -11,13 +11,11 @@ IncludeModuleLangFile(__FILE__);
 
 require_once($_SERVER['DOCUMENT_ROOT'].'/bitrix/modules/iblock/classes/general/subelement.php');
 
+$IBLOCK_ID = IntVal($IBLOCK_ID);
 define("MODULE_ID", "iblock");
 define("ENTITY", "CIBlockDocument");
 define("DOCUMENT_TYPE", "iblock_".$IBLOCK_ID);
-
 define("BX_SUB_SETTINGS",(isset($_REQUEST['bxsku']) && 'Y' == $_REQUEST['bxsku']));
-
-$IBLOCK_ID = IntVal($IBLOCK_ID);
 
 $strWarning = "";
 $bVarsFromForm = false;
@@ -228,8 +226,6 @@ do{ //one iteration loop
 		'LINK' => $APPLICATION->GetCurPageParam(),
 		'POST_PARAMS' => $arPostParams,
 	);
-
-	$tabControl = new CAdminSubForm($bCustomForm? "tabControl_sub": "form_subelement_".$IBLOCK_ID, $aTabs, true, false, $arListUrl, BX_SUB_SETTINGS);
 
 	if($ID>0)
 	{
@@ -839,18 +835,6 @@ if($error && $error->err_level==1)
 }
 else
 {
-	if (!(defined('BX_SUB_SETTINGS') && BX_SUB_SETTINGS == true))
-	{
-		$APPLICATION->SetAdditionalCSS('/bitrix/themes/.default/sub.css');
-		$APPLICATION->AddHeadScript('/bitrix/js/iblock/subelementdet.js');
-	}
-	if (defined('BX_SUB_SETTINGS') && BX_SUB_SETTINGS == true)
-	{
-		?>
-		<script type="text/javascript" bxrunfirst="yes" src="/bitrix/js/iblock/subelementdet.js"></script>
-		<script type="text/javascript" bxrunfirst="yes">BX.loadCSS('/bitrix/themes/.default/sub-public.css');</script><?
-	}
-
 	if(!$arIBlock["ELEMENT_NAME"])
 		$arIBlock["ELEMENT_NAME"] = $arIBTYPE["ELEMENT_NAME"]? $arIBTYPE["ELEMENT_NAME"]: GetMessage("IBEL_E_IBLOCK_ELEMENT");
 	if(!$arIBlock["SECTIONS_NAME"])
@@ -888,14 +872,14 @@ else
 
 	$str_IBLOCK_ELEMENT_SECTION = Array();
 	$str_ACTIVE = $arIBlock["FIELDS"]["ACTIVE"]["DEFAULT_VALUE"] === "N"? "N": "Y";
-	$str_NAME = htmlspecialchars($arIBlock["FIELDS"]["NAME"]["DEFAULT_VALUE"]);
+	$str_NAME = htmlspecialcharsbx($arIBlock["FIELDS"]["NAME"]["DEFAULT_VALUE"]);
 	if ('' != $strProductName)
-		$str_NAME = htmlspecialchars($strProductName);
+		$str_NAME = htmlspecialcharsbx($strProductName);
 
 	$str_PREVIEW_TEXT_TYPE = $arIBlock["FIELDS"]["PREVIEW_TEXT_TYPE"]["DEFAULT_VALUE"] !== "html"? "text": "html";
-	$str_PREVIEW_TEXT = htmlspecialchars($arIBlock["FIELDS"]["PREVIEW_TEXT"]["DEFAULT_VALUE"]);
+	$str_PREVIEW_TEXT = htmlspecialcharsbx($arIBlock["FIELDS"]["PREVIEW_TEXT"]["DEFAULT_VALUE"]);
 	$str_DETAIL_TEXT_TYPE = $arIBlock["FIELDS"]["DETAIL_TEXT_TYPE"]["DEFAULT_VALUE"] !== "html"? "text": "html";
-	$str_DETAIL_TEXT = htmlspecialchars($arIBlock["FIELDS"]["DETAIL_TEXT"]["DEFAULT_VALUE"]);
+	$str_DETAIL_TEXT = htmlspecialcharsbx($arIBlock["FIELDS"]["DETAIL_TEXT"]["DEFAULT_VALUE"]);
 
 	if ($historyId > 0)
 	{
@@ -931,6 +915,8 @@ else
 	}
 
 	require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_after.php");
+
+	$tabControl = new CAdminSubForm($bCustomForm? "tabControl_sub": "form_subelement_".$IBLOCK_ID, $aTabs, true, false, $arListUrl, BX_SUB_SETTINGS);
 
 	if($bVarsFromForm)
 	{
@@ -1068,8 +1054,6 @@ else
 		);
 		echo '</div>';
 	}
-	if($bFileman)
-		CMedialibTabControl::ShowScript();
 
 	if($arTranslit["TRANSLITERATION"] == "Y")
 	{
@@ -1153,15 +1137,15 @@ else
 <?echo GetFilterHiddens("find_");?>
 <input type="hidden" name="linked_state" id="linked_state" value="<?if($bLinked) echo 'Y'; else echo 'N';?>">
 <input type="hidden" name="Update" value="Y">
-<input type="hidden" name="from" value="<?echo htmlspecialchars($from)?>">
-<input type="hidden" name="WF" value="<?echo htmlspecialchars($WF)?>">
-<input type="hidden" name="return_url" value="<?echo htmlspecialchars($return_url)?>">
+<input type="hidden" name="from" value="<?echo htmlspecialcharsbx($from)?>">
+<input type="hidden" name="WF" value="<?echo htmlspecialcharsbx($WF)?>">
+<input type="hidden" name="return_url" value="<?echo htmlspecialcharsbx($return_url)?>">
 <?if($ID>0 && !$bSubCopy):?>
 	<input type="hidden" name="ID" value="<?echo $ID?>">
 <?endif;?>
 <input type="hidden" name="IBLOCK_SECTION_ID" value="<?echo IntVal($IBLOCK_SECTION_ID)?>">
 <input type="hidden" name="PRODUCT_ID" value="<?echo IntVal($intProductID)?>">
-<input type="hidden" name="TMP_ID" value="<?echo htmlspecialchars($strSubTMP_ID)?>">
+<input type="hidden" name="TMP_ID" value="<?echo htmlspecialcharsbx($strSubTMP_ID)?>">
 <?
 $tabControl->EndEpilogContent();
 
@@ -1215,7 +1199,7 @@ if(count($PROP)>0):
 
 			?>
 			<tr id="tr_PROPERTY_<?echo $prop_fields["ID"];?>">
-				<td valign="top"><?echo $tabControl->GetCustomLabelHTML();?>:</td>
+				<td><?echo $tabControl->GetCustomLabelHTML();?>:</td>
 				<td><?_ShowPropertyField('PROP['.$prop_fields["ID"].']', $prop_fields, $prop_fields["VALUE"], (($historyId <= 0) && (!$bVarsFromForm) && ($ID<=0)), $bVarsFromForm, 50000, $tabControl->GetFormName());?></td>
 			</tr>
 			<?
@@ -1293,44 +1277,38 @@ if($bVarsFromForm && !array_key_exists("SUB_PREVIEW_PICTURE", $_REQUEST) && $arE
 	$str_PREVIEW_PICTURE = intval($arElement["PREVIEW_PICTURE"]);
 ?>
 	<tr id="tr_SUB_PREVIEW_PICTURE">
-		<td valign="top" width="40%"><?echo $tabControl->GetCustomLabelHTML()?>:</td>
+		<td width="40%"><?echo $tabControl->GetCustomLabelHTML()?>:</td>
 		<td width="60%">
-			<?if($bFileman):?>
-				<?if($historyId > 0):?>
-					<?echo CMedialib::InputFile(
-						"SUB_PREVIEW_PICTURE", $str_PREVIEW_PICTURE,
-						array("IMAGE" => "Y", "PATH" => "Y", "FILE_SIZE" => "Y", "DIMENSIONS" => "Y",
-						"IMAGE_POPUP"=>"Y", "MAX_SIZE" => array("W" => 200, "H"=>200)) //info
-					);
-					?>
-					<br>
-				<?else:?>
-					<?echo CMedialib::InputFile(
-						"SUB_PREVIEW_PICTURE", ($ID > 0 && !$bSubCopy? $str_PREVIEW_PICTURE: 0),
-						array("IMAGE" => "Y", "PATH" => "Y", "FILE_SIZE" => "Y", "DIMENSIONS" => "Y",
-						"IMAGE_POPUP"=>"Y", "MAX_SIZE" => array("W" => 200, "H"=>200)), //info
-						array(), //file
-						array(), //server
-						array(), //media lib
-						array(), //descr
-						array(), //delete
-						$arIBlock["FIELDS"]["PREVIEW_PICTURE"]["DEFAULT_VALUE"], //scale hint
-						array() //clouds
-					);
-					?>
-					<br>
-				<?endif?>
+			<?if($historyId > 0):?>
+				<?echo CFileInput::Show("SUB_PREVIEW_PICTURE", $str_PREVIEW_PICTURE, array(
+					"IMAGE" => "Y",
+					"PATH" => "Y",
+					"FILE_SIZE" => "Y",
+					"DIMENSIONS" => "Y",
+					"IMAGE_POPUP" => "Y",
+					"MAX_SIZE" => array("W" => 200, "H"=>200),
+				));
+				?>
 			<?else:?>
-				<?if($historyId > 0):?>
-					<?echo CFile::ShowImage($str_PREVIEW_PICTURE, 200, 200, "border=0", "", true)?>
-				<?elseif($ID > 0 && !$bSubCopy):?>
-					<?echo CFile::InputFile("SUB_PREVIEW_PICTURE", 20, $str_PREVIEW_PICTURE, false, 0, "IMAGE", "", 40);?><br>
-					<?echo CFile::ShowImage($str_PREVIEW_PICTURE, 200, 200, "border=0", "", true)?>
-				<?else:?>
-					<?echo CFile::InputFile("SUB_PREVIEW_PICTURE", 20, "", false, 0, "IMAGE", "", 40);?><br>
-					<?echo CFile::ShowImage("", 200, 200, "border=0", "", true)?>
-				<?endif?>
-			<?endif;?>
+				<?echo CFileInput::Show("SUB_PREVIEW_PICTURE", ($ID > 0 && !$bSubCopy? $str_PREVIEW_PICTURE: 0),
+					array(
+						"IMAGE" => "Y",
+						"PATH" => "Y",
+						"FILE_SIZE" => "Y",
+						"DIMENSIONS" => "Y",
+						"IMAGE_POPUP" => "Y",
+						"MAX_SIZE" => array("W" => 200, "H"=>200),
+					), array(
+						'upload' => true,
+						'medialib' => true,
+						'file_dialog' => true,
+						'cloud' => true,
+						'del' => true,
+						'description' => true,
+					)
+				);
+				?>
+			<?endif?>
 		</td>
 	</tr>
 <?
@@ -1369,7 +1347,7 @@ $tabControl->BeginCustomField("SUB_PREVIEW_TEXT", GetMessage("IBLOCK_FIELD_PREVI
 			true,
 			false,
 			array(
-				'toolbarConfig' => CFileman::GetEditorToolbarConfig("iblock_".(defined('BX_PUBLIC_MODE') && BX_PUBLIC_MODE == 1 ? 'public' : 'admin')),
+				'toolbarConfig' => CFileman::GetEditorToolbarConfig("iblock_".(defined('BX_SUB_SETTINGS') && BX_SUB_SETTINGS == true ? 'admin' : 'public')),
 				'saveEditorKey' => $IBLOCK_ID
 			)
 			);?>
@@ -1396,44 +1374,38 @@ if($bVarsFromForm && !array_key_exists("SUB_DETAIL_PICTURE", $_REQUEST) && $arEl
 	$str_DETAIL_PICTURE = intval($arElement["DETAIL_PICTURE"]);
 ?>
 	<tr id="tr_SUB_DETAIL_PICTURE">
-		<td valign="top" width="40%"><?echo $tabControl->GetCustomLabelHTML()?>:</td>
+		<td width="40%"><?echo $tabControl->GetCustomLabelHTML()?>:</td>
 		<td width="60%">
-			<?if($bFileman):?>
-				<?if($historyId > 0):?>
-					<?echo CMedialib::InputFile(
-						"SUB_DETAIL_PICTURE", $str_DETAIL_PICTURE,
-						array("IMAGE" => "Y", "PATH" => "Y", "FILE_SIZE" => "Y", "DIMENSIONS" => "Y",
-						"IMAGE_POPUP"=>"Y", "MAX_SIZE" => array("W" => 200, "H"=>200)) //info
-					);
-					?>
-					<br>
-				<?else:?>
-					<?echo CMedialib::InputFile(
-						"SUB_DETAIL_PICTURE", ($ID > 0 && !$bSubCopy? $str_DETAIL_PICTURE: 0),
-						array("IMAGE" => "Y", "PATH" => "Y", "FILE_SIZE" => "Y", "DIMENSIONS" => "Y",
-						"IMAGE_POPUP"=>"Y", "MAX_SIZE" => array("W" => 200, "H"=>200)), //info
-						array(), //file
-						array(), //server
-						array(), //media lib
-						array(), //descr
-						array(), //delete
-						$arIBlock["FIELDS"]["DETAIL_PICTURE"]["DEFAULT_VALUE"], //scale hint
-						array() //clouds
-					);
-					?>
-					<br>
-				<?endif?>
+			<?if($historyId > 0):?>
+				<?echo CFileInput::Show("SUB_DETAIL_PICTURE", $str_DETAIL_PICTURE, array(
+					"IMAGE" => "Y",
+					"PATH" => "Y",
+					"FILE_SIZE" => "Y",
+					"DIMENSIONS" => "Y",
+					"IMAGE_POPUP" => "Y",
+					"MAX_SIZE" => array("W" => 200, "H"=>200),
+				));
+				?>
 			<?else:?>
-				<?if($historyId > 0):?>
-					<?echo CFile::ShowImage($str_DETAIL_PICTURE, 200, 200, "border=0", "", true)?>
-				<?elseif($ID > 0 && !$bSubCopy):?>
-					<?echo CFile::InputFile("SUB_DETAIL_PICTURE", 20, $str_DETAIL_PICTURE, false, 0, "IMAGE", "", 40);?><br>
-					<?echo CFile::ShowImage($str_DETAIL_PICTURE, 200, 200, "border=0", "", true)?>
-				<?else:?>
-					<?echo CFile::InputFile("SUB_DETAIL_PICTURE", 20, "", false, 0, "IMAGE", "", 40);?><br>
-					<?echo CFile::ShowImage("", 200, 200, "border=0", "", true)?>
-				<?endif?>
-			<?endif;?>
+				<?echo CFileInput::Show("SUB_DETAIL_PICTURE", ($ID > 0 && !$bSubCopy? $str_DETAIL_PICTURE: 0),
+					array(
+						"IMAGE" => "Y",
+						"PATH" => "Y",
+						"FILE_SIZE" => "Y",
+						"DIMENSIONS" => "Y",
+						"IMAGE_POPUP" => "Y",
+						"MAX_SIZE" => array("W" => 200, "H"=>200),
+					), array(
+						'upload' => true,
+						'medialib' => true,
+						'file_dialog' => true,
+						'cloud' => true,
+						'del' => true,
+						'description' => true,
+					)
+				);
+				?>
+			<?endif?>
 		</td>
 	</tr>
 <?
@@ -1470,7 +1442,7 @@ $tabControl->BeginCustomField("SUB_DETAIL_TEXT", GetMessage("IBLOCK_FIELD_DETAIL
 					$arIBlock["LID"],
 					true,
 					false,
-					array('toolbarConfig' => CFileman::GetEditorToolbarConfig("iblock_".(defined('BX_PUBLIC_MODE') && BX_PUBLIC_MODE == 1 ? 'public' : 'admin')), 'saveEditorKey' => $IBLOCK_ID)
+					array('toolbarConfig' => CFileman::GetEditorToolbarConfig("iblock_".(defined('BX_SUB_SETTINGS') && BX_SUB_SETTINGS == true ? 'admin' : 'public')), 'saveEditorKey' => $IBLOCK_ID)
 				);
 		?></td>
 	</tr>
@@ -1500,7 +1472,7 @@ $tabControl->EndCustomField("SUB_DETAIL_TEXT",
 	<?if($arIBlock["SECTION_CHOOSER"] != "D" && $arIBlock["SECTION_CHOOSER"] != "P"):?>
 
 		<?$l = CIBlockSection::GetTreeList(Array("IBLOCK_ID"=>$IBLOCK_ID));?>
-		<td valign="top" width="40%"><?echo $tabControl->GetCustomLabelHTML()?></td>
+		<td width="40%"><?echo $tabControl->GetCustomLabelHTML()?></td>
 		<td width="60%">
 		<select name="IBLOCK_SECTION[]" size="14" multiple>
 			<option value="0"<?if(is_array($str_IBLOCK_ELEMENT_SECTION) && in_array(0, $str_IBLOCK_ELEMENT_SECTION))echo " selected"?>><?echo GetMessage("IBLOCK_UPPER_LEVEL")?></option>
@@ -1967,7 +1939,7 @@ if ($bBizproc && ($historyId <= 0)):
 				<table width="100%" cellpadding="0" cellspacing="0" border="0">
 					<tr>
 						<td width="99%" align="center">
-							<?= htmlspecialchars($arDocumentState["TEMPLATE_NAME"]) ?>
+							<?= htmlspecialcharsbx($arDocumentState["TEMPLATE_NAME"]) ?>
 						</td>
 						<td width="1%" align="right">
 							<?if (strlen($arDocumentState["ID"]) > 0 && strlen($arDocumentState["WORKFLOW_STATUS"]) > 0):?>
@@ -1980,12 +1952,12 @@ if ($bBizproc && ($historyId <= 0)):
 		</tr>
 		<tr>
 			<td width="40%"><?echo GetMessage("IBEL_BIZPROC_NAME")?></td>
-			<td width="60%"><?= htmlspecialchars($arDocumentState["TEMPLATE_NAME"]) ?></td>
+			<td width="60%"><?= htmlspecialcharsbx($arDocumentState["TEMPLATE_NAME"]) ?></td>
 		</tr>
 		<?if($arDocumentState["TEMPLATE_DESCRIPTION"]!=''):?>
 		<tr>
 			<td width="40%"><?echo GetMessage("IBEL_BIZPROC_DESC")?></td>
-			<td width="60%"><?= htmlspecialchars($arDocumentState["TEMPLATE_DESCRIPTION"]) ?></td>
+			<td width="60%"><?= htmlspecialcharsbx($arDocumentState["TEMPLATE_DESCRIPTION"]) ?></td>
 		</tr>
 		<?endif?>
 		<?if (strlen($arDocumentState["STATE_MODIFIED"]) > 0):?>
@@ -2026,7 +1998,7 @@ if ($bBizproc && ($historyId <= 0)):
 						<?
 						foreach ($arEvents as $e)
 						{
-							?><option value="<?= htmlspecialchars($e["NAME"]) ?>"<?= ($_REQUEST["bizproc_event_".$bizProcIndex] == $e["NAME"]) ? " selected" : ""?>><?= htmlspecialchars($e["TITLE"]) ?></option><?
+							?><option value="<?= htmlspecialcharsbx($e["NAME"]) ?>"<?= ($_REQUEST["bizproc_event_".$bizProcIndex] == $e["NAME"]) ? " selected" : ""?>><?= htmlspecialcharsbx($e["TITLE"]) ?></option><?
 						}
 						?>
 					</select>
@@ -2047,7 +2019,7 @@ if ($bBizproc && ($historyId <= 0)):
 						<?
 						foreach ($arTasks as $arTask)
 						{
-							?><a href="bizproc_task.php?id=<?= $arTask["ID"] ?>&back_url=<?= urlencode($APPLICATION->GetCurPageParam("", array())) ?>" title="<?= htmlspecialchars($arTask["DESCRIPTION"]) ?>"><?= $arTask["NAME"] ?></a><br /><?
+							?><a href="bizproc_task.php?id=<?= $arTask["ID"] ?>&back_url=<?= urlencode($APPLICATION->GetCurPageParam("", array())) ?>" title="<?= htmlspecialcharsbx($arTask["DESCRIPTION"]) ?>"><?= $arTask["NAME"] ?></a><br /><?
 						}
 						?>
 					</td>
@@ -2100,9 +2072,9 @@ if($bEditRights):
 		$htmlHidden = '';
 		foreach($obRights->GetRights() as $RIGHT_ID => $arRight)
 			$htmlHidden .= '
-				<input type="hidden" name="SUB_RIGHTS[][RIGHT_ID]" value="'.htmlspecialchars($RIGHT_ID).'">
-				<input type="hidden" name="SUB_RIGHTS[][GROUP_CODE]" value="'.htmlspecialchars($arRight["GROUP_CODE"]).'">
-				<input type="hidden" name="SUB_RIGHTS[][TASK_ID]" value="'.htmlspecialchars($arRight["TASK_ID"]).'">
+				<input type="hidden" name="SUB_RIGHTS[][RIGHT_ID]" value="'.htmlspecialcharsbx($RIGHT_ID).'">
+				<input type="hidden" name="SUB_RIGHTS[][GROUP_CODE]" value="'.htmlspecialcharsbx($arRight["GROUP_CODE"]).'">
+				<input type="hidden" name="SUB_RIGHTS[][TASK_ID]" value="'.htmlspecialcharsbx($arRight["TASK_ID"]).'">
 			';
 	}
 	else
@@ -2154,5 +2126,6 @@ $tabControl->Show();
 <?//endif;
 
 }
-	require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");
+
+require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");
 ?>

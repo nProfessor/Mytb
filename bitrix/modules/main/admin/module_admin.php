@@ -71,7 +71,7 @@ if($isAdmin && !$fb && check_bitrix_sessid())
 			{
 				if (strtolower($DB->type)=="mysql" && defined("MYSQL_TABLE_TYPE") && strlen(MYSQL_TABLE_TYPE)>0)
 				{
-					$DB->Query("SET table_type = '".MYSQL_TABLE_TYPE."'", true);
+					$DB->Query("SET storage_engine = '".MYSQL_TABLE_TYPE."'", true);
 				}
 
 				OnModuleInstalledEvent($id);
@@ -193,6 +193,7 @@ foreach($arModules as $info) :
 			</form>
 		</td>
 	</tr>
+	<tr style="display: none;"><td colspan="5"></td></tr>
 <?
 endforeach;
 ?>

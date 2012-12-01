@@ -57,7 +57,6 @@ if($REQUEST_METHOD=="POST" && $_REQUEST['save'] == 'Y')
 
 	if($strWarning == '')
 	{
-
 		?>
 		<script bxrunfirst="true">
 		top.BX.WindowManager.Get().Close();

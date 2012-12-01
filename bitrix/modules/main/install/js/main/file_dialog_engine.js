@@ -48,23 +48,27 @@ BXDialogTree.prototype =
 		if (this.curSelectedItem && this.curSelectedItem.path == path)
 			return true;
 
-		var
-			oCont = this.arDirConts[path],
-			arSpans = oCont.firstChild.getElementsByTagName("SPAN"),
-			oTitle = arSpans[0];
+		var oCont = this.arDirConts[path];
 
-		if (this.curSelectedItem && this.curSelectedItem.oTitle)
-			this.UnHighlightElement(this.curSelectedItem.oTitle);
+		if (oCont && oCont.firstChild)
+		{
+			var
+				arSpans = oCont.firstChild.getElementsByTagName("SPAN"),
+				oTitle = arSpans[0];
 
-		this.HighlightElement(oTitle);
-		if (bOpen !== false)
-			this.OpenTreeSection(path, true);
+			if (this.curSelectedItem && this.curSelectedItem.oTitle)
+				this.UnHighlightElement(this.curSelectedItem.oTitle);
 
-		oBXDialogControls.dirPath.Set(path);
-		if (bLoadCont !== false)
-			oBXDialogWindow.LoadFolderContent(path);
+			this.HighlightElement(oTitle);
+			if (bOpen !== false)
+				this.OpenTreeSection(path, true);
 
-		this.curSelectedItem = {path: path, oTitle: oTitle};
+			oBXDialogControls.dirPath.Set(path);
+			if (bLoadCont !== false)
+				oBXDialogWindow.LoadFolderContent(path);
+
+			this.curSelectedItem = {path: path, oTitle: oTitle};
+		}
 	},
 
 	HighlightElement : function(El)
@@ -80,7 +84,7 @@ BXDialogTree.prototype =
 	},
 
 	DisplayElement : function(oItem, oCont)
-	{		
+	{
 		this.arDirConts[oItem.path] = oCont;
 
 		var innerHTML = '<table>' +
@@ -99,7 +103,7 @@ BXDialogTree.prototype =
 	},
 
 	LoadTree : function(path, oCont, dublReq)
-	{		
+	{
 		var q = new JCHttpRequest();
 		q.Action = function(result)
 		{
@@ -193,7 +197,7 @@ BXDialogTree.prototype =
 	},
 
 	OpenTreeSection : function(path, bOpen)
-	{	
+	{
 		var oCont = this.arDirConts[path];
 		if (!oCont)
 			return;
@@ -238,7 +242,7 @@ BXDialogTree.prototype =
 
 	HighlightPath : function(path)
 	{
-		//try{
+		try{
 			if (path == "" || path == "/")
 			{
 				if (this.curSelectedItem && this.curSelectedItem.oTitle)
@@ -255,14 +259,14 @@ BXDialogTree.prototype =
 
 			for (i = 0; i < l; i++)
 			{
-				dir = jsUtils.trim(arPath[i]);
+				dir = BX.util.trim(arPath[i]);
 				if (dir != '')
 				{
 					basePath += '/' + dir;
 					this.OpenTreeSection(basePath, true);
 				}
 			}
-			
+
 			var
 				oCont = this.arDirConts[basePath],
 				arSpans = oCont.firstChild.getElementsByTagName("SPAN"),
@@ -273,24 +277,20 @@ BXDialogTree.prototype =
 			this.HighlightElement(oTitle);
 			this.curSelectedItem = {path: basePath, oTitle: oTitle};
 
-		//}catch(e){
-		//	setTimeout(function () {oBXDialogTree.HighlightPath(path);}, 100);
-		//}
+		}catch(e){
+			setTimeout(function () {oBXDialogTree.HighlightPath(path);}, 100);
+		}
 		oBXDialogTree.focusOnSelectedElment();
 	},
 
 	SetPath : function(path, bHightlight)
-	{		
-		if (path == '' || path.indexOf('..') != -1 || path == '/')
-		{
+	{
+		path = path.replace(/\\/ig,"/");
+		path = path.replace(/[\/]+$/g, "");
+		path = BX.util.trim(path);
+
+		if (path == '' || path.indexOf('..') != -1 || path == '/' || path == './' || path == '/.' || path == '.')
 			path = '/';
-		}
-		else
-		{
-			path = path.replace(/\\/ig,"/");
-			path = path.replace(/[\/]+$/g, "");
-			path = jsUtils.trim(path);
-		}		
 
 		if (!window.arFDDirs[path] && !window.arFDFiles[path])
 			return this.LoadTree(path, false);
@@ -301,11 +301,10 @@ BXDialogTree.prototype =
 
 		if (arFDDirs[path] && arFDFiles[path]) // Content
 			return oBXDialogWindow.DisplayFolderContent(path);
-
 	},
 
 	DisplaySubTree : function(oCont, arSubTreeItems, bRefresh)
-	{			
+	{
 		if (!oCont || arSubTreeItems === false)
 			return;
 
@@ -575,7 +574,7 @@ function BXDialogWindow() {this.Init();}
 
 BXDialogWindow.prototype =
 {
-	Init: function(path)
+	Init: function()
 	{
 		this.pWnd = BX('__bx_windowContainer');
 		this.view = oBXFileDialog.UserConfig.view;
@@ -625,7 +624,7 @@ BXDialogWindow.prototype =
 	},
 
 	LoadFolderContent: function(path, hard_refresh, bForTimeout)
-	{		
+	{
 		if (path.indexOf('..') != -1)
 			path = '/';
 
@@ -671,6 +670,8 @@ BXDialogWindow.prototype =
 	{
 		//Folder doesn't exists
 		if (arDirs === false && arFiles === false)
+			return;
+		if (typeof arDirs != 'object' || typeof arFiles != 'object')
 			return;
 
 		oBXDialogWindow.view = view;
@@ -1311,7 +1312,7 @@ BXDialogWindow.prototype =
 	},
 
 	NewDir: function(name, dublReq)
-	{	
+	{
 		var path = oBXDialogControls.dirPath.Get();
 		setTimeout(function ()
 			{
@@ -1368,14 +1369,14 @@ BXDialogWindow.prototype =
 							oBXDialogTree.HighlightPath(path);
 
 							setTimeout(function()
-							{								
+							{
 								// Select folder after creation
 								if(path == '/')
 									var tmpPath = '/' + name;
 								else
 									var tmpPath = path + '/' + name;
-								
-								var oFile = oBXDialogWindow.arFiles[tmpPath];								
+
+								var oFile = oBXDialogWindow.arFiles[tmpPath];
 								if (oFile && oFile._winCont && oFile._winCont[oBXDialogWindow.view])
 									oBXDialogWindow.SelectElement(oFile._winCont[oBXDialogWindow.view], name);
 
@@ -1467,26 +1468,26 @@ BXDialogWindow.prototype =
 						{
 							var
 								openPath = parPath,
-								parItems = arFDDirs[parPath],
-								bRefresh = parItems.length <= 0;
+								parItems = arFDDirs[parPath];
 
 							if (parItems.length == 0)
 							{
 								var
 									li2 = parPath.lastIndexOf('/'),
 									parPath2 = parPath.substr(0, li2),
-									parItems2 = arFDDirs[parPath2],
-									l2 = parItems2.length, i;
+									i;
 
-								// find cur element in parent path array
-								for (i = 0; i < l2; i++)
+								if (arFDDirs[parPath2] && arFDDirs[parPath2].length)
 								{
-									if (parItems2[i].path == parPath)
+									// find cur element in parent path array
+									for (i = 0; i < arFDDirs[parPath2].length; i++)
 									{
-										parItems2[i].empty = true;
-										break;
+										if (arFDDirs[parPath2][i] && arFDDirs[parPath2][i].path == parPath)
+										{
+											arFDDirs[parPath2][i].empty = true;
+											break;
+										}
 									}
-
 								}
 								openPath = parPath2;
 							}
@@ -1685,7 +1686,7 @@ BXDialogWindow.prototype =
 				});
 			}
 
-			oBXDialogWindow.oCM.Show(2500, 0, {left : e.realX, top : e.realY}, arItems);
+			oBXDialogWindow.oCM.Show(3500, 0, {left : e.realX, top : e.realY}, arItems);
 		}
 		else if (oBXDialogWindow.oCM)
 			oBXDialogWindow.oCM.menu.PopupHide();
@@ -1781,8 +1782,8 @@ BXDialogWindow.prototype =
 				if (oEl)
 				{
 					var oEl = this.arElIndex[this.GetCurIndex(this.curSelectedItem.path)];
-					if (oEl.icon == 'folder')					
-						oBXDialogTree.SetPath(this.curSelectedItem.path);					
+					if (oEl.icon == 'folder')
+						oBXDialogTree.SetPath(this.curSelectedItem.path);
 					else
 						oBXFileDialog.SubmitFileDialog();
 					return BX.PreventDefault(e);
@@ -2375,11 +2376,10 @@ __Preview.prototype =
 		var
 			oEl = oBXDialogWindow.arFiles[sPath],
 			date = oEl.date.substr(0, oEl.date.lastIndexOf(':')),
-			pFrame = jsUtils.CreateElement('IFRAME', {id: "bxfd_ifrm_flash", frameborder: "0"});
+			pFrame = this.oDiv.appendChild(jsUtils.CreateElement('IFRAME', {id: "bxfd_ifrm_flash", frameborder: "0"}));
 
 		this.addInfoCont.innerHTML = getFileSize(oEl.size) + " " + date;
 		pFrame.setAttribute("src", oBXFileDialog.GetRequestUrl(getSite()) + '&action=flash&path=' + jsUtils.urlencode(sPath));
-		pFrame = this.oDiv.appendChild(pFrame);
 		this.oDiv.className = '';
 	},
 
@@ -2415,7 +2415,12 @@ function __ViewSelector()
 		var pos = jsUtils.GetRealPos(this.oSel);
 		pos.left += 7;
 		pos.top += 6;
-		setTimeout(function(){window.fd_view_list.PopupShow(pos);}, 5);
+		setTimeout(function(){
+			window.fd_view_list.PopupShow(pos);
+			// Temp hack for old popupmenus
+			if (BX('fd_view_list'))
+				BX('fd_view_list').style.zIndex = 3500;
+		}, 5);
 	};
 
 	__ViewSelector.prototype.OnChange = function(value)
@@ -2661,7 +2666,7 @@ __Uploader.prototype =
 
 		if (mess !== true)
 		{
-			alert(FD_MESS.FD_EMPTY_NAME);
+			alert(mess);
 			return false;
 		}
 
@@ -2713,11 +2718,13 @@ __Uploader.prototype =
 		this.pFrameDoc.getElementById('__bx_fd_upload_fname').value = fileName;
 		//5. Set path in hidden input
 		this.pFrameDoc.getElementById('__bx_fd_upload_path').value = path;
+		this.pFrameDoc.getElementById('__bx_fd_server_site').value = getSite();
+
 		oWaitWindow.Show();
 	},
 
 	OnAfterUpload: function(fileName, bClose)
-	{		
+	{
 		oWaitWindow.Hide();
 		oBXDialogControls.filePath.Set(fileName);
 		if (bClose)
@@ -2857,25 +2864,54 @@ function __History()
 
 function SubmitFileDialog()
 {
-	var filename = oBXDialogControls.filePath.Get();
-	var path = oBXDialogControls.dirPath.Get();
-	var site = getSite();
+	var
+		filename = oBXDialogControls.filePath.Get(),
+		path = oBXDialogControls.dirPath.Get(),
+		site = getSite();
 
 	if (filename == '' && !oBXFileDialog.bSelectDirs)
+		return alert(FD_MESS.FD_EMPTY_FILENAME);
+
+	if (oBXFileDialog.oConfig.operation == 'S' && !oBXFileDialog.bSelectDirs && filename)
 	{
-		alert(FD_MESS.FD_EMPTY_FILENAME);
-		return;
+		var
+			clearName = filename,
+			ext = '';
+
+		if (filename.indexOf('.') !== -1)
+		{
+			clearName = filename.substr(0, filename.indexOf('.'));
+			ext = filename.substr(filename.indexOf('.'));
+		}
+
+		if (ext == '' && oBXDialogControls.Filter)
+		{
+			if (oBXDialogControls.Filter.arFilters && oBXDialogControls.Filter.arFilters.length > 0)
+			{
+				var filter = oBXDialogControls.Filter.arFilters[oBXDialogControls.Filter.curentFilter];
+				if (filter != '*')
+				{
+					if (typeof filter == 'object')
+						filter = filter[0];
+					filename = clearName + '.' + filter.toLowerCase();
+				}
+			}
+		}
 	}
+
 	if (oBXFileDialog.oConfig.operation == 'O')
 	{
 		window[oBXFileDialog.oConfig.submitFuncName](filename, path, site);
 	}
 	else if (oBXFileDialog.oConfig.operation == 'S')
 	{
-		var title, menuObj = {type : false};
+		var
+			title,
+			menuObj = {type : false};
+
 		if (oBXFileDialog.oConfig.showAddToMenuTab)
 		{
-			var title = oBXDialogControls.PageTitle.Get();
+			title = oBXDialogControls.PageTitle.Get();
 			var add2MenuCheck = BX("__bx_fd_add_to_menu");
 			if (add2MenuCheck.checked)
 			{
@@ -2915,7 +2951,6 @@ function _IsPHP(fileName)
 {
 	return BXFDIsUserExt(fileName,['php']);
 }
-
 
 function BXFDIsUserExt(fileName, arExt)
 {
@@ -3147,7 +3182,7 @@ BXFDContextMenu.prototype =
 		this.oDiv = document.body.appendChild(jsUtils.CreateElement('DIV', {id: '__BXFDContextMenu'}));
 		this.oDiv.innerHTML = '<table cellpadding="0" cellspacing="0"><tr><td class="popupmenu"><table id="__BXFDContextMenu_items" cellpadding="0" cellspacing="0"><tr><td></td></tr></table></td></tr></table>';
 		// Part of logic of JCFloatDiv.Show()   Prevent bogus rerendering window in IE...
-		document.body.appendChild(jsUtils.CreateElement('IFRAME', {id: '__BXFDContextMenu_frame', src: "javascript:''", className: 'bxfd-sys-frame'}));
+		//document.body.appendChild(jsUtils.CreateElement('IFRAME', {id: '__BXFDContextMenu_frame', src: "javascript:''", className: 'bxfd-sys-frame'}));
 		this.menu = new PopupMenu('__BXFDContextMenu');
 	},
 
@@ -3265,7 +3300,7 @@ function getFileSize(size)
 		return size+" M"+FD_MESS.FD_BYTE;
 }
 
-function getSite(size)
+function getSite()
 {
 	if (window.oBXDialogControls && window.oBXDialogControls.currentSite)
 		return window.oBXDialogControls.currentSite;

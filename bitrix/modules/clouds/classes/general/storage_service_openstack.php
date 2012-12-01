@@ -45,20 +45,20 @@ class CCloudStorageService_OpenStackStorage
 		if(!is_array($arSettings))
 			$arSettings = array("HOST" => "", "USER" => "", "KEY" => "");
 
-		$htmlID = htmlspecialchars($this->GetID());
+		$htmlID = htmlspecialcharsbx($this->GetID());
 
 		$result = '
-		<tr id="SETTINGS_2_'.$htmlID.'" style="display:'.($cur_SERVICE_ID == $this->GetID() || !$bServiceSet? '': 'none').'" class="settings-tr">
-			<td><span class="required">*</span>'.GetMessage("CLO_STORAGE_OPENSTACK_EDIT_HOST").':</td>
-			<td><input type="hidden" name="SETTINGS['.$htmlID.'][HOST]" id="'.$htmlID.'HOST" value="'.htmlspecialchars($arSettings['HOST']).'"><input type="text" size="55" name="'.$htmlID.'INP_HOST" id="'.$htmlID.'INP_HOST" value="'.htmlspecialchars($arSettings['HOST']).'" '.($arBucket['READ_ONLY'] == 'Y'? '"disabled"': '').' onchange="BX(\''.$htmlID.'HOST\').value = this.value"></td>
+		<tr id="SETTINGS_2_'.$htmlID.'" style="display:'.($cur_SERVICE_ID == $this->GetID() || !$bServiceSet? '': 'none').'" class="settings-tr adm-detail-required-field">
+			<td>'.GetMessage("CLO_STORAGE_OPENSTACK_EDIT_HOST").':</td>
+			<td><input type="hidden" name="SETTINGS['.$htmlID.'][HOST]" id="'.$htmlID.'HOST" value="'.htmlspecialcharsbx($arSettings['HOST']).'"><input type="text" size="55" name="'.$htmlID.'INP_HOST" id="'.$htmlID.'INP_HOST" value="'.htmlspecialcharsbx($arSettings['HOST']).'" '.($arBucket['READ_ONLY'] == 'Y'? '"disabled"': '').' onchange="BX(\''.$htmlID.'HOST\').value = this.value"></td>
 		</tr>
-		<tr id="SETTINGS_0_'.$htmlID.'" style="display:'.($cur_SERVICE_ID == $this->GetID() || !$bServiceSet? '': 'none').'" class="settings-tr">
-			<td><span class="required">*</span>'.GetMessage("CLO_STORAGE_OPENSTACK_EDIT_USER").':</td>
-			<td><input type="hidden" name="SETTINGS['.$htmlID.'][USER]" id="'.$htmlID.'USER" value="'.htmlspecialchars($arSettings['USER']).'"><input type="text" size="55" name="'.$htmlID.'INP_" id="'.$htmlID.'INP_USER" value="'.htmlspecialchars($arSettings['USER']).'" '.($arBucket['READ_ONLY'] == 'Y'? '"disabled"': '').' onchange="BX(\''.$htmlID.'USER\').value = this.value"></td>
+		<tr id="SETTINGS_0_'.$htmlID.'" style="display:'.($cur_SERVICE_ID == $this->GetID() || !$bServiceSet? '': 'none').'" class="settings-tr adm-detail-required-field">
+			<td>'.GetMessage("CLO_STORAGE_OPENSTACK_EDIT_USER").':</td>
+			<td><input type="hidden" name="SETTINGS['.$htmlID.'][USER]" id="'.$htmlID.'USER" value="'.htmlspecialcharsbx($arSettings['USER']).'"><input type="text" size="55" name="'.$htmlID.'INP_" id="'.$htmlID.'INP_USER" value="'.htmlspecialcharsbx($arSettings['USER']).'" '.($arBucket['READ_ONLY'] == 'Y'? '"disabled"': '').' onchange="BX(\''.$htmlID.'USER\').value = this.value"></td>
 		</tr>
-		<tr id="SETTINGS_1_'.$htmlID.'" style="display:'.($cur_SERVICE_ID == $this->GetID() || !$bServiceSet? '': 'none').'" class="settings-tr">
-			<td><span class="required">*</span>'.GetMessage("CLO_STORAGE_OPENSTACK_EDIT_KEY").':</td>
-			<td><input type="hidden" name="SETTINGS['.$htmlID.'][KEY]" id="'.$htmlID.'KEY" value="'.htmlspecialchars($arSettings['KEY']).'"><input type="text" size="55" name="'.$htmlID.'INP_KEY" id="'.$htmlID.'INP_KEY" value="'.htmlspecialchars($arSettings['KEY']).'" autocomplete="off" '.($arBucket['READ_ONLY'] == 'Y'? '"disabled"': '').' onchange="BX(\''.$htmlID.'KEY\').value = this.value"></td>
+		<tr id="SETTINGS_1_'.$htmlID.'" style="display:'.($cur_SERVICE_ID == $this->GetID() || !$bServiceSet? '': 'none').'" class="settings-tr adm-detail-required-field">
+			<td>'.GetMessage("CLO_STORAGE_OPENSTACK_EDIT_KEY").':</td>
+			<td><input type="hidden" name="SETTINGS['.$htmlID.'][KEY]" id="'.$htmlID.'KEY" value="'.htmlspecialcharsbx($arSettings['KEY']).'"><input type="text" size="55" name="'.$htmlID.'INP_KEY" id="'.$htmlID.'INP_KEY" value="'.htmlspecialcharsbx($arSettings['KEY']).'" autocomplete="off" '.($arBucket['READ_ONLY'] == 'Y'? '"disabled"': '').' onchange="BX(\''.$htmlID.'KEY\').value = this.value"></td>
 		</tr>
 		';
 		return $result;
@@ -335,6 +335,7 @@ class CCloudStorageService_OpenStackStorage
 			if(substr($filePath, 0, strlen($arBucket["PREFIX"])+2) != "/".$arBucket["PREFIX"]."/")
 				$filePath = "/".$arBucket["PREFIX"]."/".ltrim($filePath, "/");
 		}
+		$filePath = CCloudUtil::URLEncode($filePath, LANG_CHARSET);
 
 		$obRequest = $this->SendRequest(
 			$arBucket["SETTINGS"],
@@ -501,12 +502,12 @@ class CCloudStorageService_OpenStackStorage
 								if($a["#"]["content_type"][0]["#"] === "application/directory")
 								{
 									$dir_name = trim(substr($a["#"]["name"][0]["#"], strlen($filePath)), "/");
-									$result["dir"][urldecode($dir_name)] = true;
+									$result["dir"][$APPLICATION->ConvertCharset(urldecode($dir_name), "UTF-8", LANG_CHARSET)] = true;
 								}
 								else
 								{
 									$file_name = substr($a["#"]["name"][0]["#"], strlen($filePath));
-									$result["file"][] = urldecode($file_name);
+									$result["file"][] = $APPLICATION->ConvertCharset(urldecode($file_name), "UTF-8", LANG_CHARSET);
 									$result["file_size"][] = $a["#"]["bytes"][0]["#"];
 								}
 							}
@@ -523,11 +524,15 @@ class CCloudStorageService_OpenStackStorage
 							{
 								$new_marker = $a["@"]["name"];
 								$dir_name = trim(substr($a["@"]["name"], strlen($filePath)), "/");
-								$result["dir"][urldecode($dir_name)] = true;
+								$result["dir"][$APPLICATION->ConvertCharset(urldecode($dir_name), "UTF-8", LANG_CHARSET)] = true;
 							}
 						}
 					}
 				}
+			}
+			else
+			{
+				return false;
 			}
 
 			if($new_marker === $marker)

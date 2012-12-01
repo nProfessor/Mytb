@@ -280,7 +280,7 @@ if($arParams["SHOW_WORKFLOW"] || $this->StartResultCache(false, ($arParams["CACH
 			$arResult["NEXT"][$key]["PICTURE"] = CFile::GetFileArray($value["PREVIEW_PICTURE"]);
 		foreach($arResult["PREV"] as $key=>$value)
 			$arResult["PREV"][$key]["PICTURE"] = CFile::GetFileArray($value["PREVIEW_PICTURE"]);
-		//echo "<pre>",htmlspecialchars(print_r($arResult,true)),"</pre>";
+		//echo "<pre>",htmlspecialcharsbx(print_r($arResult,true)),"</pre>";
 		$this->SetResultCacheKeys(array(
 			"ID",
 			"IBLOCK_ID",

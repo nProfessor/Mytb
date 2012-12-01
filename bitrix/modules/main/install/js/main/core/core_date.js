@@ -725,6 +725,201 @@ BX.calendar.ValueToString = function(value, bTime, bUTC)
 	);
 }
 
+
+BX.CalendarPeriod =
+{
+	Init: function(inputFrom, inputTo, selPeriod)
+	{
+		if((inputFrom.value != "" || inputTo.value != "") && selPeriod.value == "")
+			selPeriod.value = "interval";
+
+		selPeriod.onchange();
+	},
+
+	ChangeDirectOpts: function(peroidValue, selPParent) // "week" || "others"
+	{
+		var selDirect = BX.findChild(selPParent, {'className':'adm-select adm-calendar-direction'}, true);
+
+		if(peroidValue == "week")
+		{
+			selDirect.options[0].text = BX.message('JSADM_CALEND_PREV_WEEK');
+			selDirect.options[1].text = BX.message('JSADM_CALEND_CURR_WEEK');
+			selDirect.options[2].text = BX.message('JSADM_CALEND_NEXT_WEEK');
+		}
+		else
+		{
+			selDirect.options[0].text = BX.message('JSADM_CALEND_PREV');
+			selDirect.options[1].text = BX.message('JSADM_CALEND_CURR');
+			selDirect.options[2].text = BX.message('JSADM_CALEND_NEXT');
+		}
+	},
+
+	SaveAndClearInput: function(oInput)
+	{
+		if(!window.SavedPeriodValues)
+			window.SavedPeriodValues = {};
+
+		window.SavedPeriodValues[oInput.id] = oInput.value;
+		oInput.value="";
+	},
+
+	RestoreInput: function(oInput)
+	{
+		if(!window.SavedPeriodValues || !window.SavedPeriodValues[oInput.id])
+			return;
+
+		oInput.value = window.SavedPeriodValues[oInput.id];
+		delete(window.SavedPeriodValues[oInput.id]);
+	},
+
+	OnChangeP: function(sel)
+	{
+		var selPParent = sel.parentNode.parentNode;
+		var bShowFrom = bShowTo = bShowDirect = bShowSeparate = false;
+
+		var inputFromWrap = BX.findChild(selPParent, {'className':'adm-input-wrap adm-calendar-inp adm-calendar-first'});
+		var inputToWrap = BX.findChild(selPParent, {'className':'adm-input-wrap adm-calendar-second'});
+		var selDirectWrap = BX.findChild(selPParent, {'className':'adm-select-wrap adm-calendar-direction'});
+		var separator = BX.findChild(selPParent, {'className':'adm-calendar-separate'});
+		var inputFrom = BX.findChild(selPParent, {'className':'adm-input adm-calendar-from'},true);
+		var inputTo = BX.findChild(selPParent, {'className':'adm-input adm-calendar-to'},true);
+
+		// define who must be shown
+		switch (sel.value)
+		{
+			case "day":
+			case "week":
+			case "month":
+			case "quarter":
+			case "year":
+				bShowDirect=true;
+				BX.CalendarPeriod.OnChangeD(selDirectWrap.children[0]);
+				break;
+
+			case "before":
+				bShowTo = true;
+				break;
+
+			case "after":
+				bShowFrom = true;
+				break;
+
+			case "exact":
+				bShowFrom= true;
+				break;
+
+			case "interval":
+				bShowFrom = bShowTo = bShowSeparate = true;
+				BX.CalendarPeriod.RestoreInput(inputFrom);
+				BX.CalendarPeriod.RestoreInput(inputTo);
+
+				break;
+
+			case "":
+				BX.CalendarPeriod.SaveAndClearInput(inputFrom);
+				BX.CalendarPeriod.SaveAndClearInput(inputTo);
+				break;
+
+			default:
+				break;
+
+		}
+
+		BX.CalendarPeriod.ChangeDirectOpts(sel.value, selPParent);
+
+		inputFromWrap.style.display = (bShowFrom? 'inline-block':'none');
+		inputToWrap.style.display = (bShowTo? 'inline-block':'none');
+		selDirectWrap.style.display = (bShowDirect? 'inline-block':'none');
+		separator.style.display = (bShowSeparate? 'inline-block':'none');
+	},
+
+
+	OnChangeD: function(sel)
+	{
+		var selPParent = sel.parentNode.parentNode;
+		var inputFrom = BX.findChild(selPParent, {'className':'adm-input adm-calendar-from'},true);
+		var inputTo = BX.findChild(selPParent, {'className':'adm-input adm-calendar-to'},true);
+		var selPeriod = BX.findChild(selPParent, {'className':'adm-select adm-calendar-period'},true);
+
+		var offset=0;
+
+		switch (sel.value)
+		{
+			case "previous":
+				offset = -1;
+				break;
+
+			case "next":
+				offset = 1;
+				break;
+
+			case "current":
+			default:
+				break;
+
+		}
+
+		var from = false;
+		var to = false;
+
+		var today = new Date();
+		var year = today.getFullYear();
+		var month = today.getMonth();
+		var day = today.getDate();
+		var dayW = today.getDay();
+
+		if (dayW == 0)
+				dayW = 7;
+
+		switch (selPeriod.value)
+		{
+			case "day":
+				from = new Date(year, month, day+offset, 0, 0, 0);
+				to = new Date(year, month, day+offset, 23, 59, 59);
+				break;
+
+			case "week":
+				from = new Date(year, month, day-dayW+1+offset*7, 0, 0, 0);
+				to = new Date(year, month, day+(7-dayW)+offset*7, 23, 59, 59);
+				break;
+
+			case "month":
+				from = new Date(year, month+offset, 1, 0, 0, 0);
+				to = new Date(year, month+1+offset, 0, 23, 59, 59);
+				break;
+
+			case "quarter":
+				var quarterNum = Math.floor((month/3))+offset;
+				from = new Date(year, 3*(quarterNum), 1, 0, 0, 0);
+				to = new Date(year, 3*(quarterNum+1), 0, 23, 59, 59);
+				break;
+
+			case "year":
+				from = new Date(year+offset, 0, 1, 0, 0, 0);
+				to = new Date(year+1+offset, 0, 0, 23, 59, 59);
+				break;
+
+			default:
+				break;
+		}
+
+		var format = window[inputFrom.name+"_bTime"] ? BX.message('FORMAT_DATETIME') : BX.message('FORMAT_DATE');
+
+		if(from)
+		{
+			inputFrom.value = BX.formatDate(from, format);
+			BX.addClass(inputFrom,"adm-calendar-inp-setted");
+		}
+
+		if(to)
+		{
+			inputTo.value = BX.formatDate(to, format);
+			BX.addClass(inputTo,"adm-calendar-inp-setted");
+		}
+	}
+}
+
+
 BX.JCCalendar = function()
 {
 	this.params = {};

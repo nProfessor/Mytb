@@ -7,6 +7,7 @@
 # mailto:admin@bitrixsoft.com                #
 ##############################################
 */
+
 require_once(substr(__FILE__, 0, strlen(__FILE__) - strlen("/include.php"))."/bx_root.php");
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/start.php");
 
@@ -148,31 +149,43 @@ CModule::AddAutoloadClasses(
 		"IProviderInterface" => "classes/general/authproviders.php",
 		"CGroupAuthProvider" => "classes/general/authproviders.php",
 		"CUserAuthProvider" => "classes/general/authproviders.php",
-		"CBaseEntity" => "classes/general/entity_base.php",
-		"CIblockSectionEntity" => "classes/general/entity_iblock_section.php",
-		"CEntityField" => "classes/general/entity_field.php",
-		"CScalarEntityField" => "classes/general/entity_scalar_field.php",
-		"CBooleanEntityField" => "classes/general/entity_boolean_field.php",
-		"CExpressionEntityField" => "classes/general/entity_expression_field.php",
-		"CUEntityField" => "classes/general/entity_u_field.php",
-		"CWorkgroupEntity" => "classes/general/entity_workgroup.php",
-		"CReferenceEntityField" => "classes/general/entity_reference_field.php",
-		"CEntityQuery" => "classes/general/entity_query.php",
-		"CEntityQueryChain" => "classes/general/entity_query_chain.php",
-		"CEntityQueryChainElement" => "classes/general/entity_query_chain_element.php",
-		"CSiteEntity" => "classes/general/entity_site.php",
-		"CUserEntity" => "classes/general/entity_user.php",
-		"CUtsUserEntity" => "classes/general/entity_uts_user.php",
-		"CUtmUserEntity" => "classes/general/entity_utm_user.php",
-		"CUserGroupEntity" => "classes/general/entity_user_group.php",
-		"CGroupEntity" => "classes/general/entity_group.php",
+		"Bitrix\\Main\\Entity\\Base" => "lib/entity/base.php",
+		"Bitrix\\Main\\Entity\\DataManager" => "lib/entity/datamanager.php",
+		"Bitrix\\Main\\Entity\\Field" => "lib/entity/field.php",
+		"Bitrix\\Main\\Entity\\ScalarField" => "lib/entity/scalarfield.php",
+		"Bitrix\\Main\\Entity\\IntegerField" => "lib/entity/integerfield.php",
+		"Bitrix\\Main\\Entity\\FloatField" => "lib/entity/floatfield.php",
+		"Bitrix\\Main\\Entity\\StringField" => "lib/entity/stringfield.php",
+		"Bitrix\\Main\\Entity\\TextField" => "lib/entity/textfield.php",
+		"Bitrix\\Main\\Entity\\BooleanField" => "lib/entity/booleanfield.php",
+		"Bitrix\\Main\\Entity\\DateField" => "lib/entity/datefield.php",
+		"Bitrix\\Main\\Entity\\DatetimeField" => "lib/entity/datetimefield.php",
+		"Bitrix\\Main\\Entity\\EnumField" => "lib/entity/enumfield.php",
+		"Bitrix\\Main\\Entity\\ExpressionField" => "lib/entity/expressionfield.php",
+		"Bitrix\\Main\\Entity\\UField" => "lib/entity/ufield.php",
+		"Bitrix\\Main\\Entity\\ReferenceField" => "lib/entity/referencefield.php",
+		"Bitrix\\Main\\Entity\\Query" => "lib/entity/query.php",
+		"Bitrix\\Main\\Entity\\QueryChain" => "lib/entity/querychain.php",
+		"Bitrix\\Main\\Entity\\QueryChainElement" => "lib/entity/querychainelement.php",
+		"Bitrix\\Main\\SiteEntity" => "lib/site.php",
+		"Bitrix\\Main\\Site" => "lib/site.php",
+		"Bitrix\\Main\\UserEntity" => "lib/user.php",
+		"Bitrix\\Main\\User" => "lib/user.php",
+		"Bitrix\\Main\\UtsUserEntity" => "lib/utsuser.php",
+		"Bitrix\\Main\\UtmUserEntity" => "lib/utmuser.php",
+		"Bitrix\\Main\\UserGroupEntity" => "lib/usergroup.php",
+		"Bitrix\\Main\\GroupEntity" => "lib/group.php",
+		"Bitrix\\Main\\Localization\\CultureEntity" => "lib/localization/culture.php",
+		"Bitrix\\Main\\Localization\\Culture" => "lib/localization/culture.php",
 		"CTableSchema" => "classes/general/table_schema.php",
 		"CUserCounter" => "classes/".$DBType."/user_counter.php",
 		"CHotKeys" => "classes/general/hot_keys.php",
 		"CHotKeysCode" => "classes/general/hot_keys.php",
 		"CBXSanitizer" => "classes/general/sanitizer.php",
 		"CBXArchive" => "classes/general/archive.php",
-		"CAdminNotify" => "classes/general/admin_notify.php"
+		"CAdminNotify" => "classes/general/admin_notify.php",
+		"CBXFavAdmMenu" => "classes/general/favorites.php",
+		"CAdminInformer" => "classes/general/admin_informer.php"
 	)
 );
 
@@ -327,6 +340,12 @@ if(
 
 define("BX_STARTED", true);
 
+if ($_SESSION['BX_ADMIN_LOAD_AUTH'])
+{
+	define('ADMIN_SECTION_LOAD_AUTH', 1);
+	unset($_SESSION['BX_ADMIN_LOAD_AUTH']);
+}
+
 if(!defined("NOT_CHECK_PERMISSIONS") || NOT_CHECK_PERMISSIONS!==true)
 {
 	$bLogout = (strtolower($_REQUEST["logout"]) == "yes");
@@ -392,7 +411,15 @@ if(!defined("NOT_CHECK_PERMISSIONS") || NOT_CHECK_PERMISSIONS!==true)
 			else
 				$USER_LID = false;
 			if($_REQUEST["TYPE"] == "AUTH")
+			{
 				$arAuthResult = $GLOBALS["USER"]->Login($_REQUEST["USER_LOGIN"], $_REQUEST["USER_PASSWORD"], $_REQUEST["USER_REMEMBER"]);
+				if ($arAuthResult === true && defined('ADMIN_SECTION') && ADMIN_SECTION === true)
+				{
+					$_SESSION['BX_ADMIN_LOAD_AUTH'] = true;
+					echo '<script type="text/javascript">window.onload=function(){top.BX.AUTHAGENT.setAuthResult(false);};</script>';
+					die();
+				}
+			}
 			elseif($_REQUEST["TYPE"] == "SEND_PWD")
 				$arAuthResult = $GLOBALS["USER"]->SendPassword($_REQUEST["USER_LOGIN"], $_REQUEST["USER_EMAIL"], $USER_LID);
 			elseif($_SERVER['REQUEST_METHOD'] == 'POST' && $_REQUEST["TYPE"] == "CHANGE_PWD")
@@ -466,20 +493,15 @@ if((!defined("NOT_CHECK_PERMISSIONS") || NOT_CHECK_PERMISSIONS!==true) && (!defi
 		{
 			if ($_REQUEST["mode"]=="list" || $_REQUEST["mode"]=="settings")
 			{
-				echo "<script>window.location='".$GLOBALS["APPLICATION"]->GetCurPage()."?".DeleteParam(array("mode"))."';</script>";
+				echo "<script>top.location='".$GLOBALS["APPLICATION"]->GetCurPage()."?".DeleteParam(array("mode"))."';</script>";
 				die();
 			}
 			elseif ($_REQUEST["mode"]=="frame")
 			{
 				echo "<script type=\"text/javascript\">
 					var w = (opener? opener.window:parent.window);
-					w.location='".$GLOBALS["APPLICATION"]->GetCurPage()."?".DeleteParam(array("mode"))."';
+					w.location.href='".$GLOBALS["APPLICATION"]->GetCurPage()."?".DeleteParam(array("mode"))."';
 				</script>";
-				die();
-			}
-			elseif ($_REQUEST["mode"]=="public")
-			{
-				require_once($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/interface/popup_auth.php");
 				die();
 			}
 		}
@@ -495,4 +517,3 @@ if(isset($REDIRECT_STATUS) && $REDIRECT_STATUS==404)
 	if(COption::GetOptionString("main", "header_200", "N")=="Y")
 		CHTTP::SetStatus("200 OK");
 }
-?>

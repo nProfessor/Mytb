@@ -30,4 +30,5 @@ $MESS["IBLOCK_ADM_CONFIRM_DEL_MESSAGE"] = "All information related to this recor
 $MESS["IBLOCK_ADM_SAVE_ERROR"] = "Error saving record ##ID#: #ERROR_TEXT#";
 $MESS["IBLOCK_ADM_HEADER_BIZPROC"] = "Business Process Templates";
 $MESS["IBLOCK_ADM_MENU_BIZPROC"] = "Business Processes";
+$MESS["IBLOCK_ADM_MENU_PROPERTIES"] = "Properties";
 ?>

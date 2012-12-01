@@ -12,7 +12,7 @@ class bitrixcloud extends CModule
 	var $MODULE_DESCRIPTION;
 	var $MODULE_CSS;
 	var $MODULE_GROUP_RIGHTS = "N";
-	
+
 	function bitrixcloud()
 	{
 		$arModuleVersion = array();
@@ -24,12 +24,12 @@ class bitrixcloud extends CModule
 		$this->MODULE_NAME = GetMessage("BCL_MODULE_NAME");
 		$this->MODULE_DESCRIPTION = GetMessage("BCL_MODULE_DESCRIPTION");
 	}
-	
+
 	function GetModuleTasks()
 	{
 		return array();
 	}
-	
+
 	function InstallDB($arParams = array())
 	{
 		global $DB, $DBType, $APPLICATION;
@@ -48,16 +48,20 @@ class bitrixcloud extends CModule
 		{
 			$this->InstallTasks();
 			RegisterModule("bitrixcloud");
+			RegisterModuleDependences("main", "OnAdminInformerInsertItems", "bitrixcloud", "CBitrixCloudCDN", "OnAdminInformerInsertItems");
+			RegisterModuleDependences("main", "OnAdminInformerInsertItems", "bitrixcloud", "CBitrixCloudBackup", "OnAdminInformerInsertItems");
 			CModule::IncludeModule("bitrixcloud");
 		}
 		return true;
 	}
-	
+
 	function UnInstallDB($arParams = array())
 	{
 		global $DB, $DBType, $APPLICATION;
 		$this->errors = false;
 		UnRegisterModuleDependences("main", "OnEndBufferContent", "bitrixcloud", "CBitrixCloudCDN", "OnEndBufferContent");
+		UnRegisterModuleDependences("main", "OnAdminInformerInsertItems", "bitrixcloud", "CBitrixCloudCDN", "OnAdminInformerInsertItems");
+		UnRegisterModuleDependences("main", "OnAdminInformerInsertItems", "bitrixcloud", "CBitrixCloudBackup", "OnAdminInformerInsertItems");
 		if (!array_key_exists("savedata", $arParams) || $arParams["savedata"] != "Y")
 		{
 			$this->errors = $DB->RunSQLBatch($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/bitrixcloud/install/db/".strtolower($DB->type)."/uninstall.sql");
@@ -70,32 +74,29 @@ class bitrixcloud extends CModule
 		}
 		return true;
 	}
-	
+
 	function InstallEvents()
 	{
 		return true;
 	}
-	
+
 	function UnInstallEvents()
 	{
 		return true;
 	}
-	
+
 	function InstallFiles($arParams = array())
 	{
 		CopyDirFiles($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/bitrixcloud/install/admin/", $_SERVER["DOCUMENT_ROOT"]."/bitrix/admin");
-		CopyDirFiles($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/bitrixcloud/install/themes/", $_SERVER["DOCUMENT_ROOT"]."/bitrix/themes/", true, true);
 		return true;
 	}
-	
+
 	function UnInstallFiles()
 	{
 		DeleteDirFiles($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/bitrixcloud/install/admin/", $_SERVER["DOCUMENT_ROOT"]."/bitrix/admin");
-		DeleteDirFiles($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/bitrixcloud/install/themes/.default/", $_SERVER["DOCUMENT_ROOT"]."/bitrix/themes/.default");
-		DeleteDirFilesEx("/bitrix/themes/.default/icons/bitrixcloud/");
 		return true;
 	}
-	
+
 	function DoInstall()
 	{
 		global $DB, $USER, $DOCUMENT_ROOT, $APPLICATION, $step;
@@ -118,7 +119,7 @@ class bitrixcloud extends CModule
 			}
 		}
 	}
-	
+
 	function DoUninstall()
 	{
 		global $DB, $USER, $DOCUMENT_ROOT, $APPLICATION, $step;

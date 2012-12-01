@@ -26,8 +26,15 @@ class CAllIBlockProperty
 			case "ACTIVE":
 			case "SEARCHABLE":
 			case "FILTRABLE":
+			case "IS_REQUIRED":
+			case "MULTIPLE":
+			case "FILTRABLE":
 				if($val=="Y" || $val=="N")
 					$arSqlSearch[] = "BP.".$key." = '".$val."'";
+				break;
+			case "?CODE":
+			case "?NAME":
+				$arSqlSearch[] = CIBlock::FilterCreate("BP.".substr($key, 1), $val, "string", "E");
 				break;
 			case "CODE":
 			case "NAME":
@@ -48,6 +55,14 @@ class CAllIBlockProperty
 				$arSqlSearch[] = "(BP.TMP_ID IS NULL OR NOT (BP.TMP_ID LIKE '".$val."'))";
 				break;
 			case "PROPERTY_TYPE":
+				$ar = explode(":", $val);
+				if(count($ar) == 2)
+				{
+					$val = $ar[0];
+					$arSqlSearch[] = "BP.USER_TYPE = '".$val[1]."'";
+				}
+				$arSqlSearch[] = "BP.".$key." = '".$val."'";
+				break;
 			case "USER_TYPE":
 				$arSqlSearch[] = "BP.".$key." = '".$val."'";
 				break;
@@ -133,6 +148,8 @@ class CAllIBlockProperty
 		if(!CIBlockPropertyEnum::DeleteByPropertyID($ID, true))
 			return false;
 
+		CIBlockSectionPropertyLink::DeleteByProperty($ID);
+
 		$rsProperty = CIBlockProperty::GetByID($ID);
 		$arProperty = $rsProperty->Fetch();
 		if($arProperty["VERSION"] == 2)
@@ -163,8 +180,8 @@ class CAllIBlockProperty
 				return false;
 			$strSql = "
 				DELETE
-				FROM	b_iblock_element_prop_m".$arProperty["IBLOCK_ID"]."
-				WHERE	IBLOCK_PROPERTY_ID=".$ID."
+				FROM b_iblock_element_prop_m".$arProperty["IBLOCK_ID"]."
+				WHERE IBLOCK_PROPERTY_ID=".$ID."
 			";
 			if(!$DB->Query($strSql))
 				return false;
@@ -263,8 +280,20 @@ class CAllIBlockProperty
 				$arFields["ID"] = &$ID;
 			}
 
-			if($Result && is_set($arFields, "VALUES"))
-				$this->UpdateEnum($ID, $arFields["VALUES"]);
+			if($Result)
+			{
+				if(array_key_exists("VALUES", $arFields))
+					$this->UpdateEnum($ID, $arFields["VALUES"]);
+
+				if(CIBlock::GetArrayByID($arFields["IBLOCK_ID"], "SECTION_PROPERTY") === "Y")
+				{
+					if(
+						!array_key_exists("SECTION_PROPERTY", $arFields)
+						|| $arFields["SECTION_PROPERTY"] !== "N"
+					)
+						CIBlockSectionPropertyLink::Add(0, $ID, array("SMART_FILTER" => $arFields["SMART_FILTER"]));
+				}
+			}
 		}
 
 		$arFields["RESULT"] = &$Result;
@@ -424,6 +453,19 @@ class CAllIBlockProperty
 
 			if(is_set($arFields, "VALUES"))
 				$this->UpdateEnum($ID, $arFields["VALUES"]);
+
+			if(
+				array_key_exists("IBLOCK_ID", $arFields)
+				&& CIBlock::GetArrayByID($arFields["IBLOCK_ID"], "SECTION_PROPERTY") === "Y"
+			)
+			{
+				CIBlockSectionPropertyLink::Delete(0, $ID);
+				if(
+					!array_key_exists("SECTION_PROPERTY", $arFields)
+					|| $arFields["SECTION_PROPERTY"] !== "N"
+				)
+					CIBlockSectionPropertyLink::Add(0, $ID, array("SMART_FILTER" => $arFields["SMART_FILTER"]));
+			}
 
 			global $BX_IBLOCK_PROP_CACHE;
 			if(is_set($arFields, "IBLOCK_ID"))
@@ -897,8 +939,10 @@ class CAllIBlockProperty
 			"USER_TYPE"		=>"FileMan",
 			"DESCRIPTION"		=>GetMessage("IBLOCK_PROP_FILEMAN_DESC"),
 			"GetPropertyFieldHtml"	=>array("CIBlockPropertyFileMan","GetPropertyFieldHtml"),
+			"GetPropertyFieldHtmlMulty" => array('CIBlockPropertyFileMan','GetPropertyFieldHtmlMulty'),
 			"ConvertToDB"		=>array("CIBlockPropertyFileMan","ConvertToDB"),
 			"ConvertFromDB"		=>array("CIBlockPropertyFileMan","ConvertFromDB"),
+			"GetSettingsHTML" => array("CIBlockPropertyFileMan","GetSettingsHTML"),
 		);
 	}
 

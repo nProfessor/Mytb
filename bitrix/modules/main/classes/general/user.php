@@ -174,7 +174,7 @@ class CAllUser extends CDBResult
 
 		if($bOk && $arParams['HASH'] <> '')
 		{
-			$strSql = 
+			$strSql =
 				"SELECT U.ID, U.ACTIVE, U.STORED_HASH, U.EXTERNAL_AUTH_ID ".
 				"FROM b_user U ".
 				"WHERE U.LOGIN='".$DB->ForSQL($arParams['LOGIN'], 50)."' ";
@@ -237,7 +237,7 @@ class CAllUser extends CDBResult
 	function LoginByHttpAuth()
 	{
 		$arAuth = CHTTP::ParseAuthRequest();
-	
+
 		if(isset($arAuth["basic"]) && $arAuth["basic"]["username"] <> '' && $arAuth["basic"]["password"] <> '')
 		{
 			// Authorize user, if it is http basic authorization, with no remembering
@@ -748,13 +748,13 @@ class CAllUser extends CDBResult
 					{
 						$DB->Query("UPDATE b_user SET LOGIN_ATTEMPTS = ".$usr_login_attempts." WHERE ID = ".intval($arUser["ID"]));
 						$APPLICATION->ThrowException(GetMessage("WRONG_LOGIN"));
-						$result_message = Array("MESSAGE"=>GetMessage("WRONG_LOGIN")."<br>", "TYPE"=>"ERROR");
+						$result_message = Array("MESSAGE"=>GetMessage("WRONG_LOGIN")."<br>", "TYPE"=>"ERROR", "ERROR_TYPE" => "LOGIN");
 					}
 				}
 				else
 				{
 					$APPLICATION->ThrowException(GetMessage("WRONG_LOGIN"));
-					$result_message = Array("MESSAGE"=>GetMessage("WRONG_LOGIN")."<br>", "TYPE"=>"ERROR");
+					$result_message = Array("MESSAGE"=>GetMessage("WRONG_LOGIN")."<br>", "TYPE"=>"ERROR", "ERROR_TYPE" => "LOGIN");
 				}
 			}
 		}
@@ -852,16 +852,16 @@ class CAllUser extends CDBResult
 			CTimeZone::Enable();
 
 			if(!($res = $db_check->Fetch()))
-				return Array("MESSAGE"=>preg_replace("/#LOGIN#/i", htmlspecialcharsbx($arParams["LOGIN"]), GetMessage('LOGIN_NOT_FOUND')), "TYPE"=>"ERROR");
+				return Array("MESSAGE"=>preg_replace("/#LOGIN#/i", htmlspecialcharsbx($arParams["LOGIN"]), GetMessage('LOGIN_NOT_FOUND')), "TYPE"=>"ERROR", "FIELD" => "LOGIN");
 
 			$salt = substr($res["CHECKWORD"], 0, 8);
 			if(strlen($res["CHECKWORD"])<=0 || $res["CHECKWORD"] != $salt.md5($salt.$arParams["CHECKWORD"]))
-				return Array("MESSAGE"=>preg_replace("/#LOGIN#/i", htmlspecialcharsbx($arParams["LOGIN"]), GetMessage("CHECKWORD_INCORRECT"))."<br>", "TYPE"=>"ERROR");
+				return Array("MESSAGE"=>preg_replace("/#LOGIN#/i", htmlspecialcharsbx($arParams["LOGIN"]), GetMessage("CHECKWORD_INCORRECT"))."<br>", "TYPE"=>"ERROR", "FIELD"=>"CHECKWORD");
 
 			$arPolicy = CUser::GetGroupPolicy($res["ID"]);
 			$site_format = CSite::GetDateFormat();
 			if(mktime()-$arPolicy["CHECKWORD_TIMEOUT"]*60 > MakeTimeStamp($res["CHECKWORD_TIME"], $site_format))
-				return Array("MESSAGE"=>preg_replace("/#LOGIN#/i", htmlspecialcharsbx($arParams["LOGIN"]), GetMessage("CHECKWORD_EXPIRE"))."<br>", "TYPE"=>"ERROR");
+				return Array("MESSAGE"=>preg_replace("/#LOGIN#/i", htmlspecialcharsbx($arParams["LOGIN"]), GetMessage("CHECKWORD_EXPIRE"))."<br>", "TYPE"=>"ERROR", "FIELD"=>"CHECKWORD_EXPIRE");
 
 			if($arParams["SITE_ID"] === false)
 			{
@@ -1537,7 +1537,7 @@ class CAllUser extends CDBResult
 				}
 			}
 
-			if(is_set($arFields, "PASSWORD") && is_set($arFields, "CONFIRM_PASSWORD") && $arFields["PASSWORD"]!=$arFields["CONFIRM_PASSWORD"])
+			if(is_set($arFields, "PASSWORD") && is_set($arFields, "CONFIRM_PASSWORD") && $arFields["PASSWORD"] !== $arFields["CONFIRM_PASSWORD"])
 				$this->LAST_ERROR .= GetMessage("WRONG_CONFIRMATION")."<br>";
 
 			if (is_array($arFields["GROUP_ID"]) && count($arFields["GROUP_ID"]) > 0)
@@ -1892,7 +1892,7 @@ class CAllUser extends CDBResult
 						"SELECT ".$USER_ID.", ID ".
 						"FROM b_group ".
 						"WHERE ID in (".implode(",", $arGroups).")";
-	
+
 					$DB->Query($strSql, false, "FILE: ".__FILE__."<br> LINE: ".__LINE__);
 				}
 			}
@@ -2693,10 +2693,7 @@ class CAllUser extends CDBResult
 		if ($bHTMLSpec)
 			$res = htmlspecialcharsbx($res);
 
-		$res = str_replace(array('#NOBR#', '#/NOBR#'), array('<nobr>', '</nobr>'), $res);
-
-		if (strpos($res, '<nobr>') !== false && strpos($res, '</nobr>') === false)
-			$res .= '</nobr>';
+		$res = str_replace(array('#NOBR#', '#/NOBR#'), '', $res);
 
 		return $res;
 	}

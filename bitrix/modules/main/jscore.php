@@ -1,7 +1,10 @@
 <?
 $pathJS = '/bitrix/js/main/core';
 $pathCSS = '/bitrix/js/main/core/css';
+$pathCSSPanel = '/bitrix/panel/main';
 $pathLang = BX_ROOT.'/modules/main/lang/'.LANGUAGE_ID;
+
+$aUserOpt = CUserOptions::GetOption("global", "settings", array());
 
 $arJSCoreConfig = array(
 	'ajax' => array(
@@ -9,9 +12,22 @@ $arJSCoreConfig = array(
 	),
 	'admin' => array(
 		'js' => $pathJS.'/core_admin.js',
-		'css' => $pathCSS.'/core_admin.css',
+		'css' => array($pathCSS.'/core_panel.css', $pathCSSPanel.'/admin-public.css'),
 		'lang' => $pathLang.'/js_core_admin.php',
 		'rel' => array('ajax'),
+		'use' => CJSCore::USE_PUBLIC,
+	),
+	'admin_interface' => array(
+		'js' => $pathJS.'/core_admin_interface.js',
+		'lang' => $pathLang.'/js_core_admin_interface.php',
+		'css' => $pathCSSPanel.'/admin-public.css',
+		'rel' => array('ajax', 'popup', 'window', 'date', 'fx'),
+		'lang_additional' => array('TITLE_PREFIX' => CUtil::JSEscape(COption::GetOptionString("main", "site_name", $_SERVER["SERVER_NAME"]))." - ")
+	),
+	"admin_login" => array(
+		'js' => $pathJS."/core_admin_login.js",
+		'css' => $pathCSSPanel."/login.css",
+		'rel' => array("ajax", "window"),
 	),
 	'autosave' => array(
 		'js' => $pathJS.'/core_autosave.js',
@@ -47,7 +63,9 @@ $arJSCoreConfig = array(
 	),
 	'window' => array(
 		'js' => $pathJS.'/core_window.js',
-		'css' => $pathCSS.'/core_window.css',
+		//'css' => $pathCSS.'/core_window.css',
+		'css' => $pathCSSPanel.'/popup.css',
+		'lang_additional' => array('MENU_ENABLE_TOOLTIP' => $aUserOpt['start_menu_title'] <> 'N'),
 		'rel' => array('ajax'),
 	),
 	'access' => array(

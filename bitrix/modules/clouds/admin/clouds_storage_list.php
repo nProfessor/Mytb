@@ -171,14 +171,21 @@ if(is_array($arID))
 					}
 
 					CAdminMessage::ShowMessage(array(
+						"TYPE"=>"PROGRESS",
 						"MESSAGE"=>GetMessage("CLO_STORAGE_LIST_DOWNLOAD_IN_PROGRESS"),
 						"DETAILS"=>GetMessage("CLO_STORAGE_LIST_DOWNLOAD_PROGRESS", array(
 							"#remain#" => $ar["CNT"] - $bNextFile,
 							"#bytes#" => CFile::FormatSize($ar["FILE_SIZE"] - $last_file_pos),
-						)).'<br /><br /><input type="button" value="'.GetMessage("CLO_STORAGE_LIST_STOP").'" onclick="window.location = \'/bitrix/admin/clouds_storage_list.php?lang='.LANGUAGE_ID.'\'">',
-						"TYPE"=>"OK",
+						)),
 						"HTML"=>true,
+						"BUTTONS" => array(
+							array(
+								"VALUE" => GetMessage("CLO_STORAGE_LIST_STOP"),
+								"ONCLICK" => 'window.location = \'/bitrix/admin/clouds_storage_list.php?lang='.LANGUAGE_ID.'\'',
+							),
+						),
 					));
+
 					$bOnTheMove = true;
 					echo '<script>', $lAdmin->ActionDoGroup($ID, "download", "themove=y"), '</script>';
 				}
@@ -300,15 +307,21 @@ if(is_array($arID))
 				else
 				{
 					CAdminMessage::ShowMessage(array(
+						"TYPE"=>"PROGRESS",
 						"MESSAGE"=>GetMessage("CLO_STORAGE_LIST_MOVE_IN_PROGRESS"),
 						"DETAILS"=>GetMessage("CLO_STORAGE_LIST_MOVE_PROGRESS", array(
 							"#bytes#" => CFile::FormatSize($_size + CCloudStorage::$part_count*CCloudStorage::$part_size),
 							"#total#" => $_done + $_skip,
 							"#moved#" => $_done,
 							"#skiped#" => $_skip,
-						)).'<br /><br /><input type="button" value="'.GetMessage("CLO_STORAGE_LIST_STOP").'" onclick="window.location = \'/bitrix/admin/clouds_storage_list.php?lang='.LANGUAGE_ID.'\'">',
+						)),
 						"HTML"=>true,
-						"TYPE"=>"OK",
+						"BUTTONS" => array(
+							array(
+								"VALUE" => GetMessage("CLO_STORAGE_LIST_STOP"),
+								"ONCLICK" => 'window.location = \'/bitrix/admin/clouds_storage_list.php?lang='.LANGUAGE_ID.'\'',
+							),
+						),
 					));
 					$bOnTheMove = true;
 					echo '<script>', $lAdmin->ActionDoGroup($ID, "move", "themove=y"), '</script>';

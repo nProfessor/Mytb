@@ -23,8 +23,8 @@ class CIBlockPriceTools
 				{
 					$arCatalogGroupsFilter[] = $key;
 					$arCatalogPrices[$value["NAME"]] = array(
-						"ID" => htmlspecialchars($value["ID"]),
-						"TITLE" => htmlspecialchars($value["NAME_LANG"]),
+						"ID" => htmlspecialcharsbx($value["ID"]),
+						"TITLE" => htmlspecialcharsbx($value["NAME_LANG"]),
 						"SELECT" => "CATALOG_GROUP_".$value["ID"],
 					);
 				}
@@ -51,10 +51,10 @@ class CIBlockPriceTools
 			{
 				if($arProperty["MULTIPLE"]=="N" && in_array($arProperty["CODE"], $arPriceCode))
 				{
-					$arPriceGroups["view"][]=htmlspecialchars("PROPERTY_".$arProperty["CODE"]);
+					$arPriceGroups["view"][]=htmlspecialcharsbx("PROPERTY_".$arProperty["CODE"]);
 					$arCatalogPrices[$arProperty["CODE"]] = array(
-						"ID"=>htmlspecialchars($arProperty["ID"]),
-						"TITLE"=>htmlspecialchars($arProperty["NAME"]),
+						"ID"=>htmlspecialcharsbx($arProperty["ID"]),
+						"TITLE"=>htmlspecialcharsbx($arProperty["NAME"]),
 						"SELECT" => "PROPERTY_".$arProperty["ID"],
 						"CAN_VIEW"=>true,
 						"CAN_BUY"=>false,
@@ -65,12 +65,17 @@ class CIBlockPriceTools
 		return $arCatalogPrices;
 	}
 
-	function GetItemPrices($IBLOCK_ID, $arCatalogPrices, $arItem, $bVATInclude = true, $arCurrencyParams = array())
+	function GetItemPrices($IBLOCK_ID, $arCatalogPrices, $arItem, $bVATInclude = true, $arCurrencyParams = array(), $USER_ID = 0, $LID = SITE_ID)
 	{
 		global $USER;
 		$arPrices = array();
 		if(CModule::IncludeModule("catalog"))
 		{
+			if (IntVal($USER_ID) > 0)
+				$arUserGroups = CUser::GetUserGroup($USER_ID);
+			else
+				$arUserGroups = $USER->GetUserGroupArray();
+
 			$boolConvert = false;
 			$strCurrencyID = '';
 			if (is_array($arCurrencyParams) && !empty($arCurrencyParams) && !empty($arCurrencyParams['CURRENCY_ID']))
@@ -93,9 +98,9 @@ class CIBlockPriceTools
 						$arItem["ID"],
 						$arItem["IBLOCK_ID"],
 						array($value["ID"]),
-						$USER->GetUserGroupArray(),
+						$arUserGroups,
 						"N",
-						SITE_ID,
+						$LID,
 						array()
 					);
 					CCatalogDiscountSave::Enable();
@@ -233,9 +238,9 @@ class CIBlockPriceTools
 			{
 				if($arPrice["CAN_BUY"] && strlen($arItem["CATALOG_PRICE_".$arPrice["ID"]]) > 0)
 				{
-					if(
+					if( $arItem["CATALOG_CAN_BUY_ZERO"] == "Y" || (
 						($arItem["CATALOG_QUANTITY_TRACE"] != "Y")
-						|| (doubleval($arItem["CATALOG_QUANTITY"]) > 0)
+						|| (doubleval($arItem["CATALOG_QUANTITY"]) > 0))
 					)
 					{
 						return true;
@@ -586,7 +591,7 @@ class CIBlockPriceTools
 		return $arResult;
 	}
 
-	function GetOffersArray($IBLOCK_ID, $arElementID, $arOrder, $arSelectFields, $arSelectProperties, $limit, $arPrices, $vat_include, $arCurrencyParams = array())
+	function GetOffersArray($IBLOCK_ID, $arElementID, $arOrder, $arSelectFields, $arSelectProperties, $limit, $arPrices, $vat_include, $arCurrencyParams = array(), $USER_ID = 0, $LID = SITE_ID)
 	{
 		$arResult = array();
 
@@ -657,7 +662,7 @@ class CIBlockPriceTools
 						}
 					}
 
-					$arOffer["PRICES"] = CIBlockPriceTools::GetItemPrices($arOffersIBlock["OFFERS_IBLOCK_ID"], $arPrices, $arOffer, $vat_include, $arCurrencyParams);
+					$arOffer["PRICES"] = CIBlockPriceTools::GetItemPrices($arOffersIBlock["OFFERS_IBLOCK_ID"], $arPrices, $arOffer, $vat_include, $arCurrencyParams, $USER_ID, $LID);
 					$arOffer["CAN_BUY"] = CIBlockPriceTools::CanBuy($arOffersIBlock["OFFERS_IBLOCK_ID"], $arPrices, $arOffer);
 				}
 				$arResult[] = $arOffer;

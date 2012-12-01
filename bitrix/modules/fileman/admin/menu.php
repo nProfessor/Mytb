@@ -233,7 +233,6 @@ if($USER->CanDoOperation('fileman_view_file_structure'))
 		"sort" => 100,
 		"text" => GetMessage("FM_MENU_TITLE"),
 		"title" => GetMessage("FM_MENU_DESC"),
-		"url" => "fileman_index.php?lang=".LANG,
 		"icon" => "fileman_menu_icon",
 		"page_icon" => "fileman_page_icon",
 		"items_id" => "menu_fileman",

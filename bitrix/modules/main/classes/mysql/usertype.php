@@ -9,7 +9,7 @@ class CUserTypeEntity extends CAllUserTypeEntity
 		if(!$DB->TableExists("b_utm_".strtolower($entity_id)))
 		{
 			if(defined("MYSQL_TABLE_TYPE"))
-				$DB->Query("SET table_type = '".MYSQL_TABLE_TYPE."'", true);
+				$DB->Query("SET storage_engine = '".MYSQL_TABLE_TYPE."'", true);
 			$rs = $DB->Query("
 				create table b_utm_".strtolower($entity_id)." (
 					ID int(11) not null auto_increment,
@@ -35,7 +35,7 @@ class CUserTypeEntity extends CAllUserTypeEntity
 		if(!$DB->TableExists("b_uts_".strtolower($entity_id)))
 		{
 			if(defined("MYSQL_TABLE_TYPE"))
-				$DB->Query("SET table_type = '".MYSQL_TABLE_TYPE."'", true);
+				$DB->Query("SET storage_engine = '".MYSQL_TABLE_TYPE."'", true);
 
 			$rs = $DB->Query("
 				create table b_uts_".strtolower($entity_id)." (

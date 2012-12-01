@@ -875,7 +875,7 @@ if(count($data))
 
 		$lAdmin->BeginPrologContent();
 		if(array_key_exists("TITLE", $arTable))
-			echo "<h3>".$arTable["TITLE"]."</h3\n";
+			echo "<h3>".$arTable["TITLE"]."</h3>\n";
 		$lAdmin->EndPrologContent();
 
 		$lAdmin->AddHeaders($arTable["HEADERS"]);

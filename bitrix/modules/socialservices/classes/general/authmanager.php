@@ -58,7 +58,7 @@ class CSocServAuthManager
 	public function Cmp($a, $b)
 	{
 		if($a["__sort"] == $b["__sort"])
-			 return 0; 
+			return 0;
 		return ($a["__sort"] < $b["__sort"])? -1 : 1;
 	}
 	
@@ -71,6 +71,7 @@ class CSocServAuthManager
 	public function GetActiveAuthServices($arParams)
 	{
 		$aServ = array();
+		self::SetUniqueKey();
 		foreach(self::$arAuthServices as $key=>$service)
 		{
 			if($service["__active"] === true && $service["DISABLED"] !== true)
@@ -96,7 +97,7 @@ class CSocServAuthManager
 		{
 			if(is_callable(array($service["CLASS"], "GetSettings")))
 			{
-				$arOptions[] = htmlspecialchars($service["NAME"]);
+				$arOptions[] = htmlspecialcharsbx($service["NAME"]);
 				$options = call_user_func_array(array($service["CLASS"], "GetSettings"), array());
 				if(is_array($options))
 					foreach($options as $opt)
@@ -118,6 +119,7 @@ class CSocServAuthManager
 					return call_user_func_array(array($cl, "Authorize"), array());
 			}
 		}
+
 		return false;
 	}
 	
@@ -132,6 +134,37 @@ class CSocServAuthManager
 		}
 		return '';
 	}
+
+	public function SetUniqueKey()
+	{
+		if(!isset($_SESSION["UNIQUE_KEY"]))
+			$_SESSION["UNIQUE_KEY"] = md5(bitrix_sessid_get().uniqid(rand(), true));
+	}
+
+	public function CheckUniqueKey()
+	{
+		if(isset($_REQUEST["state"]))
+		{
+			$arState = array();
+			parse_str($_REQUEST["state"], $arState);
+			if(isset($arState['backurl']))
+				InitURLParam($arState['backurl']);
+		}
+		if(!isset($_REQUEST['check_key']) && isset($_REQUEST['backurl']))
+			InitURLParam($_REQUEST['backurl']);
+		if($_SESSION["UNIQUE_KEY"] <> '' && ($_REQUEST['check_key'] === $_SESSION["UNIQUE_KEY"]))
+		{
+			unset($_SESSION["UNIQUE_KEY"]);
+			return true;
+		}
+		return false;
+	}
+
+	function CleanParam()
+	{
+		$redirect_url = $GLOBALS['APPLICATION']->GetCurPageParam('', array("auth_service_id", "check_key"), false);
+		LocalRedirect($redirect_url);
+	}
 }
 
 //base class for auth services
@@ -141,6 +174,53 @@ class CSocServAuth
 
 	public function GetSettings()
 	{
+		return false;
+	}
+
+	protected function CheckFields($action, &$arFields)
+	{
+		if (isset($arFields["EXTERNAL_AUTH_ID"]) && strlen($arFields["EXTERNAL_AUTH_ID"])<=0)
+		{
+			return false;
+		}
+		if (!isset($arFields["USER_ID"]) && $action == "ADD")
+			$arFields["USER_ID"]=$GLOBALS["USER"]->GetID();
+		if(is_set($arFields, "PERSONAL_PHOTO"))
+		{
+			$res = CFile::CheckImageFile($arFields["PERSONAL_PHOTO"]);
+			if(strlen($res)>0)
+				unset($arFields["PERSONAL_PHOTO"]);
+			else
+			{
+				$arFields["PERSONAL_PHOTO"]["MODULE_ID"] = "socialservices";
+				CFile::SaveForDB($arFields, "PERSONAL_PHOTO", "socialservices");
+			}
+		}
+
+		return true;
+	}
+
+	function Delete($id)
+	{
+		global $DB;
+		$id = intval($id);
+		if ($id > 0)
+		{
+			$DB->Query("DELETE FROM b_socialservices_user WHERE ID = ".$id." ", true);
+			return true;
+		}
+		return false;
+	}
+
+	function OnUserDelete($id)
+	{
+		global $DB;
+		$id = intval($id);
+		if ($id > 0)
+		{
+			$DB->Query("DELETE FROM b_socialservices_user WHERE USER_ID = ".$id." ", true);
+			return true;
+		}
 		return false;
 	}
 
@@ -155,6 +235,13 @@ class CSocServAuth
 						return false;
 		}
 		return true;
+	}
+
+	public function CheckPhotoURI($photoURI)
+	{
+		if(preg_match("|^http[s]?://|i", $photoURI))
+			return true;
+		return false;
 	}
 
 	public static function OptionsSuffix()
@@ -179,24 +266,56 @@ class CSocServAuth
 		if(!isset($arFields['EXTERNAL_AUTH_ID']) || $arFields['EXTERNAL_AUTH_ID'] == '')
 			return false;
 
-		$dbUsers = $GLOBALS["USER"]->GetList($by, $ord, array('XML_ID'=>$arFields['XML_ID'], 'EXTERNAL_AUTH_ID'=>$arFields['EXTERNAL_AUTH_ID']));
-		if($arUser = $dbUsers->Fetch())
+		if($GLOBALS["USER"]->IsAuthorized() && $GLOBALS["USER"]->GetID())
 		{
-			$USER_ID = $arUser["ID"];
+			CSocServAuthDB::Add($arFields);
 		}
 		else
 		{
-			$arFields['PASSWORD'] = randString(30); //not necessary but...
-			$arFields['LID'] = SITE_ID;
+			$dbSocUser = CSocServAuthDB::GetList(array(),array('XML_ID'=>$arFields['XML_ID'], 'EXTERNAL_AUTH_ID'=>$arFields['EXTERNAL_AUTH_ID']),false,false,array("USER_ID"));
+			$dbUsersOld = $GLOBALS["USER"]->GetList($by, $ord, array('XML_ID'=>$arFields['XML_ID'], 'EXTERNAL_AUTH_ID'=>$arFields['EXTERNAL_AUTH_ID'], 'ACTIVE'=>'Y'), array('NAV_PARAMS'=>array("nTopCount"=>"1")));
+			$dbUsersNew = $GLOBALS["USER"]->GetList($by, $ord, array('XML_ID'=>$arFields['XML_ID'], 'EXTERNAL_AUTH_ID'=>'socservices', 'ACTIVE'=>'Y'),  array('NAV_PARAMS'=>array("nTopCount"=>"1")));
 
-			$def_group = COption::GetOptionString('main', 'new_user_registration_def_group', '');
-			if($def_group <> '')
-				$arFields['GROUP_ID'] = explode(',', $def_group);
+			if($arUser = $dbSocUser->Fetch())
+			{
+				$USER_ID = $arUser["USER_ID"];
+			}
+			elseif($arUser = $dbUsersOld->Fetch())
+			{
+				$USER_ID = $arUser["ID"];
+			}
+			elseif($arUser = $dbUsersNew->Fetch())
+			{
+				$USER_ID = $arUser["ID"];
+			}
+			elseif(COption::GetOptionString("main", "new_user_registration", "N") == "Y")
+			{
 
-			if(!($USER_ID = $GLOBALS["USER"]->Add($arFields)))
+				$arFields['PASSWORD'] = randString(30); //not necessary but...
+				$arFields['LID'] = SITE_ID;
+
+				$def_group = COption::GetOptionString('main', 'new_user_registration_def_group', '');
+				if($def_group <> '')
+					$arFields['GROUP_ID'] = explode(',', $def_group);
+
+				$arFieldsUser = $arFields;
+				$arFieldsUser["EXTERNAL_AUTH_ID"] = "socservices";
+				if(!($USER_ID = $GLOBALS["USER"]->Add($arFieldsUser)))
+					return false;
+				$arFields['CAN_DELETE'] = 'N';
+				$arFields['USER_ID'] = $USER_ID;
+				CSocServAuthDB::Add($arFields);
+				unset($arFields['CAN_DELETE']);
+			}
+			if(isset($USER_ID) && $USER_ID > 0)
+				$GLOBALS["USER"]->Authorize($USER_ID);
+			else
 				return false;
+
+			//it can be redirect after authorization, so no spreading. Store cookies in the session for next hit
+			$GLOBALS['APPLICATION']->StoreCookies();
 		}
-		$GLOBALS["USER"]->Authorize($USER_ID);
+
 		return true;
 	}
 }
@@ -206,7 +325,7 @@ class CSocServUtil
 {
 	public static function GetCurUrl($addParam="", $removeParam=false)
 	{
-		$arRemove = array("logout", "auth_service_error", "auth_service_id");
+		$arRemove = array("logout", "auth_service_error", "auth_service_id", "MUL_MODE");
 		if($removeParam !== false)
 			$arRemove = array_merge($arRemove, $removeParam);
 

@@ -64,13 +64,13 @@ class CPerfQueryWhere
 
 		//Replace IN with no more than 5 values to equal
 		$sql = preg_replace("/ IN[ ]*\\([ ]*([0-9]+|'[^']*')([ ]*,[ ]*([0-9]+|'[^']*')[ ]*){0,5}[ ]*\\)/i", " = \\1 ", $sql);
-//echo "<pre>_replace_in:",htmlspecialchars($sql),"</pre>";
+//echo "<pre>_replace_in:",htmlspecialcharsbx($sql),"</pre>";
 
 		//Remove complex inner syntax
 		while(preg_match("/\\([^()]*\\)/", $sql))
 			$sql = preg_replace("/\\([^()]*\\)/", "", $sql);
 
-//echo "<pre>simplified_sql:",htmlspecialchars($sql),"</pre>";
+//echo "<pre>simplified_sql:",htmlspecialcharsbx($sql),"</pre>";
 		$this->simplified_sql = $sql;
 
 		foreach(preg_split("/ and /i", $sql) as $str)
@@ -112,7 +112,7 @@ class CPerfQueryWhere
 				if($new_sql === $sql)
 					break;
 			}
-//echo "<pre>_remove_braces:",htmlspecialchars($new_sql),"</pre>";
+//echo "<pre>_remove_braces:",htmlspecialcharsbx($new_sql),"</pre>";
 			$sql = trim($new_sql);
 		}
 		return $sql;
@@ -126,7 +126,7 @@ class CPerfQueryWhere
 			if(count(array_unique($match[1])) == 1)
 				$sql = $match[1][0]." IN ( ".implode(", ", $match[2])." )";
 		}
-//echo "<pre>_or2in:",htmlspecialchars($sql),"</pre>";
+//echo "<pre>_or2in:",htmlspecialcharsbx($sql),"</pre>";
 		return $sql;
 	}
 }
@@ -418,7 +418,7 @@ class CPerfQuery
 		$arTableJoins = $this->table_joins($table_alias);
 
 		//Next read indexes already have
-//echo "<pre>",htmlspecialchars(print_r($arTableJoins,1)),"</pre>";
+//echo "<pre>",htmlspecialcharsbx(print_r($arTableJoins,1)),"</pre>";
 		$arSuggest = array();
 		if(!empty($arTableJoins))
 		{
@@ -428,7 +428,7 @@ class CPerfQuery
 			$arIndexes = CPerfomanceTable::GetIndexes($suggest_table->name);
 			foreach($arIndexes as $index_name => $arColumns)
 				$arIndexes[$index_name] = implode(",", $arColumns);
-//echo "<pre>",htmlspecialchars(print_r($arIndexes,1)),"</pre>";
+//echo "<pre>",htmlspecialcharsbx(print_r($arIndexes,1)),"</pre>";
 			//Test our suggestion against existing indexes
 			foreach($arTableJoins as $i => $arColumns)
 			{
@@ -436,7 +436,7 @@ class CPerfQuery
 				$arColumns = $this->_adjust_columns($arColumns);
 				//Take all possible combinations of columns
 				$arCombosToTest = $this->array_power_set($arColumns);
-//echo "<pre>",htmlspecialchars(print_r($arCombosToTest,1)),"</pre>";
+//echo "<pre>",htmlspecialcharsbx(print_r($arCombosToTest,1)),"</pre>";
 				foreach($arCombosToTest as $arComboColumns)
 				{
 					if(!empty($arComboColumns))

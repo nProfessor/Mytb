@@ -71,4 +71,5 @@ $MESS["HK_IMP_SUCCESS"] = "Keyboard shortcuts imported: ";
 $MESS["HK_IMP_HEADER"] = "Import Keyboard Shortcuts";
 $MESS["HK_FILENAME_EMPTY"] = "Please specify the source file to import keyboard shortcuts from.";
 $MESS["HK_DELETE"] = "Delete";
+$MESS["HK_CHOOSE_FILE"] = "Select file";
 ?>

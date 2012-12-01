@@ -65,4 +65,10 @@ $MESS["IBLOCK_CHOOSE_IBLOCK_TYPE"] = "(select type)";
 $MESS["IBLOCK_CHOOSE_IBLOCK"] = "(select information block)";
 $MESS["IBLOCK_PROP_EAUTOCOMPLETE_DESC"] = "Link-to-element autocomplete text box";
 $MESS["IBLOCK_PROP_SKU_DESC"] = "Link to product items (SKU)";
+$MESS["IBLOCK_PROP_S"] = "String";
+$MESS["IBLOCK_PROP_N"] = "Number";
+$MESS["IBLOCK_PROP_L"] = "List";
+$MESS["IBLOCK_PROP_F"] = "File";
+$MESS["IBLOCK_PROP_G"] = "Bind To Sections";
+$MESS["IBLOCK_PROP_E"] = "Bind To Elements";
 ?>

@@ -162,6 +162,12 @@ BXMediaLib.prototype =
 		this.pButSave = BX('medialib_but_save');
 		this.pButSave.onclick = function(){_this.Submit();};
 
+		if (this.bNoCollections)
+		{
+			BX.addClass(this.pLeftCont, 'ml-no-colls-sect');
+			this.pAddNewItem.style.display = 'none';
+		}
+
 		window.MlOnKeypress = function(e)
 		{
 			if(!e) e = window.event;
@@ -201,10 +207,12 @@ BXMediaLib.prototype =
 		else if(resTupe == "FORM" && document.forms[oRes.FORM_NAME] && document.forms[oRes.FORM_NAME][oRes.FORM_ELEMENT_NAME])
 		{
 			document.forms[oRes.FORM_NAME][oRes.FORM_ELEMENT_NAME].value = oItem.path;
+			BX.fireEvent(document.forms[oRes.FORM_NAME][oRes.FORM_ELEMENT_NAME], 'change');
 		}
 		else if(resTupe == "ID" && BX(oRes.ELEMENT_ID))
 		{
 			BX(oRes.ELEMENT_ID).value = oItem.path;
+			BX.fireEvent(BX(oRes.ELEMENT_ID), 'change');
 			if(this.oConfig.description_id.length > 0 && BX(this.oConfig.description_id))
 				BX(this.oConfig.description_id).value = oItem.name;
 		}
@@ -852,7 +860,7 @@ BXMediaLib.prototype =
 			_this = this,
 			D = {
 				width: 360,
-				height: 220,
+				height: 260,
 				pWnd: BX('mlsd_coll'),
 				pTitle: BX('mlsd_coll_title'),
 				pName: BX('mlsd_coll_name'),
@@ -1190,7 +1198,6 @@ BXMediaLib.prototype =
 		D.pName.title = oItem.name;
 
 		// Link
-		//D.pLink.href = oItem.path;		
 		D.pLink.onclick = function () { jsUtils.Redirect([], 'fileman_file_download.php?path='+BX.util.urlencode(oItem.path)); };
 
 		// Keywords
@@ -1210,12 +1217,6 @@ BXMediaLib.prototype =
 		{
 			D.pDesc.innerHTML = BX.util.htmlspecialchars(oItem.desc.replace(/\n/g, '<br />'));
 			D.pDesc.parentNode.className = 'small-grey';
-
-			if (parseInt(D.pDesc.offsetHeight) > 300)
-			{
-				//D.pDesc.style.height = "300px";
-				//D.pDesc.style.overflow = "auto";
-			}
 		}
 		else
 		{
@@ -1246,9 +1247,7 @@ BXMediaLib.prototype =
 
 	SetItemHTML: function(oItem)
 	{
-		var
-			D = this.ViewItDialog,
-			_this = this;
+		var D = this.ViewItDialog;
 
 		this.Request({
 			action: 'get_item_view',
@@ -1608,7 +1607,7 @@ BXMediaLib.prototype =
 			D = {
 				Params: Params || false,
 				width: 420,
-				height: 340,
+				height: 350,
 				pWnd: BX('mlsd_item'),
 				pTitle: BX('mlsd_item_title'),
 				pIfrm: BX('mlsd_iframe_upload'),
@@ -1761,6 +1760,7 @@ BXMediaLib.prototype =
 			D.pItemPath.focus();
 			D.pItemPath.select();
 			D.pItemPath.onchange();
+			BX.fireEvent(D.pItemPath, 'change');
 		};
 
 		D.pKeys.onchange = D.pKeys.onblur = function() {_this.EditItemDialog.bFocusKeywords = true;}
@@ -1945,7 +1945,7 @@ BXMediaLib.prototype =
 		this.EditItemDialog.pItCollCont.style.height = rows * 28 + 'px';
 		this.EditItemDialog.pIfrm.style.height = 275 + delta + 'px';
 		this.EditItemDialog.pTbl.style.height = 265 + delta + 'px';
-		this.EditItemDialog.pWnd.style.height = 340 + delta + 'px';
+		this.EditItemDialog.pWnd.style.height = 350 + delta + 'px';
 		jsFloatDiv.AdjustShadow(this.EditItemDialog.pWnd);
 	},
 

@@ -184,7 +184,7 @@ if($rsData)
 		echo "<p>".str_replace(
 			array(" ", "\n"),
 			array(" &nbsp;", "<br>"),
-			htmlspecialchars($SQL_TEXT)
+			htmlspecialcharsbx($SQL_TEXT)
 		)."</p>";
 	}
 	if($arPlan["OPTIMIZER"])

@@ -52,8 +52,8 @@ class CUserTypeEnum
 		else
 			$value = "LIST";
 		$result .= '
-		<tr valign="top">
-			<td>'.GetMessage("USER_TYPE_ENUM_DISPLAY").':</td>
+		<tr>
+			<td class="adm-detail-valign-top">'.GetMessage("USER_TYPE_ENUM_DISPLAY").':</td>
 			<td>
 				<label><input type="radio" name="'.$arHtmlControl["NAME"].'[DISPLAY]" value="LIST" '.("LIST"==$value? 'checked="checked"': '').'>'.GetMessage("USER_TYPE_ENUM_LIST").'</label><br>
 				<label><input type="radio" name="'.$arHtmlControl["NAME"].'[DISPLAY]" value="CHECKBOX" '.("CHECKBOX"==$value? 'checked="checked"': '').'>'.GetMessage("USER_TYPE_ENUM_CHECKBOX").'</label><br>
@@ -67,7 +67,7 @@ class CUserTypeEnum
 		else
 			$value = 5;
 		$result .= '
-		<tr valign="top">
+		<tr>
 			<td>'.GetMessage("USER_TYPE_ENUM_LIST_HEIGHT").':</td>
 			<td>
 				<input type="text" name="'.$arHtmlControl["NAME"].'[LIST_HEIGHT]" size="10" value="'.$value.'">
@@ -82,7 +82,7 @@ class CUserTypeEnum
 		else
 			$value = '';
 		$result .= '
-		<tr valign="top">
+		<tr>
 			<td>'.GetMessage("USER_TYPE_ENUM_CAPTION_NO_VALUE").':</td>
 			<td>
 				<input type="text" name="'.$arHtmlControl["NAME"].'[CAPTION_NO_VALUE]" size="10" value="'.$value.'">
@@ -140,9 +140,14 @@ class CUserTypeEnum
 			}
 
 			if($arUserField["SETTINGS"]["LIST_HEIGHT"] > 1)
+			{
 				$size = ' size="'.$arUserField["SETTINGS"]["LIST_HEIGHT"].'"';
+			}
 			else
+			{
+				$arHtmlControl["VALIGN"] = "middle";
 				$size = '';
+			}
 
 			$result = '<select name="'.$arHtmlControl["NAME"].'"'.$size.($arUserField["EDIT_IN_LIST"]!="Y"? ' disabled="disabled" ': '').'>';
 			if($arUserField["MANDATORY"]!="Y")

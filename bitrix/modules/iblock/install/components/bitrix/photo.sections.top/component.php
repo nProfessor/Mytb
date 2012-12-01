@@ -214,7 +214,7 @@ if($this->StartResultCache(false, array($arrFilter, ($arParams["CACHE_GROUPS"]==
 		if(count($arResult["SECTIONS"])>=$arParams["SECTION_COUNT"])
 			break;
 	}
-	//echo "<pre>",htmlspecialchars(print_r($arResult,true)),"</pre>";
+	//echo "<pre>",htmlspecialcharsbx(print_r($arResult,true)),"</pre>";
 	$this->SetResultCacheKeys(array(
 	));
 	$this->IncludeComponentTemplate();

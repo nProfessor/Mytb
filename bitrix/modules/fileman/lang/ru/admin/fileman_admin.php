@@ -85,4 +85,9 @@ $MESS ['FILEMAN_ADM_FULL_ACCESS'] = "Полный доступ";
 $MESS ['FILEMAN_ADMIN_ARC_PACK'] = "Архивировать";
 $MESS ['FILEMAN_ADMIN_ARC_UNPACK'] = "Распаковать";
 $MESS ['FILEMAN_ADMIN_FLIST_ERROR'] = "Возможно, недостаточно прав для просмотра содержимого данного каталога";
+$MESS ['FILEMAN_ADMIN_ADD_FOLDER'] = "Добавить папку";
+$MESS ['FILEMAN_ADMIN_ADD_FILE'] = "Добавить файл";
+$MESS ['FILEMAN_ADMIN_ADD'] = "Добавить";
+$MESS ['FILEMAN_ADMIN_FOLDER_EXTRA_PARAM'] = "Дополнительно";
+$MESS ['FILEMAN_ADMIN_FOLDER_EXTRA_PARAM_TITLE'] = "Открыть дополнительные параметры";
 ?>

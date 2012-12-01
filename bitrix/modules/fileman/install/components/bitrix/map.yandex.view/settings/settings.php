@@ -132,10 +132,10 @@ $APPLICATION->IncludeComponent('bitrix:map.yandex.system', '', array(
 	<div class="bx-yandex-map-controls-group">
 		<b><?echo GetMessage('MYMV_SET_START_POS')?></b><br />
 			<ul id="bx_yandex_position">
-				<li><?echo GetMessage('MYMV_SET_START_POS_LAT')?>: <span class="bx-yandex-map-controls-value" id="bx_yandex_lat_value"></span><input type="hidden" name="bx_yandex_lat" value="<?echo htmlspecialchars($arData['yandex_lat'])?>" /></li>
-				<li><?echo GetMessage('MYMV_SET_START_POS_LON')?>: <span class="bx-yandex-map-controls-value" id="bx_yandex_lon_value"></span><input type="hidden" name="bx_yandex_lon" value="<?echo htmlspecialchars($arData['yandex_lon'])?>" /></li>
-				<li><?echo GetMessage('MYMV_SET_START_POS_SCALE')?>: <span class="bx-yandex-map-controls-value" id="bx_yandex_scale_value"></span><input type="hidden" name="bx_yandex_scale" value="<?echo htmlspecialchars($arData['yandex_scale'])?>" /></li>
-				<li><?echo GetMessage('MYMV_SET_START_POS_VIEW')?>: <span class="bx-yandex-map-controls-value" id="bx_yandex_view_value"></span><input type="hidden" name="bx_yandex_view" value="<?echo htmlspecialchars($_REQUEST['INIT_MAP_TYPE'])?>" /></li>
+				<li><?echo GetMessage('MYMV_SET_START_POS_LAT')?>: <span class="bx-yandex-map-controls-value" id="bx_yandex_lat_value"></span><input type="hidden" name="bx_yandex_lat" value="<?echo htmlspecialcharsbx($arData['yandex_lat'])?>" /></li>
+				<li><?echo GetMessage('MYMV_SET_START_POS_LON')?>: <span class="bx-yandex-map-controls-value" id="bx_yandex_lon_value"></span><input type="hidden" name="bx_yandex_lon" value="<?echo htmlspecialcharsbx($arData['yandex_lon'])?>" /></li>
+				<li><?echo GetMessage('MYMV_SET_START_POS_SCALE')?>: <span class="bx-yandex-map-controls-value" id="bx_yandex_scale_value"></span><input type="hidden" name="bx_yandex_scale" value="<?echo htmlspecialcharsbx($arData['yandex_scale'])?>" /></li>
+				<li><?echo GetMessage('MYMV_SET_START_POS_VIEW')?>: <span class="bx-yandex-map-controls-value" id="bx_yandex_view_value"></span><input type="hidden" name="bx_yandex_view" value="<?echo htmlspecialcharsbx($_REQUEST['INIT_MAP_TYPE'])?>" /></li>
 				<li><input type="checkbox" id="bx_yandex_position_fix" name="bx_yandex_position_fix" value="Y"<?if ($arData['yandex_scale']):?> checked="checked"<?endif;?>  /> <label for="bx_yandex_position_fix"><?echo GetMessage('MYMV_SET_START_POS_FIX')?></label>&nbsp;|&nbsp;<a href="javascript:void(0)" id="bx_restore_position"><?echo GetMessage('MYMV_SET_START_POS_RESTORE')?></a>
 			</ul>
 	</div>

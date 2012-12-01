@@ -146,6 +146,11 @@ jsDD = {
 
 	refreshDestArea: function(id)
 	{
+		if (id && typeof (id) == "object" && typeof (id.__bxddeid) != 'undefined')
+		{
+			id = id.__bxddeid;
+		}
+
 		if (typeof id == 'undefined')
 		{
 			for (var i = 0, cnt = jsDD.arDestinations.length; i < cnt; i++)
@@ -167,6 +172,14 @@ jsDD = {
 	{
 		e = e||window.event;
 		if (jsDD.bStarted && e.keyCode == 27)
+		{
+			jsDD.stopCurrentDrag();
+		}
+	},
+
+	stopCurrentDrag: function()
+	{
+		if (jsDD.bStarted)
 		{
 			jsDD.bEscPressed = true;
 			jsDD.stopDrag();
@@ -266,9 +279,13 @@ jsDD = {
 
 	startDrag: function(e)
 	{
-		if (jsDD.bDisable) return true;
+		if (jsDD.bDisable)
+			return true;
 
 		e = e || window.event;
+
+		if (!(BX.getEventButton(e)&BX.MSLEFT))
+			return true;
 
 		jsDD.current_node = null;
 		if (e.currentTarget)
@@ -321,7 +338,8 @@ jsDD = {
 
 	start: function()
 	{
-		if (jsDD.bDisable) return true;
+		if (jsDD.bDisable)
+			return true;
 
 		document.body.style.cursor = 'move';
 
@@ -358,7 +376,7 @@ jsDD = {
 		jsDD.x = e.clientX + jsDD.wndSize.scrollLeft;
 		jsDD.y = e.clientY + jsDD.wndSize.scrollTop;
 
-		var delta = 2;
+		var delta = 5;
 		if(jsDD.x >= jsDD.start_x-delta && jsDD.x <= jsDD.start_x+delta && jsDD.y >= jsDD.start_y-delta && jsDD.y <= jsDD.start_y+delta)
 			return true;
 

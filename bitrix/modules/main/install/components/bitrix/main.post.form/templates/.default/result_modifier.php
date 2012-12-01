@@ -129,7 +129,10 @@ if (!empty($arParams["TAGS"]))
 $arParams["SMILES_COUNT"] = intVal($arParams["SMILES_COUNT"]);
 $arParams["SMILES"] = (is_array($arParams["SMILES"]) ? $arParams["SMILES"] : array());
 if (!empty($arParams["SMILES"]) && !in_array("SmileList", $arParams["PARSER"]))
+{
 	$arParams["PARSER"][] = "SmileList";
+	$arParams["BUTTONS"][] = "SmileListHide";
+}
 
 $arParams["CUSTOM_TEXT"] = (is_array($arParams["CUSTOM_TEXT"]) ? $arParams["CUSTOM_TEXT"] : array());
 $arParams["CUSTOM_TEXT_HASH"] = (!empty($arParams["CUSTOM_TEXT"]) ? md5(implode("", $arParams["CUSTOM_TEXT"])) : "");

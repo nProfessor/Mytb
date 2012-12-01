@@ -20,4 +20,5 @@ $MESS["MPF_IMAGE_TITLE"] = "Bild in die Nachricht einfügen";
 $MESS["MPF_INSERT_FILE"] = "Klicken Sie, um eine Datei einzufügen";
 $MESS["MPF_SPOILER"] = "Spoiler einfügen";
 $MESS["MPF_FILES"] = "Dateien:";
+$MESS["MPF_ADD_TAG1"] = "Hinzufügen";
 ?>

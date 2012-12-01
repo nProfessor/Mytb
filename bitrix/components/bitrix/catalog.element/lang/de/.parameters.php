@@ -43,4 +43,5 @@ $MESS["IBLOCK_SORT_DESC"] = "absteigend";
 $MESS["CP_BCE_CONVERT_CURRENCY"] = "Preise in einer Währung anzeigen";
 $MESS["CP_BCE_CURRENCY_ID"] = "Währung in die die Preise konvertiert werden";
 $MESS["CP_BCE_OFFERS_LIMIT"] = "Maximale Anzahl anzuzeigender Produktvarianten (benutzen Sie 0, um alle anzuzeigen)";
+$MESS["CP_BCE_USE_ELEMENT_COUNTER"] = "Ansichtszähler benutzen";
 ?>

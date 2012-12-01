@@ -58,7 +58,7 @@ BX.localStorage.instance = function()
 			localStorageInstance = {
 				'set' : BX.DoNothing,
 				'get' : function(){return null},
-				'remove' : BX.DoNoting
+				'remove' : BX.DoNothing
 			};
 		}
 	}
@@ -142,7 +142,7 @@ BX.localStorage.prototype._encode = function(value)
 BX.localStorage.prototype._decode = function(value)
 {
 	var answer = null;
-	if (value != null)
+	if (!!value)
 	{
 		try {answer = JSON.parse(value);}
 		catch(e) { answer = value; }

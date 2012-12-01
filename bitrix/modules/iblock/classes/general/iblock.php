@@ -191,6 +191,13 @@ class CAllIBlock
 		if($IBLOCK_ID <= 0)
 			return $arButtons;
 
+		$bCatalog = false;
+		if(isset($arOptions["CATALOG"]) && $arOptions["CATALOG"] == true)
+		{
+			if(CModule::IncludeModule('catalog'))
+				$bCatalog = true;
+		}
+
 		$return_url = array(
 			"add_element" => "",
 			"edit_element" => "",
@@ -244,7 +251,13 @@ class CAllIBlock
 
 		if($ELEMENT_ID > 0 && CIBlockElementRights::UserHasRightTo($IBLOCK_ID, $ELEMENT_ID, "element_edit"))
 		{
-			$url = "/bitrix/admin/iblock_element_edit.php?type=".$arIBlock["IBLOCK_TYPE_ID"].$s."&lang=".LANGUAGE_ID."&IBLOCK_ID=".$IBLOCK_ID."&ID=".$ELEMENT_ID."&filter_section=".$SECTION_ID."&bxpublic=Y&from_module=iblock&return_url=".UrlEncode($return_url["edit_element"]);
+			$url = "/bitrix/admin/".CIBlock::GetAdminElementEditLink($IBLOCK_ID, $ELEMENT_ID, array(
+				"force_catalog" => $bCatalog,
+				"filter_section" => $SECTION_ID,
+				"bxpublic" => "Y",
+				"from_module" => "iblock",
+				"return_url" => $return_url["edit_element"],
+			));
 
 			$action = $APPLICATION->GetPopupLink(
 				array(
@@ -289,7 +302,14 @@ class CAllIBlock
 
 		if(CIBlockSectionRights::UserHasRightTo($IBLOCK_ID, $SECTION_ID, "section_element_bind"))
 		{
-			$url = "/bitrix/admin/iblock_element_edit.php?type=".$arIBlock["IBLOCK_TYPE_ID"]."&lang=".LANGUAGE_ID."&IBLOCK_ID=".$IBLOCK_ID."&filter_section=".$SECTION_ID."&IBLOCK_SECTION_ID=".$SECTION_ID."&bxpublic=Y&from_module=iblock&return_url=".UrlEncode($return_url["add_element"]);
+			$url = "/bitrix/admin/".CIBlock::GetAdminElementEditLink($IBLOCK_ID, null, array(
+				"force_catalog" => $bCatalog,
+				"filter_section" => $SECTION_ID,
+				"IBLOCK_SECTION_ID" => $SECTION_ID,
+				"bxpublic" => "Y",
+				"from_module" => "iblock",
+				"return_url" => $return_url["add_element"],
+			));
 
 			$action = $APPLICATION->GetPopupLink(
 				array(
@@ -369,7 +389,13 @@ class CAllIBlock
 					if(!empty($arButtons["submenu"]))
 						$arButtons["submenu"][] = array("SEPARATOR" => "Y", "HREF" => "");
 
-					$url = "/bitrix/admin/iblock_section_edit.php?ID=". $SECTION_ID."&type=".$arIBlock["IBLOCK_TYPE_ID"]."&lang=".LANGUAGE_ID. "&IBLOCK_ID=". $IBLOCK_ID."&filter_section=".$SECTION_ID."&bxpublic=Y&from_module=iblock&return_url=".UrlEncode($return_url["edit_section"]);
+					$url = "/bitrix/admin/".CIBlock::GetAdminSectionEditLink($IBLOCK_ID, $SECTION_ID, array(
+						"force_catalog" => $bCatalog,
+						"filter_section" => $SECTION_ID,
+						"bxpublic" => "Y",
+						"from_module" => "iblock",
+						"return_url" => $return_url["edit_section"],
+					));
 
 					$action = $APPLICATION->GetPopupLink(
 						array(
@@ -401,7 +427,14 @@ class CAllIBlock
 
 				if(CIBlockSectionRights::UserHasRightTo($IBLOCK_ID, $SECTION_ID, "section_section_bind"))
 				{
-					$url = "/bitrix/admin/iblock_section_edit.php?type=".$arIBlock["IBLOCK_TYPE_ID"]."&lang=".LANGUAGE_ID."&IBLOCK_ID=".$IBLOCK_ID."&IBLOCK_SECTION_ID=".$SECTION_ID."&filter_section=".$SECTION_ID."&bxpublic=Y&from_module=iblock&return_url=".UrlEncode($return_url["add_section"]);
+					$url = "/bitrix/admin/".CIBlock::GetAdminSectionEditLink($IBLOCK_ID, null, array(
+						"force_catalog" => $bCatalog,
+						"IBLOCK_SECTION_ID" => $SECTION_ID,
+						"filter_section" => $SECTION_ID,
+						"bxpublic" => "Y",
+						"from_module" => "iblock",
+						"return_url" => $return_url["add_section"],
+					));
 
 					$action = $APPLICATION->GetPopupLink(
 						array(
@@ -683,6 +716,9 @@ class CAllIBlock
 			unset($arFields["EXTERNAL_ID"]);
 		}
 
+		if(array_key_exists("SECTION_PROPERTY", $arFields))
+			$arFields["SECTION_PROPERTY"] = "Y";
+
 		unset($arFields["ID"]);
 
 		if(!$this->CheckFields($arFields))
@@ -853,6 +889,9 @@ class CAllIBlock
 
 		if(is_set($arFields, "SITE_ID"))
 			$arFields["LID"] = $arFields["SITE_ID"];
+
+		if(is_set($arFields, "SECTION_PROPERTY"))
+			$arFields["SECTION_PROPERTY"] = "Y";
 
 		$RIGHTS_MODE = CIBlock::GetArrayByID($ID, "RIGHTS_MODE");
 
@@ -1056,6 +1095,8 @@ class CAllIBlock
 
 		$obIBlockRights = new CIBlockRights($ID);
 		$obIBlockRights->DeleteAllRights();
+
+		CIBlockSectionPropertyLink::DeleteByIBlock($ID);
 
 		$DB->Query("delete from b_iblock_offers_tmp where PRODUCT_IBLOCK_ID=".$ID, false, $err_mess.__LINE__);
 		$DB->Query("delete from b_iblock_offers_tmp where OFFERS_IBLOCK_ID=".$ID, false, $err_mess.__LINE__);
@@ -2989,66 +3030,69 @@ REQ
 	function FilterPicture($filePath, $arFilter)
 	{
 		$io = CBXVirtualIo::GetInstance();
-
 		if (!$io->FileExists($filePath))
 			return false;
 
-		$arFileSize = CFile::GetImageSize($io->GetPhysicalName($filePath));
-		if (!in_array($arFileSize[2], array(IMAGETYPE_PNG, IMAGETYPE_JPEG, IMAGETYPE_GIF)))
+		$arFileSize = CFile::GetImageSize($filePath);
+		if(!is_array($arFileSize))
 			return false;
 
 		switch ($arFileSize[2])
 		{
-			case IMAGETYPE_GIF:
-				$picture = imagecreatefromgif($io->GetPhysicalName($filePath));
-				$bHasAlpha = true;
-				break;
-			case IMAGETYPE_PNG:
-				$picture = imagecreatefrompng($io->GetPhysicalName($filePath));
-				$bHasAlpha = true;
-				break;
-			case IMAGETYPE_JPEG:
-				$picture = imagecreatefromjpeg($io->GetPhysicalName($filePath));
-				$bHasAlpha = false;
-				break;
-			default:
-				$picture = false;
-				$bHasAlpha = false;
-				break;
-		}
+		case IMAGETYPE_GIF:
+			$picture = imagecreatefromgif($io->GetPhysicalName($filePath));
+			$bHasAlpha = true;
+			break;
 
-		if(!is_resource($picture))
+		case IMAGETYPE_PNG:
+			$picture = imagecreatefrompng($io->GetPhysicalName($filePath));
+			$bHasAlpha = true;
+			break;
+
+		case IMAGETYPE_JPEG:
+			$picture = imagecreatefromjpeg($io->GetPhysicalName($filePath));
+			$bHasAlpha = false;
+			break;
+
+		default:
+			$picture = false;
+			$bHasAlpha = false;
+			break;
+		}
+		if (!is_resource($picture))
 			return false;
 
 		$bNeedCreatePicture = CFile::ApplyImageFilter($picture, $arFilter, $bHasAlpha);
-		if($bNeedCreatePicture)
+		if ($bNeedCreatePicture)
 		{
 			switch ($arFileSize[2])
 			{
-				case IMAGETYPE_GIF:
-					imagegif($picture, $io->GetPhysicalName($filePath));
-					break;
-				case IMAGETYPE_PNG:
-					imagealphablending($picture, false );
-					imagesavealpha($picture, true);
-					imagepng($picture, $io->GetPhysicalName($filePath));
-					break;
-				case IMAGETYPE_JPEG:
-					$jpgQuality = intval(COption::GetOptionString('main', 'image_resize_quality', '95'));
-					if($jpgQuality <= 0 || $jpgQuality > 100)
-						$jpgQuality = 95;
-					imagejpeg($picture, $io->GetPhysicalName($filePath), $jpgQuality);
-					break;
+			case IMAGETYPE_GIF:
+				imagegif($picture, $io->GetPhysicalName($filePath));
+				break;
+
+			case IMAGETYPE_PNG:
+				imagealphablending($picture, false);
+				imagesavealpha($picture, true);
+				imagepng($picture, $io->GetPhysicalName($filePath));
+				break;
+
+			case IMAGETYPE_JPEG:
+				$jpgQuality = intval(COption::GetOptionString('main', 'image_resize_quality', '95'));
+				if ($jpgQuality <= 0 || $jpgQuality > 100)
+					$jpgQuality = 95;
+
+				imagejpeg($picture, $io->GetPhysicalName($filePath), $jpgQuality);
+				break;
 			}
 		}
-
 		imagedestroy($picture);
 		return true;
 	}
 
 	function NumberFormat($num)
 	{
-		if(strlen($num) > 0)
+		if (strlen($num) > 0)
 		{
 			$res = preg_replace("#\\.([0-9]*?)(0+)\$#", ".\\1", $num);
 			return rtrim($res, ".");
@@ -3090,32 +3134,86 @@ REQ
 		return $o;
 	}
 
-	function GetAdminElementListLink($IBLOCK_ID, $arParams)
+	function GetAdminSectionEditLink($IBLOCK_ID, $SECTION_ID, $arParams = array(), $strAdd = "")
 	{
-		if(CIBlock::GetAdminListMode($IBLOCK_ID) == 'C')
+		if (
+			(defined("CATALOG_PRODUCT") || $arParams["force_catalog"])
+			&& !array_key_exists("menu", $arParams)
+		)
+			$url = "cat_section_edit.php";
+		else
+			$url = "iblock_section_edit.php";
+
+		$url.= "?IBLOCK_ID=".intval($IBLOCK_ID);
+		$url.= "&type=".urlencode(CIBlock::GetArrayByID($IBLOCK_ID, "IBLOCK_TYPE_ID"));
+		if($SECTION_ID !== null)
+			$url.= "&ID=".intval($SECTION_ID);
+		$url.= "&lang=".urlencode(LANGUAGE_ID);
+		foreach ($arParams as $name => $value)
+			if (isset($value))
+				$url.= "&".urlencode($name)."=".urlencode($value);
+
+		return $url.$strAdd;
+	}
+
+	function GetAdminElementEditLink($IBLOCK_ID, $ELEMENT_ID, $arParams = array(), $strAdd = "")
+	{
+		if (
+			(defined("CATALOG_PRODUCT") || $arParams["force_catalog"])
+			&& !array_key_exists("menu", $arParams)
+		)
+			$url = "cat_product_edit.php";
+		else
+			$url = "iblock_element_edit.php";
+
+		$url.= "?IBLOCK_ID=".intval($IBLOCK_ID);
+		$url.= "&type=".urlencode(CIBlock::GetArrayByID($IBLOCK_ID, "IBLOCK_TYPE_ID"));
+		if($ELEMENT_ID !== null)
+			$url.= "&ID=".intval($ELEMENT_ID);
+		$url.= "&lang=".urlencode(LANGUAGE_ID);
+		foreach ($arParams as $name => $value)
+			if (isset($value))
+				$url.= "&".urlencode($name)."=".urlencode($value);
+
+		return $url.$strAdd;
+	}
+
+	function GetAdminElementListLink($IBLOCK_ID, $arParams = array(), $strAdd = "")
+	{
+		if (defined("CATALOG_PRODUCT") && !array_key_exists("menu", $arParams))
+			$url = "cat_product_admin.php";
+		elseif (CIBlock::GetAdminListMode($IBLOCK_ID) == 'C')
 			$url = "iblock_list_admin.php";
 		else
 			$url = "iblock_element_admin.php";
-		$url .= "?IBLOCK_ID=".intval($IBLOCK_ID);
-		$url .= "&type=".urlencode(CIBlock::GetArrayByID($IBLOCK_ID, "IBLOCK_TYPE_ID"));
-		$url .= "&lang=".urlencode(LANGUAGE_ID);
-		foreach($arParams as $name => $value)
-			$url .= "&".urlencode($name)."=".urlencode($value);
-		return $url;
+
+		$url.= "?IBLOCK_ID=".intval($IBLOCK_ID);
+		$url.= "&type=".urlencode(CIBlock::GetArrayByID($IBLOCK_ID, "IBLOCK_TYPE_ID"));
+		$url.= "&lang=".urlencode(LANGUAGE_ID);
+		foreach ($arParams as $name => $value)
+			if (isset($value))
+				$url.= "&".urlencode($name)."=".urlencode($value);
+
+		return $url.$strAdd;
 	}
 
-	function GetAdminSectionListLink($IBLOCK_ID, $arParams)
+	function GetAdminSectionListLink($IBLOCK_ID, $arParams = array(), $strAdd = "")
 	{
-		if(CIBlock::GetAdminListMode($IBLOCK_ID) == 'C')
+		if (defined("CATALOG_PRODUCT") && !array_key_exists("menu", $arParams))
+			$url = "cat_section_admin.php";
+		elseif (CIBlock::GetAdminListMode($IBLOCK_ID) == 'C')
 			$url = "iblock_list_admin.php";
 		else
 			$url = "iblock_section_admin.php";
-		$url .= "?IBLOCK_ID=".intval($IBLOCK_ID);
-		$url .= "&type=".urlencode(CIBlock::GetArrayByID($IBLOCK_ID, "IBLOCK_TYPE_ID"));
-		$url .= "&lang=".urlencode(LANGUAGE_ID);
-		foreach($arParams as $name => $value)
-			$url .= "&".urlencode($name)."=".urlencode($value);
-		return $url;
+
+		$url.= "?IBLOCK_ID=".intval($IBLOCK_ID);
+		$url.= "&type=".urlencode(CIBlock::GetArrayByID($IBLOCK_ID, "IBLOCK_TYPE_ID"));
+		$url.= "&lang=".urlencode(LANGUAGE_ID);
+		foreach ($arParams as $name => $value)
+			if (isset($value))
+				$url.= "&".urlencode($name)."=".urlencode($value);
+
+		return $url.$strAdd;
 	}
 
 	function GetAdminListMode($IBLOCK_ID)
@@ -3136,25 +3234,22 @@ REQ
 		$arIBlock = CIBlock::GetArrayByID($IBLOCK_ID);
 
 		$ar = $arIBlock["FIELDS"]["CODE"]["DEFAULT_VALUE"];
-		if(
+		if (
 			is_array($ar)
 			&& $ar["UNIQUE"] == "Y"
 			&& !$DB->IndexExists("b_iblock_element", array("IBLOCK_ID", "CODE"))
 		)
-		{
 			$DB->Query("create index ix_iblock_element_code on b_iblock_element (IBLOCK_ID, CODE)");
-		}
 
 		$ar = $arIBlock["FIELDS"]["SECTION_CODE"]["DEFAULT_VALUE"];
-		if(
+		if (
 			is_array($ar)
 			&& $ar["UNIQUE"] == "Y"
 			&& !$DB->IndexExists("b_iblock_section", array("IBLOCK_ID", "CODE"))
 		)
-		{
 			$DB->Query("create index ix_iblock_section_code on b_iblock_section (IBLOCK_ID, CODE)");
-		}
 	}
+
 
 	function GetAuditTypes()
 	{
@@ -3174,15 +3269,14 @@ REQ
 	function roundDB($value)
 	{
 		$len = 18;
-		$dec =  4;
-		$eps = 1.00/pow(10, $len + 4);
-
+		$dec = 4;
+		$eps = 1.00 / pow(10, $len + 4);
 		$rounded = round(doubleval($value) + $eps, $len);
-		if(is_nan($rounded) || is_infinite($rounded))
+		if (is_nan($rounded) || is_infinite($rounded))
 			$rounded = 0;
 
 		$result = sprintf("%01.".$dec."f", $rounded);
-		if(strlen($result) > ($len - $dec))
+		if (strlen($result) > ($len - $dec))
 			$result = trim(substr($result, 0, $len - $dec), ".");
 
 		return $result;

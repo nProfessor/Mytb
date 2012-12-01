@@ -55,7 +55,7 @@ $arResult["NEW_USER_REGISTRATION"] = (COption::GetOptionString("main", "new_user
 
 $arResult["AUTH_SERVICES"] = false;
 $arResult["CURRENT_SERVICE"] = false;
-if(!$USER->IsAuthorized() && $arResult["NEW_USER_REGISTRATION"] == "Y" && CModule::IncludeModule("socialservices"))
+if(!$USER->IsAuthorized() && CModule::IncludeModule("socialservices"))
 {
 	$oAuthManager = new CSocServAuthManager();
 	$arServices = $oAuthManager->GetActiveAuthServices($arResult);

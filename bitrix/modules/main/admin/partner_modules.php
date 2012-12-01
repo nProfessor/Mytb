@@ -17,6 +17,8 @@ $isAdmin = $USER->CanDoOperation('edit_other_settings');
 IncludeModuleLangFile(__FILE__);
 
 $id = $_REQUEST["id"];
+$mod = $_REQUEST["mod"];
+$resultMod = $_REQUEST["result"];
 
 $arModules = array();
 function OnModuleInstalledEvent($id)
@@ -126,7 +128,7 @@ if((strlen($uninstall)>0 || strlen($install)>0 || strlen($clear)>0) && $isAdmin 
 		if($Module->IsInstalled() && strlen($uninstall)>0)
 		{
 			OnModuleInstalledEvent($id);
-			if($Module->DoUninstall())
+			if($Module->DoUninstall() !== false)
 			{
 				LocalRedirect($APPLICATION->GetCurPage()."?lang=".LANGUAGE_ID."&mod=".$id."&result=DELOK");
 			}
@@ -141,11 +143,11 @@ if((strlen($uninstall)>0 || strlen($install)>0 || strlen($clear)>0) && $isAdmin 
 		{
 			if (strtolower($DB->type)=="mysql" && defined("MYSQL_TABLE_TYPE") && strlen(MYSQL_TABLE_TYPE)>0)
 			{
-				$DB->Query("SET table_type = '".MYSQL_TABLE_TYPE."'", true);
+				$DB->Query("SET storage_engine = '".MYSQL_TABLE_TYPE."'", true);
 			}
 
 			OnModuleInstalledEvent($id);
-			if($Module->DoInstall())
+			if($Module->DoInstall() !== false)
 			{
 				LocalRedirect($APPLICATION->GetCurPage()."?lang=".LANGUAGE_ID."&mod=".$id."&result=OK");
 			}
@@ -345,15 +347,21 @@ $rsData = new CAdminResult($rsData, $sTableID1);
 
 while($info = $rsData->Fetch())
 {
+
 	$row =& $lAdmin1->AddRow($info["ID"], $info);
 	
 	$row->AddViewField("NAME", "<b>".htmlspecialcharsbx($info["NAME"])."</b> (".htmlspecialcharsbx($info["ID"]).")<br />".htmlspecialcharsbx($info["DESCRIPTION"]));
+	$row->AddViewField("PARTNER", $info["PARTNER"]);
 	
-
 	if($info["UPDATE_END"] == "Y")
 	{
 		if($linkToBuy)
-			$row->AddViewField("DATE_TO", "<span style=\"color:red;\">".$info["DATE_TO"]."</span><br /><a href=\"".str_replace("#CODE#", $info["ID"], $linkToBuyUpdate)."\" target=\"_blank\">".GetMessage("MOD_UPDATE_BUY")."</a>");
+		{
+			if(strlen($info["DATE_TO"]) > 0)
+				$row->AddViewField("DATE_TO", "<span style=\"color:red;\">".$info["DATE_TO"]."</span><br /><a href=\"".str_replace("#CODE#", $info["ID"], $linkToBuyUpdate)."\" target=\"_blank\">".GetMessage("MOD_UPDATE_BUY")."</a>");
+			else
+				$row->AddViewField("DATE_TO", "<a href=\"".str_replace("#CODE#", $info["ID"], $linkToBuyUpdate)."\" target=\"_blank\">".GetMessage("MOD_UPDATE_BUY")."</a>");
+		}
 		else
 			$row->AddViewField("DATE_TO", "<span style=\"color:red;\">".$info["DATE_TO"]."</span>");
 	}
@@ -385,15 +393,16 @@ $lAdmin1->CheckListMode();
 $APPLICATION->SetTitle(GetMessage("TITLE"));
 require($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/include/prolog_admin_after.php");
 
-if(strlen($mod) > 0 && $result == "OK")
+
+if(strlen($mod) > 0 && $resultMod == "OK")
 {
 	CAdminMessage::ShowNote(GetMessage("MOD_SMP_INSTALLED", Array("#MODULE_NAME#" => $arModules[$mod]["MODULE_NAME"])));
 }
-elseif(strlen($mod) > 0 && $result == "DELOK")
+elseif(strlen($mod) > 0 && $resultMod == "DELOK")
 {
 	CAdminMessage::ShowNote(GetMessage("MOD_SMP_UNINSTALLED", Array("#MODULE_NAME#" => $arModules[$mod]["MODULE_NAME"])));
 }
-elseif(strlen($mod) > 0 && $result == "CLEAROK")
+elseif(strlen($mod) > 0 && $resultMod == "CLEAROK")
 {
 	CAdminMessage::ShowNote(GetMessage("MOD_SMP_DELETED", Array("#MODULE_NAME#" => $mod)));
 }

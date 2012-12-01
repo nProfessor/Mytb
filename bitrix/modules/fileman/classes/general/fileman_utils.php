@@ -52,7 +52,7 @@ class CFilemanUtils
 		var oSearchDialog = new BX.CAdminDialog({
 			title : '<?= GetMessage('FILEMAN_SEARCH')?>',
 			height: 300,
-			width: 490,
+			width: 570,
 			resizable: false
 		});
 
@@ -79,6 +79,7 @@ class CFilemanUtils
 			BX.addClass(oSearchDialog.PARTS.CONTENT, "bx-fm-dialog-tabed");
 			oSearchDialog.Show();
 			oSearchDialog.adjustSizeEx();
+			oSearchDialog.PARTS.CONTENT_DATA.style.height = 'auto';
 
 			if (!window.oFMSearch || !window.oFMSearch.bInited)
 			{
@@ -323,7 +324,7 @@ class CFilemanUtils
 				'PackPermsError' => 'FM_UTIL_PACK_PERMS_ERROR',
 				'PackFinishing' => 'FM_UTIL_PACK_FINISH',
 				'PackCancel' => 'FM_UTIL_PACK_CANCEL',
-				'PackFNameError' => 'FM_UTIL_PACK_FNAME_ERROR'				
+				'PackFNameError' => 'FM_UTIL_PACK_FNAME_ERROR'
 			));
 		}
 
@@ -350,7 +351,6 @@ var FM_MESS = {0:0<?foreach($arLangMess as $m1 => $m2){echo ', '.$m1." : '".adds
 
 		$searchTabControl = new CAdmintabControl("searchTabControl", $aTabs, false, true);
 		$searchTabControl->SetPublicMode('oSearchDialog');
-
 		$searchTabControl->Begin();
 		?>
 		<?$searchTabControl->BeginNextTab();?>
@@ -363,29 +363,24 @@ var FM_MESS = {0:0<?foreach($arLangMess as $m1 => $m2){echo ', '.$m1." : '".adds
 			</tr>
 			<tr title='<?= GetMessage("FM_UTIL_FILE_NAME_TITLE")?>'>
 				<td class="bxfm-d-label"><label for="bx_search_file"><?= GetMessage("FM_UTIL_FILE_NAME")?>:</label></td>
-				<td class="bxfm-d-value"><input id="bx_search_file" name="bx_search_file" value="<?= $defMask?>" style="width: 220px;" /></td>
+				<td class="bxfm-d-value"><input id="bx_search_file" name="bx_search_file" value="<?= $defMask?>" style="width: 220px;" type="text"/></td>
 			</tr>
 			<tr title="<?= GetMessage("FM_UTIL_PHRASE_TITLE")?>">
 				<td class="bxfm-d-label"><label for="bx_search_phrase"><?= GetMessage("FM_UTIL_PHRASE")?>:</label></td>
-				<td class="bxfm-d-value"><input id="bx_search_phrase" name="bx_search_phrase" value=""  style="width: 220px;" /></td>
+				<td class="bxfm-d-value"><input id="bx_search_phrase" name="bx_search_phrase" value="" style="width: 220px;" type="text"/></td>
 			</tr>
 			<tr class="bxfm-d-only-replace" title="<?= GetMessage("FM_UTIL_REPLACE_INP_TITLE")?>">
 				<td class="bxfm-d-label"><label for="bx_replace_phrase"><?= GetMessage("FM_UTIL_REPLACE_INP")?>:</label></td>
-				<td class="bxfm-d-value"><input id="bx_replace_phrase" name="bx_replace_phrase" value=""  style="width: 220px;" /></td>
+				<td class="bxfm-d-value"><input id="bx_replace_phrase" name="bx_replace_phrase" value=""  style="width: 220px;" type="text"/></td>
 			</tr>
 
 			<tr title="<?= GetMessage("FM_UTIL_DIR_TITLE")?>">
 				<td class="bxfm-d-label"><label for="bx_search_dir"><?= GetMessage("FM_UTIL_DIR")?>:</label></td>
-				<td class="bxfm-d-value">
-				<div style="float: left; width: 250px;">
-				<input id="bx_search_dir" name="bx_search_dir" value=""  style="width: 220px;"/><input id="bx_search_fd_but" type="button" value="..." title="<?= GetMessage('FD_OPEN_DIR')?>" onclick="FMFD_SearchDirOpen(true, {site: window.oFMSearch.oSiteSel.value, path: window.oFMSearch.pSearchDir.value});" />
-				</div>
-				<div class="bxfm-site-sel" id="bx_search_site_sel"></div>
-				</td>
+				<td class="bxfm-d-value"><input id="bx_search_dir" name="bx_search_dir" value="" style="width: 220px;" type="text"/> <input id="bx_search_fd_but" type="button" value="..." title="<?= GetMessage('FD_OPEN_DIR')?>" onclick="FMFD_SearchDirOpen(true, {site: window.oFMSearch.oSiteSel.value, path: window.oFMSearch.pSearchDir.value});" /><span class="bxfm-site-sel" id="bx_search_site_sel"></span></td>
 			</tr>
 			<tr>
-				<td class="bxfm-d-label"><input id="bx_search_subdir" name="bx_search_subdir" type="checkbox" value="Y" checked="checked" /></td>
-				<td class="bxfm-d-value"><label for="bx_search_subdir"><?= GetMessage("FM_UTIL_INCLUDE_SUBFOLDER")?></label></td>
+				<td class="bxfm-d-label"><label for="bx_search_subdir"><?= GetMessage("FM_UTIL_INCLUDE_SUBFOLDER")?></label></td>
+				<td class="bxfm-d-value"><input id="bx_search_subdir" name="bx_search_subdir" type="checkbox" value="Y" checked="checked" /></td>
 			</tr>
 			<tr class="bxfm-d-title">
 				<td colSpan="2">
@@ -404,8 +399,8 @@ var FM_MESS = {0:0<?foreach($arLangMess as $m1 => $m2){echo ', '.$m1." : '".adds
 						<option value="set"><?= GetMessage("FM_UTIL_SET_EXACTLY")?></option>
 					</select>
 					<div id="bx_search_date_div" class="bxfm-d-adjust-div">
-					<?= GetMessage("FM_UTIL_FROM")?>: <input name="bx_search_date_from" id="bx_search_date_from" value="" style="width: 90px;"/><?= CAdminCalendar::Calendar("bx_search_date_from", "bx_search_form");?>
-					<?= GetMessage("FM_UTIL_TO")?>: <input name="bx_search_date_to" id="bx_search_date_to" value="" style="width: 90px;"/><?= CAdminCalendar::Calendar("bx_search_date_to", "bx_search_form");?>
+					<?= GetMessage("FM_UTIL_FROM")?>: <input name="bx_search_date_from" id="bx_search_date_from" value="" style="width: 90px;" type="text"/><?= CAdminCalendar::Calendar("bx_search_date_from", "bx_search_form");?>
+					<?= GetMessage("FM_UTIL_TO")?>: <input name="bx_search_date_to" id="bx_search_date_to" value="" style="width: 90px;" type="text"/><?= CAdminCalendar::Calendar("bx_search_date_to", "bx_search_form");?>
 					</div>
 				</td>
 			</tr>
@@ -420,22 +415,22 @@ var FM_MESS = {0:0<?foreach($arLangMess as $m1 => $m2){echo ', '.$m1." : '".adds
 					<option value="set"><?= GetMessage("FM_UTIL_SET_EXACTLY")?></option>
 				</select>
 				<div id="bx_search_size_div" class="bxfm-d-adjust-div">
-				<?= GetMessage("FM_UTIL_SIZE_FROM")?>: <input id="bx_search_size_from" name="bx_search_size_from" value="" style="width: 70px;"/><?= GetMessage("FM_UTIL_KB")?> &nbsp;
-				<?= GetMessage("FM_UTIL_SIZE_TO")?>: <input id="bx_search_size_to" name="bx_search_size_to" value="" style="width: 70px;"/><?= GetMessage("FM_UTIL_KB")?>
+				<?= GetMessage("FM_UTIL_SIZE_FROM")?>: <input id="bx_search_size_from" name="bx_search_size_from" value="" style="width: 70px;" type="text"/><?= GetMessage("FM_UTIL_KB")?> &nbsp;
+				<?= GetMessage("FM_UTIL_SIZE_TO")?>: <input id="bx_search_size_to" name="bx_search_size_to" value="" style="width: 70px;" type="text"/><?= GetMessage("FM_UTIL_KB")?>
 				</div>
 				</td>
 			</tr>
 			<tr class="bxfm-add-hide bxfm-d-only-search">
-				<td class="bxfm-d-label"><input id="bx_search_dirs_too" name="bx_search_dirs_too" type="checkbox" value="Y" checked="checked" /></td>
-				<td class="bxfm-d-value"><label for="bx_search_dirs_too"><?= GetMessage("FM_UTIL_SEARCH_DIRS")?></label></td>
+				<td class="bxfm-d-label"><label for="bx_search_dirs_too"><?= GetMessage("FM_UTIL_SEARCH_DIRS")?></label></td>
+				<td class="bxfm-d-value"><input id="bx_search_dirs_too" name="bx_search_dirs_too" type="checkbox" value="Y" checked="checked" /></td>
 			</tr>
 			<tr class="bxfm-add-hide-TEMP" style="display: none;">
-				<td class="bxfm-d-label"><input  id="bx_search_entire" type="checkbox" value="Y" /></td>
-				<td class="bxfm-d-value"><label for="bx_search_entire"><?= GetMessage("FM_UTIL_ENTIRE")?></label></td>
+				<td class="bxfm-d-label"><label for="bx_search_entire"><?= GetMessage("FM_UTIL_ENTIRE")?></label></td>
+				<td class="bxfm-d-value"><input  id="bx_search_entire" type="checkbox" value="Y" /></td>
 			</tr>
 			<tr class="bxfm-add-hide">
-				<td class="bxfm-d-label"><input id="bx_search_case" name="bx_search_case" type="checkbox" value="Y" /></td>
-				<td class="bxfm-d-value"><label for="bx_search_case"><?= GetMessage("FM_UTIL_CASE_SENS")?></label></td>
+				<td class="bxfm-d-label"><label for="bx_search_case"><?= GetMessage("FM_UTIL_CASE_SENS")?></td>
+				<td class="bxfm-d-value"><input id="bx_search_case" name="bx_search_case" type="checkbox" value="Y" /></label></td>
 			</tr>
 		</table>
 		<input type="hidden" name="search" value="Y" />
@@ -475,10 +470,10 @@ var FM_MESS = {0:0<?foreach($arLangMess as $m1 => $m2){echo ', '.$m1." : '".adds
 			<tr>
 				<td class="bxfm-d-label"><label for="bx_copy_to"><?= GetMessage("FM_COPY_TO")?>:</label></td>
 				<td class="bxfm-d-value">
-				<div style="float: left; width: 285px;">
-					<input id="bx_copy_to" style="width: 255px;" value="/" /><input type="button" value="..." title="<?= GetMessage('FD_OPEN_DIR')?>" onclick="FMFD_CopyMoveOpen(true, {site: window.oBXFMCopy.oSiteSel.value, path: window.oBXFMCopy.oCopyTo.pInput.value});"  />
-				</div>
-				<div class="bxfm-site-sel" id="bx_copy_site_sel"></div>
+					<div style="width: 340px;">
+						<input id="bx_copy_to" style="width: 255px;" value="/" type="text" /><input type="button" value="..." title="<?= GetMessage('FD_OPEN_DIR')?>" onclick="FMFD_CopyMoveOpen(true, {site: window.oBXFMCopy.oSiteSel.value, path: window.oBXFMCopy.oCopyTo.pInput.value});"  />
+						<span class="bxfm-site-sel" id="bx_copy_site_sel"></span>
+					</div>
 				</td>
 			</tr>
 
@@ -591,9 +586,7 @@ CAdminFileDialog::ShowScript(Array
 				<!-- if pack "to archive", if not - "to folder" -->
 				<td class="bxfm-d-label"><label for="bx_pack_to"><?= GetMessage("FM_PACK_TO")?>:</label></td>
 				<td class="bxfm-d-value">
-					<div style="float: left; width: 285px;">
-						<input id="bx_pack_to" style="width: 260px;" value="/" /><input type="button" value="..." title="<?= GetMessage('FD_OPEN_DIR')?>" onclick="FMFD_PackUnpackOpen(true, {site: window.oBXFMPack.site, path: window.oBXFMPack.GetFolderPath(window.oBXFMPack.oPackTo.pInput.value)});"  />
-					</div>
+					<input id="bx_pack_to" style="width: 260px;" value="/" type="text"/>&nbsp;<input type="button" value="..." title="<?= GetMessage('FD_OPEN_DIR')?>" onclick="FMFD_PackUnpackOpen(true, {site: window.oBXFMPack.site, path: window.oBXFMPack.GetFolderPath(window.oBXFMPack.oPackTo.pInput.value)});"  />
 				</td>
 			</tr>
 			<tr class="bx-pack-d-title" id="bx-pack-d-title-label">
@@ -657,7 +650,7 @@ CAdminFileDialog::ShowScript(Array
 			<tr>
 				<td>
 					<div class="bx-pack-name-cnt">
-					<a id="bx_pack_ask_file2" href="javascript:void();">file1</a>
+					<a id="bx_pack_ask_file2" href="javascript:void('');">file1</a>
 					<div id="bxc_ask_nn_cont2" class="bx-pack-new-name bxcnn-0"></div>
 					</div>
 				</td>
@@ -778,8 +771,8 @@ CAdminFileDialog::ShowScript(Array
 						$pack_to = "/".$_POST["packTo"];
 				}
 
-				$pack_to = RemoveScriptExtension($pack_to);	
-				
+				$pack_to = RemoveScriptExtension($pack_to);
+
 				//check writing permissions
 				if (!$USER->CanDoFileOperation('fm_create_new_file', $pack_to))
 				{
@@ -790,7 +783,7 @@ CAdminFileDialog::ShowScript(Array
 					<?
 					return;
 				}
-				
+
 				if(IsFileUnsafe($pack_to) || CFileMan::CheckFileName(GetFileName($pack_to)) !== true)
 				{
 					?>
@@ -1003,7 +996,7 @@ CAdminFileDialog::ShowScript(Array
 		$path = CBXVirtualIoFileSystem::ConvertCharset($path);
 
 		if (file_exists($path))
-		{			
+		{
 			$stat = stat($path);
 			return $stat["mtime"];
 		}
@@ -1716,7 +1709,7 @@ class CFilemanCopy
 								path: "<?= CUtil::JSEscape($pathTo.$name_i)?>",
 								bDir: <?= $bDir_i ? "true" : "false"?>,
 								size: "<?= $bDir_i ? '-' : CFile::FormatSize($fTmp->GetFileSize())?>",
-								date: "<?= date(CDatabase::DateFormatToPHP(CLang::GetDateFormat("FULL")), CFilemanUtils::GetModifyTime($absPathTo.$name_i)+CTimeZone::GetOffset())?>"								
+								date: "<?= date(CDatabase::DateFormatToPHP(CLang::GetDateFormat("FULL")), CFilemanUtils::GetModifyTime($absPathTo.$name_i)+CTimeZone::GetOffset())?>"
 							},
 							fileNew: {
 								alt_name: "<?= CUtil::JSEscape($altName)?>",

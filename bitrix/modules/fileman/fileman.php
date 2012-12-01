@@ -95,7 +95,7 @@ class CFileMan
 
 	function OnPanelCreate()
 	{
-		global $APPLICATION, $REQUEST_URI, $USER;
+		global $APPLICATION, $REQUEST_URI;
 		if($APPLICATION->GetGroupRight("fileman")<="D")
 			return;
 
@@ -225,10 +225,10 @@ class CFileMan
 
 			$APPLICATION->AddPanelButton(array(
 				"HREF" => 'javascript:'.(CSticker::CanDoOperation('sticker_edit') ? CSticker::GetScriptStr('add') : CSticker::GetScriptStr('show')),
-				"TYPE" => "BIG",
-				"ICON" => "bx-panel-stickers-icon",
-				"TEXT" => CSticker::CanDoOperation('sticker_edit') ? GetMessage("FMST_PANEL_STICKERS") : GetMessage("FMST_PANEL_STICKERS_1"),
-				"MAIN_SORT" => "1020",
+				"TYPE" => "SMALL",
+				"ICON" => "bx-panel-small-stickers-icon",
+				"TEXT" => GetMessage("FMST_PANEL_STICKERS_TOOLTIP_TITLE"),
+				"MAIN_SORT" => "1000",
 				"SORT" => 100,
 				"MENU" => $arMenu,
 				"HK_ID"=>"FMST_PANEL_STICKERS",
@@ -498,6 +498,7 @@ class CFileMan
 			return CFileman::DeleteFile(Array($site, $path));
 		}
 
+		$strWarning = "";
 		//get folder content
 		$d = $io->GetDirectory($DOC_ROOT.$path);
 		$arChildren = $d->GetChildren();
@@ -536,6 +537,7 @@ class CFileMan
 
 		CMain::InitPathVars($site_to, $path_to);
 		$DOC_ROOT_TO = CSite::GetSiteDocRoot($site_to);
+		$strWarning = '';
 
 		//check: if we copy to the same directory
 		if(strpos($DOC_ROOT_TO.$path_to."/", $DOC_ROOT_FROM.$path_from."/")===0)
@@ -613,16 +615,15 @@ class CFileMan
 			//************************** Quota **************************//
 
 			// Copy file
-			if(DEBUG_FILE_MAN)echo "copy(".$DOC_ROOT_FROM.$path_from.",".$DOC_ROOT_TO.$path_to.");<br>";
+			if(DEBUG_FILE_MAN)
+				echo "copy(".$DOC_ROOT_FROM.$path_from.",".$DOC_ROOT_TO.$path_to.");<br>";
 
 			if (!$io->Copy($DOC_ROOT_FROM.$path_from, $DOC_ROOT_TO.$path_to))
 				$strWarning .= GetMessage('FILEMAN_COPY_ERROR', array('#PATH_FROM#' => htmlspecialcharsex($path_from), '#PATH_TO#' => htmlspecialcharsex($path_to)));
 
 			//************************** Quota **************************//
 			if(COption::GetOptionInt("main", "disk_space") > 0)
-			{
 				$quota->updateDiskQuota("file", $size, "copy");
-			}
 			//************************** Quota **************************//
 
 			if(CModule::IncludeModule("search"))
@@ -883,6 +884,8 @@ class CFileMan
 				));
 			}
 		}
+
+		$GLOBALS["CACHE_MANAGER"]->CleanDir("menu");
 	}
 
 	function UndoNewFile($Params, $type)
@@ -935,6 +938,17 @@ class CFileMan
 					CFileMan::SaveMenu(Array($Params['site'], $Params['menu']['menuFile']), $arMenu["aMenuLinks"], $arMenu["sMenuTemplate"]);
 			}
 		}
+
+		if (isset($Params['public']) && $Params['public'] == 'Y')
+		{
+		?>
+			<script type="text/javascript">
+				window.location = '<?= CUtil::JSEscape(CHTTP::URN2URI(GetDirPath($Params['path'])))?>';
+			</script>
+		<?
+		}
+
+		$GLOBALS["CACHE_MANAGER"]->CleanDir("menu");
 	}
 
 	function UndoEditFile($Params, $type)
@@ -944,6 +958,8 @@ class CFileMan
 		// Restore file
 		if (strlen($Params['absPath']) > 0)
 			$APPLICATION->SaveFileContent($Params['absPath'], $Params['content']);
+
+		$GLOBALS["CACHE_MANAGER"]->CleanDir("menu");
 	}
 
 	function UndoNewSection($Params, $type)
@@ -1031,23 +1047,26 @@ class CFileMan
 
 		$ch = "checked=\"checked\"";
 		?>
-		<table class="bx-ed-type-selector">
-			<tr>
+		<script>
+			top.onChangeInputType = window.onChangeInputType = function(editorName)
+			{
+				if (window['changeType_' + editorName] && typeof window['changeType_' + editorName] == 'function')
+					window['changeType_' + editorName]();
+				else
+					return setTimeout(function(){onChangeInputType(editorName);}, 100);
+			}
+		</script>
+		<div class="bx-ed-type-selector">
 			<?if ($showTextType):?>
-				<td><input <? if ($textType == 'text') {echo $ch;}?> onclick="window.changeType_<?= $name?>();"  type="radio" name="<?= $strTextTypeFieldName?>" id="<?= $bxid?>_text" value="text"  /></td>
-				<td><label for="<?= $bxid?>_text"><?= GetMessage('FILEMAN_FILEMAN_TYPE_TEXT')?></label></td>
+			<span class="bx-ed-type-selector-item"><input <? if ($textType == 'text') {echo $ch;}?> onclick="onChangeInputType('<?= $name?>');" type="radio" name="<?= $strTextTypeFieldName?>" id="<?= $bxid?>_text" value="text" /><label for="<?= $bxid?>_text"><?= GetMessage('FILEMAN_FILEMAN_TYPE_TEXT')?></label></span>
 
-				<td><input <? if ($textType == 'html') {echo $ch;}?> onclick="window.changeType_<?= $name?>();"  type="radio" name="<?= $strTextTypeFieldName?>" id="<?= $bxid?>_html" value="html" /></td>
-				<td><label for="<?= $bxid?>_html">HTML</label></td>
+			<span class="bx-ed-type-selector-item"><input <? if ($textType == 'html') {echo $ch;}?> onclick="onChangeInputType('<?= $name?>');"  type="radio" name="<?= $strTextTypeFieldName?>" id="<?= $bxid?>_html" value="html" /><label for="<?= $bxid?>_html">HTML</label></span>
 
-				<td><input <? if ($textType == 'editor') {echo $ch;}?> onclick="window.changeType_<?= $name?>();" type="radio" name="<?= $strTextTypeFieldName?>" id="<?= $bxid?>_editor" value="html"></td>
-				<td><label for="<?= $bxid?>_editor"><?= GetMessage('FILEMAN_FILEMAN_TYPE_HTML_EDITOR')?></label></td>
+			<span class="bx-ed-type-selector-item"><input <? if ($textType == 'editor') {echo $ch;}?> onclick="onChangeInputType('<?= $name?>');" type="radio" name="<?= $strTextTypeFieldName?>" id="<?= $bxid?>_editor" value="html" /><label for="<?= $bxid?>_editor"><?= GetMessage('FILEMAN_FILEMAN_TYPE_HTML_EDITOR')?></label></span>
 			<? else:?>
-				<td><input type="checkbox" id="<?= $bxid?>_editor" name="<?=$strTextFieldName?>" onclick="window.changeType_<?= $name?>();" value="Y" <? if ($textType == 'editor') {echo $ch;}?>></td>
-				<td><label for="<?= $bxid?>_editor"><?= GetMessage("FILEMAN_FILEMAN_USE_HTML_EDITOR");?></label></td>
+			<span class="bx-ed-type-selector-item"><input type="checkbox" id="<?= $bxid?>_editor" name="<?= $strTextTypeFieldName?>" onclick="onChangeInputType('<?= $name?>');" value="Y" <? if ($textType == 'editor') {echo $ch;}?> /><label for="<?= $bxid?>_editor"><?= GetMessage("FILEMAN_FILEMAN_USE_HTML_EDITOR");?></span>
 			<? endif;?>
-			</tr>
-		</table>
+		</div>
 		<script>
 			BX.ready(
 				function()
@@ -1102,6 +1121,29 @@ class CFileMan
 						}
 						<?endif;?>
 					};
+
+
+					var pOptEditor = BX("<?= $bxid?>_editor");
+					if (pOptEditor)
+					{
+						BX.addCustomEvent(pOptEditor.form, 'onAutoSaveRestore', function (ob, data)
+						{
+							var pOptEditor = BX("<?= $bxid?>_editor");
+
+							setTimeout(function()
+							{
+								if (pOptEditor.checked)
+								{
+									var pMainObj = GLOBAL_pMainObj['<?= $name?>'];
+									if (pMainObj && pMainObj.bShowed)
+									{
+										pMainObj.SetContent(data[pMainObj.name]);
+										pMainObj.LoadContent();
+									}
+								}
+							}, 100);
+						});
+					}
 				}
 			);
 		</script>
@@ -1126,6 +1168,10 @@ class CFileMan
 				$arAdditionalParams = Array()
 			)
 	{
+		// We have to avoid of showing HTML-editor with probably unsecure content when loosing the session [mantis:#0007986]
+		if ($_SERVER["REQUEST_METHOD"] == "POST" && !check_bitrix_sessid())
+			return;
+
 		global $htmled, $usehtmled;
 		$strTextFieldName = preg_replace("/[^a-zA-Z0-9_:\.]/is", "", $strTextFieldName);
 
@@ -1147,7 +1193,7 @@ class CFileMan
 		$curHTMLEd = $textType == 'editor';
 		setEditorEventHandlers($strTextFieldName);
 		?>
-		<textarea class="typearea" style="<? echo(($curHTMLEd || $dontShowTA) ? 'display:none;' : '');?>width:100%;height:<?=$iHeight?>px;" name="<?=$strTextFieldName?>" id="bxed_<?=$strTextFieldName?>" wrap="virtual" <?=$textarea_field?>><?= htmlspecialchars($strTextValue)?></textarea>
+		<textarea class="typearea" style="<? echo(($curHTMLEd || $dontShowTA) ? 'display:none;' : '');?>width:100%;height:<?=$iHeight?>px;" name="<?=$strTextFieldName?>" id="bxed_<?=$strTextFieldName?>" wrap="virtual" <?=$textarea_field?>><?= htmlspecialcharsbx($strTextValue)?></textarea>
 		<?
 
 		if ($bWithoutPHP)
@@ -1182,6 +1228,10 @@ class CFileMan
 
 	function ShowHTMLEditControl($name, $content, $arParams = Array())
 	{
+		// We have to avoid of showing HTML-editor with probably unsecure content when loosing the session [mantis:#0007986]
+		if ($_SERVER["REQUEST_METHOD"] == "POST" && !check_bitrix_sessid())
+			return;
+
 		CUtil::InitJSCore(array('window', 'ajax'));
 		$relPath = (isset($arParams["path"])) ? $arParams["path"] : "/";
 		$site = (isset($arParams["site"])) ? $arParams["site"] : "";
@@ -1397,7 +1447,7 @@ class CFileMan
 </script>
 		<?
 		if(!$arParams["bFromTextarea"])
-			echo '<input type="hidden" name="'.$name.'" id="bxed_'.$name.'" value="'.htmlspecialchars($content).'">';
+			echo '<input type="hidden" name="'.$name.'" id="bxed_'.$name.'" value="'.htmlspecialcharsbx($content).'">';
 
 		if($arParams["bDisplay"] !== false)
 		{

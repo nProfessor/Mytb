@@ -121,7 +121,7 @@ class CIBlockXMLFile
 			global $DB;
 
 			if(defined("MYSQL_TABLE_TYPE") && strlen(MYSQL_TABLE_TYPE) > 0)
-				$DB->Query("SET table_type = '".MYSQL_TABLE_TYPE."'", true);
+				$DB->Query("SET storage_engine = '".MYSQL_TABLE_TYPE."'", true);
 
 			$res = $DB->Query("create table ".$this->_table_name."
 				(
@@ -616,6 +616,9 @@ class CIBlockXMLFile
 
 	function UnZip($file_name, $last_zip_entry = "", $start_time = 0, $interval = 0)
 	{
+		global $APPLICATION;
+		$io = CBXVirtualIo::GetInstance();
+
 		//Function and securioty checks
 		if(!function_exists("zip_open"))
 			return false;
@@ -634,6 +637,7 @@ class CIBlockXMLFile
 					break;
 		}
 
+		$io = CBXVirtualIo::GetInstance();
 		//Continue unzip
 		while($entry = zip_read($hZip))
 		{
@@ -642,11 +646,18 @@ class CIBlockXMLFile
 			zip_entry_open($hZip, $entry);
 			if(zip_entry_filesize($entry))
 			{
-				$file_name = preg_replace("/[:~\$<>]+/", "", $entry_name);
-				$bBadFile = HasScriptExtension($file_name) || IsFileUnsafe($file_name);
+
+				$file_name = trim(str_replace("\\", "/", trim($entry_name)), "/");
+				$file_name = $APPLICATION->ConvertCharset($file_name, "cp866", LANG_CHARSET);
+
+				$bBadFile = HasScriptExtension($file_name)
+					|| IsFileUnsafe($file_name)
+					|| !$io->ValidatePathString("/".$file_name)
+				;
+
 				if(!$bBadFile)
 				{
-					$file_name = $dir_name.$entry_name;
+					$file_name =  $io->GetPhysicalName($dir_name.rel2abs("/", $file_name));
 					CheckDirPath($file_name);
 					$fout = fopen($file_name, "wb");
 					if(!$fout)

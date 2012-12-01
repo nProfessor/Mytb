@@ -132,7 +132,7 @@ $context->Show();
 <?echo GetFilterHiddens("find_");?>
 <input type="hidden" name="Update" value="Y">
 <input type="hidden" name="ID" value="<?echo $ID?>">
-<?if(strlen($back_url)>0):?><input type="hidden" name="back_url" value="<?=htmlspecialchars($back_url)?>"><?endif?>
+<?if(strlen($back_url)>0):?><input type="hidden" name="back_url" value="<?=htmlspecialcharsbx($back_url)?>"><?endif?>
 <?
 	$tabControl->Begin();
 	$tabControl->BeginNextTab();
@@ -143,9 +143,9 @@ $context->Show();
 		<td><?=$str_ID?></td>
 	</tr>
 	<?else:?>
-	<tr>
-		<td><span class="required">*</span><?echo GetMessage("IBTYPE_E_ID")?></td>
-		<td><input type="text" name="NEW_ID" size="50" maxlength="50" value="<?=htmlspecialchars($NEW_ID)?>"></td>
+	<tr class="adm-detail-required-field">
+		<td><?echo GetMessage("IBTYPE_E_ID")?></td>
+		<td><input type="text" name="NEW_ID" size="50" maxlength="50" value="<?=htmlspecialcharsbx($NEW_ID)?>"></td>
 	</tr>
 	<?endif;?>
 	<script>
@@ -170,12 +170,12 @@ $context->Show();
 	</tr>
 	<tr>
 		<td colspan="2" align="center">
-			<table border="0" cellspacing="6">
-				<tr>
-					<td align="center"><?echo GetMessage("IBTYPE_E_LANG");?></td>
-					<td align="center"><span class="required">*</span><?echo GetMessage("IBTYPE_E_NAME");?></td>
-					<td align="center"><span id="SECTION_NAME_TITLE"><?echo GetMessage("IBTYPE_E_SECTIONS_LABEL");?></span></td>
-					<td align="center"><?echo GetMessage("IBTYPE_E_ELEMENTS");?></td>
+			<table border="0" cellspacing="6" class="internal">
+				<tr class="heading">
+					<td><?echo GetMessage("IBTYPE_E_LANG");?></td>
+					<td><?echo GetMessage("IBTYPE_E_NAME");?></td>
+					<td><span id="SECTION_NAME_TITLE"><?echo GetMessage("IBTYPE_E_SECTIONS_LABEL");?></span></td>
+					<td><?echo GetMessage("IBTYPE_E_ELEMENTS");?></td>
 				</tr>
 				<?
 				for($i=0; $i<count($arIBTLang); $i++):
@@ -186,9 +186,9 @@ $context->Show();
 				?>
 				<tr>
 					<td><?echo $arIBTLang[$i]["NAME"]?>:</td>
-					<td><input type="text" name="LANG_FIELDS[<?echo $arIBTLang[$i]["LID"]?>][NAME]" size="20" maxlength="255" value="<?echo $ibtypelang["NAME"]?>"></td>
-					<td><input type="text" name="LANG_FIELDS[<?echo $arIBTLang[$i]["LID"]?>][SECTION_NAME]" size="20" maxlength="255" value="<?echo $ibtypelang["SECTION_NAME"]?>"></td>
-					<td><input type="text" name="LANG_FIELDS[<?echo $arIBTLang[$i]["LID"]?>][ELEMENT_NAME]" size="20" maxlength="255" value="<?echo $ibtypelang["ELEMENT_NAME"]?>"></td>
+					<td><input style="width:100%" type="text" name="LANG_FIELDS[<?echo $arIBTLang[$i]["LID"]?>][NAME]" size="20" maxlength="255" value="<?echo $ibtypelang["NAME"]?>"></td>
+					<td><input style="width:100%" type="text" name="LANG_FIELDS[<?echo $arIBTLang[$i]["LID"]?>][SECTION_NAME]" size="20" maxlength="255" value="<?echo $ibtypelang["SECTION_NAME"]?>"></td>
+					<td><input style="width:100%" type="text" name="LANG_FIELDS[<?echo $arIBTLang[$i]["LID"]?>][ELEMENT_NAME]" size="20" maxlength="255" value="<?echo $ibtypelang["ELEMENT_NAME"]?>"></td>
 				</tr>
 				<?endfor?>
 			</table>
@@ -197,8 +197,8 @@ $context->Show();
 
 <?$tabControl->BeginNextTab();?>
 	<tr>
-		<td width="40%"><?echo GetMessage("IBTYPE_E_USE_RSS")?></td>
-		<td width="60%"><input type="checkbox" name="IN_RSS" value="Y"<?if($str_IN_RSS=="Y")echo " checked"?>></td>
+		<td width="40%"><label for="IN_RSS"><?echo GetMessage("IBTYPE_E_USE_RSS")?>:</label></td>
+		<td width="60%"><input type="checkbox" id="IN_RSS" name="IN_RSS" value="Y"<?if($str_IN_RSS=="Y")echo " checked"?>></td>
 	</tr>
 	<tr>
 		<td><?echo GetMessage("IBTYPE_E_SORT")?>:</td>

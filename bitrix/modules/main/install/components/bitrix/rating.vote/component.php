@@ -59,25 +59,33 @@ if (
 if (!$arResult['ALLOW_VOTE']['RESULT'])
 	$arResult['VOTE_AVAILABLE'] = 'N';
 
-$arResult['VOTE_RAND']	= time()+rand(0, 1000);
+$arResult['VOTE_RAND']	= (intval($arParams["VOTE_RAND"]) > 0 ? intval($arParams["VOTE_RAND"]) : (time()+rand(0, 1000)));
 $arResult['VOTE_TITLE'] = $arResult['TOTAL_VOTES'] == 0 ? GetMessage("RATING_COMPONENT_NO_VOTES") : sprintf(GetMessage("RATING_COMPONENT_DESC"), $arResult['TOTAL_VOTES'], $arResult['TOTAL_POSITIVE_VOTES'], $arResult['TOTAL_NEGATIVE_VOTES']);
 $arResult['VOTE_ID'] 	= $arResult['ENTITY_TYPE_ID'].'-'.$arResult['ENTITY_ID'].'-'.$arResult['VOTE_RAND'];	
-	
-
 
 if (!(isset($arParams['TEMPLATE_HIDE']) && $arParams['TEMPLATE_HIDE'] == 'Y'))
 {
 	if (!defined('MAIN_RATING_VOTE_JS_INCLUDE'))
 	{
 		define("MAIN_RATING_VOTE_JS_INCLUDE", true);
-		echo CJSCore::Init(array('popup', 'ajax'), true);
+
+		if (
+			!defined("BX_MOBILE_LOG")
+			|| BX_MOBILE_LOG != true
+		)
+			echo CJSCore::Init(array('popup', 'ajax'), true);
+
 		if ($sRatingTemplate == "like" || $sRatingTemplate == "like_graphic")
 			echo '<script type="text/javascript" src="/bitrix/js/main/rating_like.js"></script>';
 		else
 			echo '<script type="text/javascript" src="/bitrix/js/main/rating.js"></script>';
 	}
-	
-	$APPLICATION->SetAdditionalCSS("/bitrix/components/bitrix/rating.vote/templates/like/popup.css");
+	if (
+		!defined("BX_MOBILE_LOG")
+		|| BX_MOBILE_LOG != true
+	)
+		$APPLICATION->SetAdditionalCSS("/bitrix/components/bitrix/rating.vote/templates/like/popup.css");
+
 	if (in_array($sRatingTemplate, array("like", "like_graphic", "mobile_like")))
 	{
 		$arResult['RATING_TEXT_LIKE_Y'] = COption::GetOptionString("main", "rating_text_like_y", GetMessage("RATING_TEXT_LIKE_Y"));

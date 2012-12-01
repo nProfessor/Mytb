@@ -42,8 +42,8 @@ class CUserTypeStringFormatted extends CUserTypeString
 			$value = "#VALUE#";
 
 		$result .= '
-		<tr valign="top">
-			<td>'.GetMessage("USER_TYPE_STRINGFMT_PATTERN").':</td>
+		<tr>
+			<td class="adm-detail-valign-top">'.GetMessage("USER_TYPE_STRINGFMT_PATTERN").':</td>
 			<td>
 				<textarea name="'.$arHtmlControl["NAME"].'[PATTERN]" cols="40" rows="5">'.$value.'</textarea>
 			</td>
@@ -57,7 +57,7 @@ class CUserTypeStringFormatted extends CUserTypeString
 			$value = "";
 
 		$result .= '
-		<tr valign="top">
+		<tr>
 			<td>'.GetMessage("USER_TYPE_STRINGFMT_DEFAULT_VALUE").':</td>
 			<td>
 				<input type="text" name="'.$arHtmlControl["NAME"].'[DEFAULT_VALUE]" size="20"  maxlength="225" value="'.$value.'">
@@ -71,7 +71,7 @@ class CUserTypeStringFormatted extends CUserTypeString
 		else
 			$value = 20;
 		$result .= '
-		<tr valign="top">
+		<tr>
 			<td>'.GetMessage("USER_TYPE_STRINGFMT_SIZE").':</td>
 			<td>
 				<input type="text" name="'.$arHtmlControl["NAME"].'[SIZE]" size="20"  maxlength="20" value="'.$value.'">
@@ -86,7 +86,7 @@ class CUserTypeStringFormatted extends CUserTypeString
 			$value = 1;
 		if($value < 1) $value = 1;
 		$result .= '
-		<tr valign="top">
+		<tr>
 			<td>'.GetMessage("USER_TYPE_STRINGFMT_ROWS").':</td>
 			<td>
 				<input type="text" name="'.$arHtmlControl["NAME"].'[ROWS]" size="20"  maxlength="20" value="'.$value.'">
@@ -100,7 +100,7 @@ class CUserTypeStringFormatted extends CUserTypeString
 		else
 			$value = 0;
 		$result .= '
-		<tr valign="top">
+		<tr>
 			<td>'.GetMessage("USER_TYPE_STRINGFMT_MIN_LEGTH").':</td>
 			<td>
 				<input type="text" name="'.$arHtmlControl["NAME"].'[MIN_LENGTH]" size="20"  maxlength="20" value="'.$value.'">
@@ -114,7 +114,7 @@ class CUserTypeStringFormatted extends CUserTypeString
 		else
 			$value = 0;
 		$result .= '
-		<tr valign="top">
+		<tr>
 			<td>'.GetMessage("USER_TYPE_STRINGFMT_MAX_LENGTH").':</td>
 			<td>
 				<input type="text" name="'.$arHtmlControl["NAME"].'[MAX_LENGTH]" size="20"  maxlength="20" value="'.$value.'">
@@ -128,7 +128,7 @@ class CUserTypeStringFormatted extends CUserTypeString
 		else
 			$value = "";
 		$result .= '
-		<tr valign="top">
+		<tr>
 			<td>'.GetMessage("USER_TYPE_STRINGFMT_REGEXP").':</td>
 			<td>
 				<input type="text" name="'.$arHtmlControl["NAME"].'[REGEXP]" size="20"  maxlength="200" value="'.$value.'">

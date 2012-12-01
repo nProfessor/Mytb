@@ -81,11 +81,15 @@ class CCloudStorageUpload
 	 * @param string $ContentType
 	 * @return bool
 	*/
-	function Start($bucket_id, $fileSize, $ContentType = 'binary/octet-stream')
+	function Start($bucket_id, $fileSize, $ContentType = 'binary/octet-stream', $tmpFileName = false)
 	{
 		global $DB;
 
-		$obBucket = new CCloudStorageBucket(intval($bucket_id));
+		if(is_object($bucket_id))
+			$obBucket = $bucket_id;
+		else
+			$obBucket = new CCloudStorageBucket(intval($bucket_id));
+
 		if(!$obBucket->Init())
 			return false;
 
@@ -106,7 +110,8 @@ class CCloudStorageUpload
 					"ID" => $this->_ID,
 					"~TIMESTAMP_X" => $DB->CurrentTimeFunction(),
 					"FILE_PATH" => $this->_filePath,
-					"BUCKET_ID" => $obBucket->ID,
+					"TMP_FILE" => $tmpFileName,
+					"BUCKET_ID" => intval($obBucket->ID),
 					"PART_SIZE" => $obBucket->GetService()->GetMinUploadPartSize(),
 					"PART_NO" => 0,
 					"PART_FAIL_COUNTER" => 0,
@@ -125,7 +130,7 @@ class CCloudStorageUpload
 	 * @param string $data
 	 * @return bool
 	*/
-	function Next($data)
+	function Next($data, $obBucket = null)
 	{
 		global $DB;
 
@@ -133,7 +138,8 @@ class CCloudStorageUpload
 		{
 			$ar = $this->GetArray();
 
-			$obBucket = new CCloudStorageBucket(intval($ar["BUCKET_ID"]));
+			if($obBucket == null)
+				$obBucket = new CCloudStorageBucket(intval($ar["BUCKET_ID"]));
 			if(!$obBucket->Init())
 				return false;
 
@@ -180,13 +186,14 @@ class CCloudStorageUpload
 	/**
 	 * @return bool
 	*/
-	function Finish()
+	function Finish($obBucket = null)
 	{
 		if($this->isStarted())
 		{
 			$ar = $this->GetArray();
 
-			$obBucket = new CCloudStorageBucket(intval($ar["BUCKET_ID"]));
+			if($obBucket == null)
+				$obBucket = new CCloudStorageBucket(intval($ar["BUCKET_ID"]));
 			if(!$obBucket->Init())
 				return false;
 
@@ -253,6 +260,18 @@ class CCloudStorageUpload
 	{
 		$ar = $this->GetArray();
 		return is_array($ar) && (intval($ar["PART_FAIL_COUNTER"]) < $this->_max_retries);
+	}
+
+	/**
+	 * @return string
+	*/
+	function getTempFileName()
+	{
+		$ar = $this->GetArray();
+		if(is_array($ar))
+			return $ar["TMP_FILE"];
+		else
+			return "";
 	}
 }
 ?>

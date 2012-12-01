@@ -577,6 +577,16 @@ class CAllIBlockSection
 			if($bUpdateSearch)
 				CIBlockSection::UpdateSearch($ID);
 
+			if(
+				CIBlock::GetArrayByID($IBLOCK_ID, "SECTION_PROPERTY") === "Y"
+				&& array_key_exists("SECTION_PROPERTY", $arFields)
+				&& is_array($arFields["SECTION_PROPERTY"])
+			)
+			{
+				foreach($arFields["SECTION_PROPERTY"] as $PROPERTY_ID => $arLink)
+					CIBlockSectionPropertyLink::Add($ID, $PROPERTY_ID, $arLink);
+			}
+
 			if($arIBlock["FIELDS"]["LOG_SECTION_ADD"]["IS_REQUIRED"] == "Y")
 			{
 				$USER_ID = is_object($USER)? intval($USER->GetID()) : 0;
@@ -1177,6 +1187,17 @@ class CAllIBlockSection
 				$DB->Query("UPDATE b_iblock_section SET TIMESTAMP_X = ".$DB->CurrentTimeFunction()." WHERE ID = ".$ID);
 			}
 
+			if(
+				CIBlock::GetArrayByID($db_record["IBLOCK_ID"], "SECTION_PROPERTY") === "Y"
+				&& array_key_exists("SECTION_PROPERTY", $arFields)
+				&& is_array($arFields["SECTION_PROPERTY"])
+			)
+			{
+				CIBlockSectionPropertyLink::DeleteBySection($ID);
+				foreach($arFields["SECTION_PROPERTY"] as $PROPERTY_ID => $arLink)
+					CIBlockSectionPropertyLink::Add($ID, $PROPERTY_ID, $arLink);
+			}
+
 			if($bUpdateSearch)
 				CIBlockSection::UpdateSearch($ID);
 
@@ -1371,6 +1392,7 @@ class CAllIBlockSection
 				}
 			}
 
+			CIBlockSectionPropertyLink::DeleteBySection($ID);
 			$DB->Query("DELETE FROM b_iblock_section_element WHERE IBLOCK_SECTION_ID=".IntVal($ID), false, $err_mess.__LINE__);
 
 			if(CModule::IncludeModule("search"))
@@ -2091,7 +2113,7 @@ class CAllIBlockSection
 					AND (BE.ACTIVE_FROM <= ".$DB->CurrentTimeFunction()." OR BE.ACTIVE_FROM IS NULL)"
 				:"")."
 				".$strSqlSearch;
-		//echo "<pre>",htmlspecialchars($strSql),"</pre>";
+		//echo "<pre>",htmlspecialcharsbx($strSql),"</pre>";
 		$res = $DB->Query($strSql);
 		$res = $res->Fetch();
 		return $res["CNT"];
