@@ -1,5 +1,7 @@
 <? if (!$USER->IsAuthorized()): ?>
 
+
+
 <div class="modal hide fade" id="modal_auth">
     <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
@@ -20,9 +22,11 @@
                     </div>
                 </td>
                 <td width="50%">
-                    <div class="alert hide" id="errors_auth">
-                        <div id="error_text"></div>
-                    </div>
+                    <div id="bx_auth_serv_Facebook" style="text-align: center;"><a class="bx-ss-button facebook-button" href="<?=$arResult['URL_FB']?>"><span>Войти через Facebook.com</span></a></div>
+                    <div id="bx_auth_serv_VKontakte" style="text-align: center;">
+                        <a class="bx-ss-button vkontakte-button" id="auth_vk" href="<?=$arResult['URL_VK']?>"><span>Войти через VKontakte.ru</span></a></div>
+<br/>
+
                     <table class="right">
                         <tr>
                             <td>
@@ -46,10 +50,12 @@
                             <td>Зарегистрировать меня <input type="checkbox" value="1" name="AUTH[REG]"></td>
                         </tr>
                         <tr>
-                            <td><button type="button" class="btn btn-primary right btn-large" id="login">Войти</button></td>
+                            <td>
+                                <div class="alert hide" id="errors_auth" style="float: left; width: 110px">
+                                <div id="error_text"></div>
+                            </div><button type="button" class="btn btn-primary right btn-large" id="login">Войти</button></td>
                         </tr>
                     </table>
-
 
                 </td>
             </tr>

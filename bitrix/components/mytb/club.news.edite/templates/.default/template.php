@@ -7,14 +7,16 @@ $news=$arResult['NEWS'];
 ?>
 <h2>Редактируем новость  «<?=$news['NAME']?>» </h2>
     <br/>
-
+<a href="/kabinet-menedzhera/club_news_edite/">Все новости</a>
+<br/>
+<br/>
 <form action="" method="post">
     <input type="hidden" id="newsID" value="<?=$news['ID']?>">
 <table class="table">
     <tr>
         <th>Дата</th>
         <td>
-            <input type="text" class="span10" value="<?=$news['ACTIVE_FROM']?>" name="ACTIVE_FROM">
+            <input type="text" class="span10" value="<?=empty($news['ACTIVE_FROM'])?date("d.m.Y"):$news['ACTIVE_FROM'];?>" name="ACTIVE_FROM">
         </td>
     </tr>
     <tr>

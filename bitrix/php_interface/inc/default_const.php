@@ -27,6 +27,10 @@ define("IB_SUB_EVENT_ID", 17);//
 
 
 define("SOC_API_ID_VK", 3009096);//
+define("SOC_API_ID_FB", 3009096);//
+
+
+define("MAINSERVER", "dev.mytb.ru");//
 
 
 define("PROPS_ID_CLUB_STOCKS", 61);//

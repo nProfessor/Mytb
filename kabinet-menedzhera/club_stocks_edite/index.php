@@ -4,8 +4,8 @@ $APPLICATION->SetTitle("Редактируем профайл клуба");
 ?>
 
 <?$APPLICATION->IncludeComponent(
-    "mytb:club.edite",
-    "edite",
+    "mytb:club.stock.edite",
+    "list",
     Array(
         "APP_ID" => "3009096",
         "COUNT" => "20",

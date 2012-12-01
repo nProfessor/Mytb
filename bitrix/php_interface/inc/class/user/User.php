@@ -248,5 +248,43 @@ class User
         return FALSE;
     }
 
+
+    /**
+     * Ищем пользователя по ID фейсбука.
+     * @param $id
+     * @return int  ID пользователя
+     */
+    static function findFromFB($id){
+
+
+        $ob = CIBlockElement::GetList(
+            Array("SORT" => "ASC"),
+            array("PROPERTY_ID_FACEBOOK" => intval($id), "IBLOCK_ID"=> IB_USER_PROPS),
+            FALSE,
+            FALSE,
+            array("ID","PROPERTY_USER"))->Fetch();
+
+        return $ob?intval($ob['PROPERTY_USER_VALUE']):false;
+
+    }
+    /**
+     * Ищем пользователя по ID контакта.
+     * @param $id
+     * @return int  ID пользователя
+     */
+    static function findFromVK($id){
+
+
+        $ob = CIBlockElement::GetList(
+            Array("SORT" => "ASC"),
+            array("PROPERTY_ID_VKONTAKTE" => intval($id), "IBLOCK_ID"=> IB_USER_PROPS),
+            FALSE,
+            FALSE,
+            array("ID","PROPERTY_USER"))->Fetch();
+
+        return $ob?intval($ob['PROPERTY_USER_VALUE']):false;
+
+    }
+
 }
 

@@ -27,10 +27,31 @@ class Club
         }
     }
 
-
+    /**
+     * Объект новостей клуба
+     * @return News
+     */
     function news()
     {
         return new News($this->clubID);
+    }
+
+    /**
+     * Объект событий клуба
+     * @return Event
+     */
+    function event()
+    {
+        return new Event($this->clubID);
+    }
+
+    /**
+     * Объект событий клуба
+     * @return Event
+     */
+    function stock()
+    {
+        return new Stocks($this->clubID);
     }
 
     static function getOBonTheUserID($userID)
