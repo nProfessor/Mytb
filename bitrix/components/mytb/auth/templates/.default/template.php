@@ -22,9 +22,9 @@
                     </div>
                 </td>
                 <td width="50%">
-                    <div id="bx_auth_serv_Facebook" style="text-align: center;"><a class="bx-ss-button facebook-button" href="<?=$arResult['URL_FB']?>"><span>Войти через Facebook.com</span></a></div>
+                    <div id="bx_auth_serv_Facebook"><a class="bx-button facebook" href="<?=$arResult['URL_FB']?>"><span>Войти через Facebook.com</span></a></div>
                     <div id="bx_auth_serv_VKontakte" style="text-align: center;">
-                        <a class="bx-ss-button vkontakte-button" id="auth_vk" href="<?=$arResult['URL_VK']?>"><span>Войти через VKontakte.ru</span></a></div>
+                        <a class="bx-button vkontakte" id="auth_vk" href="<?=$arResult['URL_VK']?>"><span>Войти через VKontakte.ru</span></a></div>
 <br/>
 
                     <table class="right">
