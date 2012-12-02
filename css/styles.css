@@ -1207,6 +1207,30 @@ a.stoks:hover{
     padding:20px 0px;
 }
 .base span.red{
-
     color:red;
+}
+
+
+.bx-button {
+    width: 173px;
+    padding: 13px 0 11px 50px;
+    display: block;
+    color:#fff;
+    background: url(/images/face_vk_buts.png) no-repeat 0 0;
+    margin: 0 auto;;
+}
+.vkontakte{
+    background-position:4px -51px !important;
+}
+.facebook{
+    background-position:4px -3px !important;
+}
+
+.vkontakte:hover{
+    color:#fff;
+    background-position: -221px -50px !important;
+}
+.facebook:hover{
+    color:#fff;
+    background-position: -221px -2px !important;
 }

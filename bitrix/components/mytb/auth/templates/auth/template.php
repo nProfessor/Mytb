@@ -14,10 +14,12 @@
                     </div>
                 </td>
                 <td width="50%">
-                    <div class="alert hide" id="errors_auth">
-                        <div id="error_text"></div>
-                    </div>
-                    <table class="right">
+                    <div id="bx_auth_serv_Facebook"><a class="bx-button facebook" href="<?=$arResult['URL_FB']?>"><span>Войти через Facebook.com</span></a></div>
+                    <div id="bx_auth_serv_VKontakte" style="text-align: center;">
+                        <a class="bx-button vkontakte" id="auth_vk" href="<?=$arResult['URL_VK']?>"><span>Войти через VKontakte.ru</span></a></div>
+                    <br/>
+
+                    <table style="margin-left:20px;">
                         <tr>
                             <td>
                                 <div class="input-prepend input-append">
@@ -40,7 +42,11 @@
                             <td>Зарегистрировать меня <input type="checkbox" value="1" name="AUTH[REG]"></td>
                         </tr>
                         <tr>
-                            <td><button type="button" class="btn btn-primary right btn-large" id="login">Войти</button></td>
+                            <td>
+                                <div class="alert hide" id="errors_auth" style="float: left; width: 110px">
+                                    <div id="error_text"></div>
+                                </div>
+                                <button type="button" class="btn btn-primary right btn-large" id="login">Войти</button></td>
                         </tr>
                     </table>
                 </td>
