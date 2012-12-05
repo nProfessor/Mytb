@@ -271,6 +271,7 @@ class Club
 
     function getListStok()
     {
+
         $ob = CIBlockElement::GetList(
             array("SORT" => "ASC"),
             array("PROPERTY_CLUB_ID"        => $this->clubID,

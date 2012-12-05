@@ -77,10 +77,10 @@ class User
     function setSubscribe($clubID, $type)
     {
 
+
         $clubID = intval($clubID);
 
         $PROP = array();
-
 
         $ob = CIBlockElement::GetList(
             Array("SORT" => "ASC"),
@@ -113,6 +113,8 @@ class User
                 $PROP['LINK_STOK'] = $ob["PROPERTY_LINK_STOK_VALUE"];
             }
         }
+
+
 
         return CIBlockElement::SetPropertyValuesEx($ob["ID"], IB_USER_PROPS, $PROP);
 
@@ -264,7 +266,7 @@ class User
             $arUser[$user["ID"]] = $user;
         }
         return $arUser;
-
+    }
     /**
      * Ищем пользователя по ID фейсбука.
      * @param $id
