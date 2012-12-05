@@ -36,6 +36,7 @@
                         <script type="text/javascript" src="http://userapi.com/js/api/openapi.js?71"></script>
                         <!-- Put this div tag to the place, where the Poll block will be -->
                         <div  style="width:200px;">
+                            <div style="padding:5px;"><b>Друзья!</b><br/> Новый год уже совсем близко! С кем, а главное где, Вы планируете его провести? </div>
                         <div id="vk_poll"></div>
                         </div>
                         <script type="text/javascript">
