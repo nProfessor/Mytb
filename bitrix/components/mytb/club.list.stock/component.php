@@ -24,7 +24,7 @@ while ($ar = $resStockList->Fetch()) {
 
 
 $arResult['stockList'] = $arStockList;
-$arResult['club']      = $club->getInfo(array("arSelect"=> array("NAME")));
+$arResult['club']      = $club->getInfo(array("arSelect"=> array("NAME","PREVIEW_PICTURE")));
 
 
 $this->IncludeComponentTemplate();

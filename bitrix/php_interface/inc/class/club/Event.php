@@ -56,6 +56,28 @@ class Event
         return $getNext?$obj->GetNext():$obj->Fetch();
     }
 
+
+    /**
+     * Возвращаем колличество акций для клубов
+     * TODO нужно в фильтр вставить айдишники клубов
+     * @return mixed
+     */
+    function getCount(){
+
+        $ob = CIBlockElement::GetList(
+            array("IBLOCK_ID" => "ASC"),
+            array("IBLOCK_ID"               => IB_SUB_EVENT_ID,
+                ">DATE_ACTIVE_TO"         => date("d.m.Y h:i:s")),
+            array("PROPERTY_CLUB_ID"),
+            FALSE,
+            array());
+        while ($row = $ob->Fetch()) {
+            $clubListID[$row['PROPERTY_CLUB_ID_VALUE']] = intval($row['CNT']);
+        }
+
+        return $clubListID;
+    }
+
     function update($newsID,$data){
         global $USER;
 
@@ -98,6 +120,40 @@ class Event
 
         return $ob;
     }
+
+
+    /**
+     * Воззвращаем список новостей клуба
+     * @return mixed
+     */
+    function getListArray($filter=array()){
+        $filter['IBLOCK_ID']=IB_SUB_EVENT_ID;
+        $filter['PROPERTY_CLUB_ID']=$this->clubID;
+
+        $ob = CIBlockElement::GetList(
+            array("ACTIVE_FROM" => "DESC"),
+            $filter,
+            false,
+            FALSE,
+            array(
+                "ID",
+                "NAME",
+                "DATE_ACTIVE_FROM",
+                "DATE_ACTIVE_TO",
+                "ACTIVE_TO",
+                "PREVIEW_TEXT",
+                "DETAIL_PICTURE",
+                "PROPERTY_CLUB_ID",
+            ));
+
+        $result=array();
+        while($row=$ob->Fetch()){
+            $result[]=$row;
+        }
+
+        return $result;
+    }
+
 
 
 }

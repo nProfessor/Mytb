@@ -122,7 +122,7 @@ function translate($text)
  *
  * @return string
  */
-function imgurl($path, $size)
+function imgurl($path, $size,$resize=false)
 {
 
     if (!file_exists($_SERVER["DOCUMENT_ROOT"] . $path)) {
@@ -130,18 +130,34 @@ function imgurl($path, $size)
     }
     preg_match("#^(.*)([^/]*)\.([a-z]{2,4})$#i", $path, $NAME_1);
 
+    $size["w"]=intval($size["w"]);
+    $size["h"]=intval($size["h"]);
+
+    list( $width , $height ) = getimagesize( $_SERVER["DOCUMENT_ROOT"] . $path );
+
+
+    if($size["w"]==0){
+        $xscale=$height/$size["h"];
+        $size["w"]=intval($width/$xscale);
+    }
+
+    if($size["h"]==0){
+        $xscale=$width/$size["w"];
+        $size["h"]=intval($height/$xscale);
+    }
+
     $imgFile = "{$NAME_1[1]}{$NAME_1[2]}-resize-{$size["w"]}x{$size["h"]}.{$NAME_1[3]}";
 
-    if (!file_exists($_SERVER["DOCUMENT_ROOT"] . $imgFile)) {
+//    if (file_exists($_SERVER["DOCUMENT_ROOT"] . $imgFile)) {
 
         try {
             $image = new Imagick($_SERVER["DOCUMENT_ROOT"] . $path);
-            $image->adaptiveResizeImage($size["w"], $size["h"], TRUE);
+            $image->ResizeImage($size["w"], $size["h"],imagick::FILTER_LANCZOS, 0.9,true);
             $image->writeImages($_SERVER["DOCUMENT_ROOT"] . $imgFile, TRUE);
         } catch (ImagickException $e) {
             echo $e->getMessage();
         }
-    }
+//    }
 
 
     return $imgFile;
