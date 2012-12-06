@@ -33,7 +33,7 @@ $(document).ready(function(){
 
     //Нажал на акцию
     $(".auth_stocks").click(function(){
-        _gaq.push(['_trackEvent', 'stock', 'go', $("#club_name").val()]);
+        _gaq.push(['_trackEvent', 'stock_go_site', 'go', $("#club_name").val()]);
     });
 
 
