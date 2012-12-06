@@ -62,7 +62,7 @@ $arUrlRewrite = array(
 		"PATH"	=>	"/club/event/index.php",
 	),
 	array(
-		"CONDITION"	=>	"#^/club/([0-9]+)/?#",
+		"CONDITION"	=>	"#^/club/([0-9]+)/?.*#",
 		"RULE"	=>	"ID=$1&CLUB=true",
 		"ID"	=>	"mytb:club",
 		"PATH"	=>	"/club/index.php",

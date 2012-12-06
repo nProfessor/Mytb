@@ -123,4 +123,40 @@ class Stocks
         return $ob;
     }
 
+
+    /**
+     * Воззвращаем список новостей клуба
+     * @return mixed
+     */
+    function getListArray($filter=array()){
+        $filter['IBLOCK_ID']=IB_SUB_STOCK_ID;
+        $filter['PROPERTY_CLUB_ID']=$this->clubID;
+
+        $ob = CIBlockElement::GetList(
+            array("ACTIVE_FROM" => "DESC"),
+            $filter,
+            false,
+            FALSE,
+            array(
+                "ID",
+                "NAME",
+                "DATE_ACTIVE_FROM",
+                "DATE_ACTIVE_TO",
+                "ACTIVE_TO",
+                "PREVIEW_TEXT",
+                "DETAIL_PICTURE",
+                "PROPERTY_CLUB_ID",
+                "DATE_ACTIVE_TO",
+                "PROPERTY_URL",
+                "PROPERTY_CLUB_ID",
+                "PROPERTY_PRICECOUPON"
+            ));
+        $result=array();
+        while($row=$ob->Fetch()){
+            $result[]=$row;
+        }
+
+        return $result;
+    }
+
 }

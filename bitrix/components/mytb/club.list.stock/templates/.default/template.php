@@ -2,10 +2,15 @@
 $APPLICATION->SetTitle("Акции клуба  {$arResult['club']['NAME']}");
 $APPLICATION->AddHeadScript("/jslibs/jquery/eTextTimer.js");
 ?>
+<?
+global $USER;
+$auth = $USER->IsAuthorized();
+?>
 <h1>Действующие акции «<?=$arResult['club']['NAME']?>» </h1>
 <br/>
-<a href="#" class="btn btn-danger pull-right btn-large"  id="subs_ok" data-original-title="Вы сможете моментально узнавать о появлении акций проводимых в  <b>«<?=str_replace('"',"",$arResult['club']['NAME'])?>»</b>"
-   data-auth="<?if ($USER->IsAuthorized()) {
+<a href="#" class="btn btn-danger pull-right btn-large" id="subs_ok"
+   data-original-title="Вы сможете моментально узнавать о появлении акций проводимых в  <b>«<?=str_replace('"', "", $arResult['club']['NAME'])?>»</b>"
+   data-auth="<?if ($auth) {
        echo "yes";
    } else {
        echo "no";
@@ -14,13 +19,13 @@ $APPLICATION->AddHeadScript("/jslibs/jquery/eTextTimer.js");
 <br/>
 <br/>
 <br/>
-    <input type="hidden" id="time_now" value="<?=date("d F, Y, H:m:s")?>">
-    <input type="hidden" id="clubID" value="<?=$arResult['club']['ID']?>">
+<input type="hidden" id="time_now" value="<?=date("d F, Y, H:m:s")?>">
+<input type="hidden" id="clubID" value="<?=$arResult['club']['ID']?>">
 
 <? if (count($arResult['stockList']) > 0): ?>
 <div id="list">
     <table class="table table-striped">
-        <?foreach ($arResult['stockList'] as $val=> $var): ?>
+        <?foreach ($arResult['stockList'] as $val => $var): ?>
 
         <?
         $club = $arResult['club'][$stock["PROPERTY_CLUB_ID_VALUE"]];
@@ -34,28 +39,50 @@ $APPLICATION->AddHeadScript("/jslibs/jquery/eTextTimer.js");
         </tr>
         <tr>
             <td>
-                <a href="<?=$var["PROPERTY_URL_VALUE"]?>" class="pull-left" style="margin:0px 10px 10px 0px">
-                    <img class="thumbnail" src="<?=imgurl($arFile["SRC"], array("w"=> 300, "h"=> 200))?>"/>
-                </a>
-                <div class="time_stok pull-right">
+                <div class="pull-left" style="margin:0px 10px 10px 0px">
+                    <img class="thumbnail" src="<?=imgurl($arFile["SRC"], array("w" => 300, "h" => 200))?>"/>
+                </div>
 
+                <div class="time_stok pull-right">
+                    <?if (0): ?>
                     <span class="clock">
 
                     </span>
                     <div class="pull-right" style="padding: 8px 0px 15px 0px;">
-                    до конца акции:<br/>
-                    <span class="timer" data-active="<?=date("d F, Y, H:m:s",strtotime($var["ACTIVE_TO"]))?>" data-id="<?=$var["ID"]?>">
-                    <span class="time<?=$var["ID"]?>d">88</span>д: <span class="time<?=$var["ID"]?>h">88</span>:<span class="time<?=$var["ID"]?>m">88</span>:<span class="time<?=$var["ID"]?>s">88</span>
+                        до конца акции:<br/>
+                    <span class="timer" data-active="<?=date("d F, Y, H:m:s", strtotime($var["ACTIVE_TO"]))?>"
+                          data-id="<?=$var["ID"]?>">
+                    <span class="time<?=$var["ID"]?>d">88</span>д: <span class="time<?=$var["ID"]?>h">88</span>:<span
+                            class="time<?=$var["ID"]?>m">88</span>:<span class="time<?=$var["ID"]?>s">88</span>
                     </span>
                     </div>
-                    <a href="<?=$var["PROPERTY_URL_VALUE"]?>" class="btn btn-success pull-right btn-large" target="_blank">купить купон
+                    <? endif;?>
+
+                    <?if ($auth): ?>
+                    <a href="<?=$var["PROPERTY_URL_VALUE"]?>" class="btn btn-success pull-right btn-large"
+                       target="_blank">купить купон
                         за <?=$var["PROPERTY_PRICECOUPON_VALUE"]?>р.</a>
+                    <br/>
+                    <br/>
+                    <div class="pull-right">или</div>
+                    <br/>
+                    <a href="<?=$var["PROPERTY_URL_VALUE"]?>" class="pull-right">Узнать больше</a>
+                    <? else: ?>
+                    <a href="#"  href="#auth_stocks" data-toggle="modal"  data-target="#auth_stocks" aria-hidden="true" class="btn btn-success pull-right btn-large auth_stocks"
+                       target="_blank">купить купон
+                        за <?=$var["PROPERTY_PRICECOUPON_VALUE"]?>р.</a>
+                    <br/>
+                    <br/>
+                    <div class="pull-right">или</div>
+                    <br/>
+                    <a href="#"  href="#auth_stocks" data-toggle="modal"  data-target="#auth_stocks" aria-hidden="true" class="pull-right btn-large auth_stocks">Узнать больше</a>
+                    <?endif;?>
+
+
                 </div>
 
 
-
                 <p style="font-size: 12px;"> <?=$var["PREVIEW_TEXT"]?></p>
-                <a href="<?=$var["PROPERTY_URL_VALUE"]?>" class="pull-right">Узнать больше</a>
 
 
             </td>
@@ -84,5 +111,11 @@ $APPLICATION->AddHeadScript("/jslibs/jquery/eTextTimer.js");
 <? else: ?>
 На данный момент акций нет
 <?endif; ?>
+<input type="hidden" id="club_name" value="<?=$arResult['club']['NAME']?>"/>
+<?$clubIMG= CFile::GetFileArray($arResult['club']['PREVIEW_PICTURE']);?>
+<input type="hidden" id="club_img" value="<?=imgurl($clubIMG["SRC"],array("w"=>200))?>"/>
+
+
 <input id="redirect" type="hidden" value="/club/<?=$arResult['club']["ID"]?>/stock/?subscribe=ok">
-<? $APPLICATION->IncludeComponent("mytb:auth", "",  array("AUTH_URL"=>"/club/{$arResult['club']["ID"]}/stock/?subscribe=ok&login=yes"), FALSE); ?>
+<? $APPLICATION->IncludeComponent("mytb:auth", "", array("AUTH_URL" => "/club/{$arResult['club']["ID"]}/stock/?subscribe=ok&login=yes"), FALSE); ?>
+<? $APPLICATION->IncludeComponent("mytb:auth", "stocks", array("AUTH_URL" => "/club/{$arResult['club']["ID"]}/stock/?auth=login"), FALSE); ?>
