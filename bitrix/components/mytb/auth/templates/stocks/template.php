@@ -8,9 +8,9 @@
         <div>
             <div style="padding:0px 20px 20px 20px; font-size: 14px;">
                 <img src="" id="img_club_logo" style="float:left; margin:0px 32px 5px 0px;"/>
-                Вы хотите посмотреть информацию, об <b>акции в «<span id="club_name_show"></span>»</b>.<br/>
+                Вы хотите посмотреть информацию об <b>акции в «<span id="club_name_show"></span>»</b>.<br/>
                 Информация доступна только зарегистрированным пользователям.<br/>
-                Пожалуйста зарегистрируйтесь, или авторизуйтесь.<br/>
+                Пожалуйста, зарегистрируйтесь или авторизуйтесь.<br/>
             </div>
 
         </div>
