@@ -36,7 +36,7 @@ IncludeTemplateLangFile(__FILE__);
             s.parentNode.insertBefore(ga, s);
         })();
     </script>
-    <script type="text/javascript" src="/jslibs/script/ajaxupload.js"></script>
+    <script type="text/javascript" src="/jslibs/script/analitics.js"></script>
 
 </head>
 <body>
