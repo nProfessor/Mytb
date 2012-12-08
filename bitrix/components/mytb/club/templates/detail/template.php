@@ -233,14 +233,18 @@ $APPLICATION->SetPageProperty('description',strip_tags($clubInfo["~DETAIL_TEXT"]
 <div class="modal hide fade" id="modal_subs">
     <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-        <h6>Подписка на акции, события и новости клуба «<?=$clubInfo["NAME"]?>»</h6>
+        <h6>Подписка на акции в «<?=$clubInfo["NAME"]?>»</h6>
     </div>
     <div class="modal-body">
-        <b>Хотите узнавать об акциях, событиях и новостях клуба «<?=$clubInfo["NAME"]?>»?</b>
+        <blockquote>
+            <p>Хотите узнавать о новых акциях в <b>«<?=$clubInfo["NAME"]?>»</b>?</p>
+            <small>Можно получать уведомления по СМС, Email, или просматривать их в личном кабинете.</small>
+        </blockquote>
+
     </div>
     <div class="modal-footer">
         <a href="#" class="btn" id="no_subs">Не сейчас</a>
-        <a href="#" class="btn btn-primary"  id="subs_ok_modal" data-auth="<<?=$USER->IsAuthorized()?"yes":"no";?>">Да, хочу</a>
+        <a href="#" class="btn btn-primary"  id="subs_ok_modal" data-auth="<?=$USER->IsAuthorized()?"yes":"no";?>">Да, хочу</a>
     </div>
 </div>
 
