@@ -613,3 +613,9 @@
 2012-11-20 20:46:20 -  - exec CUpdateClientPartner::GetHTTPPage
 2012-11-20 20:46:21 -  - TIME GetUpdatesList(request) 0.63 sec
 2012-11-20 20:46:21 -  - exec CUpdateClientPartner::ParseServerData
+2012-12-07 12:01:36 - Ux11 - Ошибка описания модуля "tb.socialservices"
+2012-12-07 12:01:48 - Ux11 - Ошибка описания модуля "tb.socialservices"
+2012-12-07 12:01:55 - Ux11 - Ошибка описания модуля "tb.socialservices"
+2012-12-07 12:02:13 - Ux11 - Ошибка описания модуля "tb.socialservices"
+2012-12-07 12:03:15 - Ux11 - Ошибка описания модуля "tb.socialservices"
+2012-12-07 12:03:20 - Ux11 - Ошибка описания модуля "tb.socialservices"
