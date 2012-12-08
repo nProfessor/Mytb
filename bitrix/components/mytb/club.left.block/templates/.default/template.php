@@ -51,7 +51,7 @@ $auth = $USER->IsAuthorized();
         <?if ($auth): ?>
         <a href="<?=$var['PROPERTY_URL_VALUE']?>" target="_blank" alt="Акция <?=$arResult['CLUB']['NAME']?>" title="<?=$var['NAME']?>">
             <? else: ?>
-        <a href="#auth_stocks" class="auth_stocks"  data-toggle="modal"  data-target="#auth_stocks" aria-hidden="true" alt="Акция <?=$arResult['CLUB']['NAME']?>" title="<?=$var['NAME']?>">
+        <a href="#auth_stocks" class="auth_stocks" data-url="<?=$var['PROPERTY_URL_VALUE']?>" data-toggle="modal"  data-target="#auth_stocks" aria-hidden="true" alt="Акция <?=$arResult['CLUB']['NAME']?>" title="<?=$var['NAME']?>">
         <?endif;?>
         <img class="thumbnail" src="<?=imgurl($arFile["SRC"], array("w" => 200))?>"/>
     </a>
@@ -66,7 +66,7 @@ $auth = $USER->IsAuthorized();
 <?$clubIMG= CFile::GetFileArray($arResult['CLUB']['PREVIEW_PICTURE']);?>
 <input type="hidden" id="club_img" value="<?=imgurl($clubIMG["SRC"],array("w"=>200))?>"/>
 
-<? $APPLICATION->IncludeComponent("mytb:auth", "stocks",  array("AUTH_URL"=>"/club/{$arResult["CLUB_ID"]}/?auth=login"), FALSE); ?>
+<?// $APPLICATION->IncludeComponent("mytb:auth", "stocks",  array("AUTH_URL"=>"/club/{$arResult["CLUB_ID"]}/?auth=login"), FALSE); ?>
 <?else:?>
 <?$APPLICATION->IncludeFile(
         SITE_DIR."include/vk.php",

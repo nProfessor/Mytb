@@ -18,6 +18,16 @@ $(document).ready(function(){
         _gaq.push(['_trackEvent', 'stock', 'list', $(".workarea-inner h1").html()]);
     });
 
+    //Нажал что не хочет подписываться
+    $("#no_subs").click(function(){
+        _gaq.push(['_trackEvent', 'stock', 'no_subs', $(".workarea-inner h1").html()]);
+    });
+
+    //Нажал что хочет подписаться
+    $("#subs_ok_modal").click(function(){
+        _gaq.push(['_trackEvent', 'stock', 'subs_ok_modal', $(".workarea-inner h1").html()]);
+    });
+
 //
 //    //Нажал кнопку войти
 //    $("#login").click(function(){
