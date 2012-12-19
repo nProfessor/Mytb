@@ -79,8 +79,8 @@ IncludeTemplateLangFile(__FILE__);
                         <li><a href="/auth/?logout=yes" title="Выход">Выход</a></li>
 
                         <? else: ?>
-                        <li><a href="/auth/" title="Вход/Регистрация" style="font-size:20px;">Вход/Регистрация</a> </li>
-                <?endif;?>
+                        <li><a href="/auth/" title="Вход/Регистрация" style="font-size:20px;">Вход/Регистрация</a></li>
+                        <?endif;?>
                 </ul>
 
 
@@ -91,24 +91,61 @@ IncludeTemplateLangFile(__FILE__);
 
     <div id="content-wrapper">
         <div id="content">
-
+            <?if ($APPLICATION->GetCurPage(FALSE) == SITE_DIR): ?>
             <div id="banner">
 
             </div>
+            <? else: ?>
 
-            <div id="workarea-wrapper">
+            <div id="breadcrumb">
+                <?$APPLICATION->IncludeComponent("bitrix:breadcrumb", ".default", array(
+                    "START_FROM" => "1",
+                    "PATH" => "",
+                    "SITE_ID" => SITE_ID
+                ),
+                FALSE
+            );?>
+            </div>
+            <?endif?>
 
-                <div id="workarea">
 
-                    <div id="workarea-inner">
-                        <?if ($APPLICATION->GetCurPage(FALSE) == SITE_DIR): ?>
-                        <div id="search">
-                            <?$APPLICATION->IncludeComponent("bitrix:search.form", "flat", array(
-                                                                                                "PAGE" => "#SITE_DIR#search/index.php"
-                                                                                           ),
-                            FALSE
-                        );?>
-                        </div>
-                        <? endif?>
+            <div class="home_search">
+                <?$APPLICATION->IncludeComponent("bitrix:search.form", "flat", array(
+                    "PAGE" => "#SITE_DIR#search/index.php"
+                ),
+                FALSE
+            );?>
+                <div class="home_filter">
+                <span style=" padding:10px 0px;display: block;font-weight: bold;font-size: 16px;">Или подбери заведение по вкусу</span>
+
+                    <div class="folder">
+                    <div>
+                        <span>Наличие акций</span>
+                        <select name="" id="">
+                        <option>Неважно</option>
+                        <option>Есть</option>
+                        <option>Нет</option>
+                        </select>
+                    </div>
+                    <div>
+                        <span>Тип заведения</span><select name="" id=""></select>
+                    </div>
+                    <div>
+                        <span>Музыка</span><select name="" id=""></select>
+                    </div>
+                    <div>
+                        <span>Метро</span><select name="" id=""></select>
+                    </div>
+                        <span class="clear_both"></span>
+                    </div>
+                    <div class="padder_t_10">
+                    <input type="submit" class="btn btn-info pull-right" value="Подобрать"/>
+                    </div>
+                    <div class="clear_both"></div>
+                </div>
+
+            </div>
+            <div class="clear_both"></div>
+
 
 

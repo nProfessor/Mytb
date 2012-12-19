@@ -80,7 +80,7 @@ class Kupon
     function setStoks()
     {
         $clubList = array();
-
+        set_time_limit(0);
         $data = $this->getData();
 
         if (!$data)

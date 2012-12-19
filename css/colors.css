@@ -7,8 +7,8 @@ h2, h3, h4, h5, h6 { color:#414141; }
 hr, .hr { border-color: #E9E9E9;}
 
 /* Layout */
-body { background-color: #FFF; color: #000;}
-td#slogan { color: #999999; }
+body {  color:  #add8e6 !important}
+td#slogan { color: #999999;  }
 
 #search div.search-box { border-color: #DEDEDE; }
 #search div.search-box input { border-color: white;}
@@ -44,7 +44,7 @@ ul.left-menu .current b { background: #0D4BB1; border-color:#C3D3EC; }
 #banner-text a { color: #FFF;}
 #banner-overlay { background:  url(../bitrix/templates/corp_services_blue/images/overlay.png) no-repeat; }
 
-#footer { background: #EDEDED; }
+#footer { }
 #copyright { color: #5F5F5F; }
 
 /* Ask a question */
