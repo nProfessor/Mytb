@@ -7,6 +7,7 @@
  */
 $(document).ready(function () {
 
+    VK.init({apiId: 3009096, onlyWidgets: true});
     try {
         if (VK && VK.Observer && VK.Observer.subscribe) {
             VK.Observer.subscribe('widgets.like.liked', function (data) {

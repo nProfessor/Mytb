@@ -17,7 +17,7 @@ $rating = empty($clubInfo["PROPERTY_RATING_VALUE"])
     : $clubInfo["PROPERTY_RATING_VALUE"];
 
 $APPLICATION->SetPageProperty('description',strip_tags($clubInfo["~DETAIL_TEXT"]));
-
+$ADDRESS = $arResult['ADDRESS'];
 ?>
 <input type="hidden" value="<?=$clubInfo['ID']?>" id="clubID">
 <?$APPLICATION->IncludeComponent(
@@ -159,58 +159,64 @@ $APPLICATION->SetPageProperty('description',strip_tags($clubInfo["~DETAIL_TEXT"]
 </table>
 
 <div class="club_address">
-    <span>Адрес:</span> <?=empty($clubInfo["PROPERTY_METRO_VALUE"])
-    ? ""
-    : "м. " . $clubInfo["PROPERTY_METRO_VALUE"];?> <?=empty($clubInfo["PROPERTY_ADDRESS_VALUE"])
-    ? ""
-    : $clubInfo["PROPERTY_ADDRESS_VALUE"];?>
+<!--    <span>Адрес:</span> --><?//=empty($clubInfo["PROPERTY_METRO_VALUE"])
+//    ? ""
+//    : "м. " . $clubInfo["PROPERTY_METRO_VALUE"];?><!-- --><?//=empty($clubInfo["PROPERTY_ADDRESS_VALUE"])
+//    ? ""
+//    : $clubInfo["PROPERTY_ADDRESS_VALUE"];?>
 </div>
 
-<script src="http://api-maps.yandex.ru/2.0-stable/?load=package.full&lang=ru-RU&onload=init"type="text/javascript"></script>
+<script src="http://api-maps.yandex.ru/2.0-stable/?load=package.full&lang=ru-RU" type="text/javascript"></script>
 
 <!--$arResult['arFields']-->
 
 <div id="YMapsID" style="height: 400px"></div>
 
+
 <script type="text/javascript">
+    // Как только будет загружен API и готов DOM, выполняем инициализацию
+    ymaps.ready(init);
 
-    var myMap;
-    function init() {
+    function init () {
+        var myMap = new ymaps.Map("YMapsID", {
+                    center: [<?=$ADDRESS[0]['LON']?>, <?=$ADDRESS[0]['LAT']?>],
+                    zoom: 11
+                }),
 
-
-
-
-        ymaps.geocode('<?=$searh?>', { results:1 }).then(function (res) {
-            // Выбираем первый результат геокодирования
-            var firstGeoObject = res.geoObjects.get(0);
-
-            var myMap = new ymaps.Map("YMapsID", {
-                        center:firstGeoObject.geometry.getCoordinates(),
-                        zoom:16
+<?foreach($ADDRESS as $addres):?>
+                myGeoObject = new ymaps.GeoObject({
+                    // Геометрия.
+                    geometry: {
+                        // Тип геометрии - точка
+                        type: "Point",
+                        // Координаты точки.
+                        coordinates: [<?=$addres['LON']?>, <?=$addres['LAT']?>]
+                    },
+                    properties: {
+                        // Контент метки.
+                        iconContent: '<?=$name?>'
                     }
-            );
-            myPlacemark = new ymaps.Placemark(firstGeoObject.geometry.getCoordinates(), {
-                iconContent:'<?=$name?>'
-            }, {
-                // Опции
-                // Иконка метки будет растягиваться под ее контент
-                preset:'twirl#blueStretchyIcon'
-            }),
-                    myMap.geoObjects
-                            .add(myPlacemark);
-            myMap.controls
-                // Кнопка изменения масштаба
-                    .add('zoomControl')
-                // Список типов карты
-                    .add('typeSelector')
-                // Стандартный набор кнопок
-                    .add('mapTools');
-        },function (err) {
-          console.log(err);
+                },{   // Опции
+                    // Иконка метки будет растягиваться под ее контент
+                    preset: 'twirl#pinkStretchyIcon'
                 });
+        myMap.geoObjects.add(myGeoObject);
+        myMap.controls
+            // Кнопка изменения масштаба
+                .add('zoomControl')
+            // Список типов карты
+                .add('typeSelector')
+            // Кнопка изменения масштаба - компактный вариант
+            // Расположим её справа
+                .add('smallZoomControl', { right: 5, top: 75 })
+            // Стандартный набор кнопок
+                .add('mapTools');
+<?endforeach;?>
 
     }
 </script>
+
+
 
 <br/>
 <h2>Обсуждение:</h2>

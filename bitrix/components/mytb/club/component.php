@@ -2,6 +2,7 @@
 if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== TRUE)
     die();
 CModule::IncludeModule("iblock");
+CModule::IncludeModule("mytb");
 $APPLICATION->AddHeadScript("/jslibs/jquery/jquery-1.7.2.min.js");
 $APPLICATION->AddHeadScript("/jslibs/jqueryui/js/jquery-ui-1.8.21.custom.min.js");
 
@@ -40,9 +41,14 @@ $arResult['arFields'] = $arFields;
 
 
 $arResult['userInfo'] =$userInfo;
+$arResult['ADDRESS'] = $club->getAddress();;
+
+
 
 $this->IncludeComponentTemplate();
 }
+
+
 
 $APPLICATION->SetTitle(html_entity_decode($arResult['arFields']['PROPERTY_TYPE_FACILITY_VALUE'])." ".html_entity_decode($arResult['arFields']['NAME']));
 
