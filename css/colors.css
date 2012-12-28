@@ -7,9 +7,18 @@ h2, h3, h4, h5, h6 { color:#414141; }
 hr, .hr { border-color: #E9E9E9;}
 
 /* Layout */
-body {  color:  #add8e6 !important}
+body {  color:  #3a3e45 !important}
 td#slogan { color: #999999;  }
-
+.logo_title{ color:#ADD8E6;}
+.button.orange{
+    background-color: #df890e;
+}
+.button.orange:hover{
+    background-color: #ffa21d;
+}
+.button:hover{
+    background-color: #2a9cbf;
+}
 #search div.search-box { border-color: #DEDEDE; }
 #search div.search-box input { border-color: white;}
 #search-button {border-color: #E7E7E7 #D5D5D5 #D1D1D1 #E3E3E3; background: #DEDEDE;}

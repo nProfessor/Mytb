@@ -40,53 +40,14 @@ IncludeTemplateLangFile(__FILE__);
 
 </head>
 <body>
-<div id="page-wrapper">
-
-    <div id="panel"><?$APPLICATION->ShowPanel();?></div>
-    <table id="header">
-        <tr>
-            <td id="logo"><a href="<?=SITE_DIR?>"
-                             title="<?=GetMessage("HDR_GOTO_MAIN")?>"><?$APPLICATION->IncludeFile(
-                SITE_DIR . "include/company_name.php",
-                Array(),
-                Array("MODE" => "html")
-            );?></a></td>
-            <td id="slogan"><?$APPLICATION->IncludeFile(
-                SITE_DIR . "include/company_slogan.php",
-                Array(),
-                Array("MODE" => "html")
-            );?></td>
-            <td>
-
-                <ul class="nav nav-list">
-                    <?
-                    global $USER;
-                    if ($USER->IsAuthorized()):?>
-                        <?
-                        $dbUser = CUser::GetByID($USER->GetID());
-                        $arUser = $dbUser->Fetch();
-                        ?>
-                        <li class="nav-header">
-                            Вы вошли как: <?=empty($arUser["NAME"])
-                            ? $arUser["LOGIN"]
-                            : $arUser["NAME"];?>
-                        </li>
-                        <li>
-                            <a href="<?=CSite::InGroup((array(GROUP_MANAGER)))
-                                ? "/kabinet-menedzhera/"
-                                : "/personal/";?>" title="Личный кабинет">Личный кабинет</a>
-                        </li>
-                        <li><a href="/auth/?logout=yes" title="Выход">Выход</a></li>
-
-                        <? else: ?>
-                        <li><a href="/auth/" title="Вход/Регистрация" style="font-size:20px;">Вход/Регистрация</a> </li>
-                <?endif;?>
-                </ul>
+<?$APPLICATION->IncludeFile(
+    SITE_DIR . "include/header.php",
+    Array(),
+    Array("MODE" => "html")
+);?>
+<div class="content">
 
 
-            </td>
-        </tr>
-    </table>
 
 
     <div id="content-wrapper">
