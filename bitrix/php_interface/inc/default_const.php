@@ -6,6 +6,9 @@ define("IB_BOOKING_ID", 13); // ID столиков
 define("IB_PRICE_GROUP", 14); // ID ценовых групп
 
 
+define("PROP_CLUB_MODERATOR", 54); // ID свойства показывающего, что заведение не прошло модерацию
+
+
 //Группы
 define("GROUP_MANAGER", 6); // Группа менеджеры
 

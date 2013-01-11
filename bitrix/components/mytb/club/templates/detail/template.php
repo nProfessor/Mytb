@@ -17,7 +17,7 @@ $rating = empty($clubInfo["PROPERTY_RATING_VALUE"])
     : $clubInfo["PROPERTY_RATING_VALUE"];
 
 $APPLICATION->SetPageProperty('description',strip_tags($clubInfo["~DETAIL_TEXT"]));
-
+$ADDRESS = $arResult['ADDRESS'];
 ?>
 <input type="hidden" value="<?=$clubInfo['ID']?>" id="clubID">
 
@@ -100,8 +100,8 @@ $APPLICATION->SetPageProperty('description',strip_tags($clubInfo["~DETAIL_TEXT"]
 
         <? endif;?>
 
-
     </div>
+
 
     <div class="m_left w4 content_padding_20">
         <div class="margin_t_b_5">
@@ -223,6 +223,7 @@ $APPLICATION->SetPageProperty('description',strip_tags($clubInfo["~DETAIL_TEXT"]
         }
 
     </script>
+
 
 </div>
 

@@ -10,5 +10,6 @@ class Vigoda extends Kupon
 {
     public $xml="http://vigoda.ru/api/xml/mytb";
     public $tags="vigoda";
-
+    public $parsePage="http://vigoda.ru/cafe/";
+    public $parseReg="#http://vigoda.ru/cafe/offer/([0-9]+)#is";
 }
