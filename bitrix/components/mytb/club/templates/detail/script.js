@@ -73,19 +73,23 @@ $(document).ready(function () {
 
     $('#subs_stock').tooltip();
 
-    if($('.club_info_content p').css("height").replace("px","")<=220){
-        $('.club_info_content div').hide();
-    }
 
-    $('.club_info_content div').toggle(function(){
-        var height=$('.club_info_content p').css("height");
-        $('.club_info_content').css("height",parseInt(height.replace("px",""))+48+"px");
-        $(this).text("скрыть");
-    },function(){
-
-        $('.club_info_content').css("height",200+"px");
-        $(this).text("смотреть полностью");
+    $(".menu_club a").click(function(){
+        var id=$(this).data("block");
+        $(".menu_club a").removeClass("active");
+        $(this).addClass("active");
+        $(".block_info").hide();
+        $("#"+id).show();
+        return false;
     });
 
 
+    function show_block(){
+        var anc = window.location.hash.replace("#","");
+        if(anc!=""){
+            $("#a_"+anc).click();
+        }
+
+    }
+    show_block();
 });

@@ -13,4 +13,7 @@ $arResult['URL_FB']=$fb_soc->GetAuthUrl("http://".MAINSERVER."/auth/facebook/".b
 $arResult['URL_VK']="https://oauth.vk.com/authorize?client_id=".CSocServVKontakte::GetOption("vkontakte_appid")."&scope=8199&redirect_uri=".urlencode("http://".MAINSERVER."/auth/vkontakte/".base64_encode("http://".MAINSERVER.$arParams['AUTH_URL']));
 
 
+$arResult['LOGIN_TOP_REDIRECT']=$arParams['LOGIN_TOP_REDIRECT'];
+
+
 $this->IncludeComponentTemplate();

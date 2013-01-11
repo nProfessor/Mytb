@@ -6,6 +6,7 @@
  * To change this template use File | Settings | File Templates.
  */
 $(document).ready(function () {
+    $(".m_tooltip").tooltip();
 
     try {
         if (VK && VK.Observer && VK.Observer.subscribe) {

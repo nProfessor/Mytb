@@ -46,30 +46,12 @@ IncludeTemplateLangFile(__FILE__);
     Array("MODE" => "html")
 );?>
 <div class="content">
+        <?$APPLICATION->IncludeComponent("bitrix:search.form", "small", array(
+            "PAGE" => "#SITE_DIR#search/index.php"
+        ),
+        FALSE
+    );?>
 
-
-
-
-    <div id="content-wrapper">
-        <div id="content">
-
-            <div id="banner">
-
-            </div>
-
-            <div id="workarea-wrapper">
-
-                <div id="workarea">
-
-                    <div id="workarea-inner">
-                        <?if ($APPLICATION->GetCurPage(FALSE) == SITE_DIR): ?>
-                        <div id="search">
-                            <?$APPLICATION->IncludeComponent("bitrix:search.form", "flat", array(
-                                                                                                "PAGE" => "#SITE_DIR#search/index.php"
-                                                                                           ),
-                            FALSE
-                        );?>
-                        </div>
-                        <? endif?>
+    <br/>
 
 

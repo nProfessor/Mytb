@@ -20,11 +20,11 @@
                 <tr>
                     <td>
                         <div id="bx_auth_serv_Facebook"><a class="bx-button facebook"
-                                                           href="<?=$arResult['URL_FB']?>"><span>Войти через Facebook.com</span></a>
+                                                           href="<?=$arResult['URL_FB']?>"><span>Войти через Facebook</span></a>
                         </div>
                         <div id="bx_auth_serv_VKontakte" style="text-align: center;"><a class="bx-button vkontakte"
                                                                                         id="auth_vk"
-                                                                                        href="<?=$arResult['URL_VK']?>"><span>Войти через VKontakte.ru</span></a>
+                                                                                        href="<?=$arResult['URL_VK']?>"><span>Войти через VKontakte</span></a>
                         </div>
                     </td>
                     <td>
@@ -44,7 +44,7 @@
                                         <span class="add-on"><i class="icon-lock"></i></span><input class="span3"
                                                                                                     name="AUTH[PASSWORD]"
                                                                                                     placeholder="Пароль"
-                                                                                                    id="" size="16"
+                                                                                                     size="16"
                                                                                                     type="password">
                                     </div>
                                 </td>

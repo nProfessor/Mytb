@@ -148,8 +148,7 @@ function imgurl($path, $size,$resize=false)
 
     $imgFile = "{$NAME_1[1]}{$NAME_1[2]}-resize-{$size["w"]}x{$size["h"]}.{$NAME_1[3]}";
 
-//    if (file_exists($_SERVER["DOCUMENT_ROOT"] . $imgFile)) {
-
+    if (!file_exists($_SERVER["DOCUMENT_ROOT"] . $imgFile)) {
         try {
             $image = new Imagick($_SERVER["DOCUMENT_ROOT"] . $path);
             $image->ResizeImage($size["w"], $size["h"],imagick::FILTER_LANCZOS, 0.9,true);
@@ -157,7 +156,7 @@ function imgurl($path, $size,$resize=false)
         } catch (ImagickException $e) {
             echo $e->getMessage();
         }
-//    }
+    }
 
 
     return $imgFile;

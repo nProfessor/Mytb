@@ -21,7 +21,6 @@ IncludeTemplateLangFile(__FILE__);
     <?$APPLICATION->ShowHead();?>
 
     <script type="text/javascript">
-
         var _gaq = _gaq || [];
         _gaq.push(['_setAccount', 'UA-33379252-1']);
         _gaq.push(['_setDomainName', 'mytb.ru']);
@@ -67,6 +66,17 @@ IncludeTemplateLangFile(__FILE__);
         FALSE
     );?>
 
+        <div class="clear_both"></div>
+
+        <div class="about_us">
+            <i></i>
+            <span>О нас пишут:</span>
+            <noindex>
+            <a href="http://www.forbes.ru/video/192288-zayavka-na-konkurs-startapov-forbes-mytb" class="forbes" target="_blank"></a>
+            <a href="http://www.towave.ru/content/mytb-resurs-uvedomitel-ob-aktsiyakh-klubov-barov-restoranov.html" class="towave" target="_blank"></a>
+            <a href="http://nom.premiaruneta.ru/2012/site/approved/" class="premia" target="_blank"></a>
+            </noindex>
+        </div>
     </div>
 
     <div id="banner">
@@ -86,6 +96,71 @@ IncludeTemplateLangFile(__FILE__);
 
     </div>
 
+
+    <div class="content_news">
+        <div class="home_block_news">
+            <div class="block_title"><span class="stock"><i></i>Акции</span></div>
+            <?$APPLICATION->IncludeComponent("mytb:home.stocks.club", "", array(
+                "LIMIT" => 4
+            ),
+            FALSE
+        );?>
+            <div class="clear_both"></div>
+        </div>
+        <div class="home_block_news">
+            <div class="block_title"><span class="event"><i></i>События</span></div>
+            <?$APPLICATION->IncludeComponent("mytb:home.event.club", "", array(
+                "LIMIT" => 4
+            ),
+            FALSE
+        );?>
+            <div class="clear_both"></div>
+        </div>
+        <div class="home_block_news">
+            <div class="block_title"><span class="news"><i></i>Новости</span></div>
+            <?$APPLICATION->IncludeComponent("mytb:home.news.club", "", array(
+                "LIMIT" => 4
+            ),
+            FALSE
+        );?>
+            <div class="clear_both"></div>
+        </div>
+        <div class="clear_both"></div>
+    </div>
+
+    <div>
+        <div class="pull-right">
+            <script type="text/javascript" src="//vk.com/js/api/openapi.js?75"></script>
+
+            <!-- VK Widget -->
+            <div id="vk_groups"></div>
+            <script type="text/javascript">
+                VK.Widgets.Group("vk_groups", {mode: 0, width: "480", height: "300"}, 45144570);
+            </script>
+            <div class="clear_both"></div>
+        </div>
+        <div class="home_seo_text">
+            <h3>MyTB.ru — первыми сообщим тебе о скидках </h3>
+            <p>
+                <ul>
+            <li>Постоянно посещаешь одни и теже заведения?</li>
+            <li>Или просто есть любимое кафе, клуб, или любимый бар?</li>
+            <li>Но слишком поздно узнаешь об акциях проводимых в них?</li>
+                </ul>
+            </p>
+            <p>
+                Тогда тебе будет полезен наш сервис. Все что тебе нужно, это найти нужное заведение у нас и <strong>подписаться на акции</strong>. После чего ты начнешь получать уведомления по СМС или Email о новых акциях событиях и новостях данного заведения.
+            </p>
+            <p>
+            Какую информаци, каким способом и в какое время получать её выбираешь ты сам.
+            </p>
+            <p>
+                <b>Чем больше подписчиков у заведения, тем чаще будут проводится в нем акции!</b>
+            </p>
+        </div>
+
+        <div class="clear_both"></div>
+    </div>
 
 
 

@@ -351,6 +351,7 @@ if($this->InitComponentTemplate($templatePage))
 				$arResult["SEARCH"][]=$ar;
 				$ar = $obSearch->GetNext();
 			}
+
 			$arResult["NAV_STRING"] = $obSearch->GetPageNavStringEx($navComponentObject,  $arParams["PAGER_TITLE"], $arParams["PAGER_TEMPLATE"], $arParams["PAGER_SHOW_ALWAYS"]);
 			$arResult["NAV_CACHED_DATA"] = $navComponentObject->GetTemplateCachedData();
 			$arResult["NAV_RESULT"] = $obSearch;

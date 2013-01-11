@@ -19,6 +19,18 @@ td#slogan { color: #999999;  }
 .button:hover{
     background-color: #2a9cbf;
 }
+
+.index .home_search .filter select{
+    color:#ccc;
+}
+.index .home_search .filter select option{
+    color:#000;
+}
+.index .home_search .filter select option:first-child{
+    color:#ccc;
+}
+
+
 #search div.search-box { border-color: #DEDEDE; }
 #search div.search-box input { border-color: white;}
 #search-button {border-color: #E7E7E7 #D5D5D5 #D1D1D1 #E3E3E3; background: #DEDEDE;}

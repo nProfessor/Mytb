@@ -102,7 +102,18 @@ class Club
 
         return $arField['CNT'];
     }
-
+/**
+ * Возвращаем ID клубов у которых есть акции
+ */
+    static function getListHaveStocks(){
+        return Stocks::getListHaveStocks();
+    }
+    /**
+     * Возвращаем ID клубов у которых есть акции
+     */
+    static function getListHaveEvent(){
+        return Event::getListHaveEvents();
+    }
 
     /**
      * Возвращаем объект запроса к списку столиков
@@ -263,8 +274,7 @@ class Club
     static function getList($arOrder = Array("SORT"=> "ASC"), $arFilter = Array(), $arGroupBy = FALSE, $arNavStartParams = FALSE, $arSelectFields = Array())
     {
         $arFilter["IBLOCK_ID"] = IB_CLUB_ID;
-        $res
-                               = CIBlockElement::GetList($arOrder, $arFilter, $arGroupBy, $arNavStartParams, $arSelectFields);
+        $res = CIBlockElement::GetList($arOrder, $arFilter, $arGroupBy, $arNavStartParams, $arSelectFields);
         return $res;
     }
 

@@ -5,12 +5,19 @@ if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== TRUE)
 CModule::IncludeModule("iblock");
 global $USER;
 
+
+if(isset($arParams["LIMIT"])){
+    $arNavStartParams=array("nTopCount"=>intval($arParams["LIMIT"]));
+}else{
+    $arNavStartParams=false;
+}
+$arNavStartParams=
 $ob = CIBlockElement::GetList(
     array("DATE_ACTIVE_TO" => "ASC"),
     array("IBLOCK_ID"               => IB_SUB_STOCK_ID,
           ">DATE_ACTIVE_TO"         => date("d.m.Y h:i:s")),
     FALSE,
-    FALSE,
+    $arNavStartParams,
     array(
          "ID",
          "NAME",
@@ -42,7 +49,7 @@ while ($row = $ob->Fetch()) {
 
 if (count($clubListID)) {
     $res = CIBlockElement::GetList(Array(), array("ID"                      => $clubListID,
-                                                  "IBLOCK_ID"               => IB_CLUB_ID,), FALSE, FALSE, array("ID","NAME"));
+                                                  "IBLOCK_ID"               => IB_CLUB_ID,), FALSE, FALSE, array("ID","NAME","PROPERTY_TYPE_FACILITY"));
 
     while ($row = $res->Fetch()) {
         $arResult['clubList'][$row["ID"]] = $row;
