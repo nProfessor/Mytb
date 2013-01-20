@@ -53,7 +53,7 @@
                             <td>
                                 <div class="alert hide" id="errors_auth" style="float: left; width: 110px">
                                 <div id="error_text"></div>
-                            </div><button type="button" class="btn btn-primary right btn-large" id="login">Войти</button></td>
+                            </div><button type="button" class="btn btn-primary right btn-large" id="login_all">Войти</button></td>
                         </tr>
                     </table>
 
