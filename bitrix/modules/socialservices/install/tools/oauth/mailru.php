@@ -4,7 +4,7 @@ This is callback page for MyMailRu OAuth 2.0 authentication.
 MyMailRu redirects only to specific back url set in the OAuth application.
 The page opens in popup window after user authorized on MyMailRu.
 */
-
+define("NOT_CHECK_PERMISSIONS", true);
 if(isset($_REQUEST["state"]) && is_string($_REQUEST["state"]))
 {
 	$arState = array();

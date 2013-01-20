@@ -439,7 +439,8 @@ BX.CWindow.prototype.__expand = function()
 
 	if (!this.bExpanded)
 	{
-		var wndScroll = BX.GetWindowScrollPos();
+		var wndScroll = BX.GetWindowScrollPos(),
+			wndSize = BX.GetWindowInnerSize();
 
 		this.__expand_settings = {
 			resizable: this.SETTINGS.resizable,
@@ -448,18 +449,16 @@ BX.CWindow.prototype.__expand = function()
 			height: this.DIV.style.height,
 			left: this.DIV.style.left,
 			top: this.DIV.style.top,
-			scroll: wndScroll.scrollTop,
+			scrollTop: wndScroll.scrollTop,
+			scrollLeft: wndScroll.scrollLeft,
 			overflow: BX.style(pDocElement, 'overflow')
 		}
 
 		this.SETTINGS.resizable = false;
 		this.SETTINGS.draggable = false;
 
+		window.scrollTo(0,0);
 		pDocElement.style.overflow = 'hidden';
-
-		var wndSize = BX.GetWindowInnerSize();
-
-		pDocElement.scrollTop = 0;
 
 		this.DIV.style.top = '0px';
 		this.DIV.style.left = '0px';
@@ -473,7 +472,6 @@ BX.CWindow.prototype.__expand = function()
 		BX.onCustomEvent(this, 'onWindowResize');
 
 		BX.bind(window, 'resize', BX.proxy(this.__expand_onresize, this));
-
 	}
 	else
 	{
@@ -489,7 +487,7 @@ BX.CWindow.prototype.__expand = function()
 		this.DIV.style.width = this.__expand_settings.width;
 		this.DIV.style.height = this.__expand_settings.height;
 
-		pDocElement.scrollTop = this.__expand_settings.scroll;
+		window.scrollTo(this.__expand_settings.scrollLeft, this.__expand_settings.scrollTop);
 
 		this.bExpanded = false;
 
@@ -1081,7 +1079,8 @@ BX.CDialog.prototype.__expand = function()
 
 	if (!this.bExpanded)
 	{
-		var wndScroll = BX.GetWindowScrollPos();
+		var wndScroll = BX.GetWindowScrollPos(),
+			wndSize = BX.GetWindowInnerSize();
 
 		this.__expand_settings = {
 			resizable: this.SETTINGS.resizable,
@@ -1090,7 +1089,8 @@ BX.CDialog.prototype.__expand = function()
 			height: this.PARTS.CONTENT_DATA.style.height,
 			left: this.DIV.style.left,
 			top: this.DIV.style.top,
-			scroll: wndScroll.scrollTop,
+			scrollTop: wndScroll.scrollTop,
+			scrollLeft: wndScroll.scrollLeft,
 			overflow: BX.style(pDocElement, 'overflow')
 		}
 
@@ -1101,6 +1101,9 @@ BX.CDialog.prototype.__expand = function()
 
 		this.PARTS.CONTENT_DATA.style.width = pos.width + 'px';
 		this.PARTS.CONTENT_DATA.style.height = pos.height + 'px';
+
+		window.scrollTo(0,0);
+		pDocElement.style.overflow = 'hidden';
 
 		this.bExpanded = true;
 
@@ -1123,7 +1126,7 @@ BX.CDialog.prototype.__expand = function()
 		this.DIV.style.left = this.__expand_settings.left;
 		this.PARTS.CONTENT_DATA.style.width = this.__expand_settings.width;
 		this.PARTS.CONTENT_DATA.style.height = this.__expand_settings.height;
-		pDocElement.scrollTop = this.__expand_settings.scroll;
+		window.scrollTo(this.__expand_settings.scrollLeft, this.__expand_settings.scrollTop);
 		this.bExpanded = false;
 
 		BX.onCustomEvent(this, 'onWindowNarrow');
@@ -1346,9 +1349,9 @@ BX.CDialog.prototype.Submit = function(params, url)
 			FORM.action = url;
 		}
 
-		if (!FORM.bxsender)
+		if (!FORM._bxsender)
 		{
-			FORM.bxsender = FORM.appendChild(BX.create('INPUT', {
+			FORM._bxsender = FORM.appendChild(BX.create('INPUT', {
 				attrs: {
 					type: 'hidden',
 					name: 'bxsender',
@@ -1699,6 +1702,8 @@ BX.CDialog.prototype.__onResizeFinished = function()
 
 BX.CDialog.prototype.Show = function(bNotRegister)
 {
+	BX.browser.addGlobalClass();
+
 	if ((!this.PARAMS.content) && this.PARAMS.content_url && BX.ajax && !bNotRegister)
 	{
 		var wait = BX.showWait();
@@ -2574,13 +2579,22 @@ BX.CMenu.prototype.addItem = function(item, index)
 			) || !!item.MENU_URL
 		);
 
+		if (item.DISABLED)
+		{
+			item.CLOSE_ON_CLICK = false;
+			item.LINK = null;
+			item.ONCLICK = null;
+			item.ACTION = null;
+		}
+
 		item.NODE = BX.create(!!item.LINK || BX.browser.IsIE() && !BX.browser.IsDoctype() ? 'A' : 'SPAN', {
 			props: {
 				className: 'bx-core-popup-menu-item'
 					+ (bHasMenu ? ' bx-core-popup-menu-item-opener' : '')
 					+ (!!item.DEFAULT ? ' bx-core-popup-menu-item-default' : '')
+					+ (!!item.DISABLED ? ' bx-core-popup-menu-item-disabled' : '')
 					+ (!!item.CHECKED ? ' bx-core-popup-menu-item-checked' : ''),
-				title: BX.message('MENU_ENABLE_TOOLTIP') ? item.TITLE || '' : '',
+				title: !!BX.message['MENU_ENABLE_TOOLTIP'] ? item.TITLE || '' : '',
 				BXMENULEVEL: this.PARAMS.LEVEL
 			},
 			attrs: !!item.LINK || BX.browser.IsIE() && !BX.browser.IsDoctype() ? {href: item.LINK || 'javascript:void(0)'} : {},
@@ -2593,8 +2607,7 @@ BX.CMenu.prototype.addItem = function(item, index)
 			html: '<span class="bx-core-popup-menu-item-icon' + (item.GLOBAL_ICON ? ' '+item.GLOBAL_ICON : '') + '"></span><span class="bx-core-popup-menu-item-text">'+item.TEXT+'</span>'
 		});
 
-
-		if (bHasMenu)
+		if (bHasMenu && !item.DISABLED)
 		{
 			item.NODE.OPENER = new BX.COpener({
 				DIV: item.NODE,
@@ -2645,12 +2658,21 @@ BX.CMenu.prototype.addItem = function(item, index)
 BX.CMenu.prototype._documentClickBind = function()
 {
 	this._documentClickUnBind();
-	BX.bind(document, 'click', BX.proxy(this.Close, this));
+	BX.bind(document, 'click', BX.proxy(this._documentClick, this));
 }
 
 BX.CMenu.prototype._documentClickUnBind = function()
 {
-	BX.unbind(document, 'click', BX.proxy(this.Close, this));
+	BX.unbind(document, 'click', BX.proxy(this._documentClick, this));
+}
+
+BX.CMenu.prototype._documentClick = function(e)
+{
+	e = e||window.event;
+	if(!!e && !(BX.getEventButton(e)&BX.MSLEFT))
+		return;
+
+	this.Close();
 }
 
 BX.CMenu.prototype.Show = function()
@@ -2716,8 +2738,8 @@ BX.CMenu.prototype.__adjustMenuToNode = function()
 		return;
 	}
 
-	var menu_pos = {};
-	var scrollSize = BX.GetWindowScrollSize();
+	var menu_pos = {},
+		wndSize = BX.GetWindowSize();
 
 /*
 	if (BX.browser.IsIE() && !BX.browser.IsDoctype())
@@ -2733,34 +2755,43 @@ BX.CMenu.prototype.__adjustMenuToNode = function()
 			menu_pos.top = pos.bottom + 9;
 			menu_pos.left = pos.left;
 
-			var arrowPos = parseInt(this.ARROW.style.left);
-			if (pos.width > floatWidth)
-				arrowPos = parseInt(floatWidth/2 - 7);
-			else
-				arrowPos = parseInt(Math.min(floatWidth, pos.width)/2 - 7);
-
-			if (arrowPos < 7)
+			if (!!this.ARROW)
 			{
-				menu_pos.left -= 15;
-				arrowPos += 15;
+				var arrowPos = parseInt(this.ARROW.style.left);
+				if (pos.width > floatWidth)
+					arrowPos = parseInt(floatWidth/2 - 7);
+				else
+					arrowPos = parseInt(Math.min(floatWidth, pos.width)/2 - 7);
+
+				if (arrowPos < 7)
+				{
+					menu_pos.left -= 15;
+					arrowPos += 15;
+				}
 			}
 
-			if (menu_pos.left > scrollSize.scrollWidth - floatWidth - 10)
+			if (menu_pos.left > wndSize.scrollWidth - floatWidth - 10)
 			{
 				var orig_menu_pos = menu_pos.left;
-				menu_pos.left = scrollSize.scrollWidth - floatWidth - 10;
+				menu_pos.left = wndSize.scrollWidth - floatWidth - 10;
 
-				arrowPos += orig_menu_pos - menu_pos.left;
+				if (!!this.ARROW)
+					arrowPos += orig_menu_pos - menu_pos.left;
 			}
 
+			if (bFixed)
+			{
+				menu_pos.left -= wndSize.scrollLeft;
+			}
 
-			this.ARROW.style.left = arrowPos + 'px';
+			if (!!this.ARROW)
+				this.ARROW.style.left = arrowPos + 'px';
 		break;
 		case 'right':
 			menu_pos.top = pos.top-1;
 			menu_pos.left = pos.right;
 
-			if (menu_pos.left > scrollSize.scrollWidth - floatWidth - 10)
+			if (menu_pos.left > wndSize.scrollWidth - floatWidth - 10)
 			{
 				menu_pos.left = pos.left - floatWidth - 1;
 			}
@@ -2769,13 +2800,35 @@ BX.CMenu.prototype.__adjustMenuToNode = function()
 
 	if (bFixed)
 	{
-		var scrollPos = BX.GetWindowScrollPos();
-		menu_pos.top -= scrollPos.scrollTop;
+		menu_pos.top -= wndSize.scrollTop;
 	}
 
-	if (menu_pos.top > scrollSize.scrollHeight - floatHeight)
+	if (!!this.ARROW)
+		this.ARROW.className = 'bx-core-popup-menu-angle'
+
+	if((menu_pos.top + floatHeight > wndSize.scrollTop + wndSize.innerHeight)
+		|| (menu_pos.top + floatHeight > wndSize.scrollHeight))
 	{
-		menu_pos.top = scrollSize.scrollHeight - floatHeight;
+		var new_top = this.PARAMS.ATTACH_MODE == 'bottom'
+			? pos.top - floatHeight - 9
+			: pos.bottom - floatHeight + 1;
+
+		if((new_top > wndSize.scrollTop)
+			|| (menu_pos.top + floatHeight > wndSize.scrollHeight))
+		{
+			if ((menu_pos.top + floatHeight > wndSize.scrollHeight))
+			{
+				menu_pos.top = Math.max(0, wndSize.scrollHeight-floatHeight);
+				this.toggleArrow(false);
+			}
+			else
+			{
+				menu_pos.top = new_top;
+
+				if (!!this.ARROW)
+					this.ARROW.className = 'bx-core-popup-menu-angle-bottom';
+			}
+		}
 	}
 
 	if (menu_pos.top + menu_pos.left == 0)

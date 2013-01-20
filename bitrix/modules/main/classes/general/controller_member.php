@@ -282,6 +282,54 @@ class CControllerClient
 		return $arResult;
 	}
 
+	function PrepareUserInfo($arUser)
+	{
+		$arFields = array(
+			"ID",
+			"LOGIN",
+			"NAME",
+			"LAST_NAME",
+			"EMAIL",
+			"PERSONAL_PROFESSION",
+			"PERSONAL_WWW",
+			"PERSONAL_ICQ",
+			"PERSONAL_GENDER",
+			"PERSONAL_BIRTHDAY",
+			"PERSONAL_PHONE",
+			"PERSONAL_FAX",
+			"PERSONAL_MOBILE",
+			"PERSONAL_PAGER",
+			"PERSONAL_STREET",
+			"PERSONAL_MAILBOX",
+			"PERSONAL_CITY",
+			"PERSONAL_STATE",
+			"PERSONAL_ZIP",
+			"PERSONAL_COUNTRY",
+			"PERSONAL_NOTES",
+			"WORK_COMPANY",
+			"WORK_DEPARTMENT",
+			"WORK_POSITION",
+			"WORK_WWW",
+			"WORK_PHONE",
+			"WORK_FAX",
+			"WORK_PAGER",
+			"WORK_STREET",
+			"WORK_MAILBOX",
+			"WORK_CITY",
+			"WORK_STATE",
+			"WORK_ZIP",
+			"WORK_COUNTRY",
+			"WORK_PROFILE",
+			"WORK_NOTES",
+		);
+
+		$arSaveUser = array();
+		foreach ($arFields as $key)
+			$arSaveUser[$key] = $arUser[$key];
+
+		return $arSaveUser;
+	}
+
 	function SendMessage($name, $status = 'Y', $description = '')
 	{
 		// send to controller
@@ -424,6 +472,29 @@ class CControllerClient
 				error_log("CControllerClient::UpdateCounters: ".$oResponse->text);
 
 			return "CControllerClient::UpdateCounters();";
+		}
+	}
+
+	function ExecuteEvent($eventName, $arParams = array())
+	{
+		if(COption::GetOptionString("main", "controller_member", "N") != "Y")
+		{
+			return null;
+		}
+		else
+		{
+			$oRequest = new CControllerClientRequestTo("execute_event", array(
+				"event_name" => $eventName,
+				"parameters" => $arParams,
+			));
+			$oResponse = $oRequest->SendWithCheck();
+
+			if($oResponse == false)
+				error_log("CControllerClient::ExecuteEvent: unknown error");
+			elseif(!$oResponse->OK())
+				error_log("CControllerClient::ExecuteEvent: ".$oResponse->text);
+
+			return $oResponse->arParameters['result'];
 		}
 	}
 

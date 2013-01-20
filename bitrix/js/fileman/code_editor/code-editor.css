@@ -11,8 +11,9 @@
 .bxce .bxce-go-to-line-cont{height:15px; margin: 2px 0 0 0; display:inline-block; background:url("/bitrix/images/fileman/codeeditor/but.png") no-repeat -74px -62px; width: 54px;}
 .bxce .bxce-go-to-line{width: 40px;height:14px; border-style: none; color: #FFFFFF!important; font-family: monospace!important;font-size:13px!important; line-height:15px!important; text-align: right; background:transparent;}
 .bxce input.bxce-go-to-line:focus{outline:none;}
-.bxce .bxce-cont{overflow: hidden; padding: 1px 5px 0 54px; position: relative !important; z-index: 100;}
-.bxce .bxce-ta{background-color: transparent; border-width: 0; height: 100%; left: 0; margin: 0 0 0 4px; overflow: hidden; padding: 0; position: relative !important; resize: none; top: 0; width: 100%; z-index: 70; color: #ffffff; outline: none !important; box-shadow: none; max-width: none!important; max-height: none!important;}
+.bxce .bxce-cont{overflow: hidden; /*left: 54px;*/ padding: 1px 5px 0 54px; position: relative !important; z-index: 100;}
+.bxce .bxce-ta{background-color: transparent; border-width: 0; height: 100%; left: 0; margin: 0 0 0 4px; overflow: hidden; padding: 0; position: relative !important; resize: none; top: 0; width: 100%; z-index: 70; color: #ffffff; outline: none !important; box-shadow: none; max-width: none!important; max-height: none!important;
+font-family: consolas, monospace!important;font-size:12px!important;line-height: 13px!important;}
 .bxce .bxce-line-num{color: #AAAAAA; margin: 0 0 0 -55px; overflow: hidden;padding: 0; position: absolute !important; text-align: right; width: 55px; z-index: 80;background-color: #000000;}
 .bxce .bxce-cur-line{display: none; position: absolute !important; top: -100px; background-color: #111111; overflow: hidden; z-index: 50; white-space: -moz-pre-wrap!important; white-space: pre-wrap!important; white-space: -o-pre-wrap!important; white-space: pre-wrap!important; margin:0!important; padding:0; word-wrap: break-word!important; color: #E5E5E5!important; left: 55px; vertical-align: top;}
 .bxce .bxce-cur-line pre, .bxce .bxce-hightlight pre{font-family: monospace!important;white-space: -moz-pre-wrap!important;white-space: -pre-wrap!important;white-space: -o-pre-wrap!important;white-space: pre-wrap!important;margin:0!important;padding:0!important;word-wrap: break-word!important;}

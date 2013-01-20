@@ -37,18 +37,6 @@ $login = (strlen($USER_LOGIN)>0) ? $USER_LOGIN : $last_login;
 	</div>
 </div>
 
-<div id="change_password_message" class="login-popup-wrap login-popup-ifo-wrap">
-	<div class="login-popup">
-		<div class="login-popup-title"><?=GetMessage('AUTH_CHANGE_PASSWORD')?></div>
-		<div class="login-popup-message-wrap">
-			<div class="adm-info-message-wrap adm-info-message-green">
-				<div class="adm-info-message" id="change_password_message_inner"></div>
-			</div>
-		</div>
-		<a class="login-popup-link" href="javascript:void(0)" onclick="BX.adminLogin.toggleAuthForm('authorize')"><?=GetMessage('AUTH_GOTO_AUTH_FORM')?></a>
-	</div>
-</div>
-
 <script type="text/javascript">
 BX.message({
 	'AUTH_NEW_PASSWORD_CONFIRM_WRONG':'<?=GetMessageJS('AUTH_NEW_PASSWORD_CONFIRM_WRONG')?>'

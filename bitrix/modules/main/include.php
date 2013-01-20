@@ -121,7 +121,7 @@ CModule::AddAutoloadClasses(
 		"CAllFile" => "classes/general/file.php",
 		"CFile" => "classes/".$DBType."/file.php",
 		"CTempFile" => "classes/general/file_temp.php",
-		"CFavorites" => "classes/general/favorites.php",
+		"CFavorites" => "classes/".$DBType."/favorites.php",
 		"CUserOptions" => "classes/general/favorites.php",
 		"CGridOptions" => "classes/general/grids.php",
 		"CUndo" => "/classes/general/undo.php",

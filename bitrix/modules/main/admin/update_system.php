@@ -4,7 +4,7 @@
 //**    MODIFICATION OF THIS FILE WILL ENTAIL SITE FAILURE            **/
 //**********************************************************************/
 if (!defined("UPDATE_SYSTEM_VERSION"))
-	define("UPDATE_SYSTEM_VERSION", "12.0.3");
+	define("UPDATE_SYSTEM_VERSION", "12.0.4");
 
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
 define("HELP_FILE", "updates/update_system.php");
@@ -2427,7 +2427,7 @@ $tabControl->BeginNextTab();
 					{
 						tabControl.SelectTab('tab1');
 						tabControl.DisableTab('tab2');
-						tabControl.DisableTab('tab_coupon');
+						//tabControl.DisableTab('tab_coupon');
 						tabControl.DisableTab('tab3');
 						document.getElementById("install_updates_button").disabled = true;
 						document.getElementById("id_view_updates_list_span").innerHTML = "<u><?= GetMessage("SUP_SU_UPD_VIEW") ?></u>";

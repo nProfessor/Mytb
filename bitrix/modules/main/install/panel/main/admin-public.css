@@ -747,7 +747,12 @@
 
 #bx-admin-prefix .bx-core-popup-menu-angle {
 	top: -9px;
-	background: url("images/popup_menu_sprite.png") no-repeat left -1480px;
+	background: url("images/popup_menu_sprite_1.png") no-repeat left -1480px;
+}
+
+#bx-admin-prefix .bx-core-popup-menu-angle-bottom {
+	bottom: -9px;
+	background: url("images/popup_menu_sprite_1.png") no-repeat left -1460px;
 }
 
 #bx-admin-prefix .bx-core-popup-menu-item
@@ -769,7 +774,7 @@
 
 #bx-admin-prefix .bx-core-popup-menu-item-icon {
 	width: 46px;
-	background: url("images/popup_menu_sprite.png") no-repeat 6px -1080px;
+	background: url("images/popup_menu_sprite_1.png") no-repeat 6px -1080px;
 }
 
 
@@ -801,12 +806,12 @@
 #bx-admin-prefix .bx-core-popup-menu-item-opener:hover .bx-core-popup-menu-item-text,
 #bx-admin-prefix .bx-core-popup-menu-item-opened .bx-core-popup-menu-item-text
 {
-	background: url("images/popup_menu_sprite.png") no-repeat right -270px;
+	background: url("images/popup_menu_sprite_1.png") no-repeat right -270px;
 }
 
 #bx-admin-prefix .bx-core-popup-menu-item-checked .bx-core-popup-menu-item-text
 {
-	background: url("images/popup_menu_sprite.png") no-repeat left -600px;
+	background: url("images/popup_menu_sprite_1.png") no-repeat left -600px;
 }
 
 #bx-admin-prefix .adm-menu-edit{background-position: 6px -630px;}
@@ -844,6 +849,9 @@
 	padding:0;
 }
 
+#bx-admin-prefix .bx-core-popup-menu-item-disabled .bx-core-popup-menu-item-text {
+	color: #A0A0A0;
+}
 
 .adm-detail-content-table > tbody > .heading td {
 	padding:8px 70px 10px!important;

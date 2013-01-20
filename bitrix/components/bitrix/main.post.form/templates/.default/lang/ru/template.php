@@ -18,6 +18,7 @@ $MESS["MPF_FILES"] = "Файлы:";
 $MESS["MPF_FILE_TITLE"] = "Загрузить файл";
 $MESS["MPF_MORE"] = "Еще";
 $MESS["MPF_TAG_TITLE"] = "Добавить тег";
+$MESS["MPF_ADD_TAG1"] = "Добавить";
 $MESS["MPF_MENTION_TITLE"] = "Добавить упоминание";
 $MESS["MPF_IMAGE_TITLE"] = "Вставить изображение в сообщение";
 ?>

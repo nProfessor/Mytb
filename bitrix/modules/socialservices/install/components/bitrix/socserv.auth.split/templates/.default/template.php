@@ -7,7 +7,7 @@ if($arResult['ERROR_MESSAGE'])
 	ShowMessage($arResult['ERROR_MESSAGE']);
 ?>
 <?
-$arServices = $arResult["AUTH_SERVICES"];
+$arServices = $arResult["AUTH_SERVICES_ICONS"];
 if(!empty($arResult["AUTH_SERVICES"]))
 {
 	?>
@@ -25,7 +25,7 @@ if(!empty($arResult["AUTH_SERVICES"]))
 			"POST"=>$arResult["POST"],
 			"SHOW_TITLES"=>'N',
 			"FOR_SPLIT"=>'Y',
-			"~AUTH_LINE"=>'N',
+			"AUTH_LINE"=>'N',
 		),
 		$component,
 		array("HIDE_ICONS"=>"Y")
@@ -46,12 +46,10 @@ if(isset($arResult["DB_SOCSERV_USER"]) && $arParams["SHOW_PROFILES"] != 'N')
 				<td><?=GetMessage("SS_SOCNET");?></td>
 				<td><?=GetMessage("SS_NAME");?></td>
 			</tr>
-
-
 			<?
 			foreach($arResult["DB_SOCSERV_USER"] as $key => $arUser)
 			{
-				if(!$icon = htmlspecialcharsbx($arResult["AUTH_SERVICES"][$arUser["EXTERNAL_AUTH_ID"]]["ICON"]))
+				if(!$icon = htmlspecialcharsbx($arResult["AUTH_SERVICES_ICONS"][$arUser["EXTERNAL_AUTH_ID"]]["ICON"]))
 					$icon = 'openid';
 				$authID = ($arServices[$arUser["EXTERNAL_AUTH_ID"]]["NAME"]) ? $arServices[$arUser["EXTERNAL_AUTH_ID"]]["NAME"] : $arUser["EXTERNAL_AUTH_ID"];
 				?>
@@ -78,13 +76,19 @@ if(isset($arResult["DB_SOCSERV_USER"]) && $arParams["SHOW_PROFILES"] != 'N')
 				<?
 			}
 			?>
-
 		</table>
 	</div>
-<?
+	<?
 }
 ?>
+<?
+if(!empty($arResult["AUTH_SERVICES"]))
+{
+	?>
 	</div>
+	<?
+}
+?>
 <?if($arResult['CURRENTURL'] <> ''):?>
 <input type="hidden" name="backurl" value="<?=$arResult['CURRENTURL']?>" />
 <?endif?>

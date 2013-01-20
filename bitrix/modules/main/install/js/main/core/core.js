@@ -4,6 +4,7 @@
 
 ;(function(){
 if (window.BX) return;
+
 var BX = function(node, bCache)
 {
 	if (BX.type.isNotEmptyString(node))
@@ -606,7 +607,7 @@ BX.findChild = function(obj, params, recursive, get_all)
 		return null;
 }
 
-BX.findParent = function(obj, params)
+BX.findParent = function(obj, params, maxParent)
 {
 	if(!obj)
 		return null;
@@ -620,6 +621,22 @@ BX.findParent = function(obj, params)
 			return parent;
 
 		o = parent;
+
+		if (!!maxParent &&
+			(BX.type.isFunction(maxParent)
+				|| typeof maxParent == 'object'))
+		{
+			if (BX.type.isElementNode(maxParent))
+			{
+				if (o == maxParent)
+					break;
+			}
+			else
+			{
+				if (_checkNode(o, maxParent))
+					break;
+			}
+		}
 	}
 	return null;
 }

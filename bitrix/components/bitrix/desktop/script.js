@@ -86,6 +86,7 @@ function BXGadget(gadgetHolderID, allGadgets)
 	// Drag'n'drop start
 	_this.gdDrag = false;
 	_this.mousePos = {x: 0, y: 0};
+	_this.zind = 0;
 
 	_this.tmpDiv = false;
 	
@@ -121,9 +122,13 @@ function BXGadget(gadgetHolderID, allGadgets)
 		d.width = t.offsetWidth+'px';
 		d.style.height = t.offsetHeight+'px';
 
-		BX.addClass(t, 'bx-gadgets-drag');
-		t.style.width = d.offsetWidth+'px';
-		t.style.height = d.offsetHeight+'px';
+//		BX.addClass(t, 'bx-gadgets-drag');
+		t.style.position = 'absolute';
+		t.style.width = d.offsetWidth + 'px';
+		t.style.height = d.offsetHeight + 'px';
+		t.style.border = '1px solid #777777';
+		_this.zind = t.style.zIndex;
+		t.style.zIndex = '10000';
 		t.style.left = (tablePos["left"] + 20) + 'px';
 		t.style.top = tablePos["top"] + 'px';
 
@@ -228,9 +233,12 @@ function BXGadget(gadgetHolderID, allGadgets)
 		t.style.MozOpacity = 1;
 		t.style.opacity = 1;
 		t.style.filter = '';
-		BX.removeClass(t, 'bx-gadgets-drag');
+		t.style.position = 'static';
+		t.style.border = '0px';
+//		BX.removeClass(t, 'bx-gadgets-drag');
 		t.style.width = '';
 		t.style.height = '';
+		t.style.zIndex = _this.zind;
 
 		var d = BX('d' + _this.gdDrag);
 		d.style.display = 'none';

@@ -208,76 +208,37 @@ else
 				}
 
 
-				if($arUser['ACTIVE']=='Y' && md5($db_password.'MySalt') == md5(md5($salt.$oRequest->arParameters['password']).'MySalt'))
+				if(
+					$arUser['ACTIVE'] == 'Y'
+					&& md5($db_password.'MySalt') == md5(md5($salt.$oRequest->arParameters['password']).'MySalt')
+				)
 				{
-					$arFields = Array(
-							"ID",
-							"LOGIN",
-							"NAME",
-							"LAST_NAME",
-							"EMAIL",
-							"PERSONAL_PROFESSION",
-							"PERSONAL_WWW",
-							"PERSONAL_ICQ",
-							"PERSONAL_GENDER",
-							"PERSONAL_BIRTHDAY",
-							"PERSONAL_PHONE",
-							"PERSONAL_FAX",
-							"PERSONAL_MOBILE",
-							"PERSONAL_PAGER",
-							"PERSONAL_STREET",
-							"PERSONAL_MAILBOX",
-							"PERSONAL_CITY",
-							"PERSONAL_STATE",
-							"PERSONAL_ZIP",
-							"PERSONAL_COUNTRY",
-							"PERSONAL_NOTES",
-							"WORK_COMPANY",
-							"WORK_DEPARTMENT",
-							"WORK_POSITION",
-							"WORK_WWW",
-							"WORK_PHONE",
-							"WORK_FAX",
-							"WORK_PAGER",
-							"WORK_STREET",
-							"WORK_MAILBOX",
-							"WORK_CITY",
-							"WORK_STATE",
-							"WORK_ZIP",
-							"WORK_COUNTRY",
-							"WORK_PROFILE",
-							"WORK_NOTES"
-						);
+					$arSaveUser = CControllerClient::PrepareUserInfo($arUser);
 
-					$arSaveUser = Array();
-					for($i=0; $i<count($arFields); $i++)
-						$arSaveUser[$arFields[$i]] = $arUser[$arFields[$i]];
-
-					$arUserGroups = Array();
+					$arUserGroups = array();
 					$dbUserGroups = CUser::GetUserGroupEx($arUser['ID']);
-					while($arG = $dbUserGroups->Fetch())
+					while ($arG = $dbUserGroups->Fetch())
 					{
-						if(strlen($arG["STRING_ID"])>0)
+						if (strlen($arG["STRING_ID"]) > 0)
 							$arUserGroups[] = $arG["STRING_ID"];
-						elseif($arG["GROUP_ID"] == 1)
+						elseif ($arG["GROUP_ID"] == 1)
 							$arUserGroups[] = "administrators";
-						elseif($arG["GROUP_ID"] == 2)
+						elseif ($arG["GROUP_ID"] == 2)
 							$arUserGroups[] = "everyone";
 					}
-
 					$arSaveUser["GROUP_ID"] = $arUserGroups;
 
-					if(CModule::IncludeModule("blog"))
+					if (CModule::IncludeModule("blog"))
 					{
 						$arBlogUser = CBlogUser::GetByID($arUser['ID'], BLOG_BY_USER_ID);
-						if(is_array($arBlogUser) && $arBlogUser["AVATAR"]>0)
+						if (is_array($arBlogUser) && $arBlogUser["AVATAR"] > 0)
 							$arSaveUser["BLOG_AVATAR"] = CFile::GetPath($arBlogUser["AVATAR"]);
 					}
 
-					if(CModule::IncludeModule("forum"))
+					if (CModule::IncludeModule("forum"))
 					{
 						$arForumUser = CForumUser::GetByID($arUser['ID'], BLOG_BY_USER_ID);
-						if(is_array($arForumUser) && $arForumUser["AVATAR"]>0)
+						if (is_array($arForumUser) && $arForumUser["AVATAR"] > 0)
 							$arSaveUser["FORUM_AVATAR"] = CFile::GetPath($arForumUser["AVATAR"]);
 					}
 

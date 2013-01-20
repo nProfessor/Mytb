@@ -22,6 +22,7 @@ class CTextParser
 		$this->smiles = array();
 		$this->MaxAnchorLength = 40;
 		$this->allow = array("HTML" => "N", "ANCHOR" => "Y", "BIU" => "Y", "IMG" => "Y", "QUOTE" => "Y", "CODE" => "Y", "FONT" => "Y", "LIST" => "Y", "SMILES" => "Y", "NL2BR" => "N", "VIDEO" => "Y", "TABLE" => "Y", "CUT_ANCHOR" => "N", "SHORT_ANCHOR" => "N", "ALIGN" => "Y");
+		$this->authorName = '';
 	}
 
 	function convertText($text)
@@ -654,11 +655,13 @@ class CTextParser
 			$strPar = " width=\"".$width."\"";
 		if($height > 0)
 			$strPar .= " height=\"".$height."\"";
+		if(strlen($this->authorName) > 0)
+			$strPar .= " data-bx-title=\"".$this->authorName."\"";
 
 		if(strlen($this->serverName) <= 0 || preg_match("/^(http|https|ftp)\:\/\//i".BX_UTF_PCRE_MODIFIER, $url))
-			return '<img src="'.$url.'" border="0"'.$strPar.' />';
+			return '<img src="'.$url.'" border="0"'.$strPar.' data-bx-image="'.$url.'" />';
 		else
-			return '<img src="'.$this->serverName.$url.'" border="0"'.$strPar.' />';
+			return '<img src="'.$this->serverName.$url.'" border="0"'.$strPar.' data-bx-image="'.$this->serverName.$url.'" />';
 	}
 
 	function convert_font_attr($attr, $value = "", $text = "")
@@ -682,7 +685,7 @@ class CTextParser
 		}
 		else if ($attr == 'font')
 		{
-			$value = preg_replace("/[^\w]/", "" , $value);
+			$value = preg_replace("/[^\w\s\-\,]/", "" , $value);
 			return '<span style="font-family:'.$value.'">'.$text.'</span>';
 		}
 	}

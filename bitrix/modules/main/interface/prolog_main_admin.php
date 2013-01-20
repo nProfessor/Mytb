@@ -7,6 +7,7 @@ if(strlen($APPLICATION->GetTitle())<=0)
 	$APPLICATION->SetTitle(GetMessage("MAIN_PROLOG_ADMIN_TITLE"));
 
 $aUserOpt = CUserOptions::GetOption("admin_panel", "settings");
+$aUserOptGlobal = CUserOptions::GetOption("global", "settings");
 
 $adminPage->Init();
 $adminMenu->Init($adminPage->aModules);
@@ -55,7 +56,10 @@ echo $adminPage->ShowScript();
 $APPLICATION->ShowHeadScripts();
 $APPLICATION->ShowHeadStrings();
 ?>
-<script type="text/javascript">BX.InitializeAdmin();</script>
+<script type="text/javascript">
+BX.message({MENU_ENABLE_TOOLTIP: <?=($aUserOptGlobal['start_menu_title'] <> 'N' ? 'true' : 'false')?>});
+BX.InitializeAdmin();
+</script>
 <?
 if (!defined('ADMIN_SECTION_LOAD_AUTH') || !ADMIN_SECTION_LOAD_AUTH):
 ?>

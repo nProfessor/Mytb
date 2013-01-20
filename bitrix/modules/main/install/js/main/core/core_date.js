@@ -974,8 +974,9 @@ BX.JCCalendar = function()
 
 	this._get_content = function()
 	{
-		var _layer_onclick = BX.delegate(function() {
-			this.SetDate(new Date(parseInt(BX.proxy_context.getAttribute('data-date'))))
+		var _layer_onclick = BX.delegate(function(e) {
+			e = e||window.event;
+			this.SetDate(new Date(parseInt(BX.proxy_context.getAttribute('data-date'))), e.type=='dblclick')
 		}, this);
 
 		this.DIV = BX.create('DIV', {
@@ -1028,7 +1029,8 @@ BX.JCCalendar = function()
 						className: 'bx-calendar-cell-block'
 					},
 					events: {
-						click: BX.delegateEvent({className: 'bx-calendar-cell'}, _layer_onclick)
+						click: BX.delegateEvent({className: 'bx-calendar-cell'}, _layer_onclick),
+						dblclick: BX.delegateEvent({className: 'bx-calendar-cell'}, _layer_onclick)
 					}
 				})),
 
@@ -1375,7 +1377,16 @@ BX.JCCalendar = function()
 
 	this._menu_year_content = function()
 	{
-		return '<div class="bx-calendar-year-popup"><div class="bx-calendar-year-title" onclick="BX.calendar.get().popup_year.close();">'+this.value.getUTCFullYear()+'</div><div class="bx-calendar-year-content" id="bx-calendar-year-content"><a href="javascript:void(0)" class="bx-calendar-year-number" onclick="BX.calendar.get().SetYear('+(this.value.getUTCFullYear()-1)+')">'+(this.value.getUTCFullYear()-1)+'</a><a href="javascript:void(0)" class="bx-calendar-year-number bx-calendar-year-active" onclick="BX.calendar.get().SetYear('+this.value.getUTCFullYear()+')">'+this.value.getUTCFullYear()+'</a><a href="javascript:void(0)" class="bx-calendar-year-number" onclick="BX.calendar.get().SetYear('+(this.value.getUTCFullYear()+1)+')">'+(this.value.getUTCFullYear()+1)+'</a></div><input type="text" class="bx-calendar-year-input" onkeyup="if(this.value>=1900&&this.value<=2100)BX.calendar.get().SetYear(this.value);" maxlength="4" /></div>';
+		var s = '<div class="bx-calendar-year-popup"><div class="bx-calendar-year-title" onclick="BX.calendar.get().popup_year.close();">'+this.value.getUTCFullYear()+'</div><div class="bx-calendar-year-content" id="bx-calendar-year-content">'
+
+			for (var i=-3; i <= 3; i++)
+			{
+				s += '<a href="javascript:void(0)" class="bx-calendar-year-number'+(i==0?' bx-calendar-year-active':'')+'" onclick="BX.calendar.get().SetYear('+(this.value.getUTCFullYear()-i)+')">'+(this.value.getUTCFullYear()-i)+'</a>'
+			}
+
+			s += '</div><input type="text" class="bx-calendar-year-input" onkeyup="if(this.value>=1900&&this.value<=2100)BX.calendar.get().SetYear(this.value);" maxlength="4" /></div>';
+
+		return s;
 	};
 
 	this._menu_year = function()
@@ -1582,14 +1593,14 @@ BX.JCCalendar.prototype.SetYear = function(y)
 	return this.SetValue(this.value);
 };
 
-BX.JCCalendar.prototype.SetDate = function(v)
+BX.JCCalendar.prototype.SetDate = function(v, bSet)
 {
 	v = this._check_date(v);
 	v.setUTCHours(this.value.getUTCHours());
 	v.setUTCMinutes(this.value.getUTCMinutes());
 	v.setUTCSeconds(this.value.getUTCSeconds());
 
-	if (this.params.bTime)
+	if (this.params.bTime && !bSet)
 	{
 		return this.SetValue(v);
 	}

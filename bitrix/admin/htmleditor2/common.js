@@ -1405,19 +1405,20 @@ function BXSelectRange(oRange, oDoc, oWin)
 	if (!oWin)
 		oWin = window;
 
-	BXClearSelection(oDoc,oWin);
-
-	if (oDoc.createRange)
+	BXClearSelection(oDoc, oWin);
+	if (oDoc.createRange && oWin.getSelection)
 	{
-		//FF, Opera
+		//FF, Opera, IE9
 		var oSel = oWin.getSelection();
 		oSel.removeAllRanges();
-		oSel.addRange(oRange);
+		if (oRange && oSel.addRange)
+			oSel.addRange(oRange);
 	}
 	else
 	{
 		//IE
-		oRange.select();
+		if (oRange && oRange.select)
+			oRange.select();
 	}
 }
 

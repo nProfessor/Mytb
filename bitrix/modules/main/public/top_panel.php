@@ -1128,7 +1128,7 @@ class CTopPanel
 			'MENU_PRELOAD' => ($aUserOptGlobal["start_menu_preload"] == 'Y')
 		);
 
-		$result .= '<script type="text/javascript">new BX.COpener('.CUtil::PhpToJsObject($arStartMenuParams).')</script>';
+		$result .= '<script type="text/javascript">BX.message({MENU_ENABLE_TOOLTIP: '.($aUserOptGlobal['start_menu_title'] <> 'N' ? 'true' : 'false').'}); new BX.COpener('.CUtil::PhpToJsObject($arStartMenuParams).');</script>';
 
 		$Execs=$hkInstance->GetCodeByClassName("top_panel_menu",GetMessage("top_panel_menu"));
 		$result .=$hkInstance->PrintJSExecs($Execs);
@@ -1138,7 +1138,7 @@ class CTopPanel
 		$informerItemsCount = CAdminInformer::InsertMainItems();
 
 		if($informerItemsCount>0)
-			$result .= '<a class="adm-header-notif-block" id="adm-header-notif-block" onclick="return BX.adminInformer.Toggle(this);" href=""><span class="adm-header-notif-icon"></span><span id="adm-header-notif-counter" class="adm-header-notif-counter">'.CAdminInformer::$alertCounter.'</span></a>';
+			$result .= '<a class="adm-header-notif-block" id="adm-header-notif-block" onclick="return BX.adminInformer.Toggle(this);" href="" title="'.GetMessage("top_panel_notif_block_title").'"><span class="adm-header-notif-icon"></span><span id="adm-header-notif-counter" class="adm-header-notif-counter">'.CAdminInformer::$alertCounter.'</span></a>';
 
 		if ($USER->CanDoOperation("cache_control"))
 		{

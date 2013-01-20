@@ -579,12 +579,16 @@ while($Elem = $db_DirContent->NavNext(true, "f_"))
 	if ($bSearch)
 		$val = CFileman::GetFileName($val);
 
-	$editField = "<input type=\"text\" name=\"FIELDS[".$f_NAME."][NAME]\" value=\"".htmlspecialcharsbx($val)."\" size=\"40\"> ";
+	//$editField = "<input type=\"text\" name=\"FIELDS[".$f_NAME."][NAME]\" value=\"".htmlspecialcharsbx($val)."\" size=\"40\"> ";
 
 	if($logical=='Y')
 		$row->AddField("NAME", $showField);
 	else
-		$row->AddField("NAME", $showField, $editField);
+	{
+		//$row->AddField("NAME", $showField, $editField);
+		$row->AddViewField("NAME",$showField);
+		$row->AddInputField("NAME", Array('size'=>'40', name => 'FIELDS['.$f_NAME.'][NAME]', 'value' => htmlspecialcharsbx($val)));
+	}
 
 
 	if($logical == 'Y')

@@ -65,6 +65,10 @@ class CBitrixCloudCDN
 				}
 			}
 		}
+
+		if(!self::$config->isActive())
+			return false;
+
 		$sites = self::$config->getSites();
 		if (defined("ADMIN_SECTION"))
 		{
@@ -108,7 +112,7 @@ class CBitrixCloudCDN
 				))                                                   #attribute
 				(\"|')                                               #open_quote
 				(".$prefix_regex.")                                  #prefix
-				([^?'\"]+\\.)                                           #href body
+				([^?'\"]+\\.)                                        #href body
 				(".$extension_regex.")                               #extension
 				(|\\?\\d+|\\?v=\\d+)                                 #params
 				(\\2)                                                #close_quote
@@ -176,6 +180,8 @@ class CBitrixCloudCDN
 						if (file_exists($_SERVER["DOCUMENT_ROOT"].$prefix.$link.$extension))
 							$params = "?".filemtime($_SERVER["DOCUMENT_ROOT"].$prefix.$link.$extension).$params;
 					}
+					//Fix spaces in the link
+					$link = str_replace(" ", "%20", $link);
 					return $attribute.$open_quote.$proto.$server.$prefix.$link.$extension.$params.$close_quote;
 				}
 			}
@@ -283,6 +289,9 @@ class CBitrixCloudCDN
 	 */
 	public function OnAdminInformerInsertItems()
 	{
+		if (IsModuleInstalled('intranet'))
+			return;
+
 		$CDNAIParams = array(
 			"TITLE" => GetMessage("BCL_CDN_AI_TITLE"),
 			"COLOR" => "green",
@@ -312,7 +321,12 @@ class CBitrixCloudCDN
 					$PROGRESS_FREE_BAR = $PROGRESS_FREE > 100? 100: $PROGRESS_FREE;
 					$PROGRESS_FREE_BAR = $PROGRESS_FREE < 0? 0: $PROGRESS_FREE_BAR;
 
-					$CDNAIParams["ALERT"] = ($PROGRESS_FREE < 10 ? true : false);
+					$CDNAIParams["ALERT"] = false;
+					if ($PROGRESS_FREE < 10)
+						$CDNAIParams["ALERT"] = true;
+					elseif (!$cdn_config->isActive())
+						$CDNAIParams["ALERT"] = true;
+
 					$CDNAIParams["HTML"] = '
 						<div class="adm-informer-item-section">
 							<span class="adm-informer-item-l">

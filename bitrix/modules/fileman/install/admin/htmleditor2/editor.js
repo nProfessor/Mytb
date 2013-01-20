@@ -176,6 +176,8 @@ BXHTMLEditor.prototype.OnLoad = function()
 	if(this.pForm)
 		addAdvEvent(this.pForm, 'submit', window['OnSubmit_' + this.name]);
 
+	BX.addCustomEvent(window, "OnHtmlEditorRequestAuthFailure", BX.proxy(this.AuthFailureHandler, this));
+
 	//Table which makes structure of Toolbarsets, taskbarsets and editor area....
 	var pFrame = this.pDocument.getElementById(this.name+'_pFrame');
 	//Editor area
@@ -1079,6 +1081,10 @@ BXHTMLEditor.prototype.CleanWordText = function(text, arParams)
 		text = text.replace(/(<col[\s\S]*?)width=("|')[\s\S]*?\2([\s\S]*?>)/gi, "$1$3");
 		text = text.replace(/(<col[\s\S]*?)style=("|')[\s\S]*?\2([\s\S]*?>)/gi, "$1$3");
 	}
+
+	// For Opera (12.10+) only when in text we have reference links.
+	if (BX.browser.IsOpera())
+		text = text.replace(/REF\s+?_Ref\d+?[\s\S]*?MERGEFORMAT\s([\s\S]*?)\s[\s\S]*?<\/xml>/gi, " $1 ");
 
 	return text;
 };
@@ -2364,150 +2370,44 @@ BXHTMLEditor.prototype.CheckSubdialogs = function()
 	return false;
 };
 
+BXHTMLEditor.prototype.AuthFailureHandler = function(name, arAuthResult)
+{
+	if (name != this.name || this._authShowed)
+		return;
+
+	var _this = this;
+	function auth_callback()
+	{
+		_this._authShowed = false;
+		if (_this.__authFailureHandlerCallback)
+			_this.__authFailureHandlerCallback();
+	}
+
+	this._authShowed = true;
+	var authDialog = new BX.CAuthDialog({
+		content_url: '/bitrix/admin/fileman_editor_dialog.php',
+		auth_result: arAuthResult,
+		callback: BX.delegate(function(){
+			if (auth_callback)
+				auth_callback()
+		}, this)
+	});
+
+	authDialog.Show();
+
+	BX.addCustomEvent(authDialog, 'onWindowUnRegister', function()
+	{
+		_this._authShowed = false;
+		if (_this.__authFailureHandlerCallbackClose)
+			_this.__authFailureHandlerCallbackClose();
+	});
+};
+
 function BXContextMenuOnclick(e)
 {
 	removeEvent(this.pMainObj.pEditorDocument, "click", BXContextMenuOnclick);
 	oBXContextMenu.menu.PopupHide();
 };
-
-// function GarbageCollector()
-// {
-// return;
-// try{
-// for (var el in ar_PROP_ELEMENTS)
-// {
-// for (var prop in ar_PROP_ELEMENTS[el].arElements)
-// ar_PROP_ELEMENTS[el].arElements[prop] = null;
-
-// try
-// {
-// ar_PROP_ELEMENTS[el].pCellProps = null;
-// ar_PROP_ELEMENTS[el].pCellProps = null;
-// ar_PROP_ELEMENTS[el].pCellPath = null;
-// ar_PROP_ELEMENTS[el].parentCell = null;
-// ar_PROP_ELEMENTS[el].oOldSelected = null;
-// ar_PROP_ELEMENTS[el].parentCell = null;
-// ar_PROP_ELEMENTS[el].pTaskbarSet = null;
-// ar_PROP_ELEMENTS[el].oOldPropertyPanelElement = null;
-// ar_PROP_ELEMENTS[el].pWnd = null;
-// ar_PROP_ELEMENTS[el].pDataCell = null;
-// ar_PROP_ELEMENTS[el].pTitleRow = null;
-// ar_PROP_ELEMENTS[el].pMainObj = null;
-// if (ar_PROP_ELEMENTS[el].pHtmlElement)
-// ar_PROP_ELEMENTS[el].pHtmlElement = null;
-// }
-// catch (e) {}
-// }
-
-// ar_PROP_ELEMENTS = null;
-
-// Clean pMainObj
-// this.Clean();
-
-// for (var el in ar_BXButtonS)
-// {
-// ar_BXButtonS[el].pWnd = null;
-// ar_BXButtonS[el].pMainObj = null;
-// }
-// ar_BXButtonS = null;
-
-// for (var el in ar_BXTaskbarS)
-// {
-// ar_BXTaskbarS[el].pWnd = null;
-// ar_BXTaskbarS[el].pMainObj = null;
-// ar_BXTaskbarS[el].pDataCell = null;
-// ar_BXTaskbarS[el].pTitleRow = null;
-// }
-// ar_BXTaskbarS = null;
-
-
-// for (var el in ar_BXTaskbarSetS)
-// {
-// ar_BXTaskbarSetS[el].pWnd = null;
-// ar_BXTaskbarSetS[el].pMainObj = null;
-// if (ar_BXTaskbarSetS[el].pParent)
-// ar_BXTaskbarSetS[el].pParent = null;
-
-// ar_BXTaskbarSetS[el].pMainCell = null;
-// ar_BXTaskbarSetS[el].pMoveColumn = null;
-
-// ar_BXTaskbarSetS[el].pTaskbarsTable = null;
-// ar_BXTaskbarSetS[el].pBottomColumn = null;
-// ar_BXTaskbarSetS[el].pDataColumn = null;
-
-// ar_BXTaskbarSetS[el].pMoveImg = null;
-// }
-// ar_BXTaskbarSetS = null;
-
-// for (var el in ar_BXToolbarSetS)
-// {
-// ar_BXToolbarSetS[el].pWnd = null;
-// ar_BXToolbarSetS[el].pMainObj = null;
-// if (ar_BXToolbarSetS[el].pParent)
-// ar_BXToolbarSetS[el].pParent = null;
-// ar_BXToolbarSetS[el].pMoveImg = null;
-// ar_BXToolbarSetS[el].pMoveColumn = null;
-// }
-// ar_BXToolbarSetS = null;
-
-// for (var el in ar_BXToolbarS)
-// {
-// ar_BXToolbarS[el].pWnd.pObj = null;
-// ar_BXToolbarS[el].pWnd = null;
-// ar_BXToolbarS[el].pMainObj.pWnd = null;
-// ar_BXToolbarS[el].pIconsTable.pObj = null;
-// ar_BXToolbarS[el].pIconsTable = null;
-// ar_BXToolbarS[el].pTitleRow = null;
-// ar_BXToolbarS[el].pMainObj = null;
-// ar_BXToolbarS[el].arButtons = null;
-// ar_BXToolbarS[el].pToolbarSet = null;
-// }
-// ar_BXToolbarS = null;
-
-// for (var el in ar_BXPropertiesTaskbarS)
-// {
-// ar_BXPropertiesTaskbarS[el].pDataCell = null;
-// ar_BXPropertiesTaskbarS[el].pCellPath = null;
-// ar_BXPropertiesTaskbarS[el].pCellProps = null;
-// ar_BXPropertiesTaskbarS[el].pMainObj = null;
-// }
-
-// for (var el in ar_CustomElementS)
-// {
-// ar_CustomElementS[el].pDocument = null;
-// ar_CustomElementS[el].pMainObj = null;
-// ar_CustomElementS[el].pFrame = null;
-// ar_CustomElementS[el].pDiv = null;
-// }
-// ar_CustomElementS = null;
-
-// Cleaning events
-// for (var i=ar_EVENTS.length-1; i>=0; i--)
-// {
-// var el = ar_EVENTS[i][0];
-// var evname = ar_EVENTS[i][1];
-// var func = ar_EVENTS[i][2];
-
-// el["on"+evname] = null;
-// el = null;
-// }
-// ar_EVENTS = null;
-
-// var floatDiv = BX("BX_editor_dialog");
-// if(floatDiv)
-// floatDiv.parentNode.removeChild(floatDiv);
-
-// pDocument = null;
-// pMainObj = null;
-
-// for (var el in GLOBAL_pMainObj)
-// GLOBAL_pMainObj[el] = null;
-
-// GLOBAL_pMainObj = null;
-// }
-// catch (e){}
-// }
-
 
 function BXStyles(pMainObj)
 {

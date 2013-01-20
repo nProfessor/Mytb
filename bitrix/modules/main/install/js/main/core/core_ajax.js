@@ -1162,5 +1162,5 @@ BX.ajax.FormData.prototype.send = function(url, callbackOk, callbackProgress, ca
 	return this.xhr;
 }
 
-BX.onCustomEvent('onAjaxFailure', BX.debug);
+BX.addCustomEvent('onAjaxFailure', BX.debug);
 })(window)

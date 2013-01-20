@@ -10,10 +10,11 @@ if(!check_bitrix_sessid())
 IncludeModuleLangFile(__FILE__);
 
 $aUserOpt = CUserOptions::GetOption("global", "settings", array());
+$bSkipRecent = isset($_REQUEST['skip_recent']);
 
 function __GetSubmenu($menu)
 {
-	global $aUserOpt;
+	global $aUserOpt, $bSkipRecent;
 
 	$aPopup = array();
 	if (is_array($menu))
@@ -38,7 +39,9 @@ function __GetSubmenu($menu)
 					$link .= (strpos($link, '?') > 0 ? '&' : '?')."back_url_pub=".urlencode($_REQUEST["back_url_pub"]);
 
 				$aItem['LINK'] = $link;
-				$aItem['ONCLICK'] = 'BX.admin.startMenuRecent('.CUtil::PhpToJsObject($aItem).')';
+
+				if (!$bSkipRecent)
+					$aItem['ONCLICK'] = 'BX.admin.startMenuRecent('.CUtil::PhpToJsObject($aItem).')';
 			}
 
 			if(is_array($item["items"]) && count($item["items"])>0)
@@ -49,7 +52,7 @@ function __GetSubmenu($menu)
 			}
 			elseif($item["dynamic"] == true)
 			{
-				$aItem["MENU_URL"] = '/bitrix/admin/get_start_menu.php?mode=dynamic&lang='.LANGUAGE_ID.'&admin_mnu_module_id='.urlencode($item['module_id']).'&admin_mnu_menu_id='.urlencode($item['items_id']).($_REQUEST["back_url_pub"]<>''? '&back_url_pub='.urlencode($_REQUEST["back_url_pub"]):'').'&'.bitrix_sessid_get();
+				$aItem["MENU_URL"] = '/bitrix/admin/get_start_menu.php?mode=dynamic&lang='.LANGUAGE_ID.'&admin_mnu_module_id='.urlencode($item['module_id']).'&admin_mnu_menu_id='.urlencode($item['items_id']).($bSkipRecent?'&skip_recent=Y':'').($_REQUEST["back_url_pub"]<>''? '&back_url_pub='.urlencode($_REQUEST["back_url_pub"]):'').'&'.bitrix_sessid_get();
 				$aItem['MENU_PRELOAD'] = false;
 
 				if($item["url"] <> "" && $aUserOpt['start_menu_title'] <> 'N')
@@ -126,6 +129,8 @@ elseif($_REQUEST["mode"] == "chain")
 	if(!is_array($aSubmenu) || empty($aSubmenu))
 		$aSubmenu = array(array("text"=>GetMessage("get_start_menu_no_data")));
 
+	$bSkipRecent = true;
+
 	//generate JavaScript array for popup menu
 	echo CAdminPopup::PhpToJavaScript(__GetSubmenu($aSubmenu));
 }
@@ -192,9 +197,15 @@ else
 				"TITLE"=>htmlspecialcharsbx($sTitle),
 			);
 
-			if ($aItem["URL"])
+			if ($db_fav_arr["URL"])
 			{
-				$aItem["LINK"] = $aItem["URL"];
+				$aItem["LINK"] = $db_fav_arr["URL"];
+
+				if (!preg_match('/^(http:|https:|\/)/i', $aItem["LINK"]))
+				{
+					$aItem["LINK"] = '/bitrix/admin/'.$aItem["LINK"];
+				}
+
 				$aItem["ONCLICK"] = 'BX.admin.startMenuRecent('.CUtil::PhpToJsObject($aItem).')';
 			}
 

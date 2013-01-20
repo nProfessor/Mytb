@@ -298,7 +298,7 @@ class User
             array("PROPERTY_ID_VKONTAKTE" => intval($id), "IBLOCK_ID"=> IB_USER_PROPS),
             FALSE,
             FALSE,
-            array("ID","PROPERTY_USER"))->Fetch();
+            array("ID","PROPERTY_USER","PROPERTY_ID_VKONTAKTE"))->Fetch();
 
         return $ob?intval($ob['PROPERTY_USER_VALUE']):false;
 

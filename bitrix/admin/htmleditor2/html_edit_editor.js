@@ -144,6 +144,7 @@ arEditorFastDialogs['asksave'] = function(pObj)
 				new BX.CWindowButton(
 				{
 					title: BX_MESS.TBSaveExit,
+					className: 'adm-btn-save',
 					action: function()
 					{
 						pObj.pMainObj.isSubmited = true;

@@ -632,6 +632,8 @@ function convertTimeToMilitary ($strTime, $fromFormat = 'H:MI T', $toFormat = 'H
 		{
 			if ($arParsedDate["HH"] < 12)
 				$arParsedDate["HH"] += 12;
+			elseif($arParsedDate["HH"] == 12)
+				$arParsedDate["HH"] = 12;
 			else
 				$arParsedDate["HH"] -= 12;
 		}
@@ -3131,7 +3133,14 @@ function Ch".$tag_name_x."()
 }
 
 BX.ready(function(){
-	Ch".$tag_name_x."();
+	//js error during admin filter initialization, IE9, http://msdn.microsoft.com/en-us/library/gg622929%28v=VS.85%29.aspx?ppud=4, mantis: 33208
+	if(BX.browser.IsIE)
+	{
+		setTimeout(function(){Ch".$tag_name_x."()},3000);
+	}
+	else
+		Ch".$tag_name_x."();
+
 });
 //-->
 </script>
@@ -4446,6 +4455,45 @@ class CUtil
 	{
 		$length = (func_num_args() > 2? func_get_arg(2) : self::BinStrlen($buf));
 		return (function_exists('mb_substr')? mb_substr($buf, $start, $length, 'latin1') : substr($buf, $start, $length));
+	}
+
+	/**
+	* Convert shorthand notation to integer equivalent
+	* @param string $str
+	* @return int
+	*
+	*/
+	function Unformat($str)
+	{
+		$str = strtolower($str);
+		$res = intval($str);
+		$suffix = substr($str, -1);
+		if($suffix == "k")
+			$res *= 1024;
+		elseif($suffix == "m")
+			$res *= 1048576;
+		elseif($suffix == "g")
+			$res *= 1048576*1024;
+		elseif($suffix == "b")
+			$res = self::Unformat(substr($str,0,-1));
+		return $res;
+	}
+
+	/**
+	 * Adjust php pcre.backtrack_limit
+	 * @param int $val
+	 * @return void
+	 *
+	 */
+	function AdjustPcreBacktrackLimit($val)
+	{
+		$val = intval($val);
+		if($val <=0 )
+			return false;
+
+		$pcreBacktrackLimit = self::Unformat(ini_get("pcre.backtrack_limit"));
+		if($pcreBacktrackLimit < $val)
+			@ini_set("pcre.backtrack_limit", $val);
 	}
 }
 

@@ -1385,38 +1385,6 @@ BX.adminFav = {
 		return BX.ajax.post(urlToSend,data,callback);
 	},
 
-	get: function(callback)
-	{
-		var urlToSend = BX.adminFav.url + "?act=get_list",
-			data = {sessid: phpVars.bitrix_sessid};
-
-		if(!callback)
-		{
-			callback = function(result)
-			{
-				if(console)
-					console.log(result);
-			}
-		}
-
-		return BX.ajax.post(urlToSend,data,callback);
-	},
-
-	getMenuHtml: function(callback)
-	{
-		var urlToSend = BX.adminFav.url + "?act=get_menu_html";
-		var data = {sessid: BX.bitrix_sessid()};
-
-		if(!callback)
-			callback = function(result)
-				{
-					if(console)
-						console.log(result);
-				}
-
-		return BX.ajax.post(urlToSend,data,callback);
-	},
-
 	refresh: function(htmlMenu)
 	{
 		if(!htmlMenu)
@@ -3369,7 +3337,6 @@ BX.AdminFilter = function(filter_id, aRows)
 	this.oVisRows = {};
 	this.oOptions = {};
 	this.curID = "0";
-	this.filteredId = false;
 	this.form = jsUtils.FindParentObject(BX(this.filter_id), "form");
 	this.popupItems = {};
 	this.missingRows = 0;
@@ -3379,15 +3346,35 @@ BX.AdminFilter = function(filter_id, aRows)
 	this.startContentHeight = 0;
 	this.table_id = false;
 	this.url = false;
-	this.styleFolded = false;
 	this.currentLoadedTab = null;
+
+	this.state = {
+		init: false,
+		requesting: false,
+		clearing: false,
+		folded: false
+	};
+
+	//saving in session or cookie
+	this.params = {
+		filteredId: false,
+		activeTabId: false
+	};
 
 	this.SetFoldedView = function()
 	{
 		BX.toggleClass(BX('adm-filter-tab-wrap-'+this.filter_id), 'adm-filter-folded');
-		this.styleFolded = !this.styleFolded;
-		BX.userOptions.save('filter', this.filter_id, 'styleFolded', this.styleFolded ? "Y" : "N");
+		this.state.folded = !this.state.folded;
+		BX.userOptions.save('filter', this.filter_id, 'styleFolded', this.state.folded ? "Y" : "N");
 		this.SetSwitcherTitle();
+	}
+
+	this.SetSwitcherTitle = function()
+	{
+		var switcher = BX("adm-filter-switcher-tab");
+		var wrap = BX("adm-filter-tab-wrap-"+this.filter_id);
+
+		switcher.title = BX.hasClass(wrap,"adm-filter-folded") ? BX.message('JSADM_FLT_UNFOLD') : BX.message('JSADM_FLT_FOLD');
 	}
 
 	this.InitFilter = function(oVisRows)
@@ -3414,7 +3401,7 @@ BX.AdminFilter = function(filter_id, aRows)
 			var row = tbl.rows[i];
 			var td = row.insertCell(-1);
 			var tail = "";
-			this.WrapRow(row);
+			BX.admFltWrap.Row(row);
 
 			if( i-diff >=0 )
 			{
@@ -3470,6 +3457,9 @@ BX.AdminFilter = function(filter_id, aRows)
 						FIELDS: {},
 						EDITABLE: false
 					};
+
+	for(var i in this.oOptions)
+		this.oOptions[i]["tab"] = new BX.admFltTab(i,this);
 	}
 
 	this.InitFilteredTab = function(tabId)
@@ -3484,22 +3474,23 @@ BX.AdminFilter = function(filter_id, aRows)
 		if(flterId === false)
 			return false;
 
-		if(!this.ApplyFilter(flterId, true))
+		if(!this.ApplyFilter(flterId))
 			return false;
 
 		//required filter exists
 		if(flterId)
 		{
-			var setFilterButton = BX(this.filter_id+'set_filter');
+			if(this.state.folded)
+			{
+				this.oOptions["0"]["tab"].UnSetActive();
+				this.oOptions[flterId]["tab"].SetActive();
+			}
+
+			var setFilterButton = this.GetFormButton('set_filter');
 
 			if(this.filter_id  && this.url)
 			{
-				if(setFilterButton)
-				{
-					BX.defer(BX.adminPanel.showWait)(setFilterButton);
-				}
-
-				this.OnSet(this.table_id, this.url, true);
+				this.OnSet(this.table_id, this.url, setFilterButton);
 			}
 			else
 			{
@@ -3509,21 +3500,16 @@ BX.AdminFilter = function(filter_id, aRows)
 				}
 			}
 
-			this.FilteredTabMark(flterId, true);
+			this.oOptions[flterId]["tab"].SetFiltered(true);
 			return true;
 		}
 		else //not exist
 		{
-			var delFilterButt = BX(this.filter_id+'del_filter');
+			var delFilterButt = this.GetFormButton('del_filter');
 
 			if(this.filter_id  && this.url)
 			{
-				if(delFilterButt)
-				{
-					BX.defer(BX.adminPanel.showWait)(delFilterButt);
-				}
-
-				this.OnClear(this.table_id, this.url);
+				this.OnClear(this.table_id, this.url, delFilterButt);
 			}
 			else
 			{
@@ -3536,7 +3522,6 @@ BX.AdminFilter = function(filter_id, aRows)
 			return false;
 		}
 	}
-
 
 	this.InitOpenedTab = function(tabIdUri, tabIdSes)
 	{
@@ -3553,7 +3538,7 @@ BX.AdminFilter = function(filter_id, aRows)
 			if(tabId=="")
 				continue;
 
-			var openedTabId = false;
+			openedTabId = false;
 
 			if(this.oOptions[tabId])
 				openedTabId = tabId;
@@ -3563,7 +3548,7 @@ BX.AdminFilter = function(filter_id, aRows)
 			if(openedTabId === false)
 				continue;
 
-			var openedTabObj = BX("adm-filter-tab-"+this.filter_id+'-'+openedTabId);
+			openedTabObj = BX("adm-filter-tab-"+this.filter_id+'-'+openedTabId);
 
 			if(openedTabObj)
 				break;
@@ -3574,16 +3559,12 @@ BX.AdminFilter = function(filter_id, aRows)
 
 		//openedTabObj.onclick();
 		this.SetActiveTab(openedTabObj);
-		this.ApplyFilter(openedTabId,true);
+		this.ApplyFilter(openedTabId);
+
+		if(openedTabId == tabIdUri)
+			this.SaveFilterParams();
+
 		return true;
-	}
-
-	this.SetSwitcherTitle = function()
-	{
-		var switcher = BX("adm-filter-switcher-tab");
-		var wrap = BX("adm-filter-tab-wrap-"+this.filter_id);
-
-		switcher.title = BX.hasClass(wrap,"adm-filter-folded") ? BX.message('JSADM_FLT_UNFOLD') : BX.message('JSADM_FLT_FOLD');
 	}
 
 	this.GetByPresetId = function(presetId)
@@ -3619,224 +3600,31 @@ BX.AdminFilter = function(filter_id, aRows)
 		this.SetBottomStyle();
 	}
 
-	this.WrapRow = function(row)
+	this.UrlAddParams = function(url, sParams)
 	{
-		row.cells[0].className = "adm-filter-item-left";
-		row.cells[1].className = "adm-filter-item-center";
-		row.cells[2].className = 'adm-filter-item-right';
+		var retUrl = url;
+		var lastUrlSymb = url.substr(url.length-1);
 
-		row.cells[0].innerHTML = row.cells[0].textContent || row.cells[0].innerText;
-
-		var calendarInput = ( !!BX.findChild(row.cells[1], {'className': 'adm-input adm-input-calendar'}, true));
-
-		if(calendarInput)
+		if(retUrl.indexOf('?') >= 0)
 		{
-			calendarBlock = this.WrapElementInner(row.cells[1], "","DIV","adm-calendar-block adm-filter-alignment");
-			this.WrapElementInner(calendarBlock, "", "DIV", "adm-filter-box-sizing");
+			if(lastUrlSymb!='&')
+				retUrl += '&';
+		}
+		else
+		{
+			retUrl += '?';
+		}
+
+		retUrl+=sParams;
+
+		return retUrl;
+	}
+
+	this.OnSet = function(table_id, url, oButt)
+	{
+		if(this.state.requesting)
 			return;
-		}
 
-		if (row.cells[1].children[0] && !BX.hasClass(row.cells[1].children[0], 'adm-filter-alignment'))
-		{
-			var boxSizing = BX.create('div', {props: {className: 'adm-filter-box-sizing'}});
-			var alingment = BX.create('div', {props: {className: 'adm-filter-alignment'}});
-
-			row.cells[1].innerHTML = this.WrapCell(row.cells[1]).innerHTML;
-
-			while(row.cells[1].children.length>0)
-				boxSizing.appendChild(row.cells[1].children[0]);
-
-			alingment.appendChild(boxSizing);
-			row.cells[1].appendChild(alingment);
-		}
-		return row;
-	}
-
-	this.WrapCell = function(cell)
-	{
-		var newCell = cell.cloneNode(true);
-		newCell.innerHTML = "";
-
-		while(cell.childNodes.length)
-		{
-			switch(cell.childNodes[0].nodeName.toLowerCase())
-			{
-				case 'small':
-					this.WrapElement(cell.childNodes[0], "", "span", "adm-filter-text-wrap");
-					break;
-
-				case '#text':
-
-					cell.childNodes[0].nodeValue = jsUtils.trim(cell.childNodes[0].nodeValue);
-
-					if(cell.childNodes[0].nodeValue == '')
-					{
-						cell.removeChild(cell.childNodes[0]);
-						continue;
-					}
-
-					this.WrapElement(cell.childNodes[0], "", "span", "adm-filter-text-wrap");
-
-					break;
-
-				case 'label':
-
-					if(cell.childNodes[0].className == "adm-designed-checkbox-label")
-						break;
-
-
-					var input = BX.findChild(cell.childNodes[0],{tag: "input"});
-
-					if(input)
-						var wrap = this.WrapInputElement(input);
-
-					break;
-
-				case 'input':
-
-					var helpIcon = false;
-
-					var nextInput = BX.findNextSibling(cell.childNodes[0], {tagName: "INPUT"});
-
-					if(cell.childNodes[0].type == "text" && ( !nextInput || nextInput.type != "text"))
-						helpIcon = BX.findChild(cell.childNodes[0].parentNode, {className: "adm-input-help-icon"});
-
-					var wrap = this.WrapInputElement(cell.childNodes[0]);
-
-					if(helpIcon)
-					{
-						BX.addClass (wrap, "adm-input-help-icon-wrap");
-						wrap.appendChild(helpIcon);
-					}
-					break;
-
-				case 'select':
-					this.WrapInputElement(cell.childNodes[0]);
-					break;
-
-				case 'iframe':
-					cell.childNodes[0].style.display = 'none';
-					break;
-
-				case 'span':
-					if(cell.childNodes[0].style.display != 'none')
-						cell.childNodes[0].style.display = 'inline-block';
-					break;
-
-				default:
-					break;
-			}
-
-			newCell.appendChild(cell.childNodes[0]);
-		}
-
-		return newCell;
-	}
-
-	this.WrapInputElement = function(el)
-	{
-		var wrap = false;
-		switch (el.type)
-		{
-			case "select-one":
-				wrap = this.WrapElement(el,"adm-select","span","adm-select-wrap");
-				break;
-
-			case "select-multiple":
-				wrap = this.WrapElement(el,"adm-select-multiple","span","adm-select-wrap-multiple");
-				break;
-
-			case "text": // input
-				wrap = this.WrapElement(el,"adm-input","div","adm-input-wrap");
-				break;
-
-			case "checkbox":
-
-				var label = BX.findChild(el.parentNode, {tagName: "label", htmlFor: el.id});
-				if(label)
-				{
-					var wraplabel = this.WrapElement(el, "", "label", "");
-
-					if(label && label.childNodes[0])
-					{
-						wraplabel.appendChild(label.childNodes[0]);
-						label.parentNode.removeChild(label);
-					}
-				}
-
-				BX.adminFormTools.modifyCheckbox(el);
-				break;
-
-			case 'submit':
-			case 'button':
-			case 'reset':
-			case "hidden":
-			default:
-				break;
-		}
-
-		return wrap;
-	}
-
-	this.WrapElement = function(el, elClass, wrapType, wrapClass)
-	{
-		var wrap = document.createElement(wrapType);
-
-		if(wrapClass)
-			wrap.className = wrapClass;
-
-		if(elClass)
-			el.className = elClass;
-
-		el.parentNode.insertBefore(wrap, el);
-		wrap.appendChild(el);
-
-		return wrap;
-	}
-
-	this.WrapElementInner = function(el, elClass, wrapType, wrapClass)
-	{
-		var wrap = document.createElement(wrapType);
-
-		if(wrapClass)
-			wrap.className = wrapClass;
-
-		if(elClass)
-			el.className = elClass;
-
-		elChildren = BX.findChildren(el);
-
-		for(var i in elChildren)
-			wrap.appendChild(elChildren[i]);
-
-		el.appendChild(wrap);
-
-		return wrap;
-	}
-
-	this.FilteredTabMark = function(tabId, init)
-	{
-		for(var key in this.oOptions)
-		{
-			var tab = BX("adm-filter-tab-"+this.filter_id+"-"+key);
-
-			if(BX.hasClass(tab,"adm-current-filter-tab"))
-				BX.removeClass(tab,"adm-current-filter-tab");
-
-			if(tabId !== false && key == tabId)
-				BX.addClass(tab,"adm-current-filter-tab");
-		}
-
-
-		if(!init)
-			this.SaveFilteredId(tabId);
-
-		this.filteredId = tabId;
-		this.SetFilteredBG(tabId);
-	}
-
-	this.OnSet = function(table_id, url, init)
-	{
 		if(!this.table_id)
 			this.table_id = table_id;
 
@@ -3844,52 +3632,105 @@ BX.AdminFilter = function(filter_id, aRows)
 			this.url = url;
 
 		BX.onCustomEvent(window, 'onBeforeAdminFilterSet');
-		var filterUrl = url+'&set_filter=Y&adm_filter_applied='+encodeURIComponent(this.curID);
+		var filterUrl = this.UrlAddParams(url,'set_filter=Y&adm_filter_applied='+encodeURIComponent(this.curID));
 
 		if(this.oOptions[this.curID]["PRESET_ID"])
-			filterUrl+="&adm_filter_preset="+encodeURIComponent(this.oOptions[this.curID]["PRESET_ID"]);
+			filterUrl+=this.UrlAddParams(filterUrl,"adm_filter_preset="+encodeURIComponent(this.oOptions[this.curID]["PRESET_ID"]));
 
 		var params = this.GetParameters();
+
+		this.state.requesting = true;
+
 		BX.defer(function(){
+			if(_this.state.folded)
+			{
+				_this.currentLoadedTab = _this.oOptions[_this.curID]["tab"].GetObj();
+				_this.oOptions[_this.curID]["tab"].ShowWheel();
+
+			}
+			else
+			{
+				BX.adminPanel.showWait(oButt);
+			}
+
 			window[table_id].GetAdminList(filterUrl+params);
 		})();
 
-		if(this.curID != "0" && !init)
+		if(this.curID != "0" && !this.state.init)
 			this.Save();
 
-		this.FilteredTabMark(this.curID, init);
+		this.oOptions[this.curID]["tab"].SetFiltered(this.state.init);
 	}
 
-	this.OnClear = function(table_id, url)
+	this.OnClear = function(table_id, url, oButt)
 	{
-		BX.onCustomEvent(window, 'onBeforeAdminFilterClear');
-
-		this.ClearParameters();
-
-		try //reautorization gives unstable error
-		{
-			window[table_id].GetAdminList(url+'&del_filter=Y'+this.GetParameters());
-		}
-		catch(e)
-		{
-			this.InitOpenedTab(0);
+		if(this.state.requesting)
 			return;
-		}
 
-		this.FilteredTabMark(false);
+		this.state.clearing = true;
+		BX.onCustomEvent(window, 'onBeforeAdminFilterClear');
+		var filterUrl = this.UrlAddParams(url,"del_filter=Y"+this.GetParameters());
+
+		this.state.requesting = true;
+
+		BX.defer(function(){
+			if(_this.state.folded)
+			{
+				_this.currentLoadedTab = _this.oOptions[_this.curID]["tab"].GetObj();
+				_this.oOptions[_this.curID]["tab"].ShowWheel();
+
+			}
+			else
+			{
+				BX.adminPanel.showWait(oButt);
+			}
+
+			window[table_id].GetAdminList(filterUrl);
+		})();
+
+		if(this.params.filteredId && this.oOptions[this.params.filteredId] && !this.state.folded)
+		{
+			this.oOptions[this.params.filteredId]["tab"].UnSetFiltered();
+		}
 	}
 
+	//when window[table_id].GetAdminList(...) executed
 	this.onAdminListLoaded = function()
 	{
-		if (!this.currentLoadedTab)
+		if (this.currentLoadedTab === false)
 			return;
 
 		BX.removeClass(this.currentLoadedTab, "adm-filter-tab-loading");
+
+		if(this.state.clearing && this.params.filteredId !== false && this.oOptions[this.params.filteredId])
+			this.oOptions[this.params.filteredId]["tab"].UnSetFiltered();
+
 		this.currentLoadedTab = null;
+		this.state.clearing = false;
+		this.state.requesting = false;
 	}
 
-	this.ApplyFilter = function(id, init)
+	this.GetFormButton = function(name)
 	{
+		if(!name)
+			return false;
+
+		var button = BX(this.filter_id+name);
+
+		if(button)
+			return button;
+
+		var button = this.form[name];
+
+		return button;
+	}
+
+	this.ApplyFilter = function(id)
+	{
+
+		if(this.state.requesting && !this.state.init)
+			return false;
+
 		if(!this.oOptions[id])
 			return false;
 
@@ -3902,31 +3743,49 @@ BX.AdminFilter = function(filter_id, aRows)
 
 		this.SetFilterFields(this.oOptions[id]["FIELDS"]);
 
-		if(!init)
-			this.SaveOpenTab(id);
+		if(!this.state.init)
+		{
+			//this.SaveOpenTab(id);
+			this.SaveFilterParams();
+		}
 
 		this.EndAnimation();
 
-		if(this.styleFolded && !init)
+		if(this.state.folded && !this.state.init)
 		{
-			if(this.filter_id  && this.url)
-			{
-				this.currentLoadedTab = BX("adm-filter-tab-" + this.filter_id + "-" + id);
-				setTimeout(BX.proxy(function() {
-					if (this.currentLoadedTab)
-						BX.addClass(this.currentLoadedTab, "adm-filter-tab-loading");
-				}, this), 250);
+			this.currentLoadedTab = this.oOptions[id]["tab"].GetObj();
+			this.oOptions[id]["tab"].ShowWheel();
 
-				this.OnSet(this.table_id, this.url);
-			}
-			else
+			//click on pressed button
+			if(this.params.filteredId === id)
 			{
-				var setFilterButton = BX(this.filter_id+'set_filter');
+				var clearButton = this.GetFormButton('del_filter');
 
-				if(setFilterButton)
-					setFilterButton.onclick();
+				if(this.filter_id  && this.url)
+				{
+					this.OnClear(this.table_id, this.url, clearButton);
+				}
 				else
-					this.form.submit();
+				{
+					if(clearButton)
+						clearButton.onclick();
+				}
+			}
+			else // click on unpressed button
+			{
+				var setFilterButton = this.GetFormButton('set_filter');
+
+				if(this.filter_id  && this.url)
+				{
+					this.OnSet(this.table_id, this.url, setFilterButton);
+				}
+				else
+				{
+					if(setFilterButton)
+						setFilterButton.onclick();
+					else
+						this.form.submit();
+				}
 			}
 		}
 
@@ -3972,35 +3831,6 @@ BX.AdminFilter = function(filter_id, aRows)
 		return fields;
 	}
 
-	this.CreateNewFilter = function()
-	{
-		var fields = this.GetClearFields();
-		this.ShowSaveOptsWnd(fields, true);
-	}
-
-	this.AddFilterTab = function(id, name)
-	{
-		var tabsBlock = BX("filter-tabs-"+this.filter_id);
-		var newTab = document.createElement('span');
-
-		newTab.className = "adm-filter-tab";
-		newTab.id = "adm-filter-tab-"+this.filter_id+"-"+id;
-		newTab.onclick = function(){ _this.SetActiveTab(this); _this.ApplyFilter(id); };
-		newTab.innerHTML = BX.util.htmlspecialchars(name);
-		tabsBlock.insertBefore(newTab, BX("adm-filter-add-tab-"+this.filter_id));
-
-		if(this.url)
-		{
-			var registerUrl = BX.util.remove_url_param(this.url,["adm_filter_applied","adm_filter_preset"]);
-			registerUrl += "&adm_filter_applied" + '=' + BX.util.urlencode(id);
-
-			BX.adminMenu.registerItem(newTab.id, {URL: registerUrl, TITLE: true});
-		}
-
-		this.SetActiveTab(newTab);
-		this.ApplyFilter(id);
-	}
-
 	this.ReplaceFilterTab = function(oldId, newId)
 	{
 		if(!oldId || !newId)
@@ -4025,19 +3855,12 @@ BX.AdminFilter = function(filter_id, aRows)
 		return true;
 	}
 
-	this.DelFilterTab = function(id)
-	{
-		var delTab = BX("adm-filter-tab-"+this.filter_id+"-"+id);
-		delTab.parentNode.removeChild(delTab);
-		BX("adm-filter-tab-"+this.filter_id+"-"+"0").click();
-	}
-
 	this.SetFilteredBG = function(id)
 	{
-		if(!this.filteredId && id !== false)
+		if(!this.params.filteredId && id !== false)
 			return;
 
-		if(id == this.filteredId && id !== false)
+		if(id == this.params.filteredId && id !== false)
 			BX.addClass(BX("adm-filter-tab-wrap-"+this.filter_id),"adm-current-filter");
 		else
 			BX.removeClass(BX("adm-filter-tab-wrap-"+this.filter_id),"adm-current-filter");
@@ -4045,22 +3868,23 @@ BX.AdminFilter = function(filter_id, aRows)
 
 	this.SetActiveTab = function(tabObj)
 	{
+		if(this.state.requesting && !this.state.init)
+			return false;
+
+		var tabIdBegin = "adm-filter-tab-"+this.filter_id+"-";
+		var tabId = tabObj.id.substr(tabIdBegin.length,tabObj.id.length);
+
+		if(this.params.filteredId!== false && this.params.filteredId === tabId && this.state.folded)
+			return true;
+
 		var arPrevSelTabs = BX.findChildren(tabObj.parentNode, {tag: "span"} ,false);
 
 		for (var i=arPrevSelTabs.length-1; i>=0; i--)
-			if(BX.hasClass(arPrevSelTabs[i] ,"adm-filter-tab-active"))
-				BX.removeClass(arPrevSelTabs[i] ,"adm-filter-tab-active");
-
-		var tabIdBegin = "adm-filter-tab-"+this.filter_id+"-";
-
-		var tabId = tabObj.id.substr(tabIdBegin.length,tabObj.id.length);
+			BX.removeClass(arPrevSelTabs[i] ,"adm-filter-tab-active");
 
 		this.SetFilteredBG(tabId);
-
-		BX.addClass(tabObj,"adm-filter-tab-active");
-
-		if(this.styleFolded)
-			this.FilteredTabMark(tabId);
+		this.oOptions[tabId]["tab"].SetActive();
+		this.params.activeTabId = tabId;
 
 		return true;
 	}
@@ -4101,7 +3925,7 @@ BX.AdminFilter = function(filter_id, aRows)
 
 					_this.SaveToBase(formOpts.filter_name.value, common, fields, true, empty);
 
-					if(_this.styleFolded)
+					if(_this.state.folded)
 						_this.SetFoldedView();
 
 					this.parentWindow.Close();
@@ -4175,8 +3999,13 @@ BX.AdminFilter = function(filter_id, aRows)
 		{
 			if(result)
 			{
-				_this.DelFilterTab(id);
+				_this.oOptions[id]["tab"].DeleteHtml();
 				delete _this.oOptions[id];
+
+				var defaultTab = _this.oOptions["0"]["tab"].GetObj();
+
+				if(defaultTab)
+					defaultTab.click();
 			}
 			else
 				alert(BX.message('JSADM_FLT_DEL_ERROR'));
@@ -4211,7 +4040,8 @@ BX.AdminFilter = function(filter_id, aRows)
 					FIELDS: _this.GetFilterFields(),
 					EDITABLE: true,
 					PRESET_ID: _this.curID,
-					COMMON: false
+					COMMON: false,
+					tab: _this.oOptions[resultId]["tab"]
 				};
 
 				if(data['sort_field'])
@@ -4267,8 +4097,10 @@ BX.AdminFilter = function(filter_id, aRows)
 				if(data['sort_field'])
 					_this.oOptions[resultId]["SORT_FIELD"] = data['sort_field'];
 
+				_this.oOptions[resultId]["tab"] = new BX.admFltTab(resultId,_this);
+
 				if(saveAs || data['id'] == undefined)
-					_this.AddFilterTab(resultId, name);
+					_this.oOptions[resultId]["tab"].AddHtml(_this.url, name);
 
 				if(empty)
 					_this.ClearParameters();
@@ -4535,7 +4367,7 @@ BX.AdminFilter = function(filter_id, aRows)
 		return fields;
 	}
 
-	this.CheckActive = function()
+	this.IsFilterFill = function()
 	{
 		if(!this.form)
 			return;
@@ -4594,7 +4426,7 @@ BX.AdminFilter = function(filter_id, aRows)
 			if(el.disabled)
 				continue;
 
-			var tr = jsUtils.FindParentObject(el, 'tr');
+			var tr = this.GetRowByElement(el);
 
 			if(tr && tr.style && tr.style.display == 'none')
 				continue;
@@ -4682,6 +4514,47 @@ BX.AdminFilter = function(filter_id, aRows)
 			}
 		}
 		return s;
+	}
+
+	this.CheckActive = function()
+	{
+		var i;
+		var n = this.form.elements.length;
+		for(i=0; i<n; i++)
+		{
+			var el = form.elements[i];
+			if(el.disabled)
+				continue;
+			var tr = this.GetRowByElement(el);
+			if(tr && tr.style && tr.style.display == 'none')
+				continue;
+
+			switch(el.type.toLowerCase())
+			{
+				case 'select-one':
+					if(el.options[0].value.length != 0 && (el.options[0].value.toUpperCase() != 'NOT_REF' || el.value.toUpperCase() == 'NOT_REF'))
+						break;
+				case 'text':
+				case 'textarea':
+					if(el.value.length > 0)
+						return true;
+					break;
+				case 'checkbox':
+					if(el.checked)
+						return true;
+					break;
+				case 'select-multiple':
+					var j;
+					var l = el.options.length;
+					for(j=0; j<l; j++)
+						if(el.options[j].selected && el.options[j].value != '')
+							return true;
+					break;
+				default:
+					break;
+			}
+		}
+		return false;
 	}
 
 	this.DisplayNonEmptyRows = function()
@@ -4866,6 +4739,9 @@ BX.AdminFilter = function(filter_id, aRows)
 
 	this.StartAnimation = function()
 	{
+		if(this.state.folded)
+			return;
+
 		if (this.easing)
 			this.easing.stop();
 
@@ -4876,6 +4752,9 @@ BX.AdminFilter = function(filter_id, aRows)
 
 	this.EndAnimation = function()
 	{
+		if(this.state.folded)
+			return;
+
 		var newHeight = this.table.offsetHeight;
 		if (newHeight == 0)
 		{
@@ -4908,6 +4787,19 @@ BX.AdminFilter = function(filter_id, aRows)
 		});
 		this.easing.animate();
 
+	}
+
+	this.SaveFilterParams = function()
+	{
+		var sParams = "filter_id:"+this.filter_id+",";
+
+		for(var name in this.params)
+			sParams += name+":"+this.params[name]+",";
+
+		// Remove the last comma from the final string
+		sParams = sParams.substr(0,sParams.length-1);
+
+		document.cookie = BX.message('COOKIE_PREFIX')+"_ADM_FLT_PARAMS=" + sParams;
 	}
 
 	this.SaveRowsOption = function()
@@ -4985,7 +4877,7 @@ BX.AdminFilter = function(filter_id, aRows)
 		if(this.curID != "0")
 			menuItems.push({TEXT: BX.message('JSADM_FLT_SAVE'), ONCLICK: filter_id+".Save();"});
 
-		menuItems.push({TEXT: BX.message('JSADM_FLT_SAVE_AS'), ONCLICK: filter_id+".SaveAs();"});
+		menuItems.push({TEXT: BX.message('JSADM_FLT_SAVE_AS'), ONCLICK: 'setTimeout(function(){'+filter_id+'.SaveAs();},10);'});
 
 		if(this.curID != "0" && this.oOptions[this.curID].EDITABLE)
 			menuItems.push({TEXT: BX.message('JSADM_FLT_DELETE'), ONCLICK: filter_id+".Delete();"});
@@ -5068,6 +4960,311 @@ BX.AdminFilter = function(filter_id, aRows)
 		}
 	}
 }
+
+//********** admin filter tab object begin****************
+BX.admFltTab = function(id, fltObj)
+{
+	this.id = id;
+	this.filter = fltObj;
+};
+
+BX.admFltTab.prototype = {
+
+	GetObjId: function()
+	{
+		return "adm-filter-tab-"+this.filter.filter_id+"-"+this.id;
+	},
+
+	GetObj: function()
+	{
+		var tabObjId = this.GetObjId();
+		return BX(tabObjId);
+	},
+
+	SetActive: function()
+	{
+		BX.addClass(this.GetObj(),"adm-filter-tab-active");
+	},
+
+	UnSetActive: function()
+	{
+		BX.removeClass(this.GetObj(),"adm-filter-tab-active");
+	},
+
+	SetFiltered: function(init)
+	{
+
+		if(this.filter.params.filteredId !== false && !init)
+			this.filter.oOptions[this.filter.params.filteredId]["tab"].UnSetFiltered();
+
+		BX.addClass(this.GetObj(),"adm-current-filter-tab");
+
+		if(!init)
+		{
+			//this.filter.SaveFilteredId(this.id);
+			this.filter.params.filteredId = this.id;
+			this.filter.SaveFilterParams();
+
+		}
+
+		this.filter.params.filteredId = this.id;
+		this.filter.SetFilteredBG(this.id);
+	},
+
+	UnSetFiltered: function()
+	{
+		this.filter.params.filteredId = false;
+		BX.removeClass(this.GetObj(),"adm-current-filter-tab");
+		this.filter.SetFilteredBG(false);
+		//this.filter.SaveFilteredId(false);
+		this.filter.SaveFilterParams();
+	},
+
+	_RegisterDD: function(tabId, url, name)
+	{
+		if(!url)
+			return false;
+
+		var registerUrl = BX.util.remove_url_param(url, ["adm_filter_applied","adm_filter_preset"]);
+		registerUrl += "&adm_filter_applied" + '=' + BX.util.urlencode(this.id);
+		BX.adminMenu.registerItem(tabId, {URL: registerUrl, TITLE: true});
+	},
+
+	AddHtml: function(url, name)
+	{
+		var _this = this;
+		var tabsBlock = BX("filter-tabs-"+this.filter.filter_id);
+		var newTab = document.createElement('span');
+		newTab.className = "adm-filter-tab";
+		newTab.id = this.GetObjId();
+		newTab.onclick = function(){ _this.filter.SetActiveTab(this); _this.filter.ApplyFilter(_this.id); };
+		newTab.innerHTML = BX.util.htmlspecialchars(name);
+		tabsBlock.insertBefore(newTab, BX("adm-filter-add-tab-"+this.filter.filter_id));
+		this._RegisterDD(newTab.id, url, name);
+		this.filter.SetActiveTab(newTab);
+		this.filter.ApplyFilter(this.id);
+	},
+
+	DeleteHtml: function()
+	{
+		var delTab = this.GetObj();
+		delTab.parentNode.removeChild(delTab);
+	},
+
+	ShowWheel: function()
+	{
+		var timeout = 250;
+
+		setTimeout(
+			BX.proxy(
+				function() {
+					if (this.GetObj())
+						BX.addClass(this.GetObj(), "adm-filter-tab-loading");
+				},
+			this),
+		timeout);
+	}
+};
+
+//********** admin filter wrap object begin****************
+BX.admFltWrap = {
+
+	Inner: function(el, elClass, wrapType, wrapClass)
+	{
+		var wrap = document.createElement(wrapType);
+
+		if(wrapClass)
+			wrap.className = wrapClass;
+
+		if(elClass)
+			el.className = elClass;
+
+		elChildren = BX.findChildren(el);
+
+		for(var i in elChildren)
+			wrap.appendChild(elChildren[i]);
+
+		el.appendChild(wrap);
+
+		return wrap;
+	},
+
+	Element: function(el, elClass, wrapType, wrapClass)
+	{
+		var wrap = document.createElement(wrapType);
+
+		if(wrapClass)
+			wrap.className = wrapClass;
+
+		if(elClass)
+			el.className = elClass;
+
+		el.parentNode.insertBefore(wrap, el);
+		wrap.appendChild(el);
+
+		return wrap;
+	},
+
+	Input:  function(el)
+	{
+		var wrap = false;
+		switch (el.type)
+		{
+			case "select-one":
+				wrap = BX.admFltWrap.Element(el,"adm-select","span","adm-select-wrap");
+				break;
+
+			case "select-multiple":
+				wrap = BX.admFltWrap.Element(el,"adm-select-multiple","span","adm-select-wrap-multiple");
+				break;
+
+			case "text": // input
+				wrap = BX.admFltWrap.Element(el,"adm-input","div","adm-input-wrap");
+				break;
+
+			case "checkbox":
+
+				var label = BX.findChild(el.parentNode, {tagName: "label", htmlFor: el.id});
+				if(label)
+				{
+					var wraplabel = BX.admFltWrap.Element(el, "", "label", "");
+
+					if(label && label.childNodes[0])
+					{
+						wraplabel.appendChild(label.childNodes[0]);
+						label.parentNode.removeChild(label);
+					}
+				}
+
+				BX.adminFormTools.modifyCheckbox(el);
+				break;
+
+			case 'submit':
+			case 'button':
+			case 'reset':
+			case "hidden":
+			default:
+				break;
+		}
+
+		return wrap;
+	},
+
+	Cell: function(cell)
+	{
+		var newCell = cell.cloneNode(true);
+		newCell.innerHTML = "";
+
+		while(cell.childNodes.length)
+		{
+			switch(cell.childNodes[0].nodeName.toLowerCase())
+			{
+				case 'small':
+					BX.admFltWrap.Element(cell.childNodes[0], "", "span", "adm-filter-text-wrap");
+					break;
+
+				case '#text':
+
+					cell.childNodes[0].nodeValue = jsUtils.trim(cell.childNodes[0].nodeValue);
+
+					if(cell.childNodes[0].nodeValue == '')
+					{
+						cell.removeChild(cell.childNodes[0]);
+						continue;
+					}
+
+					BX.admFltWrap.Element(cell.childNodes[0], "", "span", "adm-filter-text-wrap");
+
+					break;
+
+				case 'label':
+
+					if(cell.childNodes[0].className == "adm-designed-checkbox-label")
+						break;
+
+
+					var input = BX.findChild(cell.childNodes[0],{tag: "input"});
+
+					if(input)
+						var wrap = BX.admFltWrap.Input(input);
+
+					break;
+
+				case 'input':
+
+					var helpIcon = false;
+
+					var nextInput = BX.findNextSibling(cell.childNodes[0], {tagName: "INPUT"});
+
+					if(cell.childNodes[0].type == "text" && ( !nextInput || nextInput.type != "text"))
+						helpIcon = BX.findChild(cell.childNodes[0].parentNode, {className: "adm-input-help-icon"});
+
+					var wrap = BX.admFltWrap.Input(cell.childNodes[0]);
+
+					if(helpIcon)
+					{
+						BX.addClass (wrap, "adm-input-help-icon-wrap");
+						wrap.appendChild(helpIcon);
+					}
+					break;
+
+				case 'select':
+					BX.admFltWrap.Input(cell.childNodes[0]);
+					break;
+
+				case 'iframe':
+					cell.childNodes[0].style.display = 'none';
+					break;
+
+				case 'span':
+					if(cell.childNodes[0].style.display != 'none')
+						cell.childNodes[0].style.display = 'inline-block';
+					break;
+
+				default:
+					break;
+			}
+
+			newCell.appendChild(cell.childNodes[0]);
+		}
+
+		return newCell;
+	},
+
+	Row: function(row)
+	{
+		row.cells[0].className = "adm-filter-item-left";
+		row.cells[1].className = "adm-filter-item-center";
+		row.cells[2].className = 'adm-filter-item-right';
+
+		row.cells[0].innerHTML = row.cells[0].textContent || row.cells[0].innerText;
+
+		var calendarInput = ( !!BX.findChild(row.cells[1], {'className': 'adm-input adm-input-calendar'}, true));
+
+		if(calendarInput)
+		{
+			calendarBlock = BX.admFltWrap.Inner(row.cells[1], "","DIV","adm-calendar-block adm-filter-alignment");
+			BX.admFltWrap.Inner(calendarBlock, "", "DIV", "adm-filter-box-sizing");
+			return;
+		}
+
+		if (row.cells[1].children[0] && !BX.hasClass(row.cells[1].children[0], 'adm-filter-alignment'))
+		{
+			var boxSizing = BX.create('div', {props: {className: 'adm-filter-box-sizing'}});
+			var alingment = BX.create('div', {props: {className: 'adm-filter-alignment'}});
+
+			row.cells[1].innerHTML = BX.admFltWrap.Cell(row.cells[1]).innerHTML;
+
+			while(row.cells[1].children.length>0)
+				boxSizing.appendChild(row.cells[1].children[0]);
+
+			alingment.appendChild(boxSizing);
+			row.cells[1].appendChild(alingment);
+		}
+		return row;
+	}
+};
+//********** admin filter wrap object end****************
 
 BX.adminChain = {
 	_addon: null,

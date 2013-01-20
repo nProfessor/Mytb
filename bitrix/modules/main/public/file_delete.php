@@ -20,7 +20,7 @@ function BXDeleteFromSystem($absoluteFilePath, $path, $site)
 
 	if (!$sucess)
 		return false;
-		
+
 	if(COption::GetOptionString($module_id, "log_page", "Y")=="Y")
 	{
 		$res_log['path'] = substr($path, 1);
@@ -137,7 +137,7 @@ function BXDeleteFromMenuFile($menuFile, $documentRoot, $site, $path)
 	if ($arFound)
 	{
 		CFileMan::SaveMenu(Array($site, $menuFile), $arMenu["aMenuLinks"], $arMenu["sMenuTemplate"]);
-		
+
 		if(COption::GetOptionString($module_id, "log_page", "Y")=="Y")
 		{
 			$res_log = array();
@@ -203,6 +203,7 @@ elseif (!$USER->CanDoFileOperation('fm_delete_file',Array($site, $path)))
 
 //Check post values
 $strWarning = "";
+$strNotice = "";
 if ($_SERVER["REQUEST_METHOD"] == "POST")
 {
 	$deleteFromMenu = (isset($_REQUEST["delete_from_menu"]) && $_REQUEST["delete_from_menu"] == "Y");
@@ -212,7 +213,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST")
 else
 {
 	if ($io->ExtractNameFromPath($path) == "index.php")
-		$strWarning = GetMessage("PAGE_DELETE_INDEX_WARNING");
+		$strNotice = GetMessage("PAGE_DELETE_INDEX_WARNING");
 	$deleteFromMenu = true;
 }
 
@@ -273,6 +274,10 @@ if (isset($strWarning) && $strWarning != "")
 ?>
 <?if (IsModuleInstalled("fileman")):?>
 	<input type="checkbox" name="delete_from_menu" value="Y" id="bx_delete_from_menu" <?=($deleteFromMenu ? "checked" : "")?>> <label for="bx_delete_from_menu"><?=GetMessage("PAGE_DELETE_FROM_MENU")?></label>
+<?
+if (isset($strNotice) && $strNotice != '')
+	CAdminMessage::ShowMessage(array("MESSAGE" => $strNotice, "TYPE" => "ERROR"))
+?>
 <?endif?>
 
 

@@ -30,9 +30,9 @@ div.checklist-test-popup .bx-core-window{font-size:12px !important;}
 
 
 .checklist-top-info-left-wrap { width:100%;}
-.checklist-top-info-right {padding:7px 134px 0 177px}
+.checklist-top-info-right {padding:7px 140px 0 302px}
 * html .checklist-top-info-right {padding:7px 0 0 16px;}
-.checklist-test-completion{background:url('/bitrix/themes/.default/images/checklist/checklist-sprite.png') no-repeat 0 0; margin:5px 0 3px; padding-left:4px; width:90%; zoom:1;}
+.checklist-test-completion{background:url('/bitrix/themes/.default/images/checklist/checklist-sprite.png') no-repeat 0 0; margin:5px 0 3px; padding-left:4px; width:70%; zoom:1;}
 .checklist-test-completion-right {background:url('/bitrix/themes/.default/images/checklist/checklist-sprite.png') no-repeat top right; padding-right:6px;}
 .checklist-test-completion-cont {background:url('/bitrix/themes/.default/images/checklist/checklist-sprite.png') repeat-x left -28px; height:23px; text-align:center; padding:4px 1px 0 0; position:relative;}
 * html .checklist-test-completion-cont {height:25px !important;}
@@ -92,7 +92,7 @@ div.checklist-test-popup .bx-core-window{font-size:12px !important;}
 .checklist-result-checkbox {display:block; font-size:13px; position:absolute; top:11px; right:13px;}
 .checklist-result-checkbox input {margin:0 8px 0 0; vertical-align:middle;}
 
-.checklist-result-form-content {margin: 0 auto; width: 40%;}
+.checklist-result-form-content {margin: 0 auto; width: 50%;}
 .checklist-result-form-content-data {font-size:14px; border:1px solid #e5debd; padding: 5px; margin-bottom:12px; zoom:1; background-color: #fff; width:100%}
 .checklist-result-form-content-data-left {float:left; font-size:14px; width:43%;}
 .checklist-result-form-content-data-right { float:right; font-size:14px; width:43%;}
@@ -224,7 +224,7 @@ span.checklist-popup-test-link:visited {color:#6593d6;}
 .checklist-form-textar-disabled .checklist-form-textar-status label{color:#777;}
 .checklist-popup-result-test-block .checklist-popup-result-form-button { width:100px;}
 
-.checklist-popup-start-test-block {border-top:1px solid #e5e5e5; border-bottom:1px solid #e5e5e5; margin:10px 0; padding:14px 0; width: 30%}
+.checklist-popup-start-test-block {margin:10px 0; padding:14px 0; width: 30%}
 .checklist-popup-start-test-text {display:inline-block; color:#7f7f7f; font-style:italic; margin-top:10px; vertical-align:middle;}
 .checklist-popup-start-test-block .checklist-top-button{display:inline-block; vertical-align:middle; position:relative;lerf:0;top:0;}
 

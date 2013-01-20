@@ -204,13 +204,16 @@
 
 			// For textarea MODE
 			this.pBaseContTA = this.pDiv.appendChild(BX.create("DIV", {props:{className: 'bxce-base-cont'}, style: {display: 'none'}}));
+			this.pBaseContTA.onclick = function(e){BX.focus(_this.pTA);};
+
+
 			// Relative div - contains textarea, line numbers, - ONLY for switch off hightlighting mode
 			this.pContTA = this.pBaseContTA.appendChild(BX.create("DIV", {props: {className: 'bxce-cont'}}));
 			this.pLineNumTABgTA = this.pBaseContTA.appendChild(BX.create("DIV", {props: {className: 'bxce-line-num-bg'}}));
 			// Line numbers
 			this.pLineNumTA = this.pContTA.appendChild(BX.create("DIV", {props: {className: 'bxce-line-num bxce-font'}}));
 			this.pContTA.appendChild(this.pTA);
-			this.pTA.className = 'bxce-ta bxce-font';
+			this.pTA.className = 'bxce-ta';
 			this.pTA.style.display = "none";
 			this.pTA.removeAttribute("cols");
 			this.pTA.removeAttribute("rows");
@@ -688,10 +691,13 @@
 			{
 				this.Save();
 
-				var w = this.pHighlight.offsetWidth;
-				var h = this.pHighlight.offsetHeight;
+				var
+					w = this.pHighlight.offsetWidth - 60,
+					h = this.pHighlight.offsetHeight;
 
 				this.pTA.style.width = w + "px";
+				this.pContTA.style.width = w + "px";
+
 				this.pTA.style.height = h + "px";
 
 				this.pInnerContHL.style.display = "none";
@@ -1628,6 +1634,7 @@
 			{
 				this.prevInput = "";
 				this.pInput.value = this.GetSelection();
+
 				if (this.focused)
 				{
 					if (BX.browser.IsIOS())
@@ -2245,10 +2252,9 @@
 					clientWidth = this.pLinesCont.clientWidth || this.pLinesCont.offsetWidth,
 					clientHeight = this.pLinesCont.clientHeight || this.pLinesCont.offsetHeight;
 
-				var add = function (left, top, right, height)
+				function add(left, top, right, height)
 				{
-					var pEl = frag.appendChild(BX.create("DIV", {props: {className: "bxce-selected"}, style:{position: "absolute", left: left+"px", top: top + "px", height: height + "px"}}));
-
+					var pEl = frag.appendChild(BX.create("DIV", {props: {className: "bxce-selected"}, style:{position: "absolute", left: left + "px", top: top + "px", height: height + "px"}}));
 
 //					if (BX.browser.IsDoctype())
 					pEl.style.width = (right ? (clientWidth - right - left) : clientWidth) + "px";
@@ -2434,10 +2440,12 @@
 			if (cur)
 				this._DoSelect(cur);
 
-			//e_preventDefault(e);
 			BX.PreventDefault(e);
 			this.FocusInput();
+
 			this.updateInput = true;
+			//if (this.selectionChanged)
+				this.ResetInput(this.userSelChange);
 
 			BX.unbind(document, "mousemove", BX.proxy(this.OnMouseMove, this));
 			BX.unbind(document, "mouseup", BX.proxy(this._OnDone, this));
@@ -3489,7 +3497,6 @@
 				return false;
 
 			var taW, taH;
-
 			//Handle height ! it's important to handle height first
 			taH = parseInt(this.pTA.scrollHeight, 10);
 
@@ -3501,9 +3508,11 @@
 			}
 
 			taW = this.pTA.scrollWidth;
-
-			this.pTA.style.width = taW + "px";
-			this.pContTA.style.width = taW + "px";
+			if (parseInt(this.pTA.style.width) < taW)
+			{
+				this.pTA.style.width = taW + "px";
+				this.pContTA.style.width = taW + "px";
+			}
 
 			if (bCheckLines !== false)
 				this.CheckLineSelection(true);
@@ -6541,4 +6550,4 @@
 		}
 	};
 
-})(); 
+})();

@@ -488,7 +488,7 @@ function SetUrl(filename, path, site)
 	<tr class="bx-link-t2">
 		<td class="bx-par-title"><label for="bx_url_2"><?= GetMessage("FILEMAN_ED_LINK_DOC")?>:</label></td>
 		<td class="bx-par-val">
-			<select id='bx_url_type'>
+			<select id='bx_url_type' style="vertical-align: top; margin-top: 1px;">
 				<option value="http://">http://</option>
 				<option value="ftp://">ftp://</option>
 				<option value="https://">https://</option>
@@ -1277,7 +1277,7 @@ function AppendRow(code, value, name)
 		r = tbl.insertRow(tbl.rows.length - 1),
 		c = r.insertCell(-1);
 
-	c.align="right";
+	c.className = "bx-par-title";
 	if(name)
 		c.innerHTML = '<input type="hidden" id="BX_dialog_CODE_'+cnt+'" name="BX_dialog_CODE_'+cnt+'" value="'+bxhtmlspecialchars(code)+'">'+bxhtmlspecialchars(name)+':';
 	else
@@ -1288,6 +1288,7 @@ function AppendRow(code, value, name)
 	}
 
 	c = r.insertCell(-1);
+	c.className = "bx-par-val";
 	c.innerHTML = '<input type="text" name="BX_dialog_VALUE_'+cnt+'" id="BX_dialog_VALUE_'+cnt+'" value="'+bxhtmlspecialchars(value)+'" size="55">';
 
 	if(!finput)
@@ -1548,6 +1549,7 @@ function OnLoad()
 			title: '<?= GetMessage("FILEMAN_ED_SAVE")?>',
 			id: 'save',
 			name: 'save',
+			className: 'adm-btn-save',
 			action: function()
 			{
 				var r;
@@ -2815,6 +2817,7 @@ $tabControlDialog->Begin();?>
 				title: '<?= GetMessage("FILEMAN_ED_SAVE")?>',
 				id: 'save',
 				name: 'save',
+				className: 'adm-btn-save',
 				action: function()
 				{
 					var r;

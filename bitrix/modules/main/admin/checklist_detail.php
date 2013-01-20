@@ -44,7 +44,7 @@ if($_REQUEST["TEST_ID"] && $arPoints[$_REQUEST["TEST_ID"]]){?>
 <?
 
 $aTabs = array(
-		array("DIV" => "edit1", "TAB" => GetMessage("CL_TAB_TEST"), "ICON" => "checklist_detail", "TITLE" => GetMessage("CL_TAB_TEST")),
+		array("DIV" => "edit1", "TAB" => GetMessage("CL_TAB_TEST"), "ICON" => "checklist_detail", "TITLE" => GetMessage("CL_TEST_NAME").': '.$arPoints[$arTestID]["NAME"].'&nbsp;('.$arTestID.')'),
 		array("DIV" => "edit2", "TAB" => GetMessage("CL_TAB_DESC"), "ICON" => "checklist_detail", "TITLE" => GetMessage('CL_TAB_DESC')),
 	);
 	$tabControl = new CAdminTabControl("tabControl", $aTabs);
@@ -54,78 +54,64 @@ $tabControl->Begin();
 
 $tabControl->BeginNextTab();
 ?>
-		
-		
-			<div class="checklist-popup-test">
-				<span class="checklist-popup-name-test"><?=GetMessage("CL_TEST_NAME");?>:</span>
-				<span><?=$arPoints[$arTestID]["NAME"];?>&nbsp;(<?=$arTestID;?>)</span>
+
+			<div id="bx_test_result" style="display:<?=$display_result;?>" class="checklist-popup-test">
+				<div class="checklist-popup-name-test"><?=GetMessage("CL_RESULT_TEST");?>:</div>
+				<div>
+					<span id="system_comment"><?=($arPoints[$arTestID]["STATE"]["COMMENTS"]["SYSTEM"]["PREVIEW"])?$arPoints[$arTestID]["STATE"]["COMMENTS"]["SYSTEM"]["PREVIEW"]:"&mdash;";?></span>
+					<div><span class="checklist-popup-test-link" onclick="ShowDetailComment()" id="show_detail_link"><?=GetMessage("CL_MORE_DETAILS");?></span></div>
+					<div style="display:none" id="detail_system_comment_<?=$arTestID;?>">
+						<div class="checklist-system-textarea"><?=preg_replace("/\r\n|\r|\n/",'<br>',$arPoints[$arTestID]["STATE"]["COMMENTS"]["SYSTEM"]["DETAIL"]);?></div>
+					</div>
+				</div>
+			</div>
+			<?if($arPoints[$arTestID]["AUTO"] == "Y"):?>
+				<div class="checklist-popup-start-test-block checklist-popup-name-test">
+					<a id="bx_start_button_detail" onclick="StartPointAutoCheck()" class="adm-btn adm-btn-green adm-btn">
+						<span class="checklist-button-cont" style="color: #ffffff; font-weight: bold"><?=GetMessage("CL_AUTOTEST_START");?></span>
+					</a>
+					<span id="bx_per_point_done" class="checklist-popup-start-test-text"></span>
+				</div>
+			<?endif;?>
+			<div id="check_list_comments" class="checklist-popup-result-test-block">
+				<div class="checklist-popup-result-form">
+					<div class="checklist-form-textar-block">
+						<div class="checklist-form-textar-status"><?=GetMessage("CL_STATUS_COMMENT");?></div>
+						<div class="checklist-dot-line"></div>
+						<div OnClick = "BX('performer_comment_edit_area').style.display ='block'; this.style.display='none';BX('performer_comment').focus();" OnMouseOver="BX.addClass(this,'checklist-form-textar');BX.removeClass(this,'checklist-form-textar-non-active');" OnMouseOut="BX.addClass(this,'checklist-form-textar-non-active');BX.removeClass(this,'checklist-form-textar');" id="performer_comment_area"  class="checklist-form-textar-non-active" ><?=preg_replace("/\r\n|\r|\n/",'<br>', htmlspecialcharsbx($arPoints[$arTestID]["STATE"]["COMMENTS"]["PERFOMER"]));?></div>
+						<div id="performer_comment_edit_area" style="display:none;"><textarea id="performer_comment" OnBlur = "SaveStatus(); BX('performer_comment_area').style.display ='block';BX('performer_comment_edit_area').style.display='none';CopyText(this,BX('performer_comment_area'));" class="checklist-form-textar"><?=htmlspecialcharsbx($arPoints[$arTestID]["STATE"]["COMMENTS"]["PERFOMER"])?></textarea></div>
+					</div>
+				</div>
 			</div>
 			<div class="checklist-popup-test">
 				<div class="checklist-popup-name-test"><?=GetMessage("CL_TEST_STATUS");?></div>
 				<div class="checklist-popup-tes-status-wrap" id="checklist-popup-tes-status">
-					<span class="checklist-popup-tes-status"><span
-						class="checklist-popup-tes-waiting-l"></span><span
-						class="checklist-popup-tes-waiting-c"><?=GetMessage("CL_W_STATUS");?></span><span
-						class="checklist-popup-tes-waiting-r"></span><input name="checklist-form-radio" type="radio" value="W" id="W_status" /></span>
-					<span
-						class="checklist-popup-tes-status"><span
-						class="checklist-popup-tes-successfully-l"></span><span
-						class="checklist-popup-tes-successfully-c"><?=GetMessage("CL_A_STATUS");?></span><span
-						class="checklist-popup-tes-successfully-r"></span><input name="checklist-form-radio" type="radio" value="A" id="A_status" /></span>
-					<span
-						class="checklist-popup-tes-status"><span
-						class="checklist-popup-tes-fails-l"></span><span
-						class="checklist-popup-tes-fails-c"><?=GetMessage("CL_F_STATUS");?></span><span
-						class="checklist-popup-tes-fails-r"></span><input name="checklist-form-radio" value="F" id="F_status" name="checklist-form-radio" type="radio"  /></span><span
+								<span class="checklist-popup-tes-status"><span
+										class="checklist-popup-tes-waiting-l"></span><span
+										class="checklist-popup-tes-waiting-c"><?=GetMessage("CL_W_STATUS");?></span><span
+										class="checklist-popup-tes-waiting-r"></span><input name="checklist-form-radio" type="radio" value="W" id="W_status" /></span>
+								<span
+										class="checklist-popup-tes-status"><span
+										class="checklist-popup-tes-successfully-l"></span><span
+										class="checklist-popup-tes-successfully-c"><?=GetMessage("CL_A_STATUS");?></span><span
+										class="checklist-popup-tes-successfully-r"></span><input name="checklist-form-radio" type="radio" value="A" id="A_status" /></span>
+								<span
+										class="checklist-popup-tes-status"><span
+										class="checklist-popup-tes-fails-l"></span><span
+										class="checklist-popup-tes-fails-c"><?=GetMessage("CL_F_STATUS");?></span><span
+										class="checklist-popup-tes-fails-r"></span><input name="checklist-form-radio" value="F" id="F_status" name="checklist-form-radio" type="radio"  /></span><span
 						class="checklist-popup-tes-status"><span
 						class="checklist-popup-tes-not-necessarily-l"></span><span
 						class="checklist-popup-tes-not-necessarily-c"><?=GetMessage("CL_S_STATUS");?></span><span
 						class="checklist-popup-tes-not-necessarily-r"></span><input name="checklist-form-radio" type="radio" value="S" id="S_status" /></span>
 				</div>
 			</div>
-			<div id="bx_test_result" style="display:<?=$display_result;?>" class="checklist-popup-test">
-					<div class="checklist-popup-name-test"><?=GetMessage("CL_RESULT_TEST");?>:</div>
-						<div>
-						<span id="system_comment"><?=($arPoints[$arTestID]["STATE"]["COMMENTS"]["SYSTEM"]["PREVIEW"])?$arPoints[$arTestID]["STATE"]["COMMENTS"]["SYSTEM"]["PREVIEW"]:"&mdash;";?></span>
-						<div><span class="checklist-popup-test-link" onclick="ShowDetailComment()" id="show_detail_link"><?=GetMessage("CL_MORE_DETAILS");?></span></div>
-						<div style="display:none" id="detail_system_comment_<?=$arTestID;?>">
-							<div class="checklist-system-textarea"><?=preg_replace("/\r\n|\r|\n/",'<br>',$arPoints[$arTestID]["STATE"]["COMMENTS"]["SYSTEM"]["DETAIL"]);?></div>
-						</div>
-					</div>
-				</div>
-		<?if($arPoints[$arTestID]["AUTO"] == "Y"):?>
-			<div class="checklist-popup-start-test-block checklist-popup-name-test">
-				<a id="bx_start_button_detail" onclick="StartPointAutoCheck()" class="adm-btn adm-btn-green adm-btn">
-					<span class="checklist-button-cont" style="color: #ffffff; font-weight: bold"><?=GetMessage("CL_AUTOTEST_START");?></span>
-				</a>
-				<span id="bx_per_point_done" class="checklist-popup-start-test-text"></span>
-			</div>
-		<?endif;?>
-			<div id="check_list_comments" class="checklist-popup-result-test-block">
-				<div class="checklist-popup-result-form">
-					<div class="checklist-form-textar-block">
-					<div class="checklist-form-textar-status"><?=GetMessage("CL_TESTER");?></div>
-						<div class="checklist-dot-line"></div>
-						<div OnClick = "BX('performer_comment_edit_area').style.display ='block'; this.style.display='none';BX('performer_comment').focus();" OnMouseOver="BX.addClass(this,'checklist-form-textar');BX.removeClass(this,'checklist-form-textar-non-active');" OnMouseOut="BX.addClass(this,'checklist-form-textar-non-active');BX.removeClass(this,'checklist-form-textar');" id="performer_comment_area"  class="checklist-form-textar-non-active" ><?=preg_replace("/\r\n|\r|\n/",'<br>', htmlspecialcharsbx($arPoints[$arTestID]["STATE"]["COMMENTS"]["PERFOMER"]));?></div><div id="performer_comment_edit_area" style="display:none;"><textarea id="performer_comment" OnBlur = "BX('performer_comment_area').style.display ='block';BX('performer_comment_edit_area').style.display='none';CopyText(this,BX('performer_comment_area'));" class="checklist-form-textar"><?=htmlspecialcharsbx($arPoints[$arTestID]["STATE"]["COMMENTS"]["PERFOMER"])?></textarea></div>
-					</div>
-					<div class="checklist-form-textar-block">
-						<div class="checklist-form-textar-status"><?=GetMessage("CL_VENDOR");?></div>
-						<div class="checklist-dot-line"></div>
-						<div OnClick = "BX('customer_comment_edit_area').style.display ='block'; this.style.display='none';BX('customer_comment').focus();" OnMouseOver="BX.addClass(this,'checklist-form-textar');BX.removeClass(this,'checklist-form-textar-non-active');" OnMouseOut="BX.addClass(this,'checklist-form-textar-non-active');BX.removeClass(this,'checklist-form-textar');" id="customer_comment_area"  class="checklist-form-textar-non-active" ><?=preg_replace("/\r\n|\r|\n/",'<br>', htmlspecialcharsbx($arPoints[$arTestID]["STATE"]["COMMENTS"]["CUSTOMER"]));?></div>
-						<div id="customer_comment_edit_area" style="display:none;"><textarea id="customer_comment" OnBlur = "BX('customer_comment_area').style.display ='block';BX('customer_comment_edit_area').style.display='none'; CopyText(this,BX('customer_comment_area'));" class="checklist-form-textar"><?=htmlspecialcharsbx($arPoints[$arTestID]["STATE"]["COMMENTS"]["CUSTOMER"])?></textarea></div>
-					</div>
-					<input id="bx_sc_btn" type="button" value="<?=GetMessage("CL_SAVE_COMMENTS");?>" onclick="SaveStatus();"/>
-				</div>
-			</div>
-		
-		
 <?
-
 
 $tabControl->BeginNextTab();
 ?>		
 				<div class="checklist-popup-test">
-					<div class="checklist-popup-name-test"><?=GetMessage("CL_TAB_DESC");?></div>
+					<div class="checklist-popup-name-test"><?=GetMessage("CL_DESC");?></div>
 						<?if($arPoints[$arTestID]["DESC"]):
 						?><div class="checklist-popup-test-text">
 							<div class="checklist-popup-result-form"><p><?
@@ -149,8 +135,10 @@ $tabControl->BeginNextTab();
 				<?if($arPoints[$arTestID]["AUTOTEST_DESC"]):?>
 				<div class="checklist-popup-test">
 					<div class="checklist-popup-name-test"><?=GetMessage("CL_NOW_AUTOTEST_WORK");?></div>
-					<div>
-							<?=$arPoints[$arTestID]["AUTOTEST_DESC"];?>
+					<div class="checklist-popup-test-text">
+						<div class="checklist-popup-result-form checklist-popup-code">
+							<?=$arPoints[$arTestID]["AUTOTEST_DESC"]?>
+						</div>
 					</div>
 				</div>
 			<?endif;?>
@@ -195,12 +183,6 @@ $tabControl->BeginNextTab();
 			BX('performer_comment_area').style.color="#999";
 			BX('performer_comment_area').style.fontWeight="lighter";
 			BX('performer_comment_area').innerHTML = '<?=GetMessage("CL_NO_COMMENT");?>';
-		}
-		if (BX('customer_comment_area').innerHTML.length<=0)
-		{
-			BX('customer_comment_area').style.color="#999";
-			BX('customer_comment_area').style.fontWeight="lighter";
-			BX('customer_comment_area').innerHTML = '<?=GetMessage("CL_NO_COMMENT");?>';
 		}
 
 	function ShowDetailComment()
@@ -280,7 +262,7 @@ $tabControl->BeginNextTab();
 		}
 		if (status == "S" || status == "A")
 		{
-			if ( BX("customer_comment").value.length <5 && BX("performer_comment").value.length <5)
+			if (BX("performer_comment").value.length <2)
 			{
 				BX(currentStatus+"_status").checked = true;
 				BX.addClass(BX(currentStatus+"_status").parentNode,'checklist-popup-tes-active');
@@ -298,7 +280,7 @@ $tabControl->BeginNextTab();
 		BX(currentStatus+"_status").checked = true;
 		ShowWaitWindow();
 		Dialog.hideNotify();
-		var query_str = "ACTION=update&STATUS="+status+"&TEST_ID="+testID+"&COMMENTS=Y"+"&custom_comment="+BX("customer_comment").value+"&perfomer_comment="+BX("performer_comment").value+"&lang=<?=LANG;?>";
+		var query_str = "ACTION=update&STATUS="+status+"&TEST_ID="+testID+"&COMMENTS=Y"+"&perfomer_comment="+BX("performer_comment").value+"&lang=<?=LANG;?>";
 		if (_this)
 			query_str+="&CAN_SHOW_CP_MESSAGE=Y";
 		BX.ajax.post("/bitrix/admin/checklist.php?bxpublic=Y&<?=bitrix_sessid_get()?>",query_str,TestResultSimple);
