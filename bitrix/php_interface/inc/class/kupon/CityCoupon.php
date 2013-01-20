@@ -8,7 +8,9 @@
  */
 class CityCoupon extends Kupon
 {
- public $xml="http://sitycoupon.ru/ex.php";
- public $tags="citycoupon";
+    public $xml = "http://sitycoupon.ru/ex.php";
+    public $tags = "citycoupon";
+    public $parsePage = "http://citycoupon.ru/category/food";
+    public $parseReg="#/deal/([0-9]+)#is";
 
 }

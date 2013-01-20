@@ -2,11 +2,17 @@
 $APPLICATION->SetTitle("Поиск");?>
 
 <?$APPLICATION->IncludeComponent("bitrix:search.page", "clear", Array(
-	"RESTART"	=>	"N",
+	"RESTART"	=>	"Y",
 	"CHECK_DATES"	=>	"N",
 	"AJAX"=>"Y",
-	"SHOW_WHERE"	=>	"Y",
+    "AJAX_OPTION_SHADOW"=>"Y",
+    "AJAX_OPTION_HISTORY"=>"Y",
+    "NO_WORD_LOGIC"=>"Y",
+    "arrFILTER"=>array("iblock_club"),
+
+	"SHOW_WHERE"	=>	"N",
 	"PAGE_RESULT_COUNT"	=>	"10",
+    "PAGER_TEMPLATE"=> "modern",
 	"CACHE_TYPE"	=>	"A",
 	"CACHE_TIME"	=>	"3600",
 	"TAGS_SORT"	=>	"NAME",

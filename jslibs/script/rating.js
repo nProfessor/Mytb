@@ -12,7 +12,12 @@ $(document).ready(function(){
         var left=$('#rating-a').offset().left-203;
         $('#rating-like').toggle();
         $('#rating-like').offset({left:left,top:top});
-
         return false;
+    });
+
+    $('body').click(function(e){
+        if($(e.target).closest('#rating-like').length == 0) {
+            $('#rating-like').hide();
+        }
     });
 });

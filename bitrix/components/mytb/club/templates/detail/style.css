@@ -21,6 +21,14 @@
     margin-bottom: 30px;
 }
 
+.club_info h1{
+    font-size: 27px;
+    line-height: 0.1;
+    margin-bottom: 25px;
+}
+
+
+
 .club_info_content
 {
     height: 200px;
@@ -45,4 +53,47 @@ padding:3px;
 }
 .club_info_content div:hover{
     color:#000;
+}
+
+
+.margin_t_b_5
+{
+    margin:13px 0px;
+}
+
+.menu_club
+{
+    margin: 0px;
+    padding:0px;
+}
+.menu_club li a
+{
+    margin: 0px;
+    padding:0px;
+    float:left;
+    width: 142px;
+    text-align: center;
+    background: #dadada url(/images/line_menu.png) no-repeat left top;
+    padding:5px 0px;
+    color:#000;
+    text-decoration: none;;
+}
+.menu_club li:first-child a
+{
+    background: #dadada;
+    width: 148px;
+}
+.menu_club li a:hover{
+    background-color: #efefef;
+}
+
+.menu_club li a.active{
+    background-color: #7b7b7b;
+    color:#fff;
+}
+
+.block_info
+{
+    display: none;
+    margin-top:10px;
 }

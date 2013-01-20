@@ -1,0 +1,77 @@
+.content.personal {
+    padding:40px 0px 50px 0px;
+}
+
+.content.personal h1 {
+   color: #3a3e45;
+    font-size: 22px;
+    padding:0px;
+    margin:0px;
+    margin-bottom: 10px;;
+    line-height: 22px;
+}
+.content.personal .menu{
+    margin: 10px 0px;
+    padding: 0px;
+    list-style: none;
+}
+
+.content.personal .menu li a{
+    display: block;
+    padding:3px;
+    margin-bottom: 3px;
+    background: #efefef;
+    border:1px solid #d8d8d8;
+    color:#3a3e45;
+    text-decoration: none;
+}
+.content.personal .menu li a:hover{
+    background: #9d9d9d;
+    color:#fff;
+    text-decoration: none;
+}
+
+.content.personal .list_clubs div.item{
+    width: 100px;
+    height: 100px;
+    border:1px solid #d8d8d8;
+    cursor: pointer;
+}
+.content.personal .list_clubs div.item:hover{
+    opacity: 0.5;
+}
+.content.personal .list_clubs div.item_content{
+    padding:5px;
+    display: block;
+    float:left;
+
+}
+.content.personal .list_clubs div.item_content.active{
+    background: #46adce;
+}
+
+.content.personal .block{
+    background: #efefef;
+    border:1px solid #d8d8d8;
+    padding:10px 5px;
+    margin-bottom: 5px;;
+}
+.content.personal .block .stock, .content.personal .block .event{
+    width: 50px;
+    height: 50px;
+    background: url(/images/elements.png) no-repeat 0px 0px;
+}
+
+.content.personal .block .stock{
+    background-position: -288px -81px;
+}
+
+.content.personal .block .event{
+    background-position: -219px -81px;
+}
+
+
+.menu_load_right{
+    background: #efefef url(/images/loading5.gif) no-repeat right center !important;
+}
+

@@ -16,21 +16,8 @@ function OnAfterUserAddHandler(&$arFields)
         global $USER;
 
         $noticeDefault = array(
-            "stock"=> array(
-                "sms"  => 1,
-                "email"=> 1,
-                "count"=> 0
-            ),
-            "news" => array(
-                "sms"  => 0,
-                "email"=> 1,
-                "count"=> 7
-            ),
-            "event"=> array(
-                "sms"  => 1,
-                "email"=> 1,
-                "count"=> 3
-            )
+            "day"=> array(1,2,3,4,5,6,7),
+            "metod" => array("sms","email"),
         );
 
         $PROP['USER'] = $arFields["ID"];

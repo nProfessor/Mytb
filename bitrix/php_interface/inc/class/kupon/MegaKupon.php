@@ -11,6 +11,9 @@ class MegaKupon extends Kupon
 {
     public $xml="http://www.megakupon.ru/deals/xml";
     public $tags="megakupon";
+    public $parsePage="http://skidka-coupon.ru/restaurant";
+    public $parseReg="#http://www.megakupon.ru/deals/buy/30977([0-9]+)#is";
+
 
 
     function  getData(){
@@ -39,12 +42,12 @@ class MegaKupon extends Kupon
                     ), FALSE, FALSE, $arSelect)->Fetch()
                     ) {
                         $PROP            = array();
-                        $PROP["URL"]     = $var->deal_url; // свойству с кодом 12 присваиваем значение "Белый"
-                        $PROP["CLUB_ID"] = $res["ID"]; // свойству с кодом 3 присваиваем значение 38
-                        $PROP["PRICE"] = intval($var->value); // свойству с кодом 3 присваиваем значение 38
-                        $PROP["DISCOUNT"] = intval($var->discount_percent); // свойству с кодом 3 присваиваем значение 38
-                        $PROP["DISCOUNTPRICE"] = intval($var->discount_amount); // свойству с кодом 3 присваиваем значение 38
-                        $PROP["PRICECOUPON"] = intval($var->price); // свойству с кодом 3 присваиваем значение 38
+                        $PROP["URL"]     = $var->deal_url; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅ 12 пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ "пїЅпїЅпїЅпїЅпїЅ"
+                        $PROP["CLUB_ID"] = $res["ID"]; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅ 3 пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ 38
+                        $PROP["PRICE"] = intval($var->value); // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅ 3 пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ 38
+                        $PROP["DISCOUNT"] = intval($var->discount_percent); // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅ 3 пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ 38
+                        $PROP["DISCOUNTPRICE"] = intval($var->discount_amount); // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅ 3 пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ 38
+                        $PROP["PRICECOUPON"] = intval($var->price); // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅ 3 пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ 38
 
 
                         $arLoadProductArray = Array(
@@ -55,7 +58,7 @@ class MegaKupon extends Kupon
                             "ACTIVE_TO"             => date("d.m.Y H:m:s", intval($var->end_timestamp)),
                             "CODE"                  => $id,
                             "TAGS"                  =>  $this->tags,
-                            "ACTIVE"                => "Y", // активен
+                            "ACTIVE"                => "Y", // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
                             "PREVIEW_TEXT"          => strip_tags($var->conditions),
                             "DETAIL_PICTURE"        => CFile::MakeFileArray($var->large_image_url)
                         );

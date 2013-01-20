@@ -1,0 +1,17 @@
+.filter_result{
+
+    min-height: 100px;
+
+}
+
+
+.rating_show {
+    display: block;
+    font-size: 12px;
+    font-weight: normal;
+    padding: 10px;
+}
+
+.filter_result h1{
+    font-size:28px;
+}

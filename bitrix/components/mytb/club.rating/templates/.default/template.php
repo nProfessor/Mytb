@@ -7,9 +7,8 @@
             <tr>
                 <td style="width: 100px;">Голосовать:</td>
                 <td>
-                    <!-- Put this script tag to the <head> of your page -->
-                    <script type="text/javascript" src="//vk.com/js/api/openapi.js?62"></script>
 
+<?$APPLICATION->AddHeadScript("//vk.com/js/api/openapi.js");?>
                     <script type="text/javascript">
                         VK.init({apiId: <?=SOC_API_ID_VK?>, onlyWidgets: true});
                     </script>
@@ -44,7 +43,7 @@
     </div>
 </div>
 <div id="rating" data-placement="left">
-    <a id="rating-a" class="btn btn-small" href="#"><i class="icon-star"></i>
+    <a id="rating-a" class="button gray m_tooltip" data-animation="Ты можешь проголосовать за это заведение" title="Ты можешь проголосовать за это заведение" href="#"><i class="icon-star"></i>
         <?=$arResult["RATING"]?> <?=declOfNum($arResult["RATING"], array("голос", "голосов", "голоса"))?>
     </a>
 </div>

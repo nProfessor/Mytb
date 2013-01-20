@@ -29,6 +29,30 @@ function dateShowText($date)
 }
 
 
+function dateShowTextMonth($date)
+{
+    $strtotime=strtotime($date);
+    $month              = date("m",$strtotime);
+    $day         = date("d",$strtotime);
+
+    $array=array(
+        "01"=>"января",
+        "02"=>"февраля",
+        "03"=>"марта",
+        "04"=>"апреля",
+        "05"=>"мая",
+        "06"=>"июня",
+        "07"=>"июля",
+        "08"=>"августа",
+        "09"=>"сентября",
+        "10"=>"октября",
+        "11"=>"ноября",
+        "12"=>"декабря",
+    );
+
+    return $day." ".$array[$month];
+}
+
 function GetShortUrl($url,$server=false){
     $show = false;
     $rsData = CBXShortUri::GetList(Array(),Array());
@@ -125,7 +149,7 @@ function translate($text)
 function imgurl($path, $size,$resize=false)
 {
 
-    if (!file_exists($_SERVER["DOCUMENT_ROOT"] . $path)) {
+    if (!file_exists($_SERVER["DOCUMENT_ROOT"] . $path)||empty($path)) {
         return "";
     }
     preg_match("#^(.*)([^/]*)\.([a-z]{2,4})$#i", $path, $NAME_1);
@@ -148,8 +172,7 @@ function imgurl($path, $size,$resize=false)
 
     $imgFile = "{$NAME_1[1]}{$NAME_1[2]}-resize-{$size["w"]}x{$size["h"]}.{$NAME_1[3]}";
 
-//    if (file_exists($_SERVER["DOCUMENT_ROOT"] . $imgFile)) {
-
+    if (!file_exists($_SERVER["DOCUMENT_ROOT"] . $imgFile)) {
         try {
             $image = new Imagick($_SERVER["DOCUMENT_ROOT"] . $path);
             $image->ResizeImage($size["w"], $size["h"],imagick::FILTER_LANCZOS, 0.9,true);
@@ -157,7 +180,7 @@ function imgurl($path, $size,$resize=false)
         } catch (ImagickException $e) {
             echo $e->getMessage();
         }
-//    }
+    }
 
 
     return $imgFile;

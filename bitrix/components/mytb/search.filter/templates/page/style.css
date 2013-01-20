@@ -1,0 +1,12 @@
+.home_search.page{
+    margin: 0px;
+    padding:0px;
+    width:240px;
+    float:right;
+}
+.home_search.page .filter{
+    padding: 10px;
+    color:#fff;
+    position: fixed;
+    background: #232427;
+}

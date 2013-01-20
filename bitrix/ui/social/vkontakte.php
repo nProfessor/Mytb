@@ -76,7 +76,6 @@ if (!empty($_GET['code'])) {
         $ID = false;
         if ($userFromVK_ID = User::findFromVK($vk_res->uid)) {
             $ID = $userFromVK_ID;
-            printAr(1);
         } else { //создаем нового
 
 

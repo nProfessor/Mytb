@@ -154,6 +154,27 @@ class Event
         return $result;
     }
 
+    /**
+     * возвращаем ID всех клубов у которых есть события
+     * @return mixed
+     */
+    static  function getListHaveEvents(){
+        $filter['IBLOCK_ID']=IB_SUB_EVENT_ID;
+        $filter['>=DATE_ACTIVE_TO']=date("d.m.Y");
+
+        $ob = CIBlockElement::GetList(
+            array("ACTIVE_FROM" => "DESC"),
+            $filter,
+            array("PROPERTY_CLUB_ID"),
+            FALSE,
+            array("PROPERTY_CLUB_ID"));
+        $result=array();
+        while($row=$ob->Fetch()){
+            $result[]=intval($row["PROPERTY_CLUB_ID_VALUE"]);
+        }
+        return $result;
+    }
+
 
 
 }

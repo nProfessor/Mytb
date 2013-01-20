@@ -1,0 +1,26 @@
+.left_list_club
+{
+    height: 200px;
+    border: 1px solid #eee;
+    overflow-y: auto;
+}
+.content_club_edite{
+    margin-top:50px;
+}
+.logo_edite
+{
+    width: 300px;
+    min-height: 100px;
+}
+.club_address_edite
+{
+    background: #eee;
+    margin:5px 0px;
+    border-radius: 4px;
+    padding:10px;
+}
+
+.checkbox_list{
+    float:left !important;
+
+}

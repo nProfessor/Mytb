@@ -10,8 +10,11 @@ class Stocks
 {
     private $clubID;
 
-    function __construct($clubID)
+    function __construct($clubID=false)
     {
+        if($clubID==false){
+            return;
+        }
         if(is_array($clubID)){
             $ar=array();
             foreach($clubID as $var){
@@ -27,15 +30,19 @@ class Stocks
 
     /**
      * Возвращаем колличество акций для клубов
-     * TODO нужно в фильтр вставить айдишники клубов
      * @return mixed
      */
-    function getCount(){
+    function getCount($clubID=false){
+        $arFilter = array(
+            "IBLOCK_ID"       => IB_SUB_STOCK_ID,
+            ">DATE_ACTIVE_TO" => date("d.m.Y h:i:s"));
+            if (is_array($clubID)) {
+                $arFilter["PROPERTY_CLUB_ID"]=$clubID;
+            }
 
         $ob = CIBlockElement::GetList(
             array("IBLOCK_ID" => "ASC"),
-            array("IBLOCK_ID"               => IB_SUB_STOCK_ID,
-                    ">DATE_ACTIVE_TO"         => date("d.m.Y h:i:s")),
+            $arFilter,
             array("PROPERTY_CLUB_ID"),
             FALSE,
             array());
@@ -91,7 +98,8 @@ class Stocks
             "ACTIVE_TO"      => date("d.m.Y",strtotime($data['ACTIVE_TO'])),
             "ACTIVE_FROM"      => date("d.m.Y",strtotime($data['ACTIVE_FROM'])),
             "NAME"           => trim(strip_tags($data['NAME'])),
-            "DETAIL_TEXT"    => trim($data['DETAIL_TEXT']),
+            "DETAIL_TEXT"    => trim($data['DETAIL_TEXT'])
+
         );
 
 
@@ -99,7 +107,28 @@ class Stocks
     }
 
     /**
-     * Воззвращаем список новостей клуба
+     * возвращаем ID всех клубов у которых есть акции
+     * @return mixed
+     */
+    static  function getListHaveStocks(){
+        $filter['IBLOCK_ID']=IB_SUB_STOCK_ID;
+        $filter['>=DATE_ACTIVE_TO']=date("d.m.Y");
+
+        $ob = CIBlockElement::GetList(
+            array("ACTIVE_FROM" => "DESC"),
+            $filter,
+            array("PROPERTY_CLUB_ID"),
+            FALSE,
+            array("PROPERTY_CLUB_ID"));
+        $result=array();
+        while($row=$ob->Fetch()){
+            $result[]=intval($row["PROPERTY_CLUB_ID_VALUE"]);
+        }
+        return $result;
+    }
+
+    /**
+     * Воззвращаем список акций клуба
      * @return mixed
      */
     function getList($filter=array()){
@@ -114,10 +143,18 @@ class Stocks
             array(
                 "ID",
                 "NAME",
-                "ACTIVE_FROM",
+                "DATE_ACTIVE_FROM",
+                "DATE_ACTIVE_TO",
                 "ACTIVE_TO",
-                "DETAIL_TEXT",
-                "PREVIEW_PICTURE"
+                "PREVIEW_TEXT",
+                "DETAIL_PICTURE",
+                "PROPERTY_CLUB_ID",
+                "DATE_ACTIVE_TO",
+                "PROPERTY_URL",
+                "PROPERTY_CLUB_ID",
+                "PROPERTY_PRICECOUPON",
+                "PROPERTY_DISCOUNT",
+                 "TAGS"
             ));
 
         return $ob;
@@ -125,7 +162,7 @@ class Stocks
 
 
     /**
-     * Воззвращаем список новостей клуба
+     * Воззвращаем список акций клуба
      * @return mixed
      */
     function getListArray($filter=array()){

@@ -9,6 +9,7 @@
 class BigCoupon extends Kupon
 {
     public $xml="http://bigcoupon.ru/bigcoupon.xml";
+    public $parsePage="http://bigcoupon.ru/bigcoupon.xml";
     public $tags="bigcoupon";
 
 }

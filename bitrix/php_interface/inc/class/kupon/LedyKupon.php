@@ -10,5 +10,8 @@ class LedyKupon extends Kupon
 {
     public $xml="http://www.ladykupon.ru/kuponator.xml";
     public $tags="ladykupon";
+    public $parsePage="http://www.ladykupon.ru/category/rest";
+    public $parseReg="#/shares/single/([0-9]+)#is";
+
 
 }

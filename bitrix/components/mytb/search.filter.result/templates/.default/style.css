@@ -1,0 +1,13 @@
+.filter_result{
+    width: 740px;
+    min-height: 100px;
+    margin-right: 260px;
+}
+
+
+.rating_show {
+    display: block;
+    font-size: 12px;
+    font-weight: normal;
+    padding: 10px;
+}

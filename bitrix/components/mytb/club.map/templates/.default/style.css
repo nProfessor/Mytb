@@ -1,0 +1,20 @@
+.address_item {
+border-bottom: 1px solid #eee;
+}
+.address_item i{
+    display: inline-block;
+    padding:10px;
+    width: 14px;
+    height: 14px;
+    float:left;
+    /*border-radius:12px;*/
+    /*border:2px solid #0000CC;*/
+}
+.content_addres{
+    margin-left: 35px;
+    font-size:12px;
+}
+
+.content_addres span{
+    font-size:14px;
+}

@@ -7,8 +7,29 @@ h2, h3, h4, h5, h6 { color:#414141; }
 hr, .hr { border-color: #E9E9E9;}
 
 /* Layout */
-body { background-color: #FFF; color: #000;}
-td#slogan { color: #999999; }
+body {  color:  #3a3e45 !important}
+td#slogan { color: #999999;  }
+.logo_title{ color:#ADD8E6;}
+.button.orange{
+    background-color: #df890e;
+}
+.button.orange:hover{
+    background-color: #ffa21d;
+}
+.button:hover{
+    background-color: #2a9cbf;
+}
+
+.index .home_search .filter select{
+    color:#ccc;
+}
+.index .home_search .filter select option{
+    color:#000;
+}
+.index .home_search .filter select option:first-child{
+    color:#ccc;
+}
+
 
 #search div.search-box { border-color: #DEDEDE; }
 #search div.search-box input { border-color: white;}
@@ -44,7 +65,7 @@ ul.left-menu .current b { background: #0D4BB1; border-color:#C3D3EC; }
 #banner-text a { color: #FFF;}
 #banner-overlay { background:  url(../bitrix/templates/corp_services_blue/images/overlay.png) no-repeat; }
 
-#footer { background: #EDEDED; }
+#footer { }
 #copyright { color: #5F5F5F; }
 
 /* Ask a question */
