@@ -1,0 +1,12 @@
+.auth_table > td{
+    padding:10px 15px;
+}
+
+.auth_table .v_line_gray{
+   border-right:1px solid #eee;
+    padding:0px 5px;
+    margin:0px  5px;
+}
+.auth_table .v_line_gray ol{
+    color:gray;
+}

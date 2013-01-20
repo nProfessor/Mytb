@@ -6,7 +6,7 @@ IncludeTemplateLangFile(__FILE__);
 <html lang="en">
 <head>
     <title><?$APPLICATION->ShowTitle()?></title>
-    <link rel="shortcut icon" type="image/x-icon" href="<?=SITE_TEMPLATE_PATH?>/favicon.ico"/>
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico"/>
 
     <link rel="stylesheet" type="text/css" href="/css/common.css"/>
     <link rel="stylesheet" type="text/css" href="/css/styles.css"/>

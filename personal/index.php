@@ -4,7 +4,7 @@ $APPLICATION->SetTitle("Личный кабинет");
 ?>
 
 
-<?$APPLICATION->IncludeComponent("mytb:profile", "", array(
+<?$APPLICATION->IncludeComponent("profile:home", "", array(
         "USER_ID"=>$USER::GetID(),
         "CACHE_TIME"=>600
     ),

@@ -148,14 +148,10 @@ class User
             FALSE,
             array("ID",
                 "PROPERTY_USER",
-                "PROPERTY_LINK_NEWS",
                 "PROPERTY_LINK_EVENT",
                 "PROPERTY_LINK_STOK"))->Fetch();
 
 
-        $data['LINK_NEWS'] = count($data['LINK_NEWS'])
-            ? $data['LINK_NEWS']
-            : array("");
         $data['LINK_EVENT'] = count($data['LINK_EVENT'])
             ? $data['LINK_EVENT']
             : array("");
@@ -163,10 +159,10 @@ class User
             ? $data['LINK_STOK']
             : array("");
 
-        CIBlockElement::SetPropertyValuesEx($ob["ID"], IB_USER_PROPS, array("LINK_NEWS" => $data['LINK_NEWS'],
+        CIBlockElement::SetPropertyValuesEx($ob["ID"], IB_USER_PROPS, array(
             "LINK_EVENT" => $data['LINK_EVENT'],
-            "LINK_STOK" => $data['LINK_STOK']));
-
+            "LINK_STOK" => $data['LINK_STOK'],
+            "NOTICE" => serialize(array("day"=>$data['day'],"metod"=>$data['metod']))));
 
         return TRUE;
 
@@ -264,7 +260,7 @@ class User
             $arUser[$user["ID"]] = $user;
         }
         return $arUser;
-
+    }
     /**
      * Ищем пользователя по ID фейсбука.
      * @param $id

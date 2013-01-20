@@ -10,8 +10,11 @@ class Stocks
 {
     private $clubID;
 
-    function __construct($clubID)
+    function __construct($clubID=false)
     {
+        if($clubID==false){
+            return;
+        }
         if(is_array($clubID)){
             $ar=array();
             foreach($clubID as $var){
@@ -95,7 +98,8 @@ class Stocks
             "ACTIVE_TO"      => date("d.m.Y",strtotime($data['ACTIVE_TO'])),
             "ACTIVE_FROM"      => date("d.m.Y",strtotime($data['ACTIVE_FROM'])),
             "NAME"           => trim(strip_tags($data['NAME'])),
-            "DETAIL_TEXT"    => trim($data['DETAIL_TEXT']),
+            "DETAIL_TEXT"    => trim($data['DETAIL_TEXT'])
+
         );
 
 
@@ -139,10 +143,18 @@ class Stocks
             array(
                 "ID",
                 "NAME",
-                "ACTIVE_FROM",
+                "DATE_ACTIVE_FROM",
+                "DATE_ACTIVE_TO",
                 "ACTIVE_TO",
-                "DETAIL_TEXT",
-                "PREVIEW_PICTURE"
+                "PREVIEW_TEXT",
+                "DETAIL_PICTURE",
+                "PROPERTY_CLUB_ID",
+                "DATE_ACTIVE_TO",
+                "PROPERTY_URL",
+                "PROPERTY_CLUB_ID",
+                "PROPERTY_PRICECOUPON",
+                "PROPERTY_DISCOUNT",
+                 "TAGS"
             ));
 
         return $ob;

@@ -12,6 +12,7 @@ function send_message_event()
 
     require_once($_SERVER["DOCUMENT_ROOT"] . "/bitrix/modules/main/include/prolog_before.php");
     CModule::IncludeModule("iblock");
+
     global $DB;
 
 
@@ -22,21 +23,25 @@ function send_message_event()
     $stokAllUser=array();
 
 
+    // Выбираем все акции по кторым нужно разослать уведомления
     $resStoskListNoSend=$DB->Query("SELECT * FROM a_send_notice");
 
+    /**
+     * Собираем список событий по которым отправляем уведомления
+     * И список пользователей
+     */
     while($row=$resStoskListNoSend->Fetch()){
         $stokAll=array_merge((array)$stokAll,(array)explode("|",$row['EVENT_ID']));
-        $stokAllUser[]=$row['USER_ID'];
+        $stokAllUser[$row['USER_ID']]=$row['USER_ID'];
     }
-
 
     if(!count($stokAll)){
         return "send_message_event();";
     }
 
-    // собираем все действующие акции всех клубов
+    // собираем все акции всех клубов которые активны на данный момент и которые нужно разослать
+    // TODO нужно еще и события рассылать
     $resStock = CIBlockElement::GetList(Array("SORT" => "DESC"), array("IBLOCK_ID" => IB_SUB_STOCK_ID, ">=DATE_ACTIVE_TO" => date("d.m.Y"),"ID"=>$stokAll), false, false, array("ID", "PROPERTY_CLUB_ID"));
-
 
     $idl=array();
     while ($obj = $resStock->Fetch()) {
@@ -46,22 +51,24 @@ function send_message_event()
     }
 
 
-    // Собираем всех пользователей которые подписанны на действующие акции
+    // Собираем всех пользователей которые подписанны на действующие акции и которым нужно разослать сегодня
     $res = CIBlockElement::GetList(Array("SORT" => "DESC"), array("IBLOCK_ID" => IB_USER_PROPS, "PROPERTY_LINK_STOK" => $clubListID,"PROPERTY_USER"=>$stokAllUser), false, false, array("ID", "PROPERTY_USER", "PROPERTY_LINK_STOK", "PROPERTY_LINK_NEWS", "PROPERTY_LINK_EVENT", "PROPERTY_NOTICE", "PROPERTY_DATE_SEND"));
+
+    $day_now=date('w');
+    $day_now=$day_now==0?7:$day_now;
 
     while ($obj = $res->Fetch()) {
         $PROPERTY_NOTICE_VALUE = unserialize($obj['PROPERTY_NOTICE_VALUE']);
 
-        $date_send = strtotime($obj['PROPERTY_DATE_SEND_VALUE']);
-        $count = intval($PROPERTY_NOTICE_VALUE['stock']["count"]);
-        $date_send_period = strtotime("-{$count} day");
+        $day_send = $PROPERTY_NOTICE_VALUE['day'];
+        $metod = intval($PROPERTY_NOTICE_VALUE['stock']["count"]);
 
 
-        if ($date_send_period >= $date_send ) { //то отправляем уведомления
+
+        if (in_array($day_now,$day_send)) { // если должны отправить сегодня, то отправляем уведомления
 
             $usersProps[] = array(
-                "SMS" => intval($PROPERTY_NOTICE_VALUE['stock']["sms"]),
-                "EMAIL" => intval($PROPERTY_NOTICE_VALUE['stock']["email"]),
+                "MEOD" =>$metod,
                 "USER_ID" => $obj['PROPERTY_USER_VALUE'],
                 "PROPS_ID" => $obj['ID'],
             );
@@ -75,14 +82,14 @@ function send_message_event()
         $sms = new Smsc();
         foreach ($usersProps as $var) { //отсылаем всем уведомления
             $send=false;
-            if ($var["SMS"] == 1) {
+            if (in_array("sms",$var["MEOD"])) {
                 $user = $arUser[$var['USER_ID']];
-                $sms->send_sms($user["PERSONAL_PHONE"], "Новые акции в заведениях, на которые вы подписаны!\nС уважением mytb.ru");
+                $sms->send_sms($user["PERSONAL_PHONE"], "Новые акции в заведениях, на которые вы подписаны!\nС уважением MyTb.ru");
                 $send=true;
             }
 
 
-            if ($var["EMAIL"] == 1) {
+            if (in_array("email",$var["MEOD"])) {
                 $user = $arUser[$var['USER_ID']];
                 $arEventFields = array(
                     "NAME" => $user["NAME"] . " " . $user["LAST_NAME"],

@@ -8,7 +8,7 @@ IncludeTemplateLangFile(__FILE__);
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ru" lang="ru">
 <head>
     <title><?$APPLICATION->ShowTitle()?></title>
-    <link rel="shortcut icon" type="image/x-icon" href="<?=SITE_TEMPLATE_PATH?>/favicon.ico"/>
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico"/>
 
     <link rel="stylesheet" type="text/css" href="/css/common.css"/>
     <link rel="stylesheet" type="text/css" href="/css/styles.css"/>
@@ -21,7 +21,6 @@ IncludeTemplateLangFile(__FILE__);
     <?$APPLICATION->ShowHead();?>
 
     <script type="text/javascript">
-
         var _gaq = _gaq || [];
         _gaq.push(['_setAccount', 'UA-33379252-1']);
         _gaq.push(['_setDomainName', 'mytb.ru']);

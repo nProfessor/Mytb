@@ -134,6 +134,7 @@ th {
 .content {
     width: 1000px;
     margin: 0 auto;
+    min-height: 78%;
 }
 
 .content.index {
@@ -380,11 +381,12 @@ ul.left-menu {
 }
 
 #banner {
-    height: 260px;
-    width: 750px;
+    display: block;
+    height: 262px;
+    width: 752px;
     overflow: hidden;
-    background: #eeeeee;
-    border:1px solid #bdbdbd;
+    background: url(/images/baner_home.png) no-repeat center center;
+    /*border:1px solid #bdbdbd;*/
 }
 
 #banner-image {
@@ -1041,9 +1043,9 @@ input.errors {
 }
 
 #rating-like.popover .arrow {
-    right: -6px !important;
+    /*right: -6px !important;*/
     left: 90% !important;
-    top: -5px !important;
+    /*top: -5px !important;*/
 }
 
 .right {
@@ -1701,11 +1703,27 @@ a.stoks:hover {
     padding: 35px;
     padding-right: 85px;
     text-align: left;
+    cursor: pointer;
+    width: 259px;
+    height: 70px;
 }
 .button_subsribe:hover {
     background-color:  #57bfdf;
-
 }
+.button_subsribe_ok{
+    background: #eaeaea  url(/images/button_subsribe_ok.png) no-repeat 90% bottom;
+    border:1px solid #aeaeae;
+    color: #3a3e45;
+    font-size: 20px;
+    font-weight: normal;
+    line-height: 1.4;
+    padding: 35px;
+    padding-right: 85px;
+    text-align: left;
+    width: 259px;
+    height: 70px;
+}
+
 
 .stock_title
 {
@@ -1723,4 +1741,22 @@ a.stoks:hover {
 }
 .thumbnail{
     border-radius: 0px !important;
+}
+
+.margin_l_10
+{
+    margin-left: 10px;
+}
+.padding_l_25{
+    margin-left: 25px;
+}
+.padding_tb_4{
+    padding:4px 0px;
+}
+.padding_lr_10{
+    padding:0px 10px;
+}
+
+.red{
+color:#c60003;
 }

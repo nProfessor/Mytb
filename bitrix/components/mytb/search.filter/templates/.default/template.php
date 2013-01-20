@@ -38,8 +38,8 @@
             <div>
                 <select name="EVENT">
                     <option value="">Все</option>
-                    <option value="1">Есть</option>
-                    <option value="0">Нет</option>
+                    <option value="true">Есть</option>
+                    <option value="false">Нет</option>
                 </select>
             </div>
         </div>
@@ -50,8 +50,8 @@
             <div>
                 <select name="STOCKS">
                     <option value="">Все</option>
-                    <option value="1">Есть</option>
-                    <option value="0">Нет</option>
+                    <option value="true">Есть</option>
+                    <option value="false">Нет</option>
                 </select>
             </div>
         </div>

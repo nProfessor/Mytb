@@ -3,7 +3,7 @@
 <ul>
         <?foreach ($arResult['clubList'] as $val=> $var): ?>
 
-       <li><a href="/club/<?=$var['ID']?>/#stocks">
+       <li><a href="/club/<?=$var['ID']?>/#stock">
            <?if(count($var['PROPERTY_TYPE_FACILITY_VALUE'])>0):?>
            <?=implode("/",$var['PROPERTY_TYPE_FACILITY_VALUE']);?>
         <?else:?>
@@ -13,8 +13,10 @@
         <? endforeach;?>
 </ul>
     <div class="all_list">
-<a href="">Все заведения с акциями</a>
+        <a href="/sub/stocks/" title="Показать ве клубы, бары, рестораны и кафе у которых есть акции и скидки">Все заведения с акциями</a>
     </div>
 <? else: ?>
+    <noindex>
 На данный момент акций нет
+    </noindex>
 <?endif; ?>

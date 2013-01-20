@@ -36,7 +36,8 @@ $arFields=$club->getInfo(array("arSelect"=> array(
 
 
 $arFile = CFile::GetFileArray($arFields["PREVIEW_PICTURE"]);
-$arFields["PREVIEW_PICTURE"]=$arFile["SRC"];
+
+$arFields["PREVIEW_PICTURE"]=imgurl($arFile["SRC"], array("w" => 200));
 $arResult['arFields'] = $arFields;
 
 

@@ -101,4 +101,21 @@ class News
     }
 
 
+
+    static  function getListHaveNews(){
+        $filter['IBLOCK_ID']=IB_SUB_NEWS_ID;
+
+        $ob = CIBlockElement::GetList(
+            array("ACTIVE_FROM" => "DESC"),
+            $filter,
+            array("PROPERTY_CLUB_ID"),
+            FALSE,
+            array("PROPERTY_CLUB_ID"));
+        $result=array();
+        while($row=$ob->Fetch()){
+            $result[]=intval($row["PROPERTY_CLUB_ID_VALUE"]);
+        }
+        return $result;
+    }
+
 }

@@ -8,7 +8,7 @@ IncludeTemplateLangFile(__FILE__);
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ru" lang="ru">
 <head>
     <title><?$APPLICATION->ShowTitle()?></title>
-    <link rel="shortcut icon" type="image/x-icon" href="<?=SITE_TEMPLATE_PATH?>/favicon.ico"/>
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico"/>
 
     <link rel="stylesheet" type="text/css" href="/css/common.css"/>
     <link rel="stylesheet" type="text/css" href="/css/styles.css"/>
@@ -79,9 +79,9 @@ IncludeTemplateLangFile(__FILE__);
         </div>
     </div>
 
-    <div id="banner">
+    <a id="banner" href="#text_baner">
 
-    </div>
+    </a>
 
 
     <div class="home_search">
@@ -139,7 +139,7 @@ IncludeTemplateLangFile(__FILE__);
             </script>
             <div class="clear_both"></div>
         </div>
-        <div class="home_seo_text">
+        <div class="home_seo_text" id="text_baner">
             <h3>MyTB.ru — первыми сообщим тебе о скидках </h3>
             <p>
                 <ul>

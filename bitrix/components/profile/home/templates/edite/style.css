@@ -1,0 +1,14 @@
+.form-horizontal .button_upload
+{
+    padding:10px 0px;
+    text-align: center;
+    cursor: pointer;
+}
+.form-horizontal .button_upload *
+{
+    cursor: pointer;
+}
+.form-horizontal .button_upload a{
+    width: 88%;
+    cursor: pointer;
+}

@@ -267,4 +267,25 @@ class Kupon
         }
 
     }
+
+    static function getDataServise($key){
+        $array=array(
+            "bigcoupon"=>array("site"=>"BigCoupon.ru","name"=>"BigCoupon"),
+            "citycoupon"=>array("site"=>"SityCoupon.ru","name"=>"SityCoupon"),
+            "darikupon"=>array("site"=>"DariKupon.ru","name"=>"DariKupon"),
+            "kingcoupon"=>array("site"=>"KingCoupon.ru","name"=>"KingCoupon"),
+            "kuponauktsion"=>array("site"=>"KuponAuktsion.ru","name"=>"KuponAuktsion"),
+            "ladykupon"=>array("site"=>"LadyKupon.ru","name"=>"LadyKupon"),
+            "megakupon"=>array("site"=>"MegaKupon.ru","name"=>"MegaKupon"),
+            "myfant"=>array("site"=>"MyFant.ru","name"=>"MyFant"),
+            "skidkabum"=>array("site"=>"SkidkaBum.ru","name"=>"SkidkaBum"),
+            "skidkacoupon"=>array("site"=>"Skidka-Coupon.ru","name"=>"SkidkaCoupon"),
+            "skuponom"=>array("site"=>"sKuponom.ru","name"=>"sKuponom"),
+            "vigoda"=>array("site"=>"Vigoda.ru","name"=>"Vigoda"),
+            "zoombonus"=>array("site"=>"ZoomBonus.ru","name"=>"ZoomBonus"),
+        );
+
+        return $array[$key];
+
+    }
 }

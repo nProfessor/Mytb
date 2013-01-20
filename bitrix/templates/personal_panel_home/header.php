@@ -6,7 +6,7 @@ IncludeTemplateLangFile(__FILE__);
 <html lang="en">
 <head>
     <title><?$APPLICATION->ShowTitle()?></title>
-    <link rel="shortcut icon" type="image/x-icon" href="<?=SITE_TEMPLATE_PATH?>/favicon.ico"/>
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico"/>
 
     <link rel="stylesheet" type="text/css" href="/css/common.css"/>
     <link rel="stylesheet" type="text/css" href="/css/styles.css"/>
@@ -20,14 +20,10 @@ IncludeTemplateLangFile(__FILE__);
     <link rel="stylesheet" type="text/css" href="/css/colors.css"/>
 </head>
 <body>
-<?include($_SERVER["DOCUMENT_ROOT"]."/bitrix/templates/.default/include/menu_top.php")?>
-<div id="panel"><?$APPLICATION->ShowPanel();?></div>
-<div id="header">
-
-</div>
-<div style="margin:0 auto; width:940px;" >
-
-<div class="container-fluid">
-    <div class="row-fluid">
-        <div class="12">
-
+<?$APPLICATION->SetAdditionalCSS("/css/personal.css");?>
+<?$APPLICATION->IncludeFile(
+    SITE_DIR . "include/header_personal.php",
+    Array(),
+    Array("MODE" => "html")
+);?>
+<div class="content personal">

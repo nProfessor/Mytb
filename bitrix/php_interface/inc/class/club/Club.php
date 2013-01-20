@@ -114,6 +114,13 @@ class Club
     static function getListHaveEvent(){
         return Event::getListHaveEvents();
     }
+    /**
+     * Возвращаем ID клубов у которых есть новости
+     */
+    static function getListHaveNews(){
+        return News::getListHaveNews();
+    }
+
 
     /**
      * Возвращаем объект запроса к списку столиков
@@ -305,7 +312,6 @@ class Club
                 "PROPERTY_PRICECOUPON"
             ));
         return $ob;
-
     }
 
     function getListEvent()
@@ -313,7 +319,31 @@ class Club
         $ob = CIBlockElement::GetList(
             array("SORT" => "ASC"),
             array("PROPERTY_CLUB_ID" => $this->clubID,
+                ">=DATE_ACTIVE_TO" => date("d.m.Y"),
                 "IBLOCK_ID" => IB_SUB_EVENT_ID),
+            FALSE,
+            FALSE,
+            array(
+                "ID",
+                "NAME",
+                "ACTIVE_FROM",
+                "ACTIVE_TO",
+                "PREVIEW_TEXT",
+                "DETAIL_TEXT",
+                "DETAIL_PICTURE",
+                "PROPERTY_CLUB_ID",
+                "DATE_ACTIVE_TO"
+            ));
+        return $ob;
+
+    }
+
+    function getListNews()
+    {
+        $ob = CIBlockElement::GetList(
+            array("SORT" => "ASC"),
+            array("PROPERTY_CLUB_ID" => $this->clubID,
+                "IBLOCK_ID" => IB_SUB_NEWS_ID),
             FALSE,
             FALSE,
             array(
@@ -329,6 +359,7 @@ class Club
         return $ob;
 
     }
+
 
     /* Staff */
     /**

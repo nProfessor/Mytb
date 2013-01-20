@@ -23,12 +23,13 @@ $ADDRESS = $arResult['ADDRESS'];
 
 <div class="club_info">
     <div class="m_left w2  options">
+        <div class="img-polaroid w2">
+            <div  style="height: 200px;width: 200px;background: #fff url('<?=$clubInfo["PREVIEW_PICTURE"]?>') no-repeat center center" title="<?=$name?>"></div>
+            </div>
 
-        <?if(!empty($clubInfo["PREVIEW_PICTURE"])):?>
-        <img src="<?=$clubInfo["PREVIEW_PICTURE"]?>" width="200px">
-        <?endif;?>
 </div>
     <div class="m_left w4 options">
+        <div style="padding-left:30px">
         <h1><?=$name?></h1>
 
         <?if(!empty($clubInfo["PROPERTY_TIME_WORKING_VALUE"])):?>
@@ -99,6 +100,7 @@ $ADDRESS = $arResult['ADDRESS'];
         </dl>
 
         <? endif;?>
+        </div>
 
     </div>
 
@@ -114,10 +116,20 @@ $ADDRESS = $arResult['ADDRESS'];
             "CLUB_ID"  => $clubInfo['ID'],
         )
     );?>
+            <div class="clear_both"></div>
         </div>
 
+<div class="margin_t_b_5">
+    <?
+    $APPLICATION->IncludeComponent("mytb:subscribe.button",
+        "",
+        array(
+            "CLUB_ID"=> intval($clubInfo["ID"]),
+            "CLUB_NAME"=> $clubInfo["NAME"],
+        ), false);
+    ?>
+</div>
 
-       <button class="button_subsribe subsribe-ok right margin_t_b_5"  data-toggle="modal" data-original-title="Вы сможете моментально узнавать о появлении акций проводимых в  <b>«<?=$clubInfo['NAME']?>»</b>" id="subs_ok" data-auth="<?=$USER->IsAuthorized()?"yes":"no";?>">Подписаться на акции<br/>«<?=$clubInfo['NAME']?>»</button>
 
         <table class="right margin_t_b_5">
             <tr>
@@ -146,17 +158,34 @@ $ADDRESS = $arResult['ADDRESS'];
         </ul>
         <div class="clear_both"></div>
     </div>
-<div class="block_info" id="news">
-    Новости
+<div class="block_info" id="b_descr">
+    <?=$clubInfo["~DETAIL_TEXT"]?>
 </div>
-<div class="block_info" id="event">
-    События
+<div class="block_info" id="b_news">
+        <?
+        $APPLICATION->IncludeComponent("mytb:club.list.news",
+            "",
+            array(
+                "CLUB_ID"=> intval($clubInfo["ID"])
+            ), false);
+        ?>
 </div>
-<div class="block_info" id="photo">
-    Фото/видео
+<div class="block_info" id="b_event">
+           <?
+        $APPLICATION->IncludeComponent("mytb:club.list.event",
+            "",
+            array(
+                "CLUB_ID"=> intval($clubInfo["ID"])
+            ), false);
+        ?>
+</div>
+<div class="block_info" id="b_photo">
+    <noindex>
+        На данный момент нет фото и видео
+    </noindex>
 </div>
 
-        <div class="block_info" id="stock">
+        <div class="block_info" id="b_stock">
 <?
             $APPLICATION->IncludeComponent("mytb:club.list.stock",
             "",
@@ -165,69 +194,19 @@ $ADDRESS = $arResult['ADDRESS'];
             ), false);
             ?>
         </div>
-<div class="block_info" id="descr">
-    <?=$clubInfo["~DETAIL_TEXT"]?>
-</div>
-<div class="block_info" id="map">
+
+<div class="block_info" id="b_map">
     <?
     $APPLICATION->IncludeComponent("mytb:club.map",
         "",
         array(
-            "CLUB_ID"=> intval($clubInfo["ID"])
+            "CLUB_ID"=> intval($clubInfo["ID"]),
+            "NAME"=> $name,
         ), false);
     ?>
-
-    <script src="http://api-maps.yandex.ru/2.0-stable/?load=package.full&lang=ru-RU&onload=init"type="text/javascript"></script>
-
-    <!--$arResult['arFields']-->
-
-    <div id="YMapsID" style="height: 400px"></div>
-
-    <script type="text/javascript">
-
-        var myMap;
-        function init() {
-
-
-
-
-            ymaps.geocode('<?=$searh?>', { results:1 }).then(function (res) {
-                // Выбираем первый результат геокодирования
-                var firstGeoObject = res.geoObjects.get(0);
-
-                var myMap = new ymaps.Map("YMapsID", {
-                            center:firstGeoObject.geometry.getCoordinates(),
-                            zoom:16
-                        }
-                );
-                myPlacemark = new ymaps.Placemark(firstGeoObject.geometry.getCoordinates(), {
-                    iconContent:'<?=$name?>'
-                }, {
-                    // Опции
-                    // Иконка метки будет растягиваться под ее контент
-                    preset:'twirl#blueStretchyIcon'
-                }),
-                        myMap.geoObjects
-                                .add(myPlacemark);
-                myMap.controls
-                    // Кнопка изменения масштаба
-                        .add('zoomControl')
-                    // Список типов карты
-                        .add('typeSelector')
-                    // Стандартный набор кнопок
-                        .add('mapTools');
-            },function (err) {
-                console.log(err);
-            });
-
-        }
-
-    </script>
-
-
 </div>
 
-<div class="block_info" id="reviews">
+<div class="block_info" id="b_reviews">
     <?$APPLICATION->IncludeComponent(
     "prmedia:vkontakte.comments",
     "",
