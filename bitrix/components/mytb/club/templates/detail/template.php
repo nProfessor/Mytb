@@ -230,6 +230,5 @@ $ADDRESS = $arResult['ADDRESS'];
         "WIDTH"          => "1000"
     )
 );?>
+
 </div>
-
-
