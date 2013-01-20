@@ -19,6 +19,15 @@ $rating = empty($clubInfo["PROPERTY_RATING_VALUE"])
 $APPLICATION->SetPageProperty('description',strip_tags($clubInfo["~DETAIL_TEXT"]));
 $ADDRESS = $arResult['ADDRESS'];
 ?>
+
+<!-- Put this script tag to the <head> of your page -->
+<script type="text/javascript" src="//vk.com/js/api/openapi.js?75"></script>
+
+<script type="text/javascript">
+    VK.init({apiId: <?=SOC_API_ID_VK?>, onlyWidgets: true});
+</script>
+
+
 <input type="hidden" value="<?=$clubInfo['ID']?>" id="clubID">
 
 <div class="club_info">
@@ -223,40 +232,4 @@ $ADDRESS = $arResult['ADDRESS'];
 );?>
 </div>
 
-
-<?if(0):?>
-<div class="club_address">
-    <span>Адрес:</span> <?=empty($clubInfo["PROPERTY_METRO_VALUE"])
-    ? ""
-    : "м. " . $clubInfo["PROPERTY_METRO_VALUE"];?> <?=empty($clubInfo["PROPERTY_ADDRESS_VALUE"])
-    ? ""
-    : $clubInfo["PROPERTY_ADDRESS_VALUE"];?>
-</div>
-
-
-
-<br/>
-
-<?endif;?>
-
-<div class="modal hide fade" id="modal_subs">
-    <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-        <h6>Подписка на акции в «<?=$clubInfo["NAME"]?>»</h6>
-    </div>
-    <div class="modal-body">
-        <blockquote>
-            <p>Хотите узнавать о новых акциях в <b>«<?=$clubInfo["NAME"]?>»</b>?</p>
-            <small>Можно получать уведомления по СМС, Email, или просматривать их в личном кабинете.</small>
-        </blockquote>
-
-    </div>
-    <div class="modal-footer">
-        <a href="#" class="btn" id="no_subs">Не сейчас</a>
-        <a href="#" class="btn btn-primary"  id="subs_ok_modal" data-auth="<?=$USER->IsAuthorized()?"yes":"no";?>">Да, хочу</a>
-    </div>
-</div>
-
-<input id="redirect" type="hidden" value="/club/<?=$clubInfo["ID"]?>/stock/?subscribe=ok">
-<? $APPLICATION->IncludeComponent("mytb:auth", "",  array("AUTH_URL"=>"/club/".$clubInfo["ID"]."/stock/?subscribe=ok"),false); ?>
 

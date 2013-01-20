@@ -1697,14 +1697,14 @@ a.stoks:hover {
     background: #2A9CBF  url(/images/buttons_big.png) no-repeat 90% center;;
     border: medium none;
     color: #FFFFFF;
-    font-size: 25px;
+    font-size: 23px;
     font-weight: normal;
     line-height: 1.4;
     padding: 35px;
     padding-right: 85px;
     text-align: left;
     cursor: pointer;
-    width: 259px;
+    width:305px;
     height: 70px;
 }
 .button_subsribe:hover {

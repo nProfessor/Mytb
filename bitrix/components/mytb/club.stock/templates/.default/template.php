@@ -7,7 +7,15 @@ $partner = Kupon::getDataServise($arResult['stockInfo']['TAGS']);
 <div class="stock">
     <h2><?=$arResult['stockInfo']['NAME']?></h2>
 
-    <button id="subs_ok"  class="right button_subsribe subsribe-ok right">Подписаться на акции<br>«Гиляй (Gilyay)»</button>
+    <?
+    $APPLICATION->IncludeComponent("mytb:subscribe.button",
+        "",
+        array(
+            "CLUB_ID"=> intval($arResult['club']["ID"]),
+            "CLUB_NAME"=> $arResult['club']['NAME'],
+        ), false);
+    ?>
+
 
     <div class="m_left w6">
     <table class="table">

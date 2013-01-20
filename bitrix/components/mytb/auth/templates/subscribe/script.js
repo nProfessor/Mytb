@@ -8,9 +8,9 @@
 $(document).ready(function () {
     $("#login").click(function () {
 
-        var email = $("input[name='AUTH[EMAIL]']").val();
-        var password = $("input[name='AUTH[PASSWORD]']").val();
-        var reg = $("input[name='AUTH[REG]']:checked").val();
+        var email = $(".modal_auth_subscribe input[name='AUTH[EMAIL]']").val();
+        var password = $(".modal_auth_subscribe input[name='AUTH[PASSWORD]']").val();
+        var reg = $(".modal_auth_subscribe input[name='AUTH[REG]']:checked").val();
 
         $("#login").text("Выполняется вход");
         $("#errors_auth").addClass("hide");

@@ -13,6 +13,8 @@
             "LON"=>$LON,
             "LAT"=>$LAT,
         ),"address");
+        $arResult["ADDRESS"][0]['LON']=$LON;
+        $arResult["ADDRESS"][0]['LAT']=$LAT;
     }
 
 endif;?>
