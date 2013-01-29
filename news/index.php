@@ -2,7 +2,7 @@
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/header.php");
 $APPLICATION->SetTitle("Новости компании");
 ?>
-<p><?$APPLICATION->IncludeComponent("bitrix:news", ".default", array(
+<p><?$APPLICATION->IncludeComponent("bitrix:news", "web20", array(
 	"IBLOCK_TYPE" => "news",
 	"IBLOCK_ID" => "1",
 	"NEWS_COUNT" => "20",
