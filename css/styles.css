@@ -386,7 +386,27 @@ ul.left-menu {
     width: 752px;
     overflow: hidden;
     background: url(/images/baner_home.png) no-repeat center center;
+    text-decoration: none;
     /*border:1px solid #bdbdbd;*/
+}
+#banner span{
+    font-size: 28px;
+    /*display: block;*/
+    background: url(/images/fon_text.png);
+    color:#fff;
+    padding:3px 10px;
+    line-height: 39px;
+
+    /*border:1px solid #bdbdbd;*/
+}
+#banner span.small{
+    font-size: 18px;
+    margin-top:5px;
+    /*border:1px solid #bdbdbd;*/
+}
+#banner div{
+    padding-left:30px;
+    padding-top:30px;
 }
 
 #banner-image {

@@ -37,14 +37,28 @@ $ADDRESS = $arResult['ADDRESS'];
             </div>
 
 </div>
+    <div>
+        <div class="right">
+
+            <?$APPLICATION->IncludeComponent(
+            "mytb:club.rating",
+            "",
+            Array(
+                "CLUB_ID"  => $clubInfo['ID'],
+            )
+        );?>
+        </div>
+        <h1><?=$name?></h1>
+
+    </div>
     <div class="m_left w4 options">
         <div style="padding-left:30px">
-        <h1><?=$name?></h1>
+
 
         <?if(!empty($clubInfo["PROPERTY_TIME_WORKING_VALUE"])):?>
         <dl>
             <dt>Часы работы</dt>
-            <dd><?=str_replace(",", "<br>", $clubInfo["PROPERTY_TIME_WORKING_VALUE"]);?></dd>
+            <dd><?=str_replace(array(",",";"), "<br>", $clubInfo["PROPERTY_TIME_WORKING_VALUE"]);?></dd>
         </dl>
         <?endif;?>
 
@@ -115,20 +129,8 @@ $ADDRESS = $arResult['ADDRESS'];
 
 
     <div class="m_left w4 content_padding_20">
-        <div class="margin_t_b_5">
 
-
-        <?$APPLICATION->IncludeComponent(
-        "mytb:club.rating",
-        "",
-        Array(
-            "CLUB_ID"  => $clubInfo['ID'],
-        )
-    );?>
-            <div class="clear_both"></div>
-        </div>
-
-<div class="margin_t_b_5">
+<div>
     <?
     $APPLICATION->IncludeComponent("mytb:subscribe.button",
         "",

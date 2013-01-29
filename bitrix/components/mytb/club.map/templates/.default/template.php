@@ -21,8 +21,13 @@ endif;?>
 <script type="text/javascript">
     var myMap;
 
-
-    function init(){
+    $(document).ready(function(){
+        $("#a_map").click(function(){
+            console.log();
+            myMap.container.fitToViewport();
+        });
+    });
+   function init(){
         myMap = new ymaps.Map ("YMapsID", {
             center: [<?=$arResult["ADDRESS"][0]['LON']?>, <?=$arResult["ADDRESS"][0]['LAT']?>],
             zoom: 12

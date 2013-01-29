@@ -8,7 +8,7 @@ $APPLICATION->AddHeadScript("/jslibs/jqueryui/js/jquery-ui-1.8.21.custom.min.js"
 
 
 $clubID = (int)$arParams['ID'];
-if ($this->StartResultCache()) {
+
 global $USER;
 $userInfo=CUser::GetByID($USER::GetID())->Fetch();
 
@@ -47,7 +47,6 @@ $arResult['ADDRESS'] = $club->getAddress();;
 
 
 $this->IncludeComponentTemplate();
-}
 
 
 

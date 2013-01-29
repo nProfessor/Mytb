@@ -2,6 +2,7 @@
 if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== TRUE)
     die();
 
+
 CModule::IncludeModule("iblock");
 
 global $USER;
@@ -19,6 +20,7 @@ if ($arParams["AJAX"] == "Y" && intval($_POST['clubID']) != 0) {
 } else { //иначе достаем спиисок всех клубов
     $arListClubSubs = array_merge($rs['PROPERTY_LINK_STOK_VALUE'],$rs['PROPERTY_LINK_EVENT_VALUE']);
 }
+
 
 if (count($arListClubSubs) > 0) {
     $ob = CIBlockElement::GetList(

@@ -56,6 +56,12 @@ $arUrlRewrite = array(
         "ID"	=>	"bitrix:news",
         "PATH"	=>	"/club/stock/index.php",
     ),
+    array(
+        "CONDITION"	=>	"#^/club/event/([0-9]+)#",
+        "RULE"	=>	"ID=$1",
+        "ID"	=>	"bitrix:news",
+        "PATH"	=>	"/club/event/index.php",
+    ),
 	array(
 		"CONDITION"	=>	"#^/club/([0-9]+)/stock/.*#",
 		"RULE"	=>	"ID=$1",

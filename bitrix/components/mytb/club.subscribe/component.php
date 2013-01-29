@@ -30,7 +30,6 @@ if (isset($_POST["clubID"]) && intval($_POST["clubID"]) > 0) {
 }
 
 
-$APPLICATION->SetTitle("Подписка на акции клуба ", html_entity_decode($arField['NAME']));
 
 
 $this->IncludeComponentTemplate();

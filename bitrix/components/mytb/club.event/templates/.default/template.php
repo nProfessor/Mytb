@@ -28,10 +28,6 @@ $partner = Kupon::getDataServise($arResult['stockInfo']['TAGS']);
             <td>с <?=date("d.m.Y",strtotime($arResult['stockInfo']['ACTIVE_FROM']))?> по <?=date("d.m.Y",strtotime($arResult['stockInfo']['ACTIVE_TO']))?></td>
         </tr>
         <tr>
-            <th>Партнер акции</th>
-            <td><?=$partner['name']?></td>
-        </tr>
-        <tr>
             <th>Поделиться</th>
             <td><script type="text/javascript" src="//yandex.st/share/share.js" charset="utf-8"></script>
                 <div class="yashare-auto-init" data-yashareL10n="ru" data-yashareType="none"
@@ -44,13 +40,10 @@ $partner = Kupon::getDataServise($arResult['stockInfo']['TAGS']);
                 <div class="pull-left" style="margin:0px 10px 10px 0px">
                     <img class="thumbnail" src="<?=imgurl($arFile["SRC"], array("w" => 300, "h" => 200))?>"/>
                 </div>
-                <strong>Описание акции</strong><br/>
-                <?=str_replace("\n","<br/>",$arResult['stockInfo']['~PREVIEW_TEXT'])?></td>
+                <strong>Описание события</strong><br/>
+                <?=$arResult['stockInfo']['~DETAIL_TEXT']?></td>
         </tr>
 </div>
-    <div class="clear_both link_cupon">
-Для покупки купона на скидку и получения полной информации об акции необходимо <strong><span data-link='<?=$arResult['stockInfo']['PROPERTY_URL_VALUE']?>' class="linc_coupon">перейти на сайт партнера <?=$partner['site']?></span></strong>
-    </div>
 
 
 

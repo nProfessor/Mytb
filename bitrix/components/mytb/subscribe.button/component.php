@@ -5,6 +5,8 @@ if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== TRUE)
 $arResult["CLUB_ID"]=intval($arParams["CLUB_ID"]);
 $arResult["NAME"]=$arParams["CLUB_NAME"];
 
+if ($USER->IsAuthorized()):
+
 $userID=$USER::GetID();
 $userRes = new User($userID);
 $arRes=$userRes->getProps(array("PROPERTY_LINK_STOK"));
@@ -15,4 +17,5 @@ if(in_array($arResult["CLUB_ID"],$arRes['PROPERTY_LINK_STOK_VALUE']['VALUE'])){
     return;
 }
 
+endif;
 $this->IncludeComponentTemplate();

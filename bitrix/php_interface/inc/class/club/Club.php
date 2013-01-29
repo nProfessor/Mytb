@@ -310,7 +310,8 @@ class Club
                 "DATE_ACTIVE_TO",
                 "PROPERTY_URL",
                 "PROPERTY_CLUB_ID",
-                "PROPERTY_PRICECOUPON"
+                "PROPERTY_PRICECOUPON",
+                "TAGS"
             ));
         return $ob;
     }
@@ -318,7 +319,7 @@ class Club
     function getListEvent()
     {
         $ob = CIBlockElement::GetList(
-            array("SORT" => "ASC"),
+            array("DATE_ACTIVE_TO" => "ASC"),
             array("PROPERTY_CLUB_ID" => $this->clubID,
                 ">=DATE_ACTIVE_TO" => date("d.m.Y"),
                 "IBLOCK_ID" => IB_SUB_EVENT_ID),

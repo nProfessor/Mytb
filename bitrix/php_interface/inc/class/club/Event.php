@@ -10,8 +10,12 @@ class Event
 {
     private $clubID;
 
-    function __construct($clubID)
+    function __construct($clubID=false)
     {
+        if($clubID==false){
+            return;
+        }
+
         if(is_array($clubID)){
             $ar=array();
             foreach($clubID as $var){
@@ -115,7 +119,9 @@ class Event
                 "ACTIVE_FROM",
                 "ACTIVE_TO",
                 "DETAIL_TEXT",
-                "PREVIEW_PICTURE"
+                "PREVIEW_PICTURE",
+                "PROPERTY_CLUB_ID",
+                "DETAIL_PICTURE"
             ));
 
         return $ob;

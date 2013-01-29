@@ -37,6 +37,14 @@ $res->update(intval($address["ID"]),array(
 
  endif;?>
 <script type="text/javascript">
+
+    $(document).ready(function(){
+        $("#a_map").click(function(){
+            console.log();
+            myMap.container.fitToViewport();
+        });
+    });
+    
     var myMap;
 
 

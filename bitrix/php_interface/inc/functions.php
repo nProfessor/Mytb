@@ -263,3 +263,11 @@ function printAr($data){
     print_r($data);
     echo "</pre>";
 };
+
+
+function cut_string($string, $length){
+    $string = substr($string, 0, $length); // обрезаем строку по указанному $length
+    $pos = strrpos($string, ' '); // определяем позиция последнего пробела
+    $string = substr($string, 0, $pos); // обрезаем переменную по определенно выше позиции
+    return $string;
+}

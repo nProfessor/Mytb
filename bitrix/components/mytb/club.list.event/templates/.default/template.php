@@ -7,13 +7,18 @@
             <tr>
                 <td>
                     <div class="pull-left" style="margin:0px 10px 10px 0px">
-                        <a href="/event/<?=$var["ID"]?>/" class="stock_title">
+                        <a href="/club/event/<?=$var["ID"]?>/" class="stock_title" title="<?=$arResult['club']['NAME']?>: <?=$var['NAME']?>">
                         <img class="thumbnail" alt="Событие в <?=$arResult['club']['NAME']?>" title="<?=$var["NAME"]?>" src="<?=imgurl($arFile["SRC"], array("w" => 300))?>"/>
                         </a>
                     </div>
-                    <a href="/event/<?=$var["ID"]?>/" class="stock_title"><?=$var["NAME"]?></a>
+                    <a href="/club/event/<?=$var["ID"]?>/" class="stock_title"  title="<?=$arResult['club']['NAME']?>: <?=$var['NAME']?>"><?=$var["NAME"]?></a>
                     <div class="stock_info">
-                        <p style="font-size: 12px;"> <?=str_replace("\n","<br/>",$var["DETAIL_TEXT"])?></p>
+                        <strong>Дата события: с <?=date("d.m.Y",strtotime($var['ACTIVE_FROM']))?> по <?=date("d.m.Y",strtotime($var['ACTIVE_TO']))?>
+                        </strong>
+                        <br/>
+                        <br/>
+                        <p style="font-size: 12px;"> <?=cut_string($var["DETAIL_TEXT"],400)?></p>
+                        <a href="/club/event/<?=$var["ID"]?>/" class="button right"  title="<?=$arResult['club']['NAME']?>: <?=$var['NAME']?>">Подробней</a>
                     </div>
                 </td>
             </tr>
