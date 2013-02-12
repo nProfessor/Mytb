@@ -43,8 +43,6 @@ if (count($arListClubSubs) > 0) {
 
 if ($ob) {
     while ($ar = $ob->Fetch()) {
-        $arFile               = CFile::GetFileArray($ar["DETAIL_PICTURE"]);
-        $ar["DETAIL_PICTURE"] = $arFile["SRC"];
         $clubListID[]         = intval($ar['PROPERTY_CLUB_ID_VALUE']);
 
         $arStockList[] = $ar;

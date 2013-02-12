@@ -44,8 +44,6 @@ if (count($arListClubSubs) > 0) {
 
 if ($ob) {
     while ($ar = $ob->Fetch()) {
-        $arFile               = CFile::GetFileArray($ar["DETAIL_PICTURE"]);
-        $ar["DETAIL_PICTURE"] = imgurl($arFile["SRC"],array("w"=>100,"h"=>100));
         $clubListID[]         = intval($ar['PROPERTY_CLUB_ID_VALUE']);
 
         $arStockList[date("d.m.Y", strtotime($ar['DATE_ACTIVE_FROM']))][] = $ar;

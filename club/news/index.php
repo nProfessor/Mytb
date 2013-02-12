@@ -1,14 +1,11 @@
 <?php
 require($_SERVER["DOCUMENT_ROOT"] . "/bitrix/header.php");
 
-if (intval($_GET['ID']) != 0):
-    $APPLICATION->IncludeComponent("mytb:club", "detail", array(
-            "ID" => $_GET['ID']
-        ),
-        false
-    ); else:
-    $APPLICATION->IncludeComponent("mytb:club.list", "home", array(),
-        false
-    );
-endif;
+$APPLICATION->IncludeComponent("mytb:club.news",
+    "",
+    array(
+        "NEWS_ID"=> intval($_GET["ID"])
+    ), false);
+
+
 require($_SERVER["DOCUMENT_ROOT"] . "/bitrix/footer.php");

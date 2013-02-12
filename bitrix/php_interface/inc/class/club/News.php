@@ -46,6 +46,27 @@ class News
         return $el->Add($arLoadProductArray);
     }
 
+
+    /**
+     * возвращаем ID всех клубов у которых есть события
+     * @return mixed
+     */
+    static  function getListHaveNews(){
+        $filter['IBLOCK_ID']=IB_SUB_NEWS_ID;
+
+
+        $ob = CIBlockElement::GetList(
+            array("ACTIVE_FROM" => "DESC"),
+            $filter,
+            array("PROPERTY_CLUB_ID"),
+            FALSE,
+            array("PROPERTY_CLUB_ID"));
+        $result=array();
+        while($row=$ob->Fetch()){
+            $result[]=intval($row["PROPERTY_CLUB_ID_VALUE"]);
+        }
+        return $result;
+    }
     /**
      * Возвращаем информацию о новости
      * @param $newsID
@@ -55,6 +76,32 @@ class News
     {
         $obj = $this->getList(array("ID" => $newsID));
         return $getNext ? $obj->GetNext() : $obj->Fetch();
+    }
+
+    /**
+     * Возвращаем информацию о новости
+     * @param $newsID
+     * @return mixed
+     */
+    static function getInfoStatic($newsID)
+    {
+        $filter['IBLOCK_ID'] = IB_SUB_NEWS_ID;
+
+        $ob = CIBlockElement::GetList(
+            array("ACTIVE_FROM" => "DESC"),
+            array("ID"=>intval($newsID)),
+            false,
+            FALSE,
+            array(
+                "ID",
+                "NAME",
+                "ACTIVE_FROM",
+                "DETAIL_TEXT",
+                "PREVIEW_PICTURE",
+                "PROPERTY_CLUB_ID"
+            ));
+
+        return $ob;
     }
 
     function update($newsID, $data)
@@ -100,22 +147,5 @@ class News
         return $ob;
     }
 
-
-
-    static  function getListHaveNews(){
-        $filter['IBLOCK_ID']=IB_SUB_NEWS_ID;
-
-        $ob = CIBlockElement::GetList(
-            array("ACTIVE_FROM" => "DESC"),
-            $filter,
-            array("PROPERTY_CLUB_ID"),
-            FALSE,
-            array("PROPERTY_CLUB_ID"));
-        $result=array();
-        while($row=$ob->Fetch()){
-            $result[]=intval($row["PROPERTY_CLUB_ID_VALUE"]);
-        }
-        return $result;
-    }
 
 }

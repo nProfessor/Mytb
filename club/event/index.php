@@ -7,5 +7,5 @@ $APPLICATION->IncludeComponent("mytb:club.event",
         "EVENT_ID"=> intval($_GET["ID"])
     ), false);
 
-
 require($_SERVER["DOCUMENT_ROOT"] . "/bitrix/footer.php");
+

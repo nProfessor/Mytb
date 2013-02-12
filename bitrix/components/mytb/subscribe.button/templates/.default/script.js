@@ -19,6 +19,7 @@ $(document).ready(function () {
                 if(data.status=="ok"){//Подписался
                     obj.removeClass("button_subsribe").addClass("button_subsribe_ok");
                     obj.find("span").html("Ты подписался на");
+                        _gaq.push(['_trackEvent', 'subscribe', 'ok', $(".club_info h1").html()]);
                 }else{//Не подписался
                     $("#modal_auth_subscribe").modal();
                 }
