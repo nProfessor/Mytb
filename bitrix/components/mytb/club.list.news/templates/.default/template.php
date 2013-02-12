@@ -3,7 +3,7 @@
         <?foreach ($arResult['stockList'] as $val=> $var): ?>
         <tr>
             <th width="100px"><?=date("d.m.Y",strtotime($var['DATE_ACTIVE_FROM']))?></th>
-            <td><a href="/news/<?=$var['ID']?>/" title="<?=$var['NAME']?>"><?=$var['NAME']?></a></td>
+            <td><a href="/club/news/<?=$var['ID']?>/" title="<?=$var['NAME']?>"><?=$var['NAME']?></a></td>
         </tr>
         <? endforeach;?>
     </table>

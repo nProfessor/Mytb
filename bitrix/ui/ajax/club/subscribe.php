@@ -26,6 +26,7 @@ if ($USER->IsAuthorized()) {
 //достаем информуци.  у пользователя
     $rs = $user->getProps(array("ID", "PROPERTY_USER", "PROPERTY_LINK_STOK", "PROPERTY_LINK_EVENT"));
     die(json_encode(array("status"=>"ok","result"=>$rs)));
+
 }
 
 die(json_encode(array("status"=>"error")));

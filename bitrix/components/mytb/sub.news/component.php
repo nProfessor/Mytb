@@ -2,12 +2,11 @@
 
 if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== true) die();
 
-
 $arFilter = array(
     "ACTIVE" => "Y"
 );
-
 $arFilter["ID"] = Club::getListHaveNews();
+
 
 
 $arNavStartParams = array("nPageSize" => 33, "bShowAll" => false);

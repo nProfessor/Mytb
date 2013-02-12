@@ -56,6 +56,7 @@ $arUrlRewrite = array(
         "ID"	=>	"bitrix:news",
         "PATH"	=>	"/club/stock/index.php",
     ),
+
     array(
         "CONDITION"	=>	"#^/club/event/([0-9]+)#",
         "RULE"	=>	"ID=$1",
@@ -98,6 +99,13 @@ $arUrlRewrite = array(
 		"ID"	=>	"bitrix:news",
 		"PATH"	=>	"/personal/club/event/index.php",
 	),
+    array(
+        "CONDITION"	=>	"#^/club/news/([0-9]+)#",
+        "RULE"	=>	"ID=$1",
+        "ID"	=>	"bitrix:news",
+        "PATH"	=>	"/club/news/index.php",
+    ),
+
 );
 
 ?>
