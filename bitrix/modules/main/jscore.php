@@ -4,7 +4,7 @@ $pathCSS = '/bitrix/js/main/core/css';
 $pathCSSPanel = '/bitrix/panel/main';
 $pathLang = BX_ROOT.'/modules/main/lang/'.LANGUAGE_ID;
 
-$aUserOpt = CUserOptions::GetOption("global", "settings", array());
+//WARNING: Don't use CUserOptions here! CJSCore::Init can be called from php_interface/init.php where no $USER exists
 
 $arJSCoreConfig = array(
 	'ajax' => array(
@@ -61,11 +61,14 @@ $arJSCoreConfig = array(
 		'lang' => $pathLang.'/js_core_translit.php',
 /*		'lang_additional' => array('BING_KEY' => COption::GetOptionString('main', 'translate_key_bing', '')),*/
 	),
+	'image' => array(
+		'js' => $pathJS.'/core_image.js',
+		'css' => $pathCSS.'/core_image.css'
+	),
 	'window' => array(
 		'js' => $pathJS.'/core_window.js',
 		//'css' => $pathCSS.'/core_window.css',
 		'css' => $pathCSSPanel.'/popup.css',
-		'lang_additional' => array('MENU_ENABLE_TOOLTIP' => $aUserOpt['start_menu_title'] <> 'N'),
 		'rel' => array('ajax'),
 	),
 	'access' => array(

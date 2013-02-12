@@ -191,11 +191,11 @@ else
 
 			$module_id = "fileman";
 			if(COption::GetOptionString($module_id, "log_menu", "Y")=="Y")
-			{    
+			{
 				$mt = COption::GetOptionString("fileman", "menutypes", $default_value, $site);
-	 			$mt = unserialize(str_replace("\\", "", $mt));
-	  			$res_log['menu_name'] = $mt[$name];
-	  			$res_log['path'] = substr($path, 1);
+				$mt = unserialize(str_replace("\\", "", $mt));
+				$res_log['menu_name'] = $mt[$name];
+				$res_log['path'] = substr($path, 1);
 				if (strlen($new)<=0)
 					CEventLog::Log(
 						"content",
@@ -302,7 +302,7 @@ $number_new_params = COption::GetOptionInt("fileman", "num_menu_param", 1, $site
 
 <?= CAdminCalendar::ShowScript()?>
 <?
-ob_start();	
+ob_start();
 ?>
 <tr>
 	<td valign="top" align="right"><?=GetMessage("FILEMAN_MENU_EDIT_CONDITION_TYPE")?></td>
@@ -311,7 +311,7 @@ ob_start();
 	// NOTE: tmp_menu_item_id - will be replaced by real menu item index
 	ConditionJS(array('enable_false'=>true));
 	ConditionParse();
-	ConditionSelect("tmp_menu_item_id"); 
+	ConditionSelect("tmp_menu_item_id");
 ?>
 </tr>
 <tr>
@@ -327,7 +327,7 @@ ob_end_clean();
 <script>
 function AddMenuItem(ob)
 {
-	var 
+	var
 		f = document.fmenu,
 		tbl = document.getElementById("t"),
 		row = ob.parentNode.parentNode,
@@ -411,7 +411,7 @@ function AddMenuItem(ob)
 		'	<td valign="top" align="right"><?=GetMessage("FILEMAN_MENU_EDIT_ADDITIONAL_LINK")?></td>'+
 		'	<td valign="top"><textarea rows="3" cols="30" name="additional_link_'+nums+'" WRAP="off"></textarea></td>'+
 		'</tr>'+
-		cond_str + 
+		cond_str +
 		<?if($number_new_params>0):?>
 		'<tr>'+
 		'	<td valign="top" align="right"><?=GetMessage("FILEMAN_MENU_EDIT_PARAMS")?></td>'+
@@ -634,7 +634,7 @@ $tabControl->BeginNextTab();
 						$j++;
 					?>
 						<tr>
-						<td nowrap><input type="text" size="15" name="param_name_<?= $i?>_<?=$j?>" value="">=</td>
+						<td nowrap><input type="text" size="15" name="param_name_<?= $i?>_<?=$j?>" value="">&nbsp;&nbsp;&nbsp;=</td>
 						<td><input type="text" size="25" name="param_value_<?= $i?>_<?=$j?>" value=""></td>
 						</tr>
 					<?endfor?>

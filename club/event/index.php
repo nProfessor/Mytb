@@ -1,10 +1,10 @@
 <?php
 require($_SERVER["DOCUMENT_ROOT"] . "/bitrix/header.php");
 
-$APPLICATION->IncludeComponent("mytb:club.list.event",
+$APPLICATION->IncludeComponent("mytb:club.event",
     "",
     array(
-         "CLUB_ID"=> intval($_GET["ID"])
+        "EVENT_ID"=> intval($_GET["ID"])
     ), false);
 
 

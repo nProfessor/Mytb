@@ -1660,14 +1660,14 @@ class CAdminFilter
 		<tr>
 			<td class="adm-filter-main-table-cell">
 				<div class="adm-filter-tabs-block" id="filter-tabs-'.$this->id.'">
-					<span id="adm-filter-tab-'.$this->id.'-0" class="adm-filter-tab adm-filter-tab-active" onclick="'.$this->id.'.SetActiveTab(this); '.$this->id.'.ApplyFilter(\'0\'); ">'.GetMessage("admin_lib_filter_filter").'</span>';
+					<span id="adm-filter-tab-'.$this->id.'-0" class="adm-filter-tab adm-filter-tab-active" onclick="'.$this->id.'.SetActiveTab(this); '.$this->id.'.ApplyFilter(\'0\'); " title="'.GetMessage("admin_lib_filter_goto_dfilter").'">'.GetMessage("admin_lib_filter_filter").'</span>';
 
 		if(is_array($this->arItems) && !empty($this->arItems))
 		{
 			foreach($this->arItems as $filter_id => $filter)
 			{
 				$name = ($filter["NAME"] <> '' ? $filter["NAME"] : GetMessage("admin_lib_filter_no_name"));
-				echo '<span id="adm-filter-tab-'.$this->id.'-'.$filter_id.'" class="adm-filter-tab" onclick="'.$this->id.'.SetActiveTab(this); '.$this->id.'.ApplyFilter(\''.$filter_id.'\');">'.htmlspecialcharsbx($name).'</span>';
+				echo '<span id="adm-filter-tab-'.$this->id.'-'.$filter_id.'" class="adm-filter-tab" onclick="'.$this->id.'.SetActiveTab(this); '.$this->id.'.ApplyFilter(\''.$filter_id.'\');" title="'.GetMessage("admin_lib_filter_goto_filter").": &quot;".htmlspecialcharsbx($name).'&quot;">'.htmlspecialcharsbx($name).'</span>';
 			}
 		}
 
@@ -1714,13 +1714,13 @@ class CAdminFilter
 			if(isset($aParams['report']) && $aParams['report'])
 			{
 				echo '
-						<input type="submit" class="adm-btn" id="'.$this->id.'set_filter" name="set_filter" title="'.GetMessage("admin_lib_filter_set_rep_title").$hkInst->GetTitle("set_filter").'" onclick="'.htmlspecialcharsbx($this->id.'.OnSet(\''.CUtil::AddSlashes($aParams["table_id"]).'\', \''.CUtil::AddSlashes($url).'\'); BX.adminPanel.showWait(this); return false;').'" value="'.GetMessage("admin_lib_filter_set_rep").'">
-						<input type="submit" class="adm-btn" id="'.$this->id.'del_filter" name="del_filter" title="'.GetMessage("admin_lib_filter_clear_butt_title").$hkInst->GetTitle("del_filter").'" onclick="'.htmlspecialcharsbx($this->id.'.OnClear(\''.CUtil::AddSlashes($aParams["table_id"]).'\', \''.CUtil::AddSlashes($url).'\'); BX.adminPanel.showWait(this); return false;').'" value="'.GetMessage("admin_lib_filter_clear_butt").'">';
+						<input type="submit" class="adm-btn" id="'.$this->id.'set_filter" name="set_filter" title="'.GetMessage("admin_lib_filter_set_rep_title").$hkInst->GetTitle("set_filter").'" onclick="'.htmlspecialcharsbx($this->id.'.OnSet(\''.CUtil::AddSlashes($aParams["table_id"]).'\', \''.CUtil::AddSlashes($url).'\', this); return false;').'" value="'.GetMessage("admin_lib_filter_set_rep").'">
+						<input type="submit" class="adm-btn" id="'.$this->id.'del_filter" name="del_filter" title="'.GetMessage("admin_lib_filter_clear_butt_title").$hkInst->GetTitle("del_filter").'" onclick="'.htmlspecialcharsbx($this->id.'.OnClear(\''.CUtil::AddSlashes($aParams["table_id"]).'\', \''.CUtil::AddSlashes($url).'\', this); return false;').'" value="'.GetMessage("admin_lib_filter_clear_butt").'">';
 			}
 			else
 				echo '
-						<input type="submit" class="adm-btn" id="'.$this->id.'set_filter" name="set_filter" title="'.GetMessage("admin_lib_filter_set_butt").$hkInst->GetTitle("set_filter").'" onclick="'.htmlspecialcharsbx($this->id.'.OnSet(\''.CUtil::AddSlashes($aParams["table_id"]).'\', \''.CUtil::AddSlashes($url).'\'); BX.adminPanel.showWait(this); return false;').'" value="'.GetMessage("admin_lib_filter_set_butt").'">
-						<input type="submit" class="adm-btn" id="'.$this->id.'del_filter" name="del_filter" title="'.GetMessage("admin_lib_filter_clear_butt").$hkInst->GetTitle("del_filter").'" onclick="'.htmlspecialcharsbx($this->id.'.OnClear(\''.CUtil::AddSlashes($aParams["table_id"]).'\', \''.CUtil::AddSlashes($url).'\'); BX.adminPanel.showWait(this); return false;').'" value="'.GetMessage("admin_lib_filter_clear_butt").'">';
+						<input type="submit" class="adm-btn" id="'.$this->id.'set_filter" name="set_filter" title="'.GetMessage("admin_lib_filter_set_butt").$hkInst->GetTitle("set_filter").'" onclick="'.htmlspecialcharsbx($this->id.'.OnSet(\''.CUtil::AddSlashes($aParams["table_id"]).'\', \''.CUtil::AddSlashes($url).'\', this); return false;').'" value="'.GetMessage("admin_lib_filter_set_butt").'">
+						<input type="submit" class="adm-btn" id="'.$this->id.'del_filter" name="del_filter" title="'.GetMessage("admin_lib_filter_clear_butt").$hkInst->GetTitle("del_filter").'" onclick="'.htmlspecialcharsbx($this->id.'.OnClear(\''.CUtil::AddSlashes($aParams["table_id"]).'\', \''.CUtil::AddSlashes($url).'\', this); return false;').'" value="'.GetMessage("admin_lib_filter_clear_butt").'">';
 
 		}
 		if($this->popup)
@@ -1728,7 +1728,7 @@ class CAdminFilter
 
 			echo '
 						<div class="adm-filter-setting-block">
-							<span class="adm-filter-setting" onClick="this.blur();'.$this->id.'.SaveMenuShow(this);return false;" hidefocus="true" ></span>
+							<span class="adm-filter-setting" onClick="this.blur();'.$this->id.'.SaveMenuShow(this);return false;" hidefocus="true" title="'.GetMessage("admin_lib_filter_savedel_title").'"></span>
 							<span class="adm-filter-add-button" onClick="this.blur();'.$this->id.'.SettMenuShow(this);return false;" hidefocus="true" title="'.GetMessage("admin_lib_filter_more_title").'"></span>
 						</div>';
 		}
@@ -1784,11 +1784,12 @@ class CAdminFilter
 		var '.$this->id.' = {};
 		BX.ready(function(){
 			'.$this->id.' = new BX.AdminFilter("'.$this->id.'", ['.$sRowIds.']);
+			'.$this->id.'.state.init = true;
+			'.$this->id.'.state.folded = '.($this->arOptFlt["styleFolded"] == "Y" ? "true" : "false").';
 			'.$this->id.'.InitFilter({'.$sVisRowsIds.'});
 			'.$this->id.'.oOptions = '.CUtil::PhpToJsObject($this->arItems).';
 			'.$this->id.'.popupItems = '.CUtil::PhpToJsObject($this->popup).';
 			'.$this->id.'.InitFirst();
-			'.$this->id.'.styleFolded = '.($this->arOptFlt["styleFolded"] == "Y" ? "true" : "false").';
 			'.$this->id.'.url = "'.CUtil::AddSlashes($this->url).'";
 			'.$this->id.'.table_id = "'.CUtil::AddSlashes($this->tableId).'";';
 
@@ -1805,6 +1806,7 @@ class CAdminFilter
 			var openedFTab = '.$this->id.'.InitOpenedTab("'.CUtil::JSEscape(htmlspecialcharsbx($openedTabUri)).'", "'.CUtil::JSEscape(htmlspecialcharsbx($openedTabSes)).'");';
 
 			echo '
+			'.$this->id.'.state.init = false;
 			BX("adm-filter-tab-wrap-'.$this->id.'").style.display = "block";';
 
 			//making filter tabs draggable
@@ -1834,6 +1836,21 @@ class CAdminFilter
 
 		$Execs = $hkInst->GetCodeByClassName("CAdminFilter");
 		echo $hkInst->PrintJSExecs($Execs);
+	}
+
+	//experemental
+	private function IsFiltered()
+	{
+		$fltTable = $_SESSION["SESS_ADMIN"][$this->tableId];
+
+		if(!isset($fltTable) || !is_array($fltTable))
+			return false;
+
+		foreach ($fltTable as $key => $value)
+			if(!is_null($value))
+				return true;
+
+		return false;
 	}
 
 	private function PrintSaveOptionsDIV()
@@ -2601,7 +2618,8 @@ echo '
 
 			//end previous tab
 			$this->EndTab();
-			echo '<div class="adm-detail-content-btns-wrap"><div class="adm-detail-content-btns adm-detail-content-btns-empty"></div></div>';
+			if (!$this->bPublicMode)
+				echo '<div class="adm-detail-content-btns-wrap"><div class="adm-detail-content-btns adm-detail-content-btns-empty"></div></div>';
 		}
 		elseif (!$this->bPublicMode)
 		{
@@ -4305,7 +4323,7 @@ class CAdminCalendar
 				"next"=>GetMessage("admin_lib_calend_next")
 			);
 
-			$s .= '<span class="adm-select-wrap adm-calendar-period" ><select class="adm-select adm-calendar-period" id="'.$sFromName.'_calendar_period" name="'.$sPeriodName.'" onchange="BX.CalendarPeriod.OnChangeP(this);">';
+			$s .= '<span class="adm-select-wrap adm-calendar-period" ><select class="adm-select adm-calendar-period" id="'.$sFromName.'_calendar_period" name="'.$sPeriodName.'" onchange="BX.CalendarPeriod.OnChangeP(this);" title="'.GetMessage("admin_lib_calend_period_title").'">';
 
 			foreach($arPeriod as $k => $v)
 			{
@@ -4315,7 +4333,7 @@ class CAdminCalendar
 
 			$s .='</select></span>';
 
-			$s .= '<span class="adm-select-wrap adm-calendar-direction" style="display: none;"><select class="adm-select adm-calendar-direction" id="'.$sFromName.'_calendar_direct" name="'.$sDirectionName.'" onchange="BX.CalendarPeriod.OnChangeD(this);">';
+			$s .= '<span class="adm-select-wrap adm-calendar-direction" style="display: none;"><select class="adm-select adm-calendar-direction" id="'.$sFromName.'_calendar_direct" name="'.$sDirectionName.'" onchange="BX.CalendarPeriod.OnChangeD(this);"  title="'.GetMessage("admin_lib_calend_direct_title").'">';
 			foreach($arDirection as $k => $v)
 					$s .= '<option value="'.$k.'"'.(($GLOBALS[$sDirectionName] <> "" && $GLOBALS[$sDirectionName] == $k) ? " selected":"").'>'.$v.'</option>';
 

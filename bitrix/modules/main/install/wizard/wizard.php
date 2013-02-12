@@ -133,7 +133,7 @@ class AgreementStep extends CWizardStep
 
 	function ShowStep()
 	{
-		$this->content = '<iframe name="license_text" src="/license.html" width="100%" height="250" border="0" frameBorder="1" scrolling="yes"></iframe><br /><br />';
+		$this->content = '<iframe name="license_text" src="/license.php" width="100%" height="250" border="0" frameBorder="1" scrolling="yes"></iframe><br /><br />';
 		$this->content .= $this->ShowCheckboxField("agree_license", "Y", Array("id" => "agree_license_id", "tabindex" => "1"));
 		$this->content .= '&nbsp;<label for="agree_license_id">'.InstallGetMessage("LICENSE_AGREE_PROMT").'</label>';
 
@@ -168,7 +168,7 @@ class AgreementStep4VM extends CWizardStep
 
 	function ShowStep()
 	{
-		$this->content = '<iframe name="license_text" src="/license.html" width="100%" height="250" border="0" frameBorder="1" scrolling="yes"></iframe><br /><br />';
+		$this->content = '<iframe name="license_text" src="/license.php" width="100%" height="250" border="0" frameBorder="1" scrolling="yes"></iframe><br /><br />';
 		$this->content .= $this->ShowCheckboxField("agree_license", "Y", Array("id" => "agree_license_id", "tabindex" => "1"));
 		$this->content .= '&nbsp;<label for="agree_license_id">'.InstallGetMessage("LICENSE_AGREE_PROMT").'</label>';
 		$this->content .= '<script type="text/javascript">setTimeout(function() {document.getElementById("agree_license_id").focus();}, 500);</script>';
@@ -2797,6 +2797,8 @@ class CreateAdminStep extends CWizardStep
 			{
 				if (BXInstallServices::CreateWizardIndex($wizardName, $errorMessageTmp))
 				{
+					BXInstallServices::DeleteDirRec($_SERVER["DOCUMENT_ROOT"]."/license.php");
+					BXInstallServices::DeleteDirRec($_SERVER["DOCUMENT_ROOT"]."/readme.php");
 					BXInstallServices::DeleteDirRec($_SERVER["DOCUMENT_ROOT"]."/license.html");
 					BXInstallServices::DeleteDirRec($_SERVER["DOCUMENT_ROOT"]."/readme.html");
 					BXInstallServices::DeleteDirRec($_SERVER["DOCUMENT_ROOT"]."/install.config");
@@ -2943,8 +2945,10 @@ class SelectWizardStep extends CWizardStep
 			}
 			else
 			{
+				BXInstallServices::DeleteDirRec($_SERVER["DOCUMENT_ROOT"]."/license.php");
+				BXInstallServices::DeleteDirRec($_SERVER["DOCUMENT_ROOT"]."/readme.php");
 				BXInstallServices::DeleteDirRec($_SERVER["DOCUMENT_ROOT"]."/license.html");
-				BXInstallServices::DeleteDirRec($_SERVER["DOCUMENT_ROOT"]."/readme.html");
+				BXInstallServices::DeleteDirRec($_SERVER["DOCUMENT_ROOT"]."/readme.html"); 
 				BXInstallServices::DeleteDirRec($_SERVER["DOCUMENT_ROOT"]."/install.config");
 			}
 
@@ -3258,6 +3262,8 @@ class LoadModuleStep extends CWizardStep
 				}
 				else
 				{
+					BXInstallServices::DeleteDirRec($_SERVER["DOCUMENT_ROOT"]."/license.php");
+					BXInstallServices::DeleteDirRec($_SERVER["DOCUMENT_ROOT"]."/readme.php");
 					BXInstallServices::DeleteDirRec($_SERVER["DOCUMENT_ROOT"]."/license.html");
 					BXInstallServices::DeleteDirRec($_SERVER["DOCUMENT_ROOT"]."/readme.html");
 					BXInstallServices::DeleteDirRec($_SERVER["DOCUMENT_ROOT"]."/install.config");
@@ -3328,10 +3334,10 @@ class LoadModuleStep extends CWizardStep
 		if (is_array($arModules["ERROR"]))
 		{
 			foreach ($arModules["ERROR"] as $e)
-				$errorMessage .= (defined("BX_UTF") ? mb_convert_encoding($e["#"], PRE_INSTALL_CHARSET, "utf-8") : $e["#"]).". ";
+				$errorMessage .= (defined("BX_UTF") ? mb_convert_encoding($e["#"], INSTALL_CHARSET, "utf-8") : $e["#"]).". ";
 		}
 		if (defined("BX_UTF"))
-			$errorMessage = mb_convert_encoding($errorMessage, PRE_INSTALL_CHARSET, "utf-8");
+			$errorMessage = mb_convert_encoding($errorMessage, INSTALL_CHARSET, "utf-8");
 
 		if (is_array($arModules["MODULE"]))
 		{
@@ -3339,8 +3345,8 @@ class LoadModuleStep extends CWizardStep
 			{
 				$arModulesList[] = array(
 					"ID" => $module["@"]["ID"],
-					"NAME" => (defined("BX_UTF") ? mb_convert_encoding($module["@"]["NAME"], PRE_INSTALL_CHARSET, "utf-8") : $module["@"]["NAME"]),
-					"DESCRIPTION" => (defined("BX_UTF") ? mb_convert_encoding($module["@"]["DESCRIPTION"], PRE_INSTALL_CHARSET, "utf-8") : $module["@"]["DESCRIPTION"]),
+					"NAME" => (defined("BX_UTF") ? mb_convert_encoding($module["@"]["NAME"], INSTALL_CHARSET, "utf-8") : $module["@"]["NAME"]),
+					"DESCRIPTION" => (defined("BX_UTF") ? mb_convert_encoding($module["@"]["DESCRIPTION"], INSTALL_CHARSET, "utf-8") : $module["@"]["DESCRIPTION"]),
 					"IMAGE" => $module["@"]["IMAGE"],
 					"IMAGE_HEIGHT" => $module["@"]["IMAGE_HEIGHT"],
 					"IMAGE_WIDTH" => $module["@"]["IMAGE_WIDTH"],
@@ -3604,6 +3610,8 @@ class LoadModuleActionStep extends CWizardStep
 					}
 					else
 					{
+						BXInstallServices::DeleteDirRec($_SERVER["DOCUMENT_ROOT"]."/license.php");
+						BXInstallServices::DeleteDirRec($_SERVER["DOCUMENT_ROOT"]."/readme.php");
 						BXInstallServices::DeleteDirRec($_SERVER["DOCUMENT_ROOT"]."/license.html");
 						BXInstallServices::DeleteDirRec($_SERVER["DOCUMENT_ROOT"]."/readme.html");
 						BXInstallServices::DeleteDirRec($_SERVER["DOCUMENT_ROOT"]."/install.config");
@@ -3887,6 +3895,8 @@ class SelectWizard1Step extends SelectWizardStep
 			}
 			else
 			{
+				BXInstallServices::DeleteDirRec($_SERVER["DOCUMENT_ROOT"]."/license.php");
+				BXInstallServices::DeleteDirRec($_SERVER["DOCUMENT_ROOT"]."/readme.php");
 				BXInstallServices::DeleteDirRec($_SERVER["DOCUMENT_ROOT"]."/license.html");
 				BXInstallServices::DeleteDirRec($_SERVER["DOCUMENT_ROOT"]."/readme.html");
 				BXInstallServices::DeleteDirRec($_SERVER["DOCUMENT_ROOT"]."/install.config");

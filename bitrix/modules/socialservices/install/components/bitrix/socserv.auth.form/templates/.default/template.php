@@ -13,7 +13,7 @@ if($arParams["POPUP"]):
 <div id="bx_auth_float" class="bx-auth-float">
 <?endif?>
 
-<?if($arParams["~CURRENT_SERVICE"] <> ''):?>
+<?if(($arParams["~CURRENT_SERVICE"] <> '') && $arParams["~FOR_SPLIT"] != 'Y'):?>
 <script type="text/javascript">
 BX.ready(function(){BxShowAuthService('<?=CUtil::JSEscape($arParams["~CURRENT_SERVICE"])?>', '<?=$arParams["~SUFFIX"]?>')});
 </script>
@@ -22,8 +22,13 @@ BX.ready(function(){BxShowAuthService('<?=CUtil::JSEscape($arParams["~CURRENT_SE
 if($arParams["~FOR_SPLIT"] == 'Y'):?>
 <div class="bx-auth-serv-icons">
 <?foreach($arParams["~AUTH_SERVICES"] as $service):?>
-	<a title="<?=htmlspecialcharsbx($service["NAME"])?>" href="javascript:void(0)" onclick="BxShowAuthService('<?=$service["ID"]?>', '<?=$arParams["SUFFIX"]?>')" id="bx_auth_href_<?=$arParams["SUFFIX"]?><?=$service["ID"]?>"><i class="bx-ss-icon <?=htmlspecialcharsbx($service["ICON"])?>"></i></a>
-<?endforeach?>
+	<?
+	if(($arParams["~FOR_SPLIT"] == 'Y') && (is_array($service["FORM_HTML"])))
+		$onClickEvent = $service["FORM_HTML"]["ON_CLICK"];
+	else
+		$onClickEvent = "onclick=\"BxShowAuthService('".$service['ID']."', '".$arParams['SUFFIX']."')\"";
+	?>
+	<a title="<?=htmlspecialcharsbx($service["NAME"])?>" href="javascript:void(0)" <?=$onClickEvent?> id="bx_auth_href_<?=$arParams["SUFFIX"]?><?=$service["ID"]?>"><i class="bx-ss-icon <?=htmlspecialcharsbx($service["ICON"])?>"></i></a><?endforeach?>
 </div>
 <?endif;?>
 <div class="bx-auth">
@@ -44,14 +49,18 @@ if($arParams["~FOR_SPLIT"] == 'Y'):?>
 		<?endif;?>
 		<div class="bx-auth-service-form" id="bx_auth_serv<?=$arParams["SUFFIX"]?>" style="display:none">
 <?foreach($arParams["~AUTH_SERVICES"] as $service):?>
+			<?if(($arParams["~FOR_SPLIT"] != 'Y') || (!is_array($service["FORM_HTML"]))):?>
 			<div id="bx_auth_serv_<?=$arParams["SUFFIX"]?><?=$service["ID"]?>" style="display:none"><?=$service["FORM_HTML"]?></div>
+				<?endif;?>
 <?endforeach?>
 		</div>
 <?foreach($arParams["~POST"] as $key => $value):?>
 		<input type="hidden" name="<?=$key?>" value="<?=$value?>" />
 <?endforeach?>
 		<input type="hidden" name="auth_service_id" value="" />
+		<?if(!$arParams["FORIE"]):?>
 	</form>
+	<?endif;?>
 </div>
 
 <?if($arParams["POPUP"]):?>

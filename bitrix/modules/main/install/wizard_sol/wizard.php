@@ -72,7 +72,7 @@ class CSelectSiteWizardStep extends CWizardStep
 
 		$arSites = array(); 
 		$arSitesSelect = array(); 
-		$db_res = CSite::GetList($by="sort", $order="desc", array());
+		$db_res = CSite::GetList($by="sort", $order="desc", array("ACTIVE" => "Y"));
 		if ($db_res && $res = $db_res->GetNext())
 		{
 			do 

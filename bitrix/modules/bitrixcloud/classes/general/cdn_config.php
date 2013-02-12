@@ -3,6 +3,7 @@ IncludeModuleLangFile(__FILE__);
 class CBitrixCloudCDNConfig
 {
 	private static $instance = /*.(CBitrixCloudCDNConfig).*/ null;
+	private $active = 0;
 	private $expires = 0; //timestamp
 	private $domain = "";
 	private $sites = /*.(array[string]string).*/ array();
@@ -68,9 +69,15 @@ class CBitrixCloudCDNConfig
 		//
 		$node = $obXML->SelectNodes("/control");
 		if (is_object($node))
+		{
+			$this->active = intval($node->getAttribute("active"));
 			$this->expires = strtotime($node->getAttribute("expires"));
+		}
 		else
+		{
+			$this->active = 0;
 			$this->expires = 0;
+		}
 
 		$node = $obXML->SelectNodes("/control/quota");
 		if (is_object($node))
@@ -107,6 +114,16 @@ class CBitrixCloudCDNConfig
 		return $this;
 	}
 	/**
+	 * Checks if it is active in webservice
+	 *
+	 * @return bool
+	 *
+	 */
+	public function isActive()
+	{
+		return ($this->active > 0);
+	}
+	/**
 	 * Checks if it is time to update policy
 	 *
 	 * @return bool
@@ -114,7 +131,7 @@ class CBitrixCloudCDNConfig
 	 */
 	public function isExpired()
 	{
-		return $this->expires < time();
+		return ($this->expires < time());
 	}
 	/**
 	 * Sets the time to update policy
@@ -261,6 +278,7 @@ class CBitrixCloudCDNConfig
 	 */
 	public function saveToOptions()
 	{
+		CBitrixCloudOption::getOption("cdn_config_active")->setStringValue((string)$this->active);
 		CBitrixCloudOption::getOption("cdn_config_expire_time")->setStringValue((string)$this->expires);
 		CBitrixCloudOption::getOption("cdn_config_domain")->setStringValue($this->domain);
 		CBitrixCloudOption::getOption("cdn_config_site")->setArrayValue($this->sites);
@@ -278,6 +296,7 @@ class CBitrixCloudCDNConfig
 	 */
 	public function loadFromOptions()
 	{
+		$this->active = intval(CBitrixCloudOption::getOption("cdn_config_active")->getStringValue());
 		$this->expires = intval(CBitrixCloudOption::getOption("cdn_config_expire_time")->getStringValue());
 		$this->domain = CBitrixCloudOption::getOption("cdn_config_domain")->getStringValue();
 		$this->sites = CBitrixCloudOption::getOption("cdn_config_site")->getArrayValue();

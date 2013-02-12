@@ -34,7 +34,7 @@ foreach($arLangs as $adminLang)
 	{
 		$arLangButton = array(
 			"TEXT"=>ToUpper($adminLang["LID"]),
-			"TITLE"=>GetMessage("top_panel_lang")." ".$adminLang["NAME"],
+			"TITLE"=>$adminLang["NAME"],
 			"LINK"=>htmlspecialcharsback($adminLang["PATH"]),
 			"SECTION" => 1,
 			"ICON" => "adm-header-language",
@@ -43,7 +43,6 @@ foreach($arLangs as $adminLang)
 
 	$arLangMenu[] = array(
 		"TEXT" => '('.$adminLang["LID"].') '.$adminLang["NAME"],
-		"TITLE"=> GetMessage("top_panel_lang")." ".$adminLang["NAME"],
 		"LINK"=>htmlspecialcharsback($adminLang["PATH"]),
 	);
 }

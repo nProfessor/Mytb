@@ -1,7 +1,7 @@
 <h2>Список событий  «<?=$arResult['club']['NAME']?>» </h2>
 <br/>
 
-<form action="/kabinet-menedzhera/club_event_edite/edite/" method="post">
+<form action="/personal/kabinet-menedzhera/club_event_edite/edite/" method="post">
 <div class="input-append">
     <input type="text" class="span5 search-query" placeholder="Навзвание события" name="NAME"><button type="submit" class="btn btn-primary" name="ADD_EVENT">Добавить событие</button>
 </div>

@@ -39,7 +39,7 @@ if($_REQUEST["ACTION"] == "INFO" && $_REQUEST["TEST_ID"] && $arPoints[$_REQUEST[
 	$APPLICATION->RestartBuffer();
 	
 	$aTabs = array(
-			array("DIV" => "edit1", "TAB" => GetMessage("CL_TAB_TEST"), "ICON" => "checklist_detail", "TITLE" => GetMessage("CL_TAB_TEST")),
+			array("DIV" => "edit1", "TAB" => GetMessage("CL_TAB_TEST"), "ICON" => "checklist_detail", "TITLE" => GetMessage("CL_TEST_NAME").': '.$arPoints[$arTestID]["NAME"].'&nbsp;('.$arTestID.')'),
 			array("DIV" => "edit2", "TAB" => GetMessage("CL_TAB_DESC"), "ICON" => "checklist_detail", "TITLE" => GetMessage('CL_TAB_DESC')),
 		);
 		$tabControl = new CAdminTabControl("tabControl", $aTabs);
@@ -49,10 +49,6 @@ if($_REQUEST["ACTION"] == "INFO" && $_REQUEST["TEST_ID"] && $arPoints[$_REQUEST[
 
 	$tabControl->BeginNextTab();
 ?>
-				<div class="checklist-popup-test">
-					<span class="checklist-popup-name-test"><?=GetMessage("CL_TEST_NAME");?>:</span>
-					<span class="checklist-popup-test-text"><?=$arPoints[$arTestID]["NAME"];?>(<?=$arTestID;?>)</span>
-				</div>
 				<div class="checklist-popup-test">
 					<div class="checklist-popup-name-test"><?=GetMessage("CL_TEST_STATUS");?></div>
 					<div class="checklist-popup-tes-status-wrap" id="checklist-popup-tes-status">
@@ -76,14 +72,9 @@ if($_REQUEST["ACTION"] == "INFO" && $_REQUEST["TEST_ID"] && $arPoints[$_REQUEST[
 				<div id="check_list_comments" class="checklist-popup-result-test-block">
 					<div class="checklist-popup-result-form">
 						<div class="checklist-form-textar-block">
-							<div class="checklist-form-textar-status"><?=GetMessage("CL_TESTER");?></div>
+							<div class="checklist-form-textar-status"><?=GetMessage("CL_STATUS_COMMENT");?></div>
 							<div class="checklist-dot-line"></div>
 							<div id="performer_comment_area" class="checklist-form-textar-comment" ><?=preg_replace("/\r\n|\r|\n/",'<br>', htmlspecialcharsbx($arPoints[$arTestID]["STATE"]["COMMENTS"]["PERFOMER"]));?></div>
-						</div>
-						<div class="checklist-form-textar-block">
-							<div class="checklist-form-textar-status"><?=GetMessage("CL_VENDOR");?></div>
-							<div class="checklist-dot-line"></div>
-							<div id="customer_comment_area" class="checklist-form-textar-comment" ><?=preg_replace("/\r\n|\r|\n/",'<br>', htmlspecialcharsbx($arPoints[$arTestID]["STATE"]["COMMENTS"]["CUSTOMER"]));?></div>
 						</div>
 					</div>
 				</div>
@@ -92,7 +83,7 @@ if($_REQUEST["ACTION"] == "INFO" && $_REQUEST["TEST_ID"] && $arPoints[$_REQUEST[
 $tabControl->BeginNextTab();
 ?>
 				<div class="checklist-popup-test">
-					<div class="checklist-popup-name-test"><?=GetMessage("CL_TAB_DESC");?></div>
+					<div class="checklist-popup-name-test"><?=GetMessage("CL_DESC");?></div>
 					<div class="checklist-popup-test-text">
 						<div class="checklist-popup-result-form">
 							<?if($arPoints[$arTestID]["DESC"]):
@@ -118,7 +109,11 @@ $tabControl->BeginNextTab();
 				<?if($arPoints[$arTestID]["AUTOTEST_DESC"]):?>
 					<div class="checklist-popup-test">
 						<div class="checklist-popup-name-test"><?=GetMessage("CL_NOW_AUTOTEST_WORK");?></div>
-						<div class="checklist-popup-test-text"></div>
+						<div class="checklist-popup-test-text">
+                            <div class="checklist-popup-result-form checklist-popup-code">
+								<?=$arPoints[$arTestID]["AUTOTEST_DESC"]?>
+                            </div>
+						</div>
 					</div>
 				<?endif;?>
 	<script>
@@ -247,6 +242,14 @@ else:
 						<tr>
 							<td><span class="checklist-top-info-test checklist-testlist-grey"><?=GetMessage("CL_REPORT_DATE")?></span></td>
 							<td><span class="checklist-top-info-test"><?=$arReport["INFO"]["DATE_CREATE"]?></span></td>
+						</tr>
+						<tr>
+							<td><span class="checklist-top-info-test checklist-testlist-grey"><?=GetMessage("CL_REPORT_FIO_TESTER")?></span></td>
+							<td><span class="checklist-top-info-test"><?=$arReport["INFO"]["TESTER"]?> (<?=$arReport["INFO"]["EMAIL"]?>)</span></td>
+						</tr>
+						<tr>
+							<td><span class="checklist-top-info-test checklist-testlist-grey"><?=GetMessage("CL_REPORT_COMPANY_NAME")?></span></td>
+							<td><span class="checklist-top-info-test"><?=$arReport["INFO"]["COMPANY_NAME"]?></span></td>
 						</tr>
 					</table>
 					<div class="checklist-top-info-result-right">

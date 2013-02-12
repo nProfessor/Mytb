@@ -27,8 +27,8 @@ else
 		$arReportData = new CCheckList($arReport["ID"]);
 		$arReportInfo = $arReportData->GetReportInfo();
 		$arStat = $arReportInfo["STAT"];
-		if ($arReportInfo["INFO"]["PICTURE"])
-			$arPictureSrc = CFile::GetPath($arReportInfo["INFO"]["PICTURE"]);
+//		if ($arReportInfo["INFO"]["PICTURE"])
+//			$arPictureSrc = CFile::GetPath($arReportInfo["INFO"]["PICTURE"]);
 
 	}	
 }
@@ -76,28 +76,20 @@ else
 			<span class="checklist-top-info-left-item checklist-test-successfully"><?=GetMessage("CL_TEST_CHECKED");?>:</span><br/>
 			<span class="checklist-top-info-left-item checklist-test-unsuccessful"><?=GetMessage("CL_TEST_FAILED");?>:</span><br/>
 			<span class="checklist-top-info-left-item checklist-test-not-necessarily"><?=GetMessage("CL_TEST_NOT_REQUIRE");?>:</span><br/>
-			<span class="checklist-top-info-left-item not-necessarily"><?=GetMessage("CL_TEST_WAITING");?>:</span><br/>
 		</span><span class="checklist-top-info-right-nambers table-statistic">
 			<span class="checklist-top-info-left-item-qt"><?=$arReport["TOTAL"]?></span><br/>
 			<span class="checklist-top-info-left-item-qt"><?=$arStat["REQUIRE"]?></span><br/>
 			<span class="checklist-test-successfully"><?=$arStat["CHECK"]?></span><br/>
 			<span class="checklist-test-unsuccessful"><?=$arStat["FAILED"]?></span><br/>
 			<span class="checklist-test-not-necessarily"><?=($arStat["TOTAL"] - $arStat["REQUIRE"]);?></span><br/>
-			<span class="checklist-top-info-left-item-qt"><?=$arStat["WAITING"]?></span>
-		</span>	
+		</span>
 		<span class="checklist-report-info">
 			<span class="checklist-top-info-left-item checklist-testlist-grey"><?=GetMessage("CL_REPORT_DATE");?></span><br/>
 			<span class="checklist-top-info-left-item"><b><?=$arReport["DATE_CREATE"]?></b></span><br/><br/>
 			<span class="checklist-top-info-left-item checklist-testlist-grey"><?=GetMessage("CL_REPORT_TABLE_TESTER");?></span><br/>
 			<span class="checklist-top-info-left-item">
-			<span class="bx-picture-statistic">
-			<?if ($arPictureSrc):?>
-					<img width="30px" height="30px" src="<?=$arPictureSrc;?>"/>
-				<?endif;?>
+			<?=$arReport["COMPANY_NAME"]?> (<?=$arReport["TESTER"]?>)
 			</span>
-			<?=$arReport["TESTER"]?>
-			
-			</span>		
 		</span>				
 <?else:?>
 	<span class="bx-gadgets-warning-cont-ball"><?=GetMessage("CL_NOT_CHECKED_YET");?></span><br><br>

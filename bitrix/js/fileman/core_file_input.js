@@ -40,6 +40,12 @@ BX.file_input.prototype.Init = function()
 			this.DisplayExistFile(i);
 	}
 
+	if (this.arConfig.useMedialib || this.arConfig.useFileDialog)
+	{
+		this.arConfig.menuExist.push({TEXT: BX.message('ADM_FILE_INSERT_PATH'), ONCLICK: BX.proxy(this.ShowPath, this)});
+		this.arConfig.menuNew.push({TEXT: BX.message('ADM_FILE_INSERT_PATH'), ONCLICK: BX.proxy(this.ShowPath, this)});
+	}
+
 	this.oFiles = [];
 	this.oNewFile = this.DisplayFileBlock();
 	this.oNewFile.pTextInput.id = this.id + '_text_input';
@@ -343,6 +349,7 @@ BX.file_input.prototype.OnSelectFromFileDialog = function(path)
 		this.oNewFile.pTextInput.style.display = "";
 		this.oNewFile.pUploadCont.style.display = "none";
 		this.SetInputName(this.oNewFile.pTextInput, this.GetInputName('file_dialog'));
+		this.FocusInput(this.oNewFile.pTextInput);
 
 		// Desc
 		this.ShowFileDescription(this.oNewFile);
@@ -359,6 +366,7 @@ BX.file_input.prototype.OnSelectFromFileDialog = function(path)
 		oFile.pTextInput.style.display = "";
 		oFile.pUploadCont.style.display = "none";
 		this.SetInputName(oFile.pTextInput, this.GetInputName('file_dialog'));
+		this.FocusInput(oFile.pTextInput);
 
 		// Show description
 		this.ShowFileDescription(oFile);
@@ -675,4 +683,14 @@ BX.file_input.prototype.SetInputName = function(inp, name)
 	inp.setAttribute('name', name);
 };
 
+BX.file_input.prototype.ShowPath = function()
+{
+	this.OnSelectFromFileDialog('');
+};
+
+BX.file_input.prototype.FocusInput = function(input)
+{
+	if (input)
+		BX.defer(function(){if(input){BX.focus(input);}})();
+};
 })();

@@ -79,8 +79,9 @@ $(document).ready(function () {
         $(".menu_club a").removeClass("active");
         $(this).addClass("active");
         $(".block_info").hide();
-        $("#"+id).show();
-        return false;
+        $("#b_"+id).show();
+        $('html,body').stop();
+
     });
 
 
@@ -88,6 +89,12 @@ $(document).ready(function () {
         var anc = window.location.hash.replace("#","");
         if(anc!=""){
             $("#a_"+anc).click();
+        }else{
+            if($(".stock_title").length>0){
+                $("#a_stock").click();
+            }else{
+                $("#a_map").click();
+            }
         }
 
     }

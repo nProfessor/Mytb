@@ -2,6 +2,15 @@
 /*********************************************************************
 						Caching
 *********************************************************************/
+interface ICacheBackend
+{
+	function IsAvailable();
+	function clean($basedir, $initdir = false, $filename = false);
+	function read(&$arAllVars, $basedir, $initdir, $filename, $TTL);
+	function write($arAllVars, $basedir, $initdir, $filename, $TTL);
+	function IsCacheExpired($path);
+}
+
 class CPHPCache
 {
 	var $_cache;
@@ -29,75 +38,85 @@ class CPHPCache
 		static $cache_type = false;
 		if($cache_type === false)
 		{
+			$isOK = false;
 			if(file_exists($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/cluster/memcache.php"))
+			{
 				include($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/cluster/memcache.php");
-
-			$cache_type = "files";
-			if(defined("BX_MEMCACHE_CLUSTER") && extension_loaded('memcache'))
+				if(defined("BX_MEMCACHE_CLUSTER") && extension_loaded('memcache'))
+				{
+					include_once($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/cluster/classes/general/memcache_cache.php");
+					$obCache = new CPHPCacheMemcacheCluster;
+					if($obCache->IsAvailable())
+					{
+						$cache_type = "CPHPCacheMemcacheCluster";
+						$isOK = true;
+					}
+				}
+			}
+			//There is no cluster configuration
+			if($cache_type === false)
 			{
-				include_once($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/cluster/classes/general/memcache_cache.php");
-				$obCache = new CPHPCacheMemcacheCluster;
-				if($obCache->IsAvailable())
-					$cache_type = "memcache_cluster";
+				if(defined("BX_CACHE_TYPE"))
+				{
+					switch(BX_CACHE_TYPE)
+					{
+					case "memcache":
+					case "CPHPCacheMemcache":
+						if(extension_loaded('memcache') && defined("BX_MEMCACHE_HOST"))
+						{
+							include_once($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/classes/general/cache_memcache.php");
+							$cache_type = "CPHPCacheMemcache";
+						}
+						break;
+					case "eaccelerator":
+					case "CPHPCacheEAccelerator":
+						if(extension_loaded('eaccelerator'))
+						{
+							include_once($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/classes/general/cache_eaccelerator.php");
+							$cache_type = "CPHPCacheEAccelerator";
+						}
+						break;
+					case "apc":
+					case "CPHPCacheAPC":
+						if(extension_loaded('apc'))
+						{
+							include_once($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/classes/general/cache_apc.php");
+							$cache_type = "CPHPCacheAPC";
+						}
+						break;
+					default:
+						if(defined("BX_CACHE_CLASS_FILE") && file_exists(BX_CACHE_CLASS_FILE))
+						{
+							include_once(BX_CACHE_CLASS_FILE);
+							$cache_type = BX_CACHE_TYPE;
+						}
+						break;
+					}
+				}
+				else
+				{
+					include_once($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/classes/general/cache_files.php");
+					$cache_type = "CPHPCacheFiles";
+				}
 			}
 
-			if($cache_type == "files" && defined("BX_CACHE_TYPE"))
-				$prefered_cache_type = BX_CACHE_TYPE;
-
-			switch($prefered_cache_type)
+			//Probe the cache backend class
+			if(!$isOK && class_exists($cache_type))
 			{
-			case "memcache":
-				if(extension_loaded('memcache') && defined("BX_MEMCACHE_HOST"))
-				{
-					include_once($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/classes/general/cache_memcache.php");
-					$obCache = new CPHPCacheMemcache;
-					if($obCache->IsAvailable())
-						$cache_type = "memcache";
-				}
-				break;
-			case "eaccelerator":
-				if(extension_loaded('eaccelerator'))
-				{
-					include_once($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/classes/general/cache_eaccelerator.php");
-					$obCache = new CPHPCacheEAccelerator;
-					if($obCache->IsAvailable())
-						$cache_type = "eaccelerator";
-				}
-				break;
-			case "apc":
-				if(extension_loaded('apc'))
-				{
-					include_once($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/classes/general/cache_apc.php");
-					$obCache = new CPHPCacheAPC;
-					if($obCache->IsAvailable())
-						$cache_type = "apc";
-				}
-				break;
+				$obCache = new $cache_type;
+				if ($obCache instanceof ICacheBackend)
+					$isOK = $obCache->IsAvailable();
 			}
 
-			if($cache_type == "files")
+			//Bulletproof files cache
+			if(!$isOK)
+			{
 				include_once($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/classes/general/cache_files.php");
+				$cache_type = "CPHPCacheFiles";
+			}
 		}
 
-		switch($cache_type)
-		{
-		case "memcache":
-			$cache = new CPHPCacheMemcache;
-			break;
-		case "eaccelerator":
-			$cache = new CPHPCacheEAccelerator;
-			break;
-		case "apc":
-			$cache = new CPHPCacheAPC;
-			break;
-		case "memcache_cluster":
-			$cache = new CPHPCacheMemcacheCluster;
-			break;
-		default:
-			$cache = new CPHPCacheFiles;
-			break;
-		}
-
+		$cache = new $cache_type;
 		return $cache;
 	}
 
@@ -376,7 +395,7 @@ class CPageCache
 		$this->_cache->write($arAllVars, $this->basedir, $this->initdir, $this->filename, $this->TTL);
 		$GLOBALS["CACHE_STAT_BYTES"] += $this->_cache->written;
 
- 		if(strlen($arAllVars)>0)
+		if(strlen($arAllVars)>0)
 			ob_end_flush();
 		else
 			ob_end_clean();

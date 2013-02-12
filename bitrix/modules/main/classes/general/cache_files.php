@@ -2,7 +2,7 @@
 /*********************************************************************
 						Caching
 *********************************************************************/
-class CPHPCacheFiles
+class CPHPCacheFiles implements ICacheBackend
 {
 	var $filename;
 	var $folder;
@@ -68,7 +68,7 @@ class CPHPCacheFiles
 
 	private static function _randomizeFile($fileName)
 	{
-		for($i = 0; $i < 9; $i++) //try to get new directory name no more than ten times
+		for($i = 0; $i < 99; $i++) //try to get new directory name no more than ten times
 		{
 			$suffix = rand(0, 999999);
 			if(!file_exists($_SERVER["DOCUMENT_ROOT"].$fileName.$suffix))
@@ -77,7 +77,7 @@ class CPHPCacheFiles
 		return "";
 	}
 
-	function clean($basedir, $initdir, $filename = false)
+	function clean($basedir, $initdir = false, $filename = false)
 	{
 		$DOCUMENT_ROOT = rtrim($_SERVER["DOCUMENT_ROOT"], "/");
 
@@ -119,16 +119,19 @@ class CPHPCacheFiles
 				$source = rtrim($source, "/");
 				$bDelayedDelete = false;
 
-				if(file_exists($DOCUMENT_ROOT.$source))
+				if(!preg_match("/^(\\.|\\.\\.|.*\\.~\\d+)\$/", $source) && file_exists($DOCUMENT_ROOT.$source))
 				{
 					$target = CPHPCacheFiles::_randomizeFile($source.".~");
-					if(
-						$DB->Query("INSERT INTO b_cache_tag (SITE_ID, CACHE_SALT, RELATIVE_PATH, TAG)
-						VALUES ('*', '*', '".$DB->ForSQL($target)."', '*')")
-					)
+					if($target != '')
 					{
-						if(@rename($DOCUMENT_ROOT.$source, $DOCUMENT_ROOT.$target))
-							$bDelayedDelete = true;
+						if(
+							$DB->Query("INSERT INTO b_cache_tag (SITE_ID, CACHE_SALT, RELATIVE_PATH, TAG)
+							VALUES ('*', '*', '".$DB->ForSQL($target)."', '*')")
+						)
+						{
+							if(@rename($DOCUMENT_ROOT.$source, $DOCUMENT_ROOT.$target))
+								$bDelayedDelete = true;
+						}
 					}
 				}
 
@@ -269,7 +272,7 @@ class CPHPCacheFiles
 		if($ar = $rs->Fetch())
 		{
 			$dir_name = $_SERVER["DOCUMENT_ROOT"].$ar["RELATIVE_PATH"];
-			if(file_exists($dir_name))
+			if($ar["RELATIVE_PATH"] != '' && file_exists($dir_name))
 			{
 				$dh = opendir($dir_name);
 				if(is_resource($dh))

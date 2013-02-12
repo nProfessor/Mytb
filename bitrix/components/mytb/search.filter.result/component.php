@@ -13,7 +13,8 @@ if (!empty($_GET["KIND_CLUB"])) {
     $arFilter["PROPERTY_TYPE_FACILITY"] = INTVAL($_GET["KIND_CLUB"]);
 }
 
-
+$arParams['GET']=$_GET;
+if ($this->StartResultCache()) {
 switch ($_GET["STOCKS"]) {
     case "true":
         $arFilter["ID"] = Club::getListHaveStocks();
@@ -87,3 +88,4 @@ $arResult["NAV_STRING"] = $res->GetPageNavStringEx($navComponentObject, "", "mod
 //$arResult["NAV"]=$res->NavPrint("События", false, "text","/include/paginator/home.php");;
 
 $this->IncludeComponentTemplate();
+}

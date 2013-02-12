@@ -7,7 +7,7 @@ $event=$arResult['EVENT'];
 ?>
 <h2>Редактируем событе  «<?=$event['NAME']?>» </h2>
     <br/>
-<a href="/kabinet-menedzhera/club_event_edite/">Все события</a>
+<a href="/personal/kabinet-menedzhera/club_event_edite/">Все события</a>
 <br/>
 <br/>
 <form action="" method="post">

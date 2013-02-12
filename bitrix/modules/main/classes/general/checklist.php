@@ -586,7 +586,7 @@ class CAutoCheck
 
 		foreach($arTmpFiles as $ar)
 		{
-			if (strpos($ar['NAME'],".enc.gz"))
+			if (strpos($ar['NAME'],".enc.gz") || strpos($ar['NAME'],".tar.gz") || strpos($ar['NAME'],".tar") || strpos($ar['NAME'],".enc"))
 				$arCount++;
 		}
 
@@ -596,7 +596,7 @@ class CAutoCheck
 			try {
 				foreach($backup->listFiles() as $ar)
 				{
-					if (strpos($ar['FILE_NAME'],".enc.gz"))
+					if (strpos($ar['FILE_NAME'],".enc.gz") || strpos($ar['FILE_NAME'],".tar.gz") || strpos($ar['FILE_NAME'],".tar") || strpos($ar['FILE_NAME'],".enc"))
 						$arCount++;
 				}
 			} catch (Exception $e) {
@@ -858,7 +858,7 @@ class CAutoCheck
 		switch ($arParams["ACTION"])
 		{
 			case "SECURITY_LEVEL":
-				if (IsModuleInstalled("security"))
+				if (CModule::IncludeModule("security"))
 				{
 						if ($arMask = CSecurityFilterMask::GetList()->Fetch())
 							$arMessage.= $err++.". ".GetMessage("CL_FILTER_EXEPTION_FOUND")."\n";
@@ -969,7 +969,7 @@ class CAutoCheck
 			if ($DBPassword == strtolower($DBPassword))
 				$arMessage.=$err++.". ".GetMessage("CL_SAME_REGISTER")."\n";
 
-			for($j=0;$j<strlen($DBPassword);$j++)
+			for($j=0, $c=strlen($DBPassword); $j<$c; $j++)
 			{
 				if (strpos($sign,$DBPassword[$j])!==false)
 					$have_sign = true;

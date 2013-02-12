@@ -1,0 +1,13 @@
+.search_top{
+    background: #eaeaea;
+    padding:20px;
+}
+.search_top form{
+    margin: 0;
+}
+.search_top input[type='text']{
+    border: 1px solid #aeaeae;
+    border-radius: 0px;
+    float:left;
+    width: 822px;
+}

@@ -49,21 +49,34 @@ $arUrlRewrite = array(
 		"ID"	=>	"bitrix:news",
 		"PATH"	=>	"/club/booking/index.php",
 	),
+
+    array(
+        "CONDITION"	=>	"#^/club/stock/([0-9]+)#",
+        "RULE"	=>	"ID=$1",
+        "ID"	=>	"bitrix:news",
+        "PATH"	=>	"/club/stock/index.php",
+    ),
+    array(
+        "CONDITION"	=>	"#^/club/event/([0-9]+)#",
+        "RULE"	=>	"ID=$1",
+        "ID"	=>	"bitrix:news",
+        "PATH"	=>	"/club/event/index.php",
+    ),
 	array(
-		"CONDITION"	=>	"#^/club/([0-9]+)/stock/#",
+		"CONDITION"	=>	"#^/club/([0-9]+)/stock/.*#",
 		"RULE"	=>	"ID=$1",
 		"ID"	=>	"bitrix:news",
-		"PATH"	=>	"/club/stock/index.php",
+		"PATH"	=>	"/club/stocks/index.php",
 	),
 	array(
 		"CONDITION"	=>	"#^/club/([0-9]+)/event/#",
 		"RULE"	=>	"ID=$1",
 		"ID"	=>	"bitrix:news",
-		"PATH"	=>	"/club/event/index.php",
+		"PATH"	=>	"/club/events/index.php",
 	),
 	array(
 		"CONDITION"	=>	"#^/club/([0-9]+)/?.*#",
-		"RULE"	=>	"ID=$1&CLUB=true",
+		"RULE"	=>	"ID=$1",
 		"ID"	=>	"mytb:club",
 		"PATH"	=>	"/club/index.php",
 	),
@@ -72,6 +85,18 @@ $arUrlRewrite = array(
 		"RULE"	=>	"",
 		"ID"	=>	"bitrix:news",
 		"PATH"	=>	"/news/index.php",
+	),
+	array(
+		"CONDITION"	=>	"#^/personal/club/stock/([0-9]+)#",
+        "RULE"	=>	"ID=$1",
+		"ID"	=>	"bitrix:news",
+		"PATH"	=>	"/personal/club/stock/index.php",
+	),
+	array(
+		"CONDITION"	=>	"#^/personal/club/event/([0-9]+)#",
+        "RULE"	=>	"ID=$1",
+		"ID"	=>	"bitrix:news",
+		"PATH"	=>	"/personal/club/event/index.php",
 	),
 );
 

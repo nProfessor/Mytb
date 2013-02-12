@@ -53,7 +53,7 @@ if (IsModuleInstalled("fileman"))
 	BX.message({
 		'BX_FPD_LINK_1':'<?=GetMessageJS("MPF_DESTINATION_1")?>',
 		'BX_FPD_LINK_2':'<?=GetMessageJS("MPF_DESTINATION_2")?>',
-		'TAG_ADD': '<?=GetMessageJS("MPF_ADD_TAG")?>',
+		'TAG_ADD': '<?=GetMessageJS("MPF_ADD_TAG1")?>',
 		'MPF_IMAGE': '<?=GetMessageJS("MPF_IMAGE_TITLE")?>',
 		'MPF_FILE': '<?=GetMessageJS("MPF_INSERT_FILE")?>',
 		'MPF_NAME_TEMPLATE' : '<?=urlencode($arParams['NAME_TEMPLATE'])?>'
@@ -150,7 +150,9 @@ if (in_array("MentionUser", $arParams["BUTTONS"]))
 	window['bMentListen'] = false;
 	window['bPlus'] = false;
 	function BXfpdSelectCallbackMent<?=$arParams["FORM_ID"]?>(item, type, search)
-	{BXfpdSelectCallbackMent(item, type, search, '<?=$arParams["FORM_ID"]?>', '<?=$arParams["LHE"]["jsObjName"]?>');}
+	{
+		BXfpdSelectCallbackMent(item, type, search, '<?=$arParams["FORM_ID"]?>', '<?=$arParams["LHE"]["jsObjName"]?>');
+	}
 
 	function BXfpdStopMent<?=$arParams["FORM_ID"]?>()
 	{
@@ -197,33 +199,87 @@ if (in_array("MentionUser", $arParams["BUTTONS"]))
 		BX.ready(
 			function()
 			{
-				BX.addCustomEvent(
-					BX.findChild(BX('<?=$arParams["FORM_ID"]?>'), {'attr': {id: 'bx-b-mention'}}, true, false),
-					'mentionClick',
-					function(e){setTimeout(function()
-					{
-						if(!BX.SocNetLogDestination.isOpenDialog())
-							BX.SocNetLogDestination.openDialog(BXSocNetLogDestinationFormNameMent<?=$arParams["FORM_ID"]?>);
-						window['<?=$arParams["LHE"]["jsObjName"]?>'].SetFocus();}, 100);
-					}
-				);
-//mousedown for IE, that lost focus on button click
-				BX.bind(
-					BX.findChild(BX('<?=$arParams["FORM_ID"]?>'), {'attr': {id: 'bx-b-mention'}}, true, false),
-					"mousedown",
-					function(e)
-					{
-						if(!window['bMentListen'])
+				if(/MSIE 8/.test(navigator.userAgent))
+				{
+					var ment = BX.findChild(BX('<?=$arParams["FORM_ID"]?>'), {'attr': {id: 'bx-b-mention'}}, true, false);
+					ment.style.width = '1px';
+					ment.style.marginRight = '0';
+				}
+				else
+				{
+					BX.addCustomEvent(
+						BX.findChild(BX('<?=$arParams["FORM_ID"]?>'), {'attr': {id: 'bx-b-mention'}}, true, false),
+						'mentionClick',
+						function(e){
+						setTimeout(function()					
 						{
-							if(window['<?=$arParams["LHE"]["jsObjName"]?>'].sEditorMode == 'html') // WYSIWYG
+							if(!BX.SocNetLogDestination.isOpenDialog())
+								BX.SocNetLogDestination.openDialog(BXSocNetLogDestinationFormNameMent<?=$arParams["FORM_ID"]?>);
+							bPlus = false;
+							window['bMentListen'] = true;
+							window["mentionText"] = '';
+							window['<?=$arParams["LHE"]["jsObjName"]?>'].SetFocus();
+
+							if(BX.browser.IsIE())
 							{
-								window['<?=$arParams["LHE"]["jsObjName"]?>'].InsertHTML('@');
-								window['bMentListen'] = true;
+								r = window['<?=$arParams["LHE"]["jsObjName"]?>'].GetSelectionRange();
+								win = window['<?=$arParams["LHE"]["jsObjName"]?>'].pEditorWindow;
+								if(win.document.selection) // IE8 and below
+								{
+									r = BXfixIERangeObject(r, win);
+									if (r.endContainer)
+									{
+										txt = r.endContainer.nodeValue;
+										if(window['rngEndOffset'] > txt.length)
+											window['rngEndOffset'] = txt.length;
+
+										var rng = window['<?=$arParams["LHE"]["jsObjName"]?>'].pEditorDocument.createRange();
+										rng.setStart(r.endContainer, window['rngEndOffset']);
+										rng.setEnd(r.endContainer, window['rngEndOffset']);
+										window['<?=$arParams["LHE"]["jsObjName"]?>'].SelectRange(rng);
+										window['<?=$arParams["LHE"]["jsObjName"]?>'].SetFocus();
+									}
+								}
+							}
+
+
+						}, 100);
+						}
+					);
+					
+					//mousedown for IE, that lost focus on button click
+					BX.bind(
+						BX.findChild(BX('<?=$arParams["FORM_ID"]?>'), {'attr': {id: 'bx-b-mention'}}, true, false),
+						"mousedown",
+						function(e)
+						{
+							if(window['bMentListen'] !== true)
+							{
+								if(window['<?=$arParams["LHE"]["jsObjName"]?>'].sEditorMode == 'html') // WYSIWYG
+								{
+									window['<?=$arParams["LHE"]["jsObjName"]?>'].InsertHTML('@');
+									window['bMentListen'] = true;
+									window["mentionText"] = '';
+									bPlus = false;
+
+									if(BX.browser.IsIE())
+									{
+										r = window['<?=$arParams["LHE"]["jsObjName"]?>'].GetSelectionRange();
+
+										win = window['<?=$arParams["LHE"]["jsObjName"]?>'].pEditorWindow;
+										if(win.document.selection) // IE8 and below
+										{
+											r = BXfixIERangeObject(r, win);
+											window['rngEndOffset'] = r.endOffset;
+										}
+									}
+								}
+			
+								BX.onCustomEvent(BX.findChild(BX('<?=$arParams["FORM_ID"]?>'), {'attr': {id: 'bx-b-mention'}}, true, false), 'mentionClick');
 							}
 						}
-						BX.onCustomEvent(BX.findChild(BX('<?=$arParams["FORM_ID"]?>'), {'attr': {id: 'bx-b-mention'}}, true, false), 'mentionClick');
-					}
-				);
+					);
+				}
 			}
 		);
 	}

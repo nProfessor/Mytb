@@ -1066,7 +1066,7 @@ function BXComponents2Taskbar()
 		window.arComp2Templates = null;
 		window.arComp2TemplateProps = null;
 
-		CHttpRequest.Action = function(result)
+		function OnRequest(result)
 		{
 			try{
 				setTimeout(function ()
@@ -1088,12 +1088,15 @@ function BXComponents2Taskbar()
 			}catch(e) {alert('Error >> LoadComp2Params');}
 		}
 
-		var url = '/bitrix/admin/fileman_load_comp2_params.php?lang=' + BXLang + '&site=' + BXSite + '&cname=' + elementName+'&stid='+((this.pMainObj.templateID) ? this.pMainObj.templateID : '')+"&loadhelp="+loadHelp+'&tname=' + templName ;
+		var url = '/bitrix/admin/fileman_load_comp2_params.php?lang=' + BXLang + '&site=' + BXSite + '&cname=' + elementName+'&stid='+((this.pMainObj.templateID) ? this.pMainObj.templateID : '')+"&loadhelp="+loadHelp+'&tname=' + templName + '&bxsender=fileman_html_editor&bxeditor=' + this.pMainObj.name;
+
+		this.pMainObj.__authFailureHandlerCallback = function(){oTaskbar.LoadComp2Params(arProps, calbackFunc, calbackObj, calbackParams, method, data);};
+		this.pMainObj.__authFailureHandlerCallbackClose = function(){window.oBXEditorDialog.Close();};
 
 		if (method == 'POST' && data)
-			CHttpRequest.Post(url, data);
+			BX.ajax.post(url, data, OnRequest);
 		else
-			CHttpRequest.Send(url);
+			BX.ajax.get(url, {}, OnRequest);
 	};
 
 	//Set template
@@ -1575,6 +1578,7 @@ function BXComponents2Taskbar()
 						new BX.CWindowButton(
 						{
 							title: BX_MESS.TBSave,
+							className: 'adm-btn-save',
 							action: function()
 							{
 								OnSave();

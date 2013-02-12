@@ -6,8 +6,14 @@ define("IB_BOOKING_ID", 13); // ID столиков
 define("IB_PRICE_GROUP", 14); // ID ценовых групп
 
 
+define("PROP_CLUB_MODERATOR", 54); // ID свойства показывающего, что заведение не прошло модерацию
+define("PROP_STOCK_PUBLIC", 55); // ID свойства показывающего, что акция не опубликована
+define("PROP_EVENT_PUBLIC", 56); // ID свойства показывающего, что событие не опубликована
+
+
 //Группы
 define("GROUP_MANAGER", 6); // Группа менеджеры
+define("GROUP_CONTEN", 5); // Группа Контент-редакторы
 
 define("DEFAULT_USER_PHOTO_PATH", "/upload/user_photo/people.png"); // Ссылка на заглушку аватарки
 
@@ -30,7 +36,7 @@ define("SOC_API_ID_VK", 3009096);//
 define("SOC_API_ID_FB", 3009096);//
 
 
-define("MAINSERVER", "dev.mytb.ru");//
+define("MAINSERVER", "mytb.ru");//
 
 
 define("PROPS_ID_CLUB_STOCKS", 61);//

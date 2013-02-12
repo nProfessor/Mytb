@@ -218,7 +218,6 @@ $lAdmin->AddHeaders($arHeaders);
 $rsData = new CDBResult;
 $rsData->InitFromArray($arModules);
 $rsData = new CAdminResult($rsData, $sTableID);
-
 while($info = $rsData->Fetch())
 {
 	$row =& $lAdmin->AddRow($info["MODULE_ID"], $info);
@@ -270,17 +269,17 @@ while($info = $rsData->Fetch())
 		$status = "<span class=\"required\">".GetMessage("MOD_NOT_INSTALLED")."</span>";
 
 	if(!empty($modules[$info["MODULE_ID"]]["VERSION"])) 
-		$status .= "<br /><a href=\"/bitrix/admin/update_system_partner.php?tabControl_active_tab=tab2\" style=\"color:green;\">".GetMessage("MOD_SMP_NEW_UPDATES")."</a>";
+		$status .= "<br /><a href=\"/bitrix/admin/update_system_partner.php?tabControl_active_tab=tab2&addmodule=".$info["MODULE_ID"]."\" style=\"color:green;\">".GetMessage("MOD_SMP_NEW_UPDATES")."</a>";
 	$row->AddViewField("STATUS", $status);
 	
 	$arActions = Array();
-	if(!empty($modules[$info["MODULE_ID"]])) 
+	if(!empty($modules[$info["MODULE_ID"]]) && !empty($modules[$info["MODULE_ID"]]["VERSION"])) 
 	{
 		$arActions[] = array(
 			"ICON" => "",
-			"DEFAULT" => false,
+			"DEFAULT" => true,
 			"TEXT" => GetMessage("MOD_SMP_UPDATE"),
-			"ACTION" => $lAdmin->ActionRedirect("/bitrix/admin/update_system_partner.php?tabControl_active_tab=tab2"),
+			"ACTION" => $lAdmin->ActionRedirect("/bitrix/admin/update_system_partner.php?tabControl_active_tab=tab2&addmodule=".$info["MODULE_ID"]),
 		);
 	}
 
@@ -288,7 +287,7 @@ while($info = $rsData->Fetch())
 	{
 		$arActions[] = array(
 			"ICON" => "delete",
-			"DEFAULT" => true,
+			"DEFAULT" => false,
 			"TEXT" => GetMessage("MOD_DELETE"),
 			"ACTION" => $lAdmin->ActionRedirect($APPLICATION->GetCurPage()."?id=".htmlspecialcharsbx($info["MODULE_ID"])."&lang=".LANG."&uninstall=Y&".bitrix_sessid_get()),
 		);
@@ -297,7 +296,7 @@ while($info = $rsData->Fetch())
 	{
 		$arActions[] = array(
 			"ICON" => "add",
-			"DEFAULT" => true,
+			"DEFAULT" => false,
 			"TEXT" => GetMessage("MOD_INSTALL_BUTTON"),
 			"ACTION" => $lAdmin->ActionRedirect($APPLICATION->GetCurPage()."?id=".htmlspecialcharsbx($info["MODULE_ID"])."&lang=".LANG."&install=Y&".bitrix_sessid_get()),
 		);
@@ -374,7 +373,7 @@ while($info = $rsData->Fetch())
 			"ICON" => "",
 			"DEFAULT" => true,
 			"TEXT" => GetMessage("MOD_SMP_DOWNLOAD"),
-			"ACTION" => $lAdmin1->ActionRedirect("/bitrix/admin/update_system_partner.php?tabControl_active_tab=tab2"),
+			"ACTION" => $lAdmin1->ActionRedirect("/bitrix/admin/update_system_partner.php?tabControl_active_tab=tab2&addmodule=".$info["MODULE_ID"]),
 		);
 	}
 

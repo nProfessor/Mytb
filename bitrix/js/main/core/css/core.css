@@ -175,6 +175,7 @@ a.hk-delete-icon {display:block; background: none !important; width:18px; height
 .bx-hk-settings-row:hover a.hk-delete-icon:hover {display:block !important; width:18px; height:18px; background: url(/bitrix/panel/main/images/bx-admin-sprite-small.png) no-repeat -0px -2989px !important;}
 
 a.bx-hk-settings:link { color: #0069c4 !important;}
-a.bx-hk-settings:visited { color: #0069c4 !important; }
+a.bx-hk-settings:visited { color: #0069c4 !important;}
 a.bx-hk-settings:hover { color: #e00000 !important;}
 a.bx-hk-settings:active { color: #0069c4 !important;}
+

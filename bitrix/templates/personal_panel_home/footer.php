@@ -1,15 +1,18 @@
 <?if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();?>
-</div>
-</div>
-</div>
 
-</div>
-<div class="clear"></div>
+<div class="clear_both"></div>
 </div>
 
 
 
 
-<?include($_SERVER["DOCUMENT_ROOT"]."/bitrix/templates/.default/include/footer.php")?>
+
+
+<?$APPLICATION->IncludeFile(
+    SITE_DIR . "include/footer.php",
+    Array(),
+    Array("MODE" => "html")
+);?>
+
 </body>
 </html>

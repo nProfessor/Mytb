@@ -13,7 +13,7 @@
         <? endforeach;?>
 </ul>
     <div class="all_list">
-<a href="">Все заведения с новостями</a>
+        <a href="/sub/news/" title="Показать ве клубы, бары, рестораны и кафе у которых есть новости">Все заведения с новостями</a>
     </div>
 <? else: ?>
 <div class="all_list">

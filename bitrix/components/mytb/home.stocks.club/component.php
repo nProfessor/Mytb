@@ -2,6 +2,7 @@
 if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== TRUE)
     die();
 
+if ($this->StartResultCache()) {
 CModule::IncludeModule("iblock");
 global $USER;
 
@@ -53,7 +54,7 @@ if (count($clubListID)) {
 
 $this->IncludeComponentTemplate();
 
-
+}
 
 
 

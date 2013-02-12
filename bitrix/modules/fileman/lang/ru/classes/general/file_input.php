@@ -19,4 +19,5 @@ $MESS ['ADM_FILE_INFO_DIM'] = "Размер";
 $MESS ['ADM_FILE_INFO_LINK'] = "Ссылка";
 $MESS ['ADM_FILE_DELETED_TITLE'] = "Изображение<br>будет<br>удалено";
 $MESS ['ADM_FILE_CANCEL_DEL'] = "Отменить удаление";
+$MESS ['ADM_FILE_INSERT_PATH'] = "Вставить путь к файлу";
 ?>

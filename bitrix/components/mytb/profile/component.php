@@ -3,7 +3,7 @@
 if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
 
 
-if ($this->StartResultCache()) {
+
 global $USER;
 
 $userID=$USER::GetID();
@@ -17,4 +17,3 @@ $userInfo["PERSONAL_PHOTO"] = CFile::GetFileArray($userInfo["PERSONAL_PHOTO"]);
 $arResult['userinfo']=$userInfo;
 
 $this->IncludeComponentTemplate();
-}

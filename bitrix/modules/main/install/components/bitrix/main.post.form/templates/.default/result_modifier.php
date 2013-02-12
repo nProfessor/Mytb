@@ -22,14 +22,8 @@ if (!function_exists("__MPF_ImageResizeHandler"))
 
 		$fileID = $arCustomFile['fileID'];
 
-		if (!isset($arCustomFile['fileContentType']))
-		{
-			$arFile = CFile::GetFileArray($fileID);
-			$arCustomFile['fileContentType'] = $arFile['CONTENT_TYPE'];
-			$arCustomFile["fileSrc"] = $arFile["SRC"];
-		}
-
-		if (strpos($arCustomFile['fileContentType'], 'image/') === 0)
+		$arFile = CFile::MakeFileArray($fileID);
+		if (CFile::CheckImageFile($arFile) === null)
 		{
 			$aImgThumb = CFile::ResizeImageGet(
 				$fileID,
@@ -52,6 +46,7 @@ if (!function_exists("__MPF_ImageResizeHandler"))
 				$arCustomFile['img_source_height'] = $aImgSource['height'];
 			}
 		}
+
 	}
 }
 

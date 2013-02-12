@@ -6,13 +6,13 @@
  * To change this template use File | Settings | File Templates.
  */
 $(document).ready(function () {
-    $("#login").click(function () {
+    $("#login_all").click(function () {
 
-        var email = $("input[name='AUTH[EMAIL]']").val();
-        var password = $("input[name='AUTH[PASSWORD]']").val();
-        var reg = $("input[name='AUTH[REG]']:checked").val();
+        var email = $("#modal_auth input[name='AUTH[EMAIL]']").val();
+        var password = $("#modal_authinput[name='AUTH[PASSWORD]']").val();
+        var reg = $("#modal_auth input[name='AUTH[REG]']:checked").val();
 
-        $("#login").text("Выполняется вход");
+        $("#login_all").text("Выполняется вход");
         $("#errors_auth").addClass("hide");
         $.ajax({
             url:"/bitrix/ui/ajax/auth/auth.php",

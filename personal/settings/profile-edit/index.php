@@ -3,7 +3,7 @@ require($_SERVER["DOCUMENT_ROOT"]."/bitrix/header.php");
 $APPLICATION->SetTitle("Редактирование профайла");
 ?>
 
-<?$APPLICATION->IncludeComponent("mytb:profile", "edite", array(
+<?$APPLICATION->IncludeComponent("profile:home", "edite", array(
     ),
     false
 );?>

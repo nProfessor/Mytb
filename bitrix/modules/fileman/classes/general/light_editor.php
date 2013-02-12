@@ -116,7 +116,14 @@ class CLightHTMLEditor // LHE
 			$this->JSConfig['toolbarConfig'] = $arParams['toolbarConfig'];
 		if (isset($arParams['documentCSS']))
 			$this->JSConfig['documentCSS'] = $arParams['documentCSS'];
-
+		if (isset($arParams['fontFamily']))
+			$this->JSConfig['fontFamily'] = $arParams['fontFamily'];
+		if (isset($arParams['fontSize']))
+			$this->JSConfig['fontSize'] = $arParams['fontSize'];
+		if (isset($arParams['lineHeight']))
+			$this->JSConfig['lineHeight'] = $arParams['lineHeight'];
+		if (isset($arParams['bHandleOnPaste']))
+			$this->JSConfig['bHandleOnPaste'] = $arParams['bHandleOnPaste'];
 		if (isset($arParams['autoResizeOffset']))
 			$this->JSConfig['autoResizeOffset'] = $arParams['autoResizeOffset'];
 		if (isset($arParams['autoResizeMaxHeight']))

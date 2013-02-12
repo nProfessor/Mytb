@@ -1,37 +1,32 @@
-<h1>События клуба  «<?=$arResult['club']['NAME']?>»</h1>
-    <br/>
     <?if(count($arResult['eventList'])>0):?>
-<div id="list" class="span12">
     <table class="table table-striped">
-        <?foreach ($arResult['eventList'] as $val=> $var): ?>
-        <tr>
-            <th colspan="3"><?=$val?></th>
-        </tr>
-        <? foreach ($var as $stock): ?>
+        <?foreach ($arResult['eventList'] as $val => $var): ?>
             <?
-            $club = $arResult['club'][$stock["PROPERTY_CLUB_ID_VALUE"]];
+            $arFile = CFile::GetFileArray($var["DETAIL_PICTURE"]);
             ?>
             <tr>
-                <td></td>
-                <td><a href="#" data-toggle="modal" data-target="#<?=$stock["ID"]?>"
-                       data-title="<?=strip_tags($stock["NAME"])?>"
-                       data-description="<?=strip_tags($stock["PREVIEW_TEXT"])?>"
-                       data-img="<?=$stock["DETAIL_PICTURE"]?>"
-                       class="stock_info"><?=$stock["NAME"]?></a><br/>
-                    <small>до <?=$stock['DATE_ACTIVE_TO']?></small>
-                </td>
                 <td>
-                </td>
-                <td>
-                    <a href="/club/<?=$club['ID']?>" target="_blank"><?=$club["NAME"]?></a>
-
+                    <div class="pull-left" style="margin:0px 10px 10px 0px">
+                        <a href="/club/event/<?=$var["ID"]?>/" class="stock_title" title="<?=$arResult['club']['NAME']?>: <?=$var['NAME']?>">
+                        <img class="thumbnail" alt="Событие в <?=$arResult['club']['NAME']?>" title="<?=$var["NAME"]?>" src="<?=imgurl($arFile["SRC"], array("w" => 300))?>"/>
+                        </a>
+                    </div>
+                    <a href="/club/event/<?=$var["ID"]?>/" class="stock_title"  title="<?=$arResult['club']['NAME']?>: <?=$var['NAME']?>"><?=$var["NAME"]?></a>
+                    <div class="stock_info">
+                        <strong>Дата события: с <?=date("d.m.Y",strtotime($var['ACTIVE_FROM']))?> по <?=date("d.m.Y",strtotime($var['ACTIVE_TO']))?>
+                        </strong>
+                        <br/>
+                        <br/>
+                        <p style="font-size: 12px;"> <?=cut_string($var["DETAIL_TEXT"],400)?></p>
+                        <a href="/club/event/<?=$var["ID"]?>/" class="button right"  title="<?=$arResult['club']['NAME']?>: <?=$var['NAME']?>">Подробней</a>
+                    </div>
                 </td>
             </tr>
-            <? endforeach; ?>
         <? endforeach;?>
     </table>
 
-</div>
 <?else:?>
-    На данный момент событий нет.
-    <?endif;?>
+<noindex>
+    На данный момент событий нет
+</noindex>
+<?endif;?>

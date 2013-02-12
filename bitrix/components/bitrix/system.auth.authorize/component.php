@@ -55,6 +55,9 @@ $arResult["NEW_USER_REGISTRATION"] = (COption::GetOptionString("main", "new_user
 
 $arResult["AUTH_SERVICES"] = false;
 $arResult["CURRENT_SERVICE"] = false;
+$arResult["FOR_INTRANET"] = false;
+if(IsModuleInstalled("intranet"))
+	$arResult["FOR_INTRANET"] = true;
 if(!$USER->IsAuthorized() && CModule::IncludeModule("socialservices"))
 {
 	$oAuthManager = new CSocServAuthManager();

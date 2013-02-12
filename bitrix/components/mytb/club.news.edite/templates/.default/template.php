@@ -7,7 +7,7 @@ $news=$arResult['NEWS'];
 ?>
 <h2>Редактируем новость  «<?=$news['NAME']?>» </h2>
     <br/>
-<a href="/kabinet-menedzhera/club_news_edite/">Все новости</a>
+<a href="/personal/kabinet-menedzhera/club_news_edite/">Все новости</a>
 <br/>
 <br/>
 <form action="" method="post">

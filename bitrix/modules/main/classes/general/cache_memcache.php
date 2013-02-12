@@ -1,5 +1,5 @@
 <?
-class CPHPCacheMemcache
+class CPHPCacheMemcache implements ICacheBackend
 {
 	private static $obMemcache;
 	private static $basedir_version = array();

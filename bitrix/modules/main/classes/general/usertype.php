@@ -1008,7 +1008,7 @@ class CAllUserTypeManager
 						if($arUserField["MULTIPLE"]=="Y")
 							$result = unserialize($ar["VALUE"]);
 						else
-							$result = $value;
+							$result = $ar["VALUE"];
 					}
 				}
 			}

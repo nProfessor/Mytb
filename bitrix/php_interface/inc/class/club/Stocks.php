@@ -10,8 +10,11 @@ class Stocks
 {
     private $clubID;
 
-    function __construct($clubID)
+    function __construct($clubID=false)
     {
+        if($clubID==false){
+            return;
+        }
         if(is_array($clubID)){
             $ar=array();
             foreach($clubID as $var){
@@ -64,7 +67,7 @@ class Stocks
             "IBLOCK_ID"      => IB_SUB_STOCK_ID,
             "PROPERTY_VALUES"=> array('CLUB_ID'=>$this->clubID),
             "ACTIVE_TO"      => date("d.m.Y",strtotime($data['ACTIVE_TO'])),
-            "ACTIVE_FROM"      => date("d.m.Y",strtotime($data['ACTIVE_FROM'])),
+            "ACTIVE_FROM"     => date("d.m.Y",strtotime($data['ACTIVE_FROM'])),
             "NAME"           => trim(strip_tags($data['NAME'])),
             "ACTIVE"         => "Y",// активен
             "DETAIL_TEXT"    => trim($data['DETAIL_TEXT']),
@@ -84,6 +87,40 @@ class Stocks
         return $getNext?$obj->GetNext():$obj->Fetch();
     }
 
+
+    function published($stockID){
+        global $USER;
+
+        $el = new CIBlockElement;
+
+        $arLoadProductArray = Array(
+            "MODIFIED_BY"    => $USER->GetID(), // элемент изменен текущим пользователем
+            "IBLOCK_ID"      => IB_SUB_STOCK_ID,
+            "ACTIVE"=>"Y"
+        );
+
+//        CIBlockElement::SetPropertyValuesEx($stockID, IB_SUB_STOCK_ID, array("PUBLIC"=>array('VALUE' => PROP_STOCK_PUBLIC)),array("DoNotValidateLists"));
+        CIBlockElement::SetPropertyValueCode($stockID, "PUBLIC", array('VALUE' => PROP_STOCK_PUBLIC));
+        return $el->update($stockID,$arLoadProductArray);
+    }
+
+    /**
+     * Обновляем активность
+     * @param $stockID
+     */
+    function active($stockID,$active){
+        global $USER;
+
+        $el = new CIBlockElement;
+
+        $arLoadProductArray = Array(
+            "MODIFIED_BY"    => $USER->GetID(), // элемент изменен текущим пользователем
+            "IBLOCK_ID"      => IB_SUB_STOCK_ID,
+            "ACTIVE"      => $active=="Y"?"Y":"N"
+        );
+        return $el->update($stockID,$arLoadProductArray);
+    }
+
     function update($newsID,$data){
         global $USER;
 
@@ -95,7 +132,8 @@ class Stocks
             "ACTIVE_TO"      => date("d.m.Y",strtotime($data['ACTIVE_TO'])),
             "ACTIVE_FROM"      => date("d.m.Y",strtotime($data['ACTIVE_FROM'])),
             "NAME"           => trim(strip_tags($data['NAME'])),
-            "DETAIL_TEXT"    => trim($data['DETAIL_TEXT']),
+            "PREVIEW_TEXT"    => trim($data['PREVIEW_TEXT'])
+
         );
 
 
@@ -139,10 +177,20 @@ class Stocks
             array(
                 "ID",
                 "NAME",
-                "ACTIVE_FROM",
+                "ACTIVE",
+                "DATE_ACTIVE_FROM",
+                "DATE_ACTIVE_TO",
                 "ACTIVE_TO",
-                "DETAIL_TEXT",
-                "PREVIEW_PICTURE"
+                "PREVIEW_TEXT",
+                "DETAIL_PICTURE",
+                "PROPERTY_CLUB_ID",
+                "DATE_ACTIVE_TO",
+                "PROPERTY_URL",
+                "PROPERTY_CLUB_ID",
+                "PROPERTY_PRICECOUPON",
+                "PROPERTY_DISCOUNT",
+                "PROPERTY_PUBLIC",
+                 "TAGS"
             ));
 
         return $ob;

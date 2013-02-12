@@ -85,4 +85,9 @@ $MESS["FILEMAN_ADM_FULL_ACCESS"] = "Full Access";
 $MESS["FILEMAN_ADMIN_ARC_PACK"] = "Add to archive";
 $MESS["FILEMAN_ADMIN_ARC_UNPACK"] = "Extract files...";
 $MESS["FILEMAN_ADMIN_FLIST_ERROR"] = "Directory list failed due to possibly insufficient permissions.";
+$MESS["FILEMAN_ADMIN_ADD_FOLDER"] = "Add folder";
+$MESS["FILEMAN_ADMIN_ADD_FILE"] = "Add file";
+$MESS["FILEMAN_ADMIN_ADD"] = "Add";
+$MESS["FILEMAN_ADMIN_FOLDER_EXTRA_PARAM"] = "Extended";
+$MESS["FILEMAN_ADMIN_FOLDER_EXTRA_PARAM_TITLE"] = "View extended parameters";
 ?>

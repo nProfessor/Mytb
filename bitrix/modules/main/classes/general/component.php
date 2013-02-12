@@ -282,10 +282,10 @@ class CBitrixComponent
 						self::$__classes_map[$componentPath] = $afterClasses[$i];
 				}
 			}
-		}
-		else
-		{
-			self::$__classes_map[$componentPath] = "";
+			else
+			{
+				self::$__classes_map[$componentPath] = "";
+			}
 		}
 		return self::$__classes_map[$componentPath];
 	}
@@ -319,7 +319,7 @@ class CBitrixComponent
 		$componentPath = "/bitrix/components".$path2Comp;
 		$this->classOfComponent = self::__getClassForPath($componentPath);
 
-		if($this->classOfComponent !== "")
+		if($this->classOfComponent === "")
 		{
 			$componentFile = $_SERVER["DOCUMENT_ROOT"].$componentPath."/component.php";
 			if (!file_exists($componentFile) || !is_file($componentFile))
@@ -338,7 +338,7 @@ class CBitrixComponent
 		$this->__arIncludeAreaIcons = array();
 		$this->__cache = null;
 		if ($componentTemplate !== false)
-			$this->setTemplateName($componentTemplate);
+			$this->__templateName = $componentTemplate;
 
 		$this->__bInited = true;
 

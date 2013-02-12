@@ -2,14 +2,31 @@
 if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== TRUE)
     die();
 CModule::IncludeModule("iblock");
+CModule::IncludeModule("mytb");
 $APPLICATION->AddHeadScript("/jslibs/jquery/jquery-1.7.2.min.js");
 $APPLICATION->AddHeadScript("/jslibs/jqueryui/js/jquery-ui-1.8.21.custom.min.js");
 
 
 $clubID = (int)$arParams['ID'];
-if ($this->StartResultCache()) {
+
 global $USER;
-$userInfo=CUser::GetByID($USER::GetID())->Fetch();
+$arParams['userID']=intval($USER::GetID());
+
+
+$cache_id = serialize(array($arParams,$_SESSION['CLEAR_CASH']));
+$arParams['CACHE_TIME']=intval($arParams['CACHE_TIME'])>0?$arParams['CACHE_TIME']:3600;
+
+$obCache = new CPHPCache;
+if ($obCache->InitCache($arParams['CACHE_TIME'], $cache_id, '/'))
+{
+    $vars = $obCache->GetVars();
+    $arResult = $vars['arResult'];
+}
+elseif ($obCache->StartDataCache())
+{
+
+
+$userInfo=CUser::GetByID($arParams['userID'])->Fetch();
 
 $club = new Club($clubID);
 
@@ -35,14 +52,25 @@ $arFields=$club->getInfo(array("arSelect"=> array(
 
 
 $arFile = CFile::GetFileArray($arFields["PREVIEW_PICTURE"]);
-$arFields["PREVIEW_PICTURE"]=$arFile["SRC"];
+
+$arFields["PREVIEW_PICTURE"]=imgurl($arFile["SRC"], array("w" => 200));
 $arResult['arFields'] = $arFields;
 
 
 $arResult['userInfo'] =$userInfo;
+$arResult['ADDRESS'] = $club->getAddress();;
+
+
+    $obCache->EndDataCache(array(
+        'arResult' => $arResult,
+    ));
+}
 
 $this->IncludeComponentTemplate();
-}
+
+
+
+
 
 $APPLICATION->SetTitle(html_entity_decode($arResult['arFields']['PROPERTY_TYPE_FACILITY_VALUE'])." ".html_entity_decode($arResult['arFields']['NAME']));
 

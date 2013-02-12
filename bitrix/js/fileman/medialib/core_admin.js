@@ -63,6 +63,10 @@ BXMedialibAdmin.prototype =
 			this.SelectCollection(this.curColl, true);
 			this.OpenCollection(this.curColl);
 		}
+
+		// Temp hack for dialogs in Opera must die when redesigned
+		if (BX('mlsd_item'))
+			document.body.appendChild(BX('mlsd_item').parentNode);
 	},
 
 	BuildCollections: function()

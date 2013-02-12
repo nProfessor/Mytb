@@ -75,7 +75,7 @@ window.LHEPostForm.prototype = {
 		window[this.eID].SaveContent();
 		window[this.eID]['arFiles'].push(result.element_id);
 
-		if (this.IsBlog && this.IsWebdavInstalled && (!result.element_content_type ||result.element_content_type.substr(0,6) != 'image/'))
+		if (this.IsBlog && this.IsWebdavInstalled && result.storage == 'bfile' && (!result.element_content_type ||result.element_content_type.substr(0,6) != 'image/'))
 		{
 			obj.agent.StopUpload(BX('wd-doc'+result.element_id));
 		}
@@ -85,6 +85,9 @@ window.LHEPostForm.prototype = {
 		}
 		else if (result.storage == 'bfile')
 		{
+			if(BX.findChild(BX(this.formID), {'attr': {id: 'upload-cid'}}, true, false))
+				BX.findChild(BX(this.formID), {'attr': {id: 'upload-cid'}}, true, false).value = obj.CID;
+
 			if(result.element_content_type && result.element_content_type.substr(0,6) == 'image/')
 			{
 
@@ -246,7 +249,7 @@ window.LHEPostForm.prototype = {
 		el.className = '';
 	}
 }
-
+window["mentionText"] = '';
 window.BXfpdSelectCallbackMent = function (item, type, search, formID, editorName)
 {
 	if(type == 'users')
@@ -281,7 +284,6 @@ window.BXfpdSelectCallbackMent = function (item, type, search, formID, editorNam
 						txt = r.endContainer.textContent;
 					}
 
-
 					lastS = r.endOffset+2;
 					if(lastS > r.endOffset)
 						lastS = r.endOffset;
@@ -293,52 +295,34 @@ window.BXfpdSelectCallbackMent = function (item, type, search, formID, editorNam
 					txt2 = txt.substr(0, txtPos);
 					txtleng = txt2.length;
 
-					lastC = txt2.slice(txt2.length-1);
-					if(lastC.length == 1 && BX.util.trim(lastC).length == 0)
-					{
-						txt2 = txt2.substr(0, txt2.length-1);
-						txt2 += txt.substr(r.endOffset, txt.length);
-						txtPos--;
-					}
+					var rng = window[editorName].pEditorDocument.createRange();
+
+					if(txtPos < 0)
+						txtPos = r.endContainer.length;
+
+					txtPosEnd = txtPos+1;
+					if(window["mentionText"].length > 0)
+						txtPosEnd = window["mentionText"].length + txtPosEnd;
 					else
-					{
-						if(txtPos > 0)
-							txt2 += txt.substr(r.endOffset, txt.length);
-					}
-					setTimeout(function(){
-						if(win.document.selection) // IE8 and below
-						{
-							r.endContainer.nodeValue = txt2;
-						}
-						else
-						{
-							r.endContainer.textContent = txt2;
-						}
+					if(txtPosEnd > r.endContainer.length)
+						txtPosEnd = r.endContainer.length;
 
-						if(!BX.browser.IsIE())
-						{
-							var selection = window[editorName].GetSelectionRange();
+					rng.setStart(r.endContainer, txtPos);
+					rng.setEnd(r.endContainer, txtPosEnd);
+					window[editorName].SelectRange(rng);
 
-							if(win.document.selection) // IE8 and below
-								selection = BXfixIERangeObject(selection, win);
-
-							var rng = window[editorName].pEditorDocument.createRange();
-							if(txtPos < 0)
-								txtPos = selection.endContainer.length;
-							rng.setStart(selection.endContainer, txtPos);
-							rng.setEnd(selection.endContainer, txtPos);
-							window[editorName].SelectRange(rng);
-						}
-					}, 1); //FF15 fix
 					adit = '&nbsp;';
 					if(txtleng <= 0)
 						adit = '';
 
 					window[editorName].InsertHTML(adit + '<span id="' + window[editorName].SetBxTag(false, {'tag': "postuser", 'params': {'value' : item.entityId}}) + '" style="color: #2067B0; border-bottom: 1px dashed #2067B0;">' + item.name + '</span>&nbsp;');
+					window[editorName].SetFocus();
 				}
 			}
 			BX.SocNetLogDestination.obItemsSelected[window['BXSocNetLogDestinationFormNameMent' + formID]] = {};
 			window['BXfpdStopMent' + formID]();
+			window["mentionText"] = '';
+
 		}
 	}
 }
@@ -403,6 +387,7 @@ window.bxPFParser = function(e, eID, formID)
 				if(prevS == "+" || prevS == "@" || prevS == "," || (prevS.length == 1 && BX.util.trim(prevS) == 0) || prevS == "" || prevS== "(")
 				{
 					window['bMentListen'] = true;
+					window["mentionText"] = '';
 					if(!BX.SocNetLogDestination.isOpenDialog())
 						BX.SocNetLogDestination.openDialog(window['BXSocNetLogDestinationFormNameMent' + formID]);
 				}
@@ -477,6 +462,7 @@ window.bxPFParser = function(e, eID, formID)
 					}
 					else
 					{
+						window["mentionText"] = txt2;
 						BX.SocNetLogDestination.search(txt2, true, window['BXSocNetLogDestinationFormNameMent' + formID], BX.message("MPF_NAME_TEMPLATE"));
 						if(BX.util.trim(txt2).length == 0)
 						{
@@ -879,10 +865,13 @@ window.__LHE_OnInit = function(pEditor)
 		formID = window[pEditor.id + 'Settings']['formID'],
 		objName = window[pEditor.id + 'Settings']['objName'];
 
-	BX.addCustomEvent(
-		pEditor,
-		'OnDocumentKeyDown',
-		function(e){bxPFParser(e, pEditor, formID);});
+	if(!/MSIE 8/.test(navigator.userAgent))
+	{
+		BX.addCustomEvent(
+			pEditor,
+			'OnDocumentKeyDown',
+			function(e){bxPFParser(e, pEditor, formID);});
+	}
 
 	if (BX.util.in_array("CreateLink", window[pEditor.id + 'Settings']['buttons']))
 		window[objName]['makeButton']('lhe_btn_createlink', 'bx-b-link');
@@ -1148,4 +1137,64 @@ window.CustomizeLightEditor = function(editorId, params)
 		};
 	};
 }
+
+	var lastWaitElement = null;
+	window.MPFbuttonShowWait = function(el)
+	{
+		if (el && !BX.type.isElementNode(el))
+			el = null;
+		el = el || this;
+
+		if (BX.type.isElementNode(el)
+			
+			)
+		{
+			BX.defer(function(){el.disabled = true})();
+
+			var 
+				waiter_parent = BX.findParent(el, BX.is_relative),
+				pos = BX.pos(el, !!waiter_parent);
+
+			el.bxwaiter = (waiter_parent || document.body).appendChild(BX.create('DIV', {
+				props: {className: 'mpf-load-img'},
+				style: {
+					top: parseInt((pos.bottom + pos.top)/2 - 9) + 'px',
+					left: parseInt((pos.right + pos.left)/2 - 9) + 'px'
+				}
+			}));
+	
+
+			BX.addClass(el, 'mpf-load');
+			BX.hide(el.nextSibling);
+			BX.hide(el.previousSibling);
+
+			lastWaitElement = el;
+
+			return el.bxwaiter;
+		}
+	}
+
+	window.MPFbuttonCloseWait = function(el)
+	{
+		if (el && !BX.type.isElementNode(el))
+			el = null;
+		el = el || lastWaitElement || this;
+
+		if (BX.type.isElementNode(el))
+		{
+			if (el.bxwaiter && el.bxwaiter.parentNode)
+			{
+				el.bxwaiter.parentNode.removeChild(el.bxwaiter);
+				el.bxwaiter = null;
+			}
+
+			el.disabled = false;
+			BX.removeClass(el, 'mpf-load');
+			BX.show(el.nextSibling);
+			BX.show(el.previousSibling);
+
+			if (lastWaitElement == el)
+				lastWaitElement = null;
+		}
+	}
 })(window);

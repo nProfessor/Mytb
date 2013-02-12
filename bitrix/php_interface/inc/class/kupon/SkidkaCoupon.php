@@ -9,5 +9,7 @@
 class SkidkaCoupon extends Kupon
 {
     public $xml="http://skidka-coupon.ru/xml4";
+    public $parsePage="http://skidka-coupon.ru/restaurant";
+    public $parseReg="#/component/coupon/event/([0-9]+)#is";
     public $tags="skidkacoupon";
 }

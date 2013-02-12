@@ -8,7 +8,7 @@ IncludeTemplateLangFile(__FILE__);
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ru" lang="ru">
 <head>
     <title><?$APPLICATION->ShowTitle()?></title>
-    <link rel="shortcut icon" type="image/x-icon" href="<?=SITE_TEMPLATE_PATH?>/favicon.ico"/>
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico"/>
 
     <link rel="stylesheet" type="text/css" href="/css/common.css"/>
     <link rel="stylesheet" type="text/css" href="/css/styles.css"/>
@@ -49,38 +49,42 @@ IncludeTemplateLangFile(__FILE__);
 
 
     <div class="sidebar pull-right">
+            <div style="padding-left:60px;margin-top: -30px;">
+                    <?$APPLICATION->IncludeComponent("mytb:auth", "soc", array(
+                        "START_FROM" => "1",
+                        "PATH" => "",
+                        "SITE_ID" => SITE_ID
+                    ),
+                    FALSE
+                );?>
 
-        <?$APPLICATION->IncludeComponent("mytb:auth", "soc", array(
-            "START_FROM" => "1",
-            "PATH" => "",
-            "SITE_ID" => SITE_ID
-        ),
-        FALSE
-    );?>
-
-        <?$APPLICATION->IncludeComponent("mytb:baner.home", "akcia", array(
-            "START_FROM" => "1",
-            "PATH" => "",
-            "SITE_ID" => SITE_ID
-        ),
-        FALSE
-    );?>
-
+                    <?$APPLICATION->IncludeComponent("mytb:baner.home", "akcia", array(
+                        "START_FROM" => "1",
+                        "PATH" => "",
+                        "SITE_ID" => SITE_ID
+                    ),
+                    FALSE
+                );?>
+            </div>
+        <div class="clear_both"></div>
+        <div class="instruction">
+            <span>Инструкция:</span>
+            <ul>
+                <li>Найди любимые заведения;</li>
+                <li>Подпишись на акции;</li>
+                <li>Получай уведомления о скидках;</li>
+            </ul>
+        </div>
         <div class="clear_both"></div>
 
-        <div class="about_us">
-            <i></i>
-            <span>О нас пишут:</span>
-            <noindex>
-            <a href="http://www.forbes.ru/video/192288-zayavka-na-konkurs-startapov-forbes-mytb" class="forbes" target="_blank"></a>
-            <a href="http://www.towave.ru/content/mytb-resurs-uvedomitel-ob-aktsiyakh-klubov-barov-restoranov.html" class="towave" target="_blank"></a>
-            <a href="http://nom.premiaruneta.ru/2012/site/approved/" class="premia" target="_blank"></a>
-            </noindex>
-        </div>
+
     </div>
 
-    <div id="banner">
-
+    <div id="banner" class="login_show" >
+        <div>
+            <span>Мы — сервис подписки на акции и события</span><br/><span>ваших любимых заведений</span><br/>
+            <span class="small">Мы первыми сообщим тебе об акции!</span>
+        </div>
     </div>
 
 
@@ -97,11 +101,13 @@ IncludeTemplateLangFile(__FILE__);
     </div>
 
 
+
     <div class="content_news">
         <div class="home_block_news">
             <div class="block_title"><span class="stock"><i></i>Акции</span></div>
             <?$APPLICATION->IncludeComponent("mytb:home.stocks.club", "", array(
-                "LIMIT" => 4
+                "LIMIT" => 4,
+                ""
             ),
             FALSE
         );?>
@@ -139,20 +145,20 @@ IncludeTemplateLangFile(__FILE__);
             </script>
             <div class="clear_both"></div>
         </div>
-        <div class="home_seo_text">
+        <div class="home_seo_text" id="text_baner">
             <h3>MyTB.ru — первыми сообщим тебе о скидках </h3>
             <p>
                 <ul>
-            <li>Постоянно посещаешь одни и теже заведения?</li>
-            <li>Или просто есть любимое кафе, клуб, или любимый бар?</li>
-            <li>Но слишком поздно узнаешь об акциях проводимых в них?</li>
+            <li>— Постоянно посещаешь одни и те же заведения?</li>
+            <li>— Или просто есть любимое кафе, клуб или любимый бар?</li>
+            <li>— Но слишком поздно узнаешь об акциях, проводимых в них?</li>
                 </ul>
             </p>
             <p>
-                Тогда тебе будет полезен наш сервис. Все что тебе нужно, это найти нужное заведение у нас и <strong>подписаться на акции</strong>. После чего ты начнешь получать уведомления по СМС или Email о новых акциях событиях и новостях данного заведения.
+                Тогда тебе будет полезен наш сервис. Все что тебе нужно, это найти любимое заведение у нас и <strong>подписаться на акции</strong>. После чего ты начнешь получать уведомления по СМС или Email о новых акциях, событиях и новостях данного заведения.
             </p>
             <p>
-            Какую информаци, каким способом и в какое время получать её выбираешь ты сам.
+            Какую информацию, каким способом и в какое время её получать, выбираешь ты сам.
             </p>
             <p>
                 <b>Чем больше подписчиков у заведения, тем чаще будут проводится в нем акции!</b>
@@ -165,3 +171,15 @@ IncludeTemplateLangFile(__FILE__);
 
 
 
+    <div class="about_us">
+        <noindex>
+        <div>
+        <i></i>
+        <span>О нас пишут:</span>
+        </div>
+
+            <a href="http://www.forbes.ru/video/192288-zayavka-na-konkurs-startapov-forbes-mytb" class="forbes" target="_blank"></a>
+            <a href="http://www.towave.ru/content/mytb-resurs-uvedomitel-ob-aktsiyakh-klubov-barov-restoranov.html" class="towave" target="_blank"></a>
+            <a href="http://nom.premiaruneta.ru/2012/site/approved/" class="premia" target="_blank"></a>
+        </noindex>
+    </div>

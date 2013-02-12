@@ -1,18 +1,10 @@
 <?if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true) die();?>
-<div class="search-page">
-	<form action="" method="get">
-		<table width="100%" border="0" cellpadding="0" cellspacing="0">
-			<tbody><tr>
-				<td style="width: 100%;">
-                    <div class="input-append">
-                        <input class="span11" type="text" name="q" value="<?=$arResult["REQUEST"]["QUERY"]?>" /><button class="button orange span2" type="submit"><?echo GetMessage("CT_BSP_GO")?>!</button>
-                    </div>
-
-				</td>
-			</tr>
-		</tbody>
-        </table>
-	</form>
+<?$APPLICATION->IncludeComponent("bitrix:search.form", "small", array(
+        "PAGE" => "#SITE_DIR#search/index.php",
+        "REQWEST"=>$arResult["REQUEST"]["QUERY"]
+    ),
+    FALSE
+);?>
 
 
 	<div class="search-result">

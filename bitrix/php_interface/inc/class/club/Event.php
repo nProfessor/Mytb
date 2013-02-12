@@ -10,8 +10,12 @@ class Event
 {
     private $clubID;
 
-    function __construct($clubID)
+    function __construct($clubID=false)
     {
+        if($clubID==false){
+            return;
+        }
+
         if(is_array($clubID)){
             $ar=array();
             foreach($clubID as $var){
@@ -112,10 +116,18 @@ class Event
             array(
                 "ID",
                 "NAME",
-                "ACTIVE_FROM",
+                "ACTIVE",
+                "DATE_ACTIVE_FROM",
+                "DATE_ACTIVE_TO",
                 "ACTIVE_TO",
                 "DETAIL_TEXT",
-                "PREVIEW_PICTURE"
+                "DETAIL_PICTURE",
+                "PROPERTY_CLUB_ID",
+                "DATE_ACTIVE_TO",
+                "PROPERTY_CLUB_ID",
+                "PROPERTY_PUBLIC",
+                "TAGS"
+
             ));
 
         return $ob;
@@ -175,6 +187,21 @@ class Event
         return $result;
     }
 
+
+    function published($eventID){
+        global $USER;
+
+        $el = new CIBlockElement;
+
+        $arLoadProductArray = Array(
+            "MODIFIED_BY"    => $USER->GetID(), // элемент изменен текущим пользователем
+            "IBLOCK_ID"      => IB_SUB_EVENT_ID,
+            "ACTIVE"=>"Y"
+        );
+
+        CIBlockElement::SetPropertyValueCode($eventID, "PUBLIC", array('VALUE' => PROP_EVENT_PUBLIC));
+        return $el->update($eventID,$arLoadProductArray);
+    }
 
 
 }

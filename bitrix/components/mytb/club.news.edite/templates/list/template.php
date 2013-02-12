@@ -1,7 +1,7 @@
 <h2>Список новостей  «<?=$arResult['club']['NAME']?>» </h2>
 <br/>
 
-<form action="/kabinet-menedzhera/club_news_edite/edite/" method="post">
+<form action="/personal/kabinet-menedzhera/club_news_edite/edite/" method="post">
 <div class="input-append">
     <input type="text" class="span5 search-query" placeholder="Навзвание новости" name="NAME"><button type="submit" class="btn btn-primary" name="ADD_NEWS">Добавить новость</button>
 </div>

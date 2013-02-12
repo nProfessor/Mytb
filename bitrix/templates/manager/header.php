@@ -8,7 +8,7 @@ global $USER;
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ru" lang="ru">
 <head>
     <title><?$APPLICATION->ShowTitle()?></title>
-    <link rel="shortcut icon" type="image/x-icon" href="<?=SITE_TEMPLATE_PATH?>/favicon.ico"/>
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico"/>
 
     <link rel="stylesheet" type="text/css" href="/css/common.css"/>
     <link rel="stylesheet" type="text/css" href="/css/styles.css"/>
@@ -63,8 +63,8 @@ global $USER;
                         <b class="caret"></b>
                     </a>
                     <ul class="dropdown-menu">
-                        <li><a href="/kabinet-menedzhera/booking/">список броней</a></li>
-                        <li><a href="/kabinet-menedzhera/booking_edite/">управление броними</a></li>
+                        <li><a href="/personal/kabinet-menedzhera/booking/">список броней</a></li>
+                        <li><a href="/personal/kabinet-menedzhera/booking_edite/">управление броними</a></li>
                     </ul>
                 </li>
                 <li class="dropdown">
@@ -76,7 +76,7 @@ global $USER;
                     </a>
                     <ul class="dropdown-menu">
                         <li><a href="#">информация о клубе</a></li>
-                        <li><a href="/kabinet-menedzhera/club_temp/">редактор клуба</a></li>
+                        <li><a href="/personal/kabinet-menedzhera/club_temp/">редактор клуба</a></li>
                     </ul>
                 </li>
             <?endif;?>
@@ -89,10 +89,10 @@ global $USER;
                         <b class="caret"></b>
                     </a>
                     <ul class="dropdown-menu">
-                        <li><a href="/kabinet-menedzhera/club_edite/">Информация</a></li>
-                        <li><a href="/kabinet-menedzhera/club_news_edite/">Новости</a></li>
-                        <li><a href="/kabinet-menedzhera/club_stocks_edite/">Акции</a></li>
-                        <li><a href="/kabinet-menedzhera/club_event_edite/">События</a></li>
+                        <li><a href="/personal/kabinet-menedzhera/club_edite/">Информация</a></li>
+                        <li><a href="/personal/kabinet-menedzhera/club_news_edite/">Новости</a></li>
+                        <li><a href="/personal/kabinet-menedzhera/club_stocks_edite/">Акции</a></li>
+                        <li><a href="/personal/kabinet-menedzhera/club_event_edite/">События</a></li>
                     </ul>
                 </li>
             </ul>
