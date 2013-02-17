@@ -142,9 +142,9 @@ class Club
 
         return $arField['CNT'];
     }
-/**
- * Возвращаем ID клубов у которых есть акции
- */
+    /**
+     * Возвращаем ID клубов у которых есть акции
+     */
     static function getListHaveStocks(){
         return Stocks::getListHaveStocks();
     }

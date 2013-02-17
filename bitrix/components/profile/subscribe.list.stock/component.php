@@ -61,6 +61,8 @@ $arResult['stockList'] = $arStockList;
 $arResult['club']      = $arClubList;
 
 
+
+
 $this->IncludeComponentTemplate();
 
 

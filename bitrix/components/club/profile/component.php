@@ -41,13 +41,13 @@ $arFields=$club->getInfo(array("arSelect"=> array(
 
 
 
-
 $arFile = CFile::GetFileArray($arFields["PREVIEW_PICTURE"]);
 
 $arFields["PREVIEW_PICTURE"]=imgurl($arFile["SRC"], array("w" => 200));
 $arResult['arFields'] = $arFields;
 $arResult['subs']['stock'] = $club->getCountSubStocks();
 $arResult['subs']['event'] = $club->getCountSubEvent();
+
 
 
 

@@ -7,6 +7,7 @@ global $USER;
 $arGroups = $USER->GetUserGroupArray();
 
 if(in_array(GROUP_MANAGER,$arGroups)):
+
     $APPLICATION->IncludeComponent("club:profile", "", array(
             "USER_ID"=>$USER::GetID()
         ),

@@ -1,15 +1,8 @@
 <?php
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/header.php");
-<<<<<<< HEAD
-$APPLICATION->SetTitle("Партнерство для клубов");
-?> 
-<h1>Для клубов</h1>
- 
-=======
 $APPLICATION->SetTitle("Партнерство с MyTb.ru");
 ?>
 По всем вопросам можно обращаться на почту <a href="mailto:info@mytb.ru">info@mytb.ru</a>
->>>>>>> bdb5a4421a29116f4c51d72000f7eb1b28ea021b
 <br />
 <br />
 <br />
@@ -19,21 +12,6 @@ $APPLICATION->SetTitle("Партнерство с MyTb.ru");
 Вы предоставляете нам информацию о ваших событиях и акциях, а мы бесплатно распространяем ее заинтересованным пользователям по средствам СМС и Email.
 
 <br />
-<<<<<<< HEAD
- <dl></dl>
-<h1>Для купонных сервисов</h1>
-
-<p>
-  <br />
-</p>
- Вы предоставляете нам доступ к списку ваших акций через xml. И мы публикуем их у себя с ссылкой на ваш сайт. 
-<br />
-
-<br />
-
-<br />
- Подробности можно узнать написав нам на почту <a href="mailto:info@mytb.ru" >info@mytb.ru</a> <?require($_SERVER["DOCUMENT_ROOT"]."/bitrix/footer.php");?>
-=======
 <br />
 <br />
 
@@ -43,4 +21,3 @@ $APPLICATION->SetTitle("Партнерство с MyTb.ru");
 Вы предоставляете нам информацию о проводимых акциях в формате xml, а мы публикуем ее на нашем сайте и информируем всех подисчиков о появлении новой акции.
 
 <?require($_SERVER["DOCUMENT_ROOT"]."/bitrix/footer.php");?>
->>>>>>> bdb5a4421a29116f4c51d72000f7eb1b28ea021b

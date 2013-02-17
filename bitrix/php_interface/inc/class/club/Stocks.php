@@ -36,9 +36,9 @@ class Stocks
         $arFilter = array(
             "IBLOCK_ID"       => IB_SUB_STOCK_ID,
             ">DATE_ACTIVE_TO" => date("d.m.Y h:i:s"));
-            if (is_array($clubID)) {
-                $arFilter["PROPERTY_CLUB_ID"]=$clubID;
-            }
+        if (is_array($clubID)) {
+            $arFilter["PROPERTY_CLUB_ID"]=$clubID;
+        }
 
         $ob = CIBlockElement::GetList(
             array("IBLOCK_ID" => "ASC"),
@@ -190,7 +190,7 @@ class Stocks
                 "PROPERTY_PRICECOUPON",
                 "PROPERTY_DISCOUNT",
                 "PROPERTY_PUBLIC",
-                 "TAGS"
+                "TAGS"
             ));
 
         return $ob;

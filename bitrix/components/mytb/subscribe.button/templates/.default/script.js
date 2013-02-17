@@ -9,7 +9,7 @@ $(document).ready(function () {
     $(".button_subsribe").on("click", {}, function () {
         var obj = $(this);
         $.ajax({
-            url:"/bitrix/ui/ajax/club/subscribe.php",
+            url:"/bitrix/ui/ajax/club/subscribe.php?r="+Math.random(),
             type:"post",
             data:{
                 CLUB_ID:$(this).data("id")

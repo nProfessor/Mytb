@@ -32,8 +32,8 @@ class User
      */
     function getProps($arSelect = array())
     {
-        $ob = CIBlockElement::GetList(Array("SORT" => "ASC"), array("PROPERTY_USER" => $this->getUserId(),
-            "IBLOCK_ID" => IB_USER_PROPS), FALSE, FALSE, $arSelect);
+        $res = new CIBlockElement;
+        $ob = $res->GetList(Array("SORT" => "ASC"), array("PROPERTY_USER" => $this->getUserId(), "IBLOCK_ID" => IB_USER_PROPS), FALSE, FALSE, $arSelect);
         return $ob->Fetch();
     }
 
@@ -89,11 +89,8 @@ class User
     function setSubscribe($clubID, $type)
     {
 
-
         $clubID = intval($clubID);
-
         $PROP = array();
-
         $ob = CIBlockElement::GetList(
             Array("SORT" => "ASC"),
             array("PROPERTY_USER" => $this->getUserId(), "IBLOCK_ID" => IB_USER_PROPS),
@@ -105,31 +102,24 @@ class User
                 "PROPERTY_LINK_EVENT",
                 "PROPERTY_LINK_STOK"))->Fetch();
 
-
         foreach ($type as $var) {
             if (!in_array($clubID, $ob["PROPERTY_LINK_NEWS_VALUE"]) && $var == "LINK_NEWS") {
                 $ob["PROPERTY_LINK_NEWS_VALUE"][] = $clubID;
-
                 $PROP['LINK_NEWS'] = $ob["PROPERTY_LINK_NEWS_VALUE"];
             }
 
             if (!in_array($clubID, $ob["PROPERTY_LINK_EVENT_VALUE"]) && $var == "LINK_EVENT") {
                 $ob["PROPERTY_LINK_EVENT_VALUE"][] = $clubID;
-
                 $PROP['LINK_EVENT'] = $ob["PROPERTY_LINK_EVENT_VALUE"];
             }
 
             if (!in_array($clubID, $ob["PROPERTY_LINK_STOK_VALUE"]) && $var == "LINK_STOK") {
                 $ob["PROPERTY_LINK_STOK_VALUE"][] = $clubID;
-
                 $PROP['LINK_STOK'] = $ob["PROPERTY_LINK_STOK_VALUE"];
             }
         }
 
-
-
         return CIBlockElement::SetPropertyValuesEx($ob["ID"], IB_USER_PROPS, $PROP);
-
     }
 
     /**
