@@ -50,6 +50,7 @@ class Kupon
                         $PROP["DISCOUNT"] = intval($var->discount); // свойству с кодом 3 присваиваем значение 38
                         $PROP["DISCOUNTPRICE"] = intval($var->discountprice); // свойству с кодом 3 присваиваем значение 38
                         $PROP["PRICECOUPON"] = intval($var->pricecoupon); // свойству с кодом 3 присваиваем значение 38
+                        $PROP["PUBLIC"] = PROP_STOCK_PUBLIC; // свойству с кодом 3 присваиваем значение 38
 
 
                         $arLoadProductArray = Array(
@@ -62,7 +63,6 @@ class Kupon
                             "TAGS" => trim($this->tags),
                             "ACTIVE" => "Y", // активен
                             "PREVIEW_TEXT" => trim(strip_tags($var->description)),
-                            "PROPERTY_PUBLIC" => PROP_STOCK_PUBLIC,
                             "DETAIL_PICTURE" => CFile::MakeFileArray(trim($var->picture))
                         );
 
