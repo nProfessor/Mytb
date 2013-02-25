@@ -21,8 +21,6 @@ $clubInfo['TIME_WORKING']=trim($_POST["TIME_WORKING"]);
 $clubInfo['AVERAGE_CHECK']=trim($_POST["AVERAGE_CHECK"]);
 $clubInfo['TYPE_FACILITY']=(array)$_POST["KIND_CLUB"];
 $clubInfo['MUSIC']=(array)$_POST["MUSIC"];
-
-
 $clubInfo['ADDRES']=(array)$_POST["ADDRES"];
 $clubInfo['ADDRES_NEW']=(array)$_POST["ADDRES_NEW"];
 
@@ -71,12 +69,12 @@ $clubRes->update(array(
     "TIME_WORKING" => $clubInfo['TIME_WORKING'],
     "TYPE_FACILITY" => $clubInfo['TYPE_FACILITY'],
     "MUSIC" => $clubInfo['MUSIC'],
-    "DESCR" => $clubInfo['DESCR']
+    "DETAIL_TEXT" => $clubInfo['DETAIL_TEXT']
 ));
 
 
 die(json_encode(array("status" => "ok", "result" => array(
-    "ID"=>$clubInfo['ID'],
+    "ID"=>$club_id,
     "NAME" => $clubInfo['NAME'],
     "PREVIEW_PICTURE" => $clubInfo['PREVIEW_PICTURE'],
     "SITE" => $clubInfo['PROPERTY_SITE_VALUE'],
@@ -85,6 +83,6 @@ die(json_encode(array("status" => "ok", "result" => array(
     "TIME_WORKING" => $clubInfo['PROPERTY_TIME_WORKING_VALUE'],
     "KIND_CLUB" => (array)$clubInfo['PROPERTY_KIND_CLUB_VALUE'],
     "MUSIC" => (array)$clubInfo['PROPERTY_MUSIC_VALUE'],
-    "DESCR" => $clubInfo['PROPERTY_DESCR_VALUE'],
+    "DETAIL_TEXT" => $clubInfo['DETAIL_TEXT'],
     "ADDRESS" => $clubRes->getAddress(),
 ))));
