@@ -15,7 +15,8 @@ function no_active_stock()
 
 
     $sort=array("SORT" => "ASC");
-    $filter=array("PROPERTY_CLUB_ID" => $this->clubID,
+    $filter=array(
+            "ACTIVE"=>"Y",
             "IBLOCK_ID" => IB_SUB_STOCK_ID,
             "<DATE_ACTIVE_TO" => date("d.m.Y"));
     $select=array("ID","IBLOCK_ID");

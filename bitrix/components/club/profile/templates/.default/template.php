@@ -8,7 +8,9 @@ $subEvent = $arResult['subs']['event'];
 <div class="right w8">
     <div class="padding_l_25">
         <h1><?=$clubInfo['NAME']?></h1>
+        <div><a href="/club/<?=$clubInfo['ID']?>" target="_blank">Перейти в карточку заведения</a></div><br/>
         <table class="table">
+
             <tr>
                 <th colspan="2">Количество подписчиков</th>
                 <td></td>

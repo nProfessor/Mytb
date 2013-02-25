@@ -10,9 +10,10 @@ $subEvent = $arResult['subs']['event'];
 
 <div class="right w8">
     <div class="padding_l_25">
+
         <h1>Редактируем <?=$clubInfo['NAME']?></h1>
 
-            <input type="hidden" value="<?=$clubInfo['ID']?>" id="club_id">
+            <input type="hidden" value="<?=$clubInfo['ID']?>" id="club_id" name="club_id">
             <table class="table">
                 <tr>
                     <td width="200px">Название:</td>
@@ -97,18 +98,18 @@ $subEvent = $arResult['subs']['event'];
                 <tr>
                     <td></td>
                     <td>
-                        <button class="btn add_new_address">Добавить еще адрес</button>
+                        <a href="#" class="btn add_new_address" onclick="return false;">Добавить еще адрес</a>
                     </td>
                 </tr>
             </table>
             <div class="form-actions">
-                <button type="button" class="btn btn-primary" id="save">Сохранить изменения</button>
+                <button type="button"  id="save" name="SAVE_PROFILE_CLUB" class="btn btn-primary">Сохранить изменения</button>
                 <div id="message_errors" class="message_errors">
 
                 </div>
             </div>
 
-    </div>
+     </div>
 </div>
 
 <div class="w2 left">

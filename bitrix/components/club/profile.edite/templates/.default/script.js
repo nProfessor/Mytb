@@ -80,7 +80,7 @@ $(document).ready(function () {
                 EMAIL_MANAGER:$("input[name='EMAIL_MANAGER']").val(),
                 AVERAGE_CHECK:$("input[name='AVERAGE_CHECK']").val(),
                 TIME_WORKING:$("textarea[name='TIME_WORKING']").val(),
-                DESCR:$("textarea[name='DESCR']").val(),
+                DESCR:tinyMCE.get('elm1').getContent(),
                 MUSIC:music,
                 ADDRES:addres,
                 ADDRES_NEW:addres_new,

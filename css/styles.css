@@ -1822,3 +1822,18 @@ color:#c60003;
     margin: 10px 0px;
 
 }
+
+
+ul.gallery_100x100{
+    margin: 0px;
+    padding: 0px;
+}
+
+ul.gallery_100x100 li{
+    margin: 10px;
+    padding: 0px;
+    float:left;
+    width: 100px;
+    height: 100px;
+    text-align: center;;
+}

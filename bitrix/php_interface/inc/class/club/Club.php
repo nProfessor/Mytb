@@ -458,6 +458,7 @@ class Club
         $el = new CIBlockElement;
 
         $el->Update($this->clubID, array("NAME" =>$info['NAME'],"DETAIL_TEXT"=>$info['DETAIL_TEXT']));
+
         return CIBlockElement::SetPropertyValues($this->clubID,IB_CLUB_ID,array(
             "SITE" =>$info['SITE'],
             "EMAIL_MANAGER" =>$info['EMAIL_MANAGER'],
@@ -467,6 +468,24 @@ class Club
             "MUSIC" =>$info['MUSIC']
         ));;
 
+    }
+
+    /**
+     * Возвращаем список фотографий заведений
+     */
+    function getPhotoList(){
+        $ob = MyTbCore::GetList(
+            array(),
+            array("CLUB_ID" => $this->clubID),
+            FALSE,
+            false,
+            array(),"club_photo");
+        $arResult=array();
+        while($row=$ob->Fetch()){
+            $arResult[]=$row;
+        }
+
+        return $arResult;
     }
 
 

@@ -71,12 +71,12 @@ $clubRes->update(array(
     "TIME_WORKING" => $clubInfo['TIME_WORKING'],
     "TYPE_FACILITY" => $clubInfo['TYPE_FACILITY'],
     "MUSIC" => $clubInfo['MUSIC'],
-    "DESCR" => $clubInfo['DESCR']
+    "DETAIL_TEXT" => $clubInfo['DETAIL_TEXT']
 ));
 
 
 die(json_encode(array("status" => "ok", "result" => array(
-    "ID"=>$clubInfo['ID'],
+    "ID"=>$club_id,
     "NAME" => $clubInfo['NAME'],
     "PREVIEW_PICTURE" => $clubInfo['PREVIEW_PICTURE'],
     "SITE" => $clubInfo['PROPERTY_SITE_VALUE'],

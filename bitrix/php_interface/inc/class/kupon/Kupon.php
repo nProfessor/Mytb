@@ -257,7 +257,7 @@ class Kupon
     public
     function filterSite($url)
     {
-        if ($url != "" && $url != "vkontakte . ru" && $url != "vk . com" && $url != "facebook . ru" && !preg_match("#(vkontakte|facebook|vk\.com)#is", $url)) {
+        if (!preg_match("#(vkontakte|facebook|vk\.com)#is", $url)) {
             return true;
         } else {
             return false;

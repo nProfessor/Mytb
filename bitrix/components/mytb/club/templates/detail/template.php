@@ -199,9 +199,14 @@ $ADDRESS = $arResult['ADDRESS'];
         ?>
 </div>
 <div class="block_info" id="b_photo">
-    <noindex>
-        На данный момент нет фото и видео
-    </noindex>
+    <?
+    $APPLICATION->IncludeComponent("mytb:club.photo",
+        "",
+        array(
+            "CLUB_ID"=> intval($clubInfo["ID"]),
+            "CLUB_NAME"=> $clubInfo["NAME"],
+        ), false);
+    ?>
 </div>
 
         <div class="block_info" id="b_stock">
