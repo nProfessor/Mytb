@@ -18,7 +18,9 @@
 
                 <a href="/club/stock/<?=$var["ID"]?>" class="stock_title"  title="<?=$partner['name']?>: <?=$var["NAME"]?>"><?=$var["NAME"]?></a>
 <div class="stock_info">
+    <?if(!empty($partner['name'])):?>
     <strong>Скидка представлена на сайте <?=$partner['name']?></strong><br/>
+    <?endif?>
                 <p style="font-size: 12px;"> <?=str_replace("\n","<br/>",cut_string($var["PREVIEW_TEXT"],400))?></p>
     <a href="/club/stock/<?=$var["ID"]?>" class="button right" title="<?=$partner['name']?>: <?=$var["NAME"]?>">Подробней</a>
 </div>

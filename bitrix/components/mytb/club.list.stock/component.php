@@ -25,6 +25,8 @@ while ($ar = $resStockList->Fetch()) {
 
 $arResult['stockList'] = $arStockList;
 $arResult['club']      = $club->getInfo(array("arSelect"=> array("NAME","PREVIEW_PICTURE")));
+$arResult['club']['NAME']=trim($arResult['club']['NAME']);
+$APPLICATION->SetTitle("Акции {$arResult['club']['NAME']}. Обычные и купонные, действующие акции заведения {$arResult['club']['NAME']}");
 
 
 $this->IncludeComponentTemplate();

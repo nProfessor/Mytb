@@ -18,6 +18,7 @@ class Kupon
 
     function  getData()
     {
+
         $data = array();
 
         $svg = new SimpleXMLElement(file_get_contents($this->xml));
@@ -31,6 +32,7 @@ class Kupon
 
 
             if ($this->filterSite($url)) {
+
 
                 $arFilter = Array(
                     "IBLOCK_ID" => IB_CLUB_ID,
@@ -94,7 +96,7 @@ class Kupon
             $clubList[$var['PROPERTY_VALUES']['CLUB_ID']][] = $var;
         }
 
-        $this->sendNotice($clubList);
+//        $this->sendNotice($clubList);
 
     }
 
@@ -257,7 +259,7 @@ class Kupon
     public
     function filterSite($url)
     {
-        if (!preg_match("#(vkontakte|facebook|vk\.com)#is", $url)) {
+        if (!preg_match("#(vkontakte|facebook|vk\.com)#is", $url)&&!empty($url)) {
             return true;
         } else {
             return false;
