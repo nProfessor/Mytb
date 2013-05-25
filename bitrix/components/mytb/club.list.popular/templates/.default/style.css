@@ -1,0 +1,30 @@
+.club_popular_list_item{
+    width: 303px;
+    float:left;
+    margin: 20px 10px 20px 10px;
+
+}
+.club_popular_list_item .img-polaroid-club a{
+    width: 300px;
+    height: 300px;
+    display: block;
+}
+
+
+
+.rating_show {
+    display: block;
+    font-size: 12px;
+    font-weight: normal;
+    padding: 10px;
+}
+
+.club_popular_list_item .info-popular-club{
+    border-top: 1px solid #EEEEEE;
+    font-size: 12px;
+    margin-top: 5px;
+    padding: 10px;
+}
+.club_popular_list_item .info-popular-club table{
+    width: 210px;
+}
