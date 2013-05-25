@@ -80,17 +80,18 @@ class Club
         $ob = CIBlockElement::GetList(Array(), array("PROPERTY_CLUB" => $this->clubID,
             "IBLOCK_ID" => IB_USER_PROPS), FALSE, FALSE, array("PROPERTY_USER"))->Fetch();
 
-        die(json_encode(array("clubID"=>$this->clubID,"obj"=>$ob)));
+        die(json_encode(array("clubID" => $this->clubID, "obj" => $ob)));
         return intval($ob['PROPERTY_USER_VALUE']);
     }
 
     /**
      * Получаем колличество подписчиков на акции у завадения
      */
-    function getCountSubStocks(){
+    function getCountSubStocks()
+    {
 
-        $arSelect = Array("ID","IBLOCK_ID","PROPERTY_LINK_STOK");
-        $arFilter = Array("IBLOCK_ID" => IB_CLUB_USER_ID, "ACTIVE" => "Y","PROPERTY_LINK_STOK"=>$this->clubID);
+        $arSelect = Array("ID", "IBLOCK_ID", "PROPERTY_LINK_STOK");
+        $arFilter = Array("IBLOCK_ID" => IB_CLUB_USER_ID, "ACTIVE" => "Y", "PROPERTY_LINK_STOK" => $this->clubID);
         $res = CIBlockElement::GetList(Array(), $arFilter, array("IBLOCK_ID"), FALSE, $arSelect);
         $arField = $res->Fetch();
 
@@ -101,10 +102,11 @@ class Club
     /**
      * Получаем колличество подписчиков на события у завадения
      */
-    function getCountSubEvent(){
+    function getCountSubEvent()
+    {
 
-        $arSelect = Array("ID","IBLOCK_ID","PROPERTY_LINK_STOK");
-        $arFilter = Array("IBLOCK_ID" => IB_CLUB_USER_ID, "ACTIVE" => "Y","PROPERTY_LINK_EVENT"=>$this->clubID);
+        $arSelect = Array("ID", "IBLOCK_ID", "PROPERTY_LINK_STOK");
+        $arFilter = Array("IBLOCK_ID" => IB_CLUB_USER_ID, "ACTIVE" => "Y", "PROPERTY_LINK_EVENT" => $this->clubID);
         $res = CIBlockElement::GetList(Array(), $arFilter, array("IBLOCK_ID"), FALSE, $arSelect);
         $arField = $res->Fetch();
 
@@ -142,22 +144,28 @@ class Club
 
         return $arField['CNT'];
     }
+
     /**
      * Возвращаем ID клубов у которых есть акции
      */
-    static function getListHaveStocks(){
+    static function getListHaveStocks()
+    {
         return Stocks::getListHaveStocks();
     }
+
     /**
      * Возвращаем ID клубов у которых есть акции
      */
-    static function getListHaveEvent(){
+    static function getListHaveEvent()
+    {
         return Event::getListHaveEvents();
     }
+
     /**
      * Возвращаем ID клубов у которых есть новости
      */
-    static function getListHaveNews(){
+    static function getListHaveNews()
+    {
         return News::getListHaveNews();
     }
 
@@ -442,9 +450,10 @@ class Club
      * Обновляем логотип клуба
      * @param $logo
      */
-    function updateLogo($logo){
+    function updateLogo($logo)
+    {
         $el = new CIBlockElement;
-        $el->Update($this->clubID, array("PREVIEW_PICTURE" =>$logo));
+        $el->Update($this->clubID, array("PREVIEW_PICTURE" => $logo));
 
     }
 
@@ -452,48 +461,109 @@ class Club
      * Обнавляем информацию о клубе
      * @param $info
      */
-    function update($info){
+    function update($info)
+    {
         $list = array();
 
         $el = new CIBlockElement;
 
-        $el->Update($this->clubID, array("NAME" =>$info['NAME'],"DETAIL_TEXT"=>$info['DETAIL_TEXT']));
+        $el->Update($this->clubID, array("NAME" => $info['NAME'], "DETAIL_TEXT" => $info['DETAIL_TEXT']));
 
-        return CIBlockElement::SetPropertyValues($this->clubID,IB_CLUB_ID,array(
-            "SITE" =>$info['SITE'],
-            "EMAIL_MANAGER" =>$info['EMAIL_MANAGER'],
-            "AVERAGE_CHECK" =>$info['AVERAGE_CHECK'],
-            "TIME_WORKING" =>$info['TIME_WORKING'],
-            "TYPE_FACILITY" =>$info['TYPE_FACILITY'],
-            "MUSIC" =>$info['MUSIC']
-        ));;
+        return CIBlockElement::SetPropertyValues($this->clubID, IB_CLUB_ID, array(
+            "SITE" => $info['SITE'],
+            "EMAIL_MANAGER" => $info['EMAIL_MANAGER'],
+            "AVERAGE_CHECK" => $info['AVERAGE_CHECK'],
+            "TIME_WORKING" => $info['TIME_WORKING'],
+            "TYPE_FACILITY" => $info['TYPE_FACILITY'],
+            "MUSIC" => $info['MUSIC']
+        ));
+        ;
 
     }
 
     /**
      * Возвращаем список фотографий заведений
      */
-    function getPhotoList(){
+    function getPhotoList()
+    {
         $ob = MyTbCore::GetList(
             array(),
             array("CLUB_ID" => $this->clubID),
             FALSE,
             false,
-            array(),"club_photo");
-        $arResult=array();
-        while($row=$ob->Fetch()){
-            $arResult[]=$row;
+            array(), "club_photo");
+        $arResult = array();
+        while ($row = $ob->Fetch()) {
+            $arResult[] = $row;
         }
 
         return $arResult;
     }
 
+    /**
+     * Возвращаем список популярных клубов
+     */
+    function getListPopular()
+    {
+        $clubListID=array();
+        $clubListData=array();
+
+
+        $obj=MyTbCore::GetList(array(),array(),false, array("nTopCount"=>21),array(),"popular");
+
+
+         while ($row = $obj->Fetch()) {
+             $clubListID[]=$row['CLUB_ID'];
+             $clubListData[$row['CLUB_ID']]['SORT']=$row['SORT'];
+             $clubListData[$row['CLUB_ID']]['SUBS']=$row['SUBS'];
+         }
+
+        if(count($clubListID)){
+        $ob = CIBlockElement::GetList(array(),
+            array("ID" => $clubListID, "IBLOCK_ID" => IB_CLUB_ID, "ACTIVE" => "Y"),
+            false,  array("nTopCount"=>21),
+            array("ID",
+                "DETAIL_TEXT",
+                "NAME",
+                "DATE_ACTIVE_FROM",
+                "PROPERTY_ADDRESS",
+                "PROPERTY_TIME_WORKING",
+                "PROPERTY_PRICE_COCKTAIL",
+                "PROPERTY_PHONE",
+                "PROPERTY_RATING",
+                "PROPERTY_MUSIC",
+                "PROPERTY_FACE",
+                "PROPERTY_DRESS_CODE",
+                "PROPERTY_SITE",
+                "PROPERTY_METRO",
+                "PROPERTY_PLAN",
+                "PREVIEW_PICTURE",
+                "PROPERTY_TYPE_FACILITY"
+            ));
+        }
+
+
+        while ($row = $ob->Fetch()) {
+            $row["SORT_RATING"]=$clubListData[$row["ID"]]['SORT'];
+            $row["SUBS"]=$clubListData[$row["ID"]]['SUBS'];
+
+            $result["s_".$row["ID"]]=$row;
+        }
+
+        uasort($result,function($a,$b){
+
+            if($a['SORT_RATING']<$b['SORT_RATING'])
+                return true;
+            return false;
+        });
+        return $result;
+    }
 
     /**
      * Возвращаем список акций для менеджера
      * @return CIBlockResult|string
      */
-    function getListStokManager($active,$arNavStartParams=false)
+    function getListStokManager($active, $arNavStartParams = false)
     {
 
         $ob = CIBlockElement::GetList(
@@ -524,13 +594,82 @@ class Club
         return $ob;
     }
 
+    /**
+     * Обновляем список популярных клубов
+     *
+     * Популярность - количество подписчиков(большой приоритет) и колличество лайков в Vkontakt
+     */
+    function UpdatePopular()
+    {
+
+        MyTbCore::DeleteWhere("popular");
+
+        $ob = CIBlockElement::GetList(
+            Array(),
+            array("IBLOCK_ID" => IB_USER_PROPS,
+                array(
+                    "LOGIC" => "OR",
+                    "!PROPERTY_LINK_NEWS" => false,
+                    "!PROPERTY_LINK_EVENT" => false,
+                    "!PROPERTY_LINK_STOK" => false,
+                )
+            ),
+            FALSE,
+            FALSE,
+            array("ID",
+                "PROPERTY_USER",
+                "PROPERTY_LINK_NEWS",
+                "PROPERTY_LINK_EVENT",
+                "PROPERTY_LINK_STOK"));
+
+        $ClubList = array();
+        while ($row = $ob->Fetch()) {
+            foreach ($row['PROPERTY_LINK_NEWS_VALUE'] as $var) {
+                $ClubList[$var]["SORT"] += 10;
+                $ClubList[$var]["SUBS"]++;
+            }
+            foreach ($row['PROPERTY_LINK_EVENT_VALUE'] as $var) {
+                $ClubList[$var]["SORT"] += 10;
+                $ClubList[$var]["SUBS"]++;
+            }
+            foreach ($row['PROPERTY_LINK_STOK_VALUE'] as $var) {
+                $ClubList[$var]["SORT"] += 10;
+                $ClubList[$var]["SUBS"]++;
+            }
+        }
+
+
+        $ob = CIBlockElement::GetList(
+            array("ACTIVE_FROM" => "DESC"),
+            array("IBLOCK_ID" => IB_CLUB_ID, "ACTIVE" => "Y", ">PROPERTY_RATING" => 0),
+            FALSE,
+            FALSE,
+            array(
+                "ID",
+                "PROPERTY_RATING",
+            ));
+        while ($row = $ob->Fetch()) {
+            $ClubList[$row["ID"]]["SORT"] += intval($row['PROPERTY_RATING_VALUE']);
+        }
+
+
+        if (count($ClubList)) {
+            foreach ($ClubList as $clubID => $popular) {
+                MyTbCore::Add(array("CLUB_ID" => $clubID, "SORT" => $popular['SORT'], "SUBS" => $popular['SUBS']), "popular");
+            }
+        }
+
+        return false;
+
+
+    }
 
 
     /**
      * Возвращаем список событий для менеджера
      * @return CIBlockResult|string
      */
-    function getListEventManager($active,$arNavStartParams=false)
+    function getListEventManager($active, $arNavStartParams = false)
     {
 
         $ob = CIBlockElement::GetList(
