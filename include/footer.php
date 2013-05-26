@@ -1,8 +1,18 @@
 <div id="footer">
 
     <div id="copyright">
-        <a href="http://mytb.ru" class="logo"></a>
+        <a href="http://mytb.ru" class="logo" title="Подписка на окции, новости и события в клубах, барах, ресторанах."></a>
+
+        <div class="footer_menu">
+            <ul>
+                <li><a href="/page/popular/">ТОП 20 заведений</a></li>
+                <li>|</li>
+                <li><a href="/page/partnership/">Партнерам</a></li>
+            </ul>
+        </div>
     </div>
+
+
 
 </div>
 

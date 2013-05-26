@@ -1386,7 +1386,7 @@ a.stoks:hover {
 .home_auth_soc {
     text-align: right;
 
-    margin-bottom: 15px;
+    margin: 15px;
     font-size: 13px;;
 
 }
@@ -1773,7 +1773,7 @@ a.stoks:hover {
 
 }
 .stock_info {
-   margin-left: 300px;
+   margin-left: 305px;
 }
 .thumbnail{
     border-radius: 0px !important;
@@ -1836,4 +1836,16 @@ ul.gallery_100x100 li{
     width: 100px;
     height: 100px;
     text-align: center;;
+}
+
+.footer_menu{
+    padding: 26px 0px;
+    float:right;
+}
+.footer_menu ul li {
+   float:left;
+    padding:0px 5px;
+}
+.footer_menu ul li a{
+    color:#fff;
 }
