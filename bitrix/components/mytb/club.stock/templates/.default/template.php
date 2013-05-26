@@ -27,10 +27,12 @@ $partner = Kupon::getDataServise($arResult['stockInfo']['TAGS']);
             <th>Даты проведения</th>
             <td>с <?=date("d.m.Y",strtotime($arResult['stockInfo']['ACTIVE_FROM']))?> по <?=date("d.m.Y",strtotime($arResult['stockInfo']['ACTIVE_TO']))?></td>
         </tr>
+        <?if(!empty($partner['name'])):?>
         <tr>
             <th>Партнер акции</th>
             <td><?=$partner['name']?></td>
         </tr>
+            <?endif?>
         <tr>
             <th>Поделиться</th>
             <td><script type="text/javascript" src="//yandex.st/share/share.js" charset="utf-8"></script>
@@ -48,9 +50,11 @@ $partner = Kupon::getDataServise($arResult['stockInfo']['TAGS']);
                 <?=str_replace("\n","<br/>",$arResult['stockInfo']['~PREVIEW_TEXT'])?></td>
         </tr>
 </div>
+<?if(!empty($arResult['stockInfo']['PROPERTY_URL_VALUE'])):?>
     <div class="clear_both link_cupon">
 Для покупки купона на скидку и получения полной информации об акции необходимо <strong><span data-link='<?=$arResult['stockInfo']['PROPERTY_URL_VALUE']?>' class="linc_coupon">перейти на сайт партнера <?=$partner['site']?></span></strong>
     </div>
 
+<?endif?>
 
 
