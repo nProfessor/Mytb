@@ -180,6 +180,7 @@ $ADDRESS = $arResult['ADDRESS'];
 <div class="block_info" id="b_descr">
     <?=$clubInfo["~DETAIL_TEXT"]?>
 </div>
+
 <div class="block_info" id="b_news">
         <?
         $APPLICATION->IncludeComponent("mytb:club.list.news",
@@ -232,6 +233,7 @@ $ADDRESS = $arResult['ADDRESS'];
 
 <div class="block_info" id="b_reviews">
 <?
+
     $APPLICATION->IncludeComponent(
     "prmedia:vkontakte.comments",
     "",

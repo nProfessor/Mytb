@@ -5,7 +5,7 @@ if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== TRUE)
 
 $clubID = (int)$arParams['CLUB_ID'];
 
-if ($this->StartResultCache()) {
+
 
 global $USER;
 
@@ -20,7 +20,7 @@ $arFields=$club->getInfo(array("arSelect"=> array(
 $arResult["RATING"]=$arFields['PROPERTY_RATING_VALUE'];
 
 $this->IncludeComponentTemplate();
-}
+
 
 
 
