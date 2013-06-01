@@ -9,6 +9,9 @@
             <? endif;?>
             <a href="/page/partnership/" title="Партнерство для клубов, купонных сервисов, рефералов"><span>Партнерам</span></a>
         </div>
+        <div class="pull-right popular_top">
+            <a href="/page/popular/" title="Рейтинг самых популярных заведений">Самые популярные<span></span></a>
+        </div>
     <a href="/" class="logo"></a>
         <div class="logo_title">
             <span>— первыми сообщим тебе о скидках</span>

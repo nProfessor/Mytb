@@ -1849,3 +1849,25 @@ ul.gallery_100x100 li{
 .footer_menu ul li a{
     color:#fff;
 }
+.popular_top a{
+    padding:25px;
+    color:#FDFDFD;
+    display: block;
+}
+.popular_top a span{
+    margin-top:-5px;
+    margin-left:10px;
+    display: block;
+    float:right;
+    background: url(/images/elements.png) no-repeat 0px -282px;
+    height: 40px;
+    width: 40px;
+}
+
+.popular_top a:hover{
+    color:#add8e6;
+    text-decoration: none;
+}
+.popular_top a:hover span{
+    background: url(/images/elements.png) no-repeat 0px -338px;
+}
