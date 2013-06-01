@@ -446,6 +446,19 @@ class Club
         return $result;
     }
 
+    static function getAddressAll($clubID)
+    {
+
+        $res = MyTbCore::GetList(array(), array("CLUB_ID" => $clubID), false, false, array("*"), "address");
+
+        $result = array();
+        while ($row = $res->Fetch()) {
+            $row["PHONE"] = unserialize($row["PHONE"]);
+            $result[] = $row;
+        }
+        return $result;
+    }
+
     /**
      * Обновляем логотип клуба
      * @param $logo

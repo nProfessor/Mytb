@@ -2,6 +2,7 @@
 <div class="header">
     <div class="header_conten">
         <div class="menu_top pull-right">
+            
             <? if (!$USER->IsAuthorized()): ?>
             <a href="/auth/" class="login_show" data-target="#auth_block_top" data-toggle="modal"  title="Войти в личный кабинет"><span>Вход</span></a>
             <?else:?>

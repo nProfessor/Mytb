@@ -1871,3 +1871,19 @@ ul.gallery_100x100 li{
 .popular_top a:hover span{
     background: url(/images/elements.png) no-repeat 0px -338px;
 }
+
+.PlacemarkInfo td{
+    padding:5px;
+}
+.PlacemarkInfo td .PlacemarkInfoHeader a{
+    font-size: 24px;
+}
+
+.PlacemarkInfoHint{
+    font-size: 14px;
+
+    padding:5px;
+}
+.ymaps-b-balloon__content-foot .button{
+    width: 82%;
+}
