@@ -1875,8 +1875,10 @@ ul.gallery_100x100 li{
 .PlacemarkInfo td{
     padding:5px;
 }
-.PlacemarkInfo td .PlacemarkInfoHeader a{
+ .PlacemarkInfoHeader a{
     font-size: 24px;
+    display: block;
+    text-align: center;
 }
 
 .PlacemarkInfoHint{

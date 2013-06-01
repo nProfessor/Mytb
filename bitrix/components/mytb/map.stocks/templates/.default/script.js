@@ -54,7 +54,7 @@ $(document).ready(function () {
                     text=
                         "<table class='PlacemarkInfo'><tr><td><img src='"+club[i]['PREVIEW_PICTURE']+"'/></td>"+
                     "<td>" +
-                    "<div><span class='PlacemarkInfoHeader'><a href='/club/"+club[i]['ID']+"'  target='_blank'>"+club[i]['NAME']+"</a></span></div>"+
+//                    "<div></div>"+
 
                     "<div><b>Время работы:</b><br/> "+club[i]['PROPERTY_TIME_WORKING_VALUE']+"</div>"+
                     "<div><b>Телефон:</b><br/> "+address[club[i]['ID']]['PHONE']+"</div>"+
@@ -62,6 +62,7 @@ $(document).ready(function () {
                     "</td></tr></table>";
                     Placemark = new ymaps.Placemark([LON,LAT], {
                         // Чтобы балун и хинт открывались на метке, необходимо задать ей определенные свойства.
+                        balloonContentHeader:"<span class='PlacemarkInfoHeader'><a href='/club/"+club[i]['ID']+"'  target='_blank'>"+club[i]['NAME']+"</a></span>",
                         balloonContentBody:text,
                         balloonContentFooter:"<a href='/club/"+club[i]['ID']+"/#stock' class='button orange' target='_blank'>Посмотреть акции и скидки</a>",
                         hintContent:"<b class='PlacemarkInfoHint'>"+club[i]['NAME']+"</b> "+club[i]['PROPERTY_TYPE_FACILITY']
