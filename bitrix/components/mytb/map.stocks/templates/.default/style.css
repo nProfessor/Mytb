@@ -1,0 +1,15 @@
+.map_filter{
+    background-color: #232427;
+    padding:20px;
+    width: 110px;
+    height: 460px;;
+    color:#FDFDFD;
+}
+.map_filter label{
+    display: block;
+}
+.map_filter label input{
+   margin:5px;
+}
+
+

@@ -4,7 +4,11 @@ require_once($_SERVER["DOCUMENT_ROOT"] . "/bitrix/modules/main/include/prolog_be
 CModule::IncludeModule("iblock");
 CModule::IncludeModule("mytb");
 
+define('AJAX_QUERY',strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest' && isset($_SERVER['HTTP_X_REQUESTED_WITH']));
 
+if (!AJAX_QUERY){
+    die(json_decode(array("status"=>"errors")));
+}
 $arFilter = array(
     "ACTIVE" => "Y"
 );
@@ -40,6 +44,8 @@ while ($arField = $res->Fetch()) {
         "PROPERTY_PRICE_COCKTAIL_VALUE" => $arField["PROPERTY_PRICE_COCKTAIL_VALUE"],
         "PROPERTY_CARDS_VALUE" => $arField["PROPERTY_CARDS_VALUE"],
         "PROPERTY_TYPE_FACILITY" => implode("/",$arField["PROPERTY_TYPE_FACILITY_VALUE"]),
+        "PROPERTY_TYPE_FACILITY_VALUE" => array_keys($arField["PROPERTY_TYPE_FACILITY_VALUE"]),
+
     );
 
 
@@ -50,7 +56,7 @@ $resAdress=Club::getAddressAll($clubsID);
 
 $adress=array();
 foreach ($resAdress as $var) {
-    $var["PHONE"]=str_replace(",","<br/>",$var["PHONE"]);
+    $var["PHONE"]=implode("<br/>",$var["PHONE"]);
     $adress[$var['CLUB_ID']]=$var;
 }
 

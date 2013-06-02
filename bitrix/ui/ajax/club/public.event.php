@@ -8,7 +8,14 @@
  */
 require_once($_SERVER["DOCUMENT_ROOT"] . "/bitrix/modules/main/include/prolog_before.php");
 
+define('AJAX_QUERY',strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest' && isset($_SERVER['HTTP_X_REQUESTED_WITH']));
+
+if (!AJAX_QUERY){
+    die(json_decode(array("status"=>"errors")));
+}
+
 CModule::IncludeModule("iblock");
+
 
 
 $eventID = intval($_POST['ID']);
