@@ -7,3 +7,6 @@ $APPLICATION->SetTitle("Все заведения с акциями и скид�
     ),
     false
 );?></p>
+    <?
+require($_SERVER["DOCUMENT_ROOT"] . "/bitrix/footer.php");
+?>

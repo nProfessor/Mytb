@@ -58,9 +58,9 @@ $(document).ready(function () {
     $('#clear').toggle(function(){
         removeMarkers();
         $(".type_club").removeAttr('checked');
-        $(this).val("Выбрать");
+        $(this).val("Показать");
     },function(){
-        $(this).val("Очистить");
+        $(this).val("Убрать");
         $(".type_club").attr('checked', 'checked');
         removeMarkers();
         addMarkers();
