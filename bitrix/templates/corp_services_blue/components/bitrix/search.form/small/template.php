@@ -10,6 +10,6 @@ $url=$APPLICATION->GetCurUri();
 $url=preg_replace("#(/)$#i","",$url);
 
 if($url!="/page/map"):?>
-<a href="/page/map" class="baner_top_map" title="Все заведения с акциями и скидками на карте"><img src="/images/baners/baner_map_search.jpg"</a>
+<a href="/page/map" class="baner_top_map" title="Все заведения с акциями и скидками на карте"><img src="/images/baners/baner_map_search.jpg"/></a>
 <?endif;?>
 
