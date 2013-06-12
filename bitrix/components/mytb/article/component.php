@@ -13,13 +13,11 @@ $article=$objArticle->getItem();
 $arResult["ARTICLE"]=$article[$ARTICLE_ID];
 
 
-
 $this->IncludeComponentTemplate();
 
 
 $APPLICATION->SetTitle(html_entity_decode($arResult["ARTICLE"]['NAME']));
-
-
+$APPLICATION->SetPageProperty("description", "Статья: ".$arResult["ARTICLE"]['PREVIEW_TEXT']);
 
 
 
