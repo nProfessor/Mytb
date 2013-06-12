@@ -1889,3 +1889,11 @@ ul.gallery_100x100 li{
 .ymaps-b-balloon__content-foot .button{
     width: 82%;
 }
+
+.news-item{
+    width: 200px;
+    float:left;
+}
+.news-item img{
+    width: 200px;
+}

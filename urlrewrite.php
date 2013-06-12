@@ -111,7 +111,12 @@ $arUrlRewrite = array(
         "ID"	=>	"bitrix:news",
         "PATH"	=>	"/personal/club/photo/index.php",
     ),
-
+    array(
+        "CONDITION"	=>	"#^/article/([a-z_-]+)/([0-9]+)#i",
+        "RULE"	=>	"ARTICLE_ID=$2",
+        "ID"	=>	"bitrix:news",
+        "PATH"	=>	"/article/detail/index.php",
+    ),
 );
 
 ?>

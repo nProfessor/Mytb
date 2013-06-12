@@ -1,0 +1,22 @@
+.article_items{
+    overflow: hidden;
+}
+.article_item{
+    float:left;
+    height: 375px;
+    width: 300px;
+    padding:10px;
+    overflow: hidden;
+}
+.article_item p{
+
+    text-align: justify;
+    font-size: 12px;
+    line-height: 19px;
+}
+.article_item a{
+padding:5px 0px;
+    display: block;
+    text-align: center;
+    font-size: 14px;;
+}
