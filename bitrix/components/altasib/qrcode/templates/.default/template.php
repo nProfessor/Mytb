@@ -51,8 +51,8 @@ function closeQr()
         <?
         if ($arResult["RESULT"] == "Y"):?>
           <?if($arParams["QR_MINI"]>0):?>
-                  <div style="height: <?=$arParams["QR_MINI"]?>"><img src="<?=$arResult["QRCODE"];?>" id="QrImgMin" onClick="openQr()" width="<?=$arParams["QR_MINI"]?>"><?if(strlen($arParams["QR_TEXT"])>0):?><a href="#" class="alx_qr_text" onclick="openQr(); return false;"><?=htmlspecialcharsBack($arParams["QR_TEXT"])?></a><?endif;?></div>
-                  <div id="alx-qr"><img id="QrImgBig" src="<?=$arResult["QRCODE_COPY"]?>" onclick="closeQr()"></div>
+                  <div style="height: <?=$arParams["QR_MINI"]?>"><img alt="" src="<?=$arResult["QRCODE"];?>" id="QrImgMin" onClick="openQr()" width="<?=$arParams["QR_MINI"]?>"><?if(strlen($arParams["QR_TEXT"])>0):?><a href="#" class="alx_qr_text" onclick="openQr(); return false;"><?=htmlspecialcharsBack($arParams["QR_TEXT"])?></a><?endif;?></div>
+                  <div id="alx-qr"><img alt="" id="QrImgBig" src="<?=$arResult["QRCODE_COPY"]?>" onclick="closeQr()"></div>
           <?else:?>
                   <img src="<?=$arResult["QRCODE"];?>" />
           <?endif;?>

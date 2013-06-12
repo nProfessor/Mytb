@@ -71,6 +71,7 @@ Class altasib_qrcode extends CModule
         function UninstallFiles()
         {
                         DeleteDirFilesEx("/bitrix/components/altasib/qrcode");
+                        DeleteDirFilesEx("/upload/altasib/qrcode");			 
                 }
 
         function InstallDB()

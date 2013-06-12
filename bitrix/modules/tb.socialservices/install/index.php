@@ -2,7 +2,7 @@
 global $MESS;
 include(GetLangFileName(substr(__FILE__, 0, -18)."/lang/", "/install/index.php"));
 
-class tr_socialservices extends CModule
+class tb_socialservices extends CModule
 {
 	var $MODULE_ID = "td.socialservices";
 	var $MODULE_VERSION;
@@ -12,7 +12,7 @@ class tr_socialservices extends CModule
     var $PARTNER_NAME = "MyTb.ru";
     var $PARTNER_URI = "http://mytb.ru";
 
-	function tr_socialservices()
+	function tb_socialservices()
 	{
 		$arModuleVersion = array();
 
@@ -21,8 +21,8 @@ class tr_socialservices extends CModule
 		$this->MODULE_VERSION = $arModuleVersion["VERSION"];
 		$this->MODULE_VERSION_DATE = $arModuleVersion["VERSION_DATE"];
 
-		$this->MODULE_NAME = GetMessage("tr_socialservices_install_name");
-		$this->MODULE_DESCRIPTION = GetMessage("tr_socialservices_install_desc");
+		$this->MODULE_NAME = GetMessage("tb_socialservices_install_name");
+		$this->MODULE_DESCRIPTION = GetMessage("tb_socialservices_install_desc");
 	}
 
 	function InstallDB($arParams = array())
@@ -77,7 +77,7 @@ class tr_socialservices extends CModule
 		global $DOCUMENT_ROOT, $APPLICATION;
 		$this->InstallDB();
 		$this->InstallFiles();
-		$APPLICATION->IncludeAdminFile(GetMessage("tr_socialservices_install_title_inst"), $DOCUMENT_ROOT."/bitrix/modules/tb.socialservices/install/step.php");
+		$APPLICATION->IncludeAdminFile(GetMessage("tb_socialservices_install_title_inst"), $DOCUMENT_ROOT."/bitrix/modules/tb.socialservices/install/step.php");
 	}
 
 	function DoUninstall()
@@ -85,7 +85,7 @@ class tr_socialservices extends CModule
 		global $DOCUMENT_ROOT, $APPLICATION;
 		$this->UnInstallFiles();
 		$this->UnInstallDB();
-		$APPLICATION->IncludeAdminFile(GetMessage("tr_socialservices_install_title_unitst"), $DOCUMENT_ROOT."/bitrix/modules/tb.socialservices/install/unstep.php");
+		$APPLICATION->IncludeAdminFile(GetMessage("tb_socialservices_install_title_unitst"), $DOCUMENT_ROOT."/bitrix/modules/tb.socialservices/install/unstep.php");
 	}
 }
 ?>

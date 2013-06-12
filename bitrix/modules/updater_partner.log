@@ -654,3 +654,94 @@
 2013-01-07 12:56:50 - NCRD01 - [Ux11] Ошибка описания модуля "tb.socialservices". 
 2013-01-07 12:56:50 - GUL01 - Empty query list
 2013-01-07 12:56:50 - Ux11 - Ошибка описания модуля "tb.socialservices"
+2013-06-12 21:56:33 - Ux11 - Ошибка описания модуля "tb.socialservices"
+2013-06-12 21:56:38 - Ux11 - Ошибка описания модуля "tb.socialservices"
+2013-06-12 21:56:40 - Ux11 - Ошибка описания модуля "tb.socialservices"
+2013-06-12 21:56:40 -  - exec CUpdateClientPartner::GetUpdatesList
+2013-06-12 21:56:40 -  - exec CUpdateClientPartner::__CollectRequestData
+2013-06-12 21:56:40 - Ux11 - Ошибка описания модуля "tb.socialservices"
+2013-06-12 21:56:40 - NCRD01 - [Ux11] Ошибка описания модуля "tb.socialservices". 
+2013-06-12 21:56:40 - GUL01 - Empty query list
+2013-06-12 21:56:40 - Ux11 - Ошибка описания модуля "tb.socialservices"
+2013-06-12 21:57:02 - Ux11 - Ошибка описания модуля "tb.socialservices"
+2013-06-12 21:57:02 -  - exec CUpdateClientPartner::GetUpdatesList
+2013-06-12 21:57:02 -  - exec CUpdateClientPartner::__CollectRequestData
+2013-06-12 21:57:02 - Ux11 - Ошибка описания модуля "tb.socialservices"
+2013-06-12 21:57:02 - NCRD01 - [Ux11] Ошибка описания модуля "tb.socialservices". 
+2013-06-12 21:57:02 - GUL01 - Empty query list
+2013-06-12 21:57:02 - Ux11 - Ошибка описания модуля "tb.socialservices"
+2013-06-12 21:58:38 -  - exec CUpdateClientPartner::GetUpdatesList
+2013-06-12 21:58:38 -  - exec CUpdateClientPartner::__CollectRequestData
+2013-06-12 21:58:38 -  - utf=Y&lang=ru&stable=N&CANGZIP=N&SUPD_DBS=MYSQL&XE=N&CLIENT_SITE=mytb.ru&LICENSE_KEY=X&SUPD_STS=1&SUPD_URS=0&SUPD_URSA=82&TYPENC=F&CLIENT_PHPVER=5.3.3-7%2Bsqueeze14&dbv=5.1.49&instm=main%2C12.5.7%2CN%3Bsocialservices%2C12.5.0%2CN%3Btb.socialservices%2C11.0.0%2CN%3Bbitrixcloud%2C12.5.1%2CN%3Bperfmon%2C12.5.0%2CN%3Bbitrix.sitecorporate%2C11.5.2%2CN%3Bfileman%2C12.5.1%2CN%3Bcompression%2C11.0.0%2CN%3Binside.summ2string%2C1.1.1%2CN%3Btranslate%2C12.0.1%2CN%3Brefreshlab.err404%2C1.1.0%2CN%3Bseo%2C11.5.0%2CN%3Binfocom.like%2C1.1.1%2CN%3Biblock%2C12.5.3%2CN%3Bclouds%2C12.5.0%2CN%3Baltasib.qrcode%2C1.1.0%2CN%3Bbitrix.liveapi%2C1.0.9%2CN%3Bprmedia.vkontaktecomments%2C1.0.1%2CN%3Bmytb%2C1.0.2%2CN%3Bsearch%2C12.5.1%2CN&reqm=tb.socialservices%2Cbitrix.sitecorporate%2Cinside.summ2string%2Crefreshlab.err404%2Cinfocom.like%2Caltasib.qrcode%2Cbitrix.liveapi%2Cprmedia.vkontaktecomments
+2013-06-12 21:58:38 -  - exec CUpdateClientPartner::GetHTTPPage
+2013-06-12 21:58:38 -  - TIME GetUpdatesList(request) 0.514 sec
+2013-06-12 21:58:38 -  - exec CUpdateClientPartner::ParseServerData
+2013-06-12 21:58:43 -  - exec CUpdateClientPartner::LoadModulesUpdates
+2013-06-12 21:58:43 -  - exec CUpdateClientPartner::__CollectRequestData
+2013-06-12 21:58:43 -  - utf=Y&lang=ru&stable=N&CANGZIP=N&SUPD_DBS=MYSQL&XE=N&CLIENT_SITE=mytb.ru&LICENSE_KEY=X&SUPD_STS=1&SUPD_URS=0&SUPD_URSA=82&TYPENC=F&CLIENT_PHPVER=5.3.3-7%2Bsqueeze14&dbv=5.1.49&instm=main%2C12.5.7%2CN%3Bsocialservices%2C12.5.0%2CN%3Btb.socialservices%2C11.0.0%2CN%3Bbitrixcloud%2C12.5.1%2CN%3Bperfmon%2C12.5.0%2CN%3Bbitrix.sitecorporate%2C11.5.2%2CN%3Bfileman%2C12.5.1%2CN%3Bcompression%2C11.0.0%2CN%3Binside.summ2string%2C1.1.1%2CN%3Btranslate%2C12.0.1%2CN%3Brefreshlab.err404%2C1.1.0%2CN%3Bseo%2C11.5.0%2CN%3Binfocom.like%2C1.1.1%2CN%3Biblock%2C12.5.3%2CN%3Bclouds%2C12.5.0%2CN%3Baltasib.qrcode%2C1.1.0%2CN%3Bbitrix.liveapi%2C1.0.9%2CN%3Bprmedia.vkontaktecomments%2C1.0.1%2CN%3Bmytb%2C1.0.2%2CN%3Bsearch%2C12.5.1%2CN&reqm=tb.socialservices%2Cbitrix.sitecorporate%2Cinside.summ2string%2Crefreshlab.err404%2Cinfocom.like%2Caltasib.qrcode%2Cbitrix.liveapi%2Cprmedia.vkontaktecomments
+2013-06-12 21:58:43 -  - exec CUpdateClientPartner::GetHTTPPage
+2013-06-12 21:58:43 -  - TIME LoadModulesUpdates(request) 0.59 sec
+2013-06-12 21:58:43 -  - exec CUpdateClientPartner::ParseServerData
+2013-06-12 21:58:43 - LMU01 - LoadModulesUpdates-Step
+2013-06-12 21:58:43 -  - exec CUpdateClientPartner::LoadModulesUpdates
+2013-06-12 21:58:43 -  - exec CUpdateClientPartner::__CollectRequestData
+2013-06-12 21:58:43 -  - exec CUpdateClientPartner::ParseServerData
+2013-06-12 21:58:45 - DOWNLOAD - Time - 1.5877151489258 sec
+2013-06-12 21:58:45 -  - exec CUpdateClientPartner::UnGzipArchive
+2013-06-12 21:58:45 -  - TIME UnGzipArchive 0.074 sec
+2013-06-12 21:58:45 - CSURUS1 - Run updater '/bitrix/updates/update_m1371059925/altasib.qrcode/updater1.2.0.php'
+2013-06-12 21:58:45 -  - TIME UpdateStepModules 0.276 sec
+2013-06-12 21:58:45 - UPD_SUCCESS - Updated: altasib.qrcode (1.2.0)<br>- Добавлена возможность создавать QR код адреса текущей страницы.
+2013-06-12 21:58:45 -  - exec CUpdateClientPartner::LoadModulesUpdates
+2013-06-12 21:58:45 -  - exec CUpdateClientPartner::__CollectRequestData
+2013-06-12 21:58:45 -  - utf=Y&lang=ru&stable=N&CANGZIP=N&SUPD_DBS=MYSQL&XE=N&CLIENT_SITE=mytb.ru&LICENSE_KEY=X&SUPD_STS=1&SUPD_URS=0&SUPD_URSA=82&TYPENC=F&CLIENT_PHPVER=5.3.3-7%2Bsqueeze14&dbv=5.1.49&instm=main%2C12.5.7%2CN%3Bsocialservices%2C12.5.0%2CN%3Btb.socialservices%2C11.0.0%2CN%3Bbitrixcloud%2C12.5.1%2CN%3Bperfmon%2C12.5.0%2CN%3Bbitrix.sitecorporate%2C11.5.2%2CN%3Bfileman%2C12.5.1%2CN%3Bcompression%2C11.0.0%2CN%3Binside.summ2string%2C1.1.1%2CN%3Btranslate%2C12.0.1%2CN%3Brefreshlab.err404%2C1.1.0%2CN%3Bseo%2C11.5.0%2CN%3Binfocom.like%2C1.1.1%2CN%3Biblock%2C12.5.3%2CN%3Bclouds%2C12.5.0%2CN%3Baltasib.qrcode%2C1.2.0%2CN%3Bbitrix.liveapi%2C1.0.9%2CN%3Bprmedia.vkontaktecomments%2C1.0.1%2CN%3Bmytb%2C1.0.2%2CN%3Bsearch%2C12.5.1%2CN&reqm=tb.socialservices%2Cbitrix.sitecorporate%2Cinside.summ2string%2Crefreshlab.err404%2Cinfocom.like%2Caltasib.qrcode%2Cbitrix.liveapi%2Cprmedia.vkontaktecomments
+2013-06-12 21:58:45 -  - exec CUpdateClientPartner::GetHTTPPage
+2013-06-12 21:58:46 -  - TIME LoadModulesUpdates(request) 0.492 sec
+2013-06-12 21:58:46 -  - exec CUpdateClientPartner::ParseServerData
+2013-06-12 21:58:46 - STEP - Finish - NOUPDATES
+2013-06-12 21:58:46 - STEP - Finish - NOUPDATES
+2013-06-12 21:59:06 -  - exec CUpdateClientPartner::GetUpdatesList
+2013-06-12 21:59:06 -  - exec CUpdateClientPartner::__CollectRequestData
+2013-06-12 21:59:06 -  - utf=Y&lang=ru&stable=N&CANGZIP=N&SUPD_DBS=MYSQL&XE=N&CLIENT_SITE=mytb.ru&LICENSE_KEY=X&SUPD_STS=1&SUPD_URS=0&SUPD_URSA=82&TYPENC=F&CLIENT_PHPVER=5.3.3-7%2Bsqueeze14&dbv=5.1.49&instm=main%2C12.5.7%2CN%3Bsocialservices%2C12.5.0%2CN%3Btb.socialservices%2C11.0.0%2CN%3Bbitrixcloud%2C12.5.1%2CN%3Bperfmon%2C12.5.0%2CN%3Bbitrix.sitecorporate%2C11.5.2%2CN%3Bfileman%2C12.5.1%2CN%3Bcompression%2C11.0.0%2CN%3Binside.summ2string%2C1.1.1%2CN%3Btranslate%2C12.0.1%2CN%3Brefreshlab.err404%2C1.1.0%2CN%3Bseo%2C11.5.0%2CN%3Binfocom.like%2C1.1.1%2CN%3Biblock%2C12.5.3%2CN%3Bclouds%2C12.5.0%2CN%3Baltasib.qrcode%2C1.2.0%2CN%3Bbitrix.liveapi%2C1.0.9%2CN%3Bprmedia.vkontaktecomments%2C1.0.1%2CN%3Bmytb%2C1.0.2%2CN%3Bsearch%2C12.5.1%2CN&reqm=tb.socialservices%2Cbitrix.sitecorporate%2Cinside.summ2string%2Crefreshlab.err404%2Cinfocom.like%2Caltasib.qrcode%2Cbitrix.liveapi%2Cprmedia.vkontaktecomments%2Ckaycom.oneplaceseo
+2013-06-12 21:59:06 -  - exec CUpdateClientPartner::GetHTTPPage
+2013-06-12 21:59:07 -  - TIME GetUpdatesList(request) 0.613 sec
+2013-06-12 21:59:07 -  - exec CUpdateClientPartner::ParseServerData
+2013-06-12 21:59:22 -  - exec CUpdateClientPartner::LoadModulesUpdates
+2013-06-12 21:59:22 -  - exec CUpdateClientPartner::__CollectRequestData
+2013-06-12 21:59:22 -  - utf=Y&lang=ru&stable=N&CANGZIP=N&SUPD_DBS=MYSQL&XE=N&CLIENT_SITE=mytb.ru&LICENSE_KEY=X&SUPD_STS=1&SUPD_URS=0&SUPD_URSA=82&TYPENC=F&CLIENT_PHPVER=5.3.3-7%2Bsqueeze14&dbv=5.1.49&instm=main%2C12.5.7%2CN%3Bsocialservices%2C12.5.0%2CN%3Btb.socialservices%2C11.0.0%2CN%3Bbitrixcloud%2C12.5.1%2CN%3Bperfmon%2C12.5.0%2CN%3Bbitrix.sitecorporate%2C11.5.2%2CN%3Bfileman%2C12.5.1%2CN%3Bcompression%2C11.0.0%2CN%3Binside.summ2string%2C1.1.1%2CN%3Btranslate%2C12.0.1%2CN%3Brefreshlab.err404%2C1.1.0%2CN%3Bseo%2C11.5.0%2CN%3Binfocom.like%2C1.1.1%2CN%3Biblock%2C12.5.3%2CN%3Bclouds%2C12.5.0%2CN%3Baltasib.qrcode%2C1.2.0%2CN%3Bbitrix.liveapi%2C1.0.9%2CN%3Bprmedia.vkontaktecomments%2C1.0.1%2CN%3Bmytb%2C1.0.2%2CN%3Bsearch%2C12.5.1%2CN&reqm=kaycom.oneplaceseo&lim=Y
+2013-06-12 21:59:22 -  - exec CUpdateClientPartner::GetHTTPPage
+2013-06-12 21:59:23 -  - TIME LoadModulesUpdates(request) 0.608 sec
+2013-06-12 21:59:23 -  - exec CUpdateClientPartner::ParseServerData
+2013-06-12 21:59:23 - LMU01 - LoadModulesUpdates-Step
+2013-06-12 21:59:23 -  - exec CUpdateClientPartner::LoadModulesUpdates
+2013-06-12 21:59:23 -  - exec CUpdateClientPartner::__CollectRequestData
+2013-06-12 21:59:23 -  - exec CUpdateClientPartner::ParseServerData
+2013-06-12 21:59:24 - DOWNLOAD - Time - 0.78272199630737 sec
+2013-06-12 21:59:24 -  - exec CUpdateClientPartner::UnGzipArchive
+2013-06-12 21:59:24 -  - TIME UnGzipArchive 0.002 sec
+2013-06-12 21:59:24 -  - TIME UpdateStepModules 0.087 sec
+2013-06-12 21:59:24 - UPD_SUCCESS - Updated: kaycom.oneplaceseo
+2013-06-12 21:59:24 -  - exec CUpdateClientPartner::LoadModulesUpdates
+2013-06-12 21:59:24 -  - exec CUpdateClientPartner::__CollectRequestData
+2013-06-12 21:59:24 -  - utf=Y&lang=ru&stable=N&CANGZIP=N&SUPD_DBS=MYSQL&XE=N&CLIENT_SITE=mytb.ru&LICENSE_KEY=X&SUPD_STS=1&SUPD_URS=0&SUPD_URSA=82&TYPENC=F&CLIENT_PHPVER=5.3.3-7%2Bsqueeze14&dbv=5.1.49&instm=main%2C12.5.7%2CN%3Bsocialservices%2C12.5.0%2CN%3Btb.socialservices%2C11.0.0%2CN%3Bbitrixcloud%2C12.5.1%2CN%3Bperfmon%2C12.5.0%2CN%3Bbitrix.sitecorporate%2C11.5.2%2CN%3Bfileman%2C12.5.1%2CN%3Bcompression%2C11.0.0%2CN%3Binside.summ2string%2C1.1.1%2CN%3Btranslate%2C12.0.1%2CN%3Brefreshlab.err404%2C1.1.0%2CN%3Bseo%2C11.5.0%2CN%3Binfocom.like%2C1.1.1%2CN%3Biblock%2C12.5.3%2CN%3Bkaycom.oneplaceseo%2C1.0.3%2CN%3Bclouds%2C12.5.0%2CN%3Baltasib.qrcode%2C1.2.0%2CN%3Bbitrix.liveapi%2C1.0.9%2CN%3Bprmedia.vkontaktecomments%2C1.0.1%2CN%3Bmytb%2C1.0.2%2CN%3Bsearch%2C12.5.1%2CN&reqm=kaycom.oneplaceseo&lim=Y
+2013-06-12 21:59:24 -  - exec CUpdateClientPartner::GetHTTPPage
+2013-06-12 21:59:24 -  - TIME LoadModulesUpdates(request) 0.264 sec
+2013-06-12 21:59:24 -  - exec CUpdateClientPartner::ParseServerData
+2013-06-12 21:59:24 - LMU01 - LoadModulesUpdates-Step
+2013-06-12 21:59:24 -  - exec CUpdateClientPartner::LoadModulesUpdates
+2013-06-12 21:59:24 -  - exec CUpdateClientPartner::__CollectRequestData
+2013-06-12 21:59:24 -  - exec CUpdateClientPartner::ParseServerData
+2013-06-12 21:59:25 - DOWNLOAD - Time - 0.81782007217407 sec
+2013-06-12 21:59:25 -  - exec CUpdateClientPartner::UnGzipArchive
+2013-06-12 21:59:25 -  - TIME UnGzipArchive 0.001 sec
+2013-06-12 21:59:25 - CSURUS1 - Run updater '/bitrix/updates/update_m1371059965/kaycom.oneplaceseo/updater1.0.4.php'
+2013-06-12 21:59:25 -  - TIME UpdateStepModules 0.002 sec
+2013-06-12 21:59:25 - UPD_SUCCESS - Updated: kaycom.oneplaceseo (1.0.4)<br>Исправлена ошибка при добавлении элемента \"Не задан статус\".
+2013-06-12 21:59:25 -  - exec CUpdateClientPartner::LoadModulesUpdates
+2013-06-12 21:59:25 -  - exec CUpdateClientPartner::__CollectRequestData
+2013-06-12 21:59:25 -  - utf=Y&lang=ru&stable=N&CANGZIP=N&SUPD_DBS=MYSQL&XE=N&CLIENT_SITE=mytb.ru&LICENSE_KEY=X&SUPD_STS=1&SUPD_URS=0&SUPD_URSA=82&TYPENC=F&CLIENT_PHPVER=5.3.3-7%2Bsqueeze14&dbv=5.1.49&instm=main%2C12.5.7%2CN%3Bsocialservices%2C12.5.0%2CN%3Btb.socialservices%2C11.0.0%2CN%3Bbitrixcloud%2C12.5.1%2CN%3Bperfmon%2C12.5.0%2CN%3Bbitrix.sitecorporate%2C11.5.2%2CN%3Bfileman%2C12.5.1%2CN%3Bcompression%2C11.0.0%2CN%3Binside.summ2string%2C1.1.1%2CN%3Btranslate%2C12.0.1%2CN%3Brefreshlab.err404%2C1.1.0%2CN%3Bseo%2C11.5.0%2CN%3Binfocom.like%2C1.1.1%2CN%3Biblock%2C12.5.3%2CN%3Bkaycom.oneplaceseo%2C1.0.4%2CN%3Bclouds%2C12.5.0%2CN%3Baltasib.qrcode%2C1.2.0%2CN%3Bbitrix.liveapi%2C1.0.9%2CN%3Bprmedia.vkontaktecomments%2C1.0.1%2CN%3Bmytb%2C1.0.2%2CN%3Bsearch%2C12.5.1%2CN&reqm=kaycom.oneplaceseo&lim=Y
+2013-06-12 21:59:25 -  - exec CUpdateClientPartner::GetHTTPPage
+2013-06-12 21:59:26 -  - TIME LoadModulesUpdates(request) 0.642 sec
+2013-06-12 21:59:26 -  - exec CUpdateClientPartner::ParseServerData
+2013-06-12 21:59:26 - STEP - Finish - NOUPDATES
+2013-06-12 21:59:26 - STEP - Finish - NOUPDATES
