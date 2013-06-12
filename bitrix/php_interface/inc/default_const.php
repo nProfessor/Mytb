@@ -4,6 +4,7 @@ define("IB_CLUB_USER_ID", 11); // ID связи клуба с пользоват
 define("IB_TABLE_ID", 12); // ID столиков
 define("IB_BOOKING_ID", 13); // ID столиков
 define("IB_PRICE_GROUP", 14); // ID ценовых групп
+define("IB_ARTICLE", 21); // ID статей
 
 
 define("PROP_CLUB_MODERATOR", 56); // ID свойства показывающего, что заведение не прошло модерацию

@@ -7,6 +7,8 @@
             <ul>
                 <li><a href="/page/popular/">ТОП 20 заведений</a></li>
                 <li>|</li>
+                <li><a href="/article/">Интересные статьи</a></li>
+                <li>|</li>
                 <li><a href="/page/partnership/">Партнерам</a></li>
             </ul>
         </div>

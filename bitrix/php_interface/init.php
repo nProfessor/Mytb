@@ -24,6 +24,7 @@ CModule::AddAutoloadClasses(
         'Smsc' => '/bitrix/php_interface/inc/class/SMS/Smsc.php',
         'News' => '/bitrix/php_interface/inc/class/club/News.php',
         'Event' => '/bitrix/php_interface/inc/class/club/Event.php',
+        'Article' => '/bitrix/php_interface/inc/class/article/Article.php',
 
 
         // купонные сервисы
