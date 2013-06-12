@@ -40,7 +40,6 @@ function JCAdminTitleSearch(arParams)
 		_this.RESULT.style.top = '4px';//(pos.bottom + 2) - 46  + 'px';
 		_this.RESULT.style.left = (pos.left - 7) + 'px';
 		_this.RESULT.style.width = (pos.width + 14)+ 'px';
-		//console.log(_this.CONTAINER.zIndex);
 		//_this.RESULT.style.zIndex = _this.CONTAINER.style.zIndex - 1;
 		if(result != null)
 			_this.RESULT.innerHTML = result;

@@ -9,7 +9,9 @@ CModule::AddAutoloadClasses(
 		"CEventFileman" => "classes/general/fileman_event_list.php",
 		"CCodeEditor" => "classes/general/code_editor.php",
 		"CFileInput" => "classes/general/file_input.php",
-		"CMedialibTabControl" => "classes/general/medialib.php"
+		"CMedialibTabControl" => "classes/general/medialib.php",
+		"CSticker" => "classes/general/sticker.php",
+		//"CAdminContextMenuML" => "classes/general/medialib_admin.php"
 	)
 );
 

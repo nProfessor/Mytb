@@ -35,6 +35,7 @@ if($USER->CanDoOperation("clouds_upload") && is_array($arID))
 	{
 		if(strlen($ID) <= 0)
 			continue;
+		$ID = urldecode($ID);
 
 		switch($action)
 		{
@@ -87,16 +88,17 @@ if($USER->CanDoOperation("clouds_upload") && is_array($arID))
 			$fileSize = doubleval($_REQUEST["file_size"]);
 			$tempDir = CTempFile::GetDirectoryName(6, "clouds_ipload");
 			$absPath = $tempDir."tmp_name";
-
 			if(isset($_REQUEST["file_name"]))
 			{
-				$filePath = CCloudStorage::translit($_REQUEST["file_name"]);
+				$filePath = $_REQUEST["file_name"];
 				$filePath = "/".$_REQUEST["path_to_upload"]."/".$filePath;
 				$filePath = preg_replace("#[\\\\\\/]+#", "/", $filePath);
 
-				//TODO: make it once
-				if($obBucket->FileExists($filePath))
-					$strError = GetMessage("CLO_STORAGE_FILE_EXISTS_ERROR");
+				if (isset($_REQUEST["chunk_start"]) && $_REQUEST["chunk_start"] == 0)
+				{
+					if($obBucket->FileExists($filePath))
+						$strError = GetMessage("CLO_STORAGE_FILE_EXISTS_ERROR");
+				}
 			}
 
 			if(isset($_REQUEST["chunk_start"]))
@@ -110,6 +112,7 @@ if($USER->CanDoOperation("clouds_upload") && is_array($arID))
 				// save data from the input stream
 				while(!feof($inputHandler))
 					fwrite($fileHandler, fread($inputHandler, 1024*1024));
+				fclose($fileHandler);
 			}
 			else
 			{
@@ -163,7 +166,6 @@ if($USER->CanDoOperation("clouds_upload") && is_array($arID))
 				else
 				{
 					$obUpload = new CCloudStorageUpload($filePath);
-
 					if(!$obUpload->isStarted())
 					{
 						if($obUpload->Start($obBucket->ID, $fileSize, $_REQUEST["file_type"]))
@@ -240,7 +242,6 @@ if($USER->CanDoOperation("clouds_upload") && is_array($arID))
 						}
 					}
 				}
-
 			}
 
 			if($strError != "")
@@ -248,7 +249,6 @@ if($USER->CanDoOperation("clouds_upload") && is_array($arID))
 				$e = $APPLICATION->GetException();
 				if(!is_object($e))
 					$e = new CApplicationException($strError);
-
 				$message = new CAdminMessage(GetMessage("CLO_STORAGE_FILE_UPLOAD_ERROR"), $e);
 			}
 
@@ -303,7 +303,7 @@ if($USER->CanDoOperation("clouds_upload") && is_array($arID))
 			{
 				if($_FILES["upload"]["error"] == 0)
 				{
-					$filePath = CCloudStorage::translit($_FILES["upload"]["name"]);
+					$filePath = $_FILES["upload"]["name"];
 					$filePath = "/".$_REQUEST["path_to_upload"]."/".$filePath;
 					$filePath = preg_replace("#[\\\\\\/]+#", "/", $filePath);
 
@@ -317,7 +317,7 @@ if($USER->CanDoOperation("clouds_upload") && is_array($arID))
 			elseif($ID !== "Fnew")
 			{
 				//TODO check for ../../../
-				$filePath = CCloudStorage::translit(substr($ID, 1));
+				$filePath = substr($ID, 1);
 				$filePath = "/".$path."/".$filePath;
 				$filePath = preg_replace("#[\\\\\\/]+#", "/", $filePath);
 
@@ -500,7 +500,7 @@ if($USER->CanDoOperation("clouds_upload") && is_array($arID))
 			if($moveResult == CCloudStorage::FILE_PARTLY_UPLOADED)
 			{
 				$lAdmin->BeginEpilogContent();
-				echo '<script>BX.ready(function(){', $lAdmin->ActionDoGroup($ID, "upload", "bucket=".urlencode($obBucket->ID)."&path=".urlencode($path)."&filePath=".urlencode($filePath)), '});</script>';
+				echo '<script>BX.ready(function(){', $lAdmin->ActionDoGroup(urlencode($ID), "upload", "bucket=".urlencode($obBucket->ID)."&path=".urlencode($path)."&filePath=".urlencode($filePath)), '});</script>';
 				$lAdmin->EndEpilogContent();
 			}
 			break;
@@ -534,9 +534,9 @@ if($path != "/")
 if(is_array($arFiles))
 {
 	foreach($arFiles["dir"] as $i => $dir)
-		$arData[] = array("ID" => "D".$dir, "TYPE" => "dir", "NAME" => $dir, "SIZE" => '');
+		$arData[] = array("ID" => "D".urlencode($dir), "TYPE" => "dir", "NAME" => $dir, "SIZE" => '');
 	foreach($arFiles["file"] as $i => $file)
-		$arData[] = array("ID" => "F".$file, "TYPE" => "file", "NAME" => $file, "SIZE" => $arFiles["file_size"][$i]);
+		$arData[] = array("ID" => "F".urlencode($file), "TYPE" => "file", "NAME" => $file, "SIZE" => $arFiles["file_size"][$i]);
 }
 else
 {
@@ -563,40 +563,17 @@ while(is_array($arRes = $rsData->NavNext()))
 {
 	$row =& $lAdmin->AddRow($arRes["ID"], $arRes);
 
-	$showFieldIcon = "";
-	$showFieldText = "";
-	if($arRes["TYPE"] === "dir")
-	{
-		if($arRes["NAME"] === "..")
-		{
-			$showFieldIcon = '<a href="'.htmlspecialcharsbx('clouds_file_list.php?lang='.urlencode(LANGUAGE_ID).'&bucket='.urlencode($obBucket->ID).'&path='.urlencode(preg_replace('#([^/]+)/$#', '', $path))).'"><span id="fileman_menu_icon_sections" class="adm-submenu-item-link-icon"></span></a>';
-			$showFieldText = '<a href="'.htmlspecialcharsbx('clouds_file_list.php?lang='.urlencode(LANGUAGE_ID).'&bucket='.urlencode($obBucket->ID).'&path='.urlencode(preg_replace('#([^/]+)/$#', '', $path))).'">'.htmlspecialcharsex($arRes["NAME"]).'</a>';
-		}
-		else
-		{
-			$showFieldIcon = '<a href="'.htmlspecialcharsbx('clouds_file_list.php?lang='.urlencode(LANGUAGE_ID).'&bucket='.urlencode($obBucket->ID).'&path='.urlencode($path.$arRes["NAME"].'/')).'"><span id="fileman_menu_icon_sections" class="adm-submenu-item-link-icon"></span></a>';
-			$showFieldText = '<a href="'.htmlspecialcharsbx('clouds_file_list.php?lang='.urlencode(LANGUAGE_ID).'&bucket='.urlencode($obBucket->ID).'&path='.urlencode($path.$arRes["NAME"].'/')).'">'.htmlspecialcharsex($arRes["NAME"]).'</a>';
-		}
-	}
-	else
-	{
-		$showFieldIcon = "";
-		$showFieldText = '<a href="'.htmlspecialcharsbx($obBucket->GetFileSRC(array("URN" => $path.$arRes["NAME"]))).'">'.htmlspecialcharsex($arRes["NAME"]).'</a>';
-	}
-
-	$showField = '<table cellpadding="0" cellspacing="0" border="0"><tr><td align="left">'.$showFieldIcon.'</td><td align="left">&nbsp;'.$showFieldText.'</td></tr></table>';
-
 	if($arRes["TYPE"] === "dir")
 	{
 		if($arRes["NAME"] === "..")
 		{
 			$row->bReadOnly = true;
-			$row->AddViewField("FILE_NAME", $showField);
+			$row->AddViewField("FILE_NAME", '<a href="'.htmlspecialcharsbx('clouds_file_list.php?lang='.urlencode(LANGUAGE_ID).'&bucket='.urlencode($obBucket->ID).'&path='.urlencode(preg_replace('#([^/]+)/$#', '', $path))).'" class="adm-list-table-icon-link"><span class="adm-submenu-item-link-icon adm-list-table-icon clouds-up-icon"></span><span class="adm-list-table-link">'.htmlspecialcharsex($arRes["NAME"]).'</span></a>');
 			$row->AddViewField("FILE_SIZE", '&nbsp;');
 		}
 		else
 		{
-			$row->AddViewField("FILE_NAME", $showField);
+			$row->AddViewField("FILE_NAME", '<a href="'.htmlspecialcharsbx('clouds_file_list.php?lang='.urlencode(LANGUAGE_ID).'&bucket='.urlencode($obBucket->ID).'&path='.urlencode($path.$arRes["NAME"].'/')).'" class="adm-list-table-icon-link"><span class="adm-submenu-item-link-icon adm-list-table-icon clouds-directory-icon"></span><span class="adm-list-table-link">'.htmlspecialcharsex($arRes["NAME"]).'</span></a>');
 			if($_GET["size"] === "y")
 			{
 				$arDirFiles = $obBucket->ListFiles($path.$arRes["NAME"]."/", true);
@@ -613,7 +590,7 @@ while(is_array($arRes = $rsData->NavNext()))
 	}
 	else
 	{
-		$row->AddViewField("FILE_NAME", $showField);
+		$row->AddViewField("FILE_NAME", '<a href="'.htmlspecialcharsbx($obBucket->GetFileSRC(array("URN" => $path.$arRes["NAME"]))).'">'.htmlspecialcharsex($arRes["NAME"]).'</a>');
 		$row->AddViewField("FILE_SIZE", CFile::FormatSize((float)$arRes["SIZE"]));
 		$total_size += $arRes["SIZE"];
 		$total_count++;
@@ -789,8 +766,20 @@ function chunk_upload(opt_Chunk, file, opt_startByte)
 	var ui8a = new Uint8Array(data, 0);
 	for (var i = 0; i < opt_Chunk.length; i++)
 		ui8a[i] = (opt_Chunk.charCodeAt(i) & 0xff);
-	var bb = new (window.MozBlobBuilder || window.WebKitBlobBuilder || window.BlobBuilder)();
-	bb.append(data);
+
+	var blob;
+
+	try
+	{
+
+		blob = new Blob([ui8a]);
+	}
+	catch (e)
+	{
+		var bb = new (window.MozBlobBuilder || window.WebKitBlobBuilder || window.BlobBuilder)();
+		bb.append(data);
+		blob = bb.getBlob();
+	}
 
 	ShowWaitWindow();
 
@@ -803,7 +792,7 @@ function chunk_upload(opt_Chunk, file, opt_startByte)
 			file_type: file.type,
 			chunk_start: opt_startByte
 		}),
-		'data': bb.getBlob(),
+		'data': blob,
 		'onsuccess': function(result){
 			BX('upload_progress').innerHTML = result;
 			var href = BX('stop_button');
@@ -835,8 +824,12 @@ function start_upload()
 	BX('start_upload_button').enabled = false;
 
 	BX.ajax.post(
-		get_upload_url(),
-		{file_name: file.name, file_size: file.size, file_type: file.type},
+		get_upload_url({
+			file_name: file.name,
+			file_size: file.size,
+			file_type: file.type
+		}),
+		{},
 		function(result){
 			BX('upload_progress').innerHTML = result;
 			var href = BX('stop_button');
@@ -867,10 +860,12 @@ function readFileChunk(opt_startByte, opt_stopByte)
 			chunk_upload(evt.target.result, file, start);
 	};
 
-	if (file.webkitSlice)
+	if (file.webkitSlice) //Deprecated
 		var blob = file.webkitSlice(start, stop + 1);
-	else if (file.mozSlice)
+	else if (file.mozSlice) //Deprecated
 		var blob = file.mozSlice(start, stop + 1);
+	else if (file.slice)
+		var blob = file.slice(start, stop + 1);
 
 	reader.readAsBinaryString(blob);
 }

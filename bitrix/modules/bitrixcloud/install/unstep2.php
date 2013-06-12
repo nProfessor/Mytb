@@ -1,4 +1,5 @@
 <?
+/** @global CMain $APPLICATION */
 if (!check_bitrix_sessid())
 	return;
 

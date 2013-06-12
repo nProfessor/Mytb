@@ -6,8 +6,7 @@ $MESS["IBLOCK_EL_ADMIN_WCREATE2"] = "Кем создана";
 $MESS["IBLOCK_EL_ADMIN_VIEW"] = "Просмотреть";
 $MESS["IBLOCK_EL_ADMIN_VIEW_WF"] = "Просмотреть в документообороте";
 $MESS["IBEL_A_UPDERR1"] = "Ошибка изменения: запись заблокирована";
-$MESS["IBEL_A_UPDERR2"] = "Ошибка изменения: недостаточно прав для перевода в заданный статус";
-$MESS["IBEL_A_UPDERR3"] = "Ошибка изменения: доступ запрещен";
+$MESS["IBEL_A_UPDERR_ACCESS"] = "Ошибка изменения: доступ к записи ##ID# запрещен.";
 $MESS["IBEL_A_UPDERR"] = "Ошибка изменения записи:";
 $MESS["IBEL_A_ACTFROM"] = "Начало активности";
 $MESS["IBEL_A_ACTTO"] = "Окончание активности";
@@ -95,4 +94,7 @@ $MESS["IBEL_A_ACTIVATE"] = "Активировать";
 $MESS["IBEL_DEFAULT_VALUE"] = "по умолчанию";
 $MESS["IBEL_YES_VALUE"] = "да";
 $MESS["IBEL_NO_VALUE"] = "нет";
+$MESS["IBEL_CATALOG_PURCHASING_PRICE"] = "Закупочная цена";
+$MESS["IBEL_CATALOG_BAR_CODE"] = "Штрих-код";
+$MESS["IBEL_CATALOG_BAR_CODE_MULTI"] = "множественный";
 ?>

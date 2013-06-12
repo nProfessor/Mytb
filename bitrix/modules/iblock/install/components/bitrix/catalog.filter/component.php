@@ -1,5 +1,11 @@
 <?
 if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true) die();
+/** @var CBitrixComponent $this */
+/** @global CUser $USER */
+global $USER;
+/** @global CMain $APPLICATION */
+global $APPLICATION;
+
 
 if(!CModule::IncludeModule("iblock"))
 {
@@ -425,11 +431,24 @@ foreach($arParams["FIELD_CODE"] as $field_code)
 			$arResult["arrInputNames"][$arDateField["to"]["name"]]=true;
 			$arResult["arrInputNames"][$arDateField["days_to_back"]["name"]]=true;
 
-			$field_res = CalendarPeriod(
-				$arDateField["from"]["name"], $arDateField["from"]["value"],
-				$arDateField["to"]["name"], $arDateField["to"]["value"],
-				$FILTER_NAME."_form", "Y", "class=\"inputselect\"", "class=\"inputfield\""
+			ob_start();
+			$APPLICATION->IncludeComponent(
+				'bitrix:main.calendar',
+				'',
+				array(
+					'FORM_NAME' => $FILTER_NAME."_form",
+					'SHOW_INPUT' => 'Y',
+					'INPUT_NAME' => $arDateField["from"]["name"],
+					'INPUT_VALUE' => $arDateField["from"]["value"],
+					'INPUT_NAME_FINISH' => $arDateField["to"]["name"],
+					'INPUT_VALUE_FINISH' => $arDateField["to"]["value"],
+					'INPUT_ADDITIONAL_ATTR' => 'size="10" class="inputselect inputfield"',
+				),
+				null,
+				array('HIDE_ICONS' => 'Y')
 			);
+			$field_res = ob_get_contents();
+			ob_end_clean();
 
 			if(strlen($arDateField["from"]["value"]) > 0)
 				${$FILTER_NAME}[$arDateField["filter_from"]] = $arDateField["from"]["value"];
@@ -440,18 +459,22 @@ foreach($arParams["FIELD_CODE"] as $field_code)
 	}
 
 	if($field_res)
-		$arResult["ITEMS"][] = array(
+	{
+		$arResult["ITEMS"][$field_code] = array(
 			"NAME" => htmlspecialcharsbx(GetMessage("IBLOCK_FIELD_".$field_code)),
 			"INPUT" => $field_res,
 			"INPUT_NAME" => $name,
 			"INPUT_VALUE" => is_array($value)? array_map("htmlspecialcharsbx", $value): htmlspecialcharsbx($value),
 			"~INPUT_VALUE" => $value,
 		);
+	}
 }
 
 foreach($arResult["arrProp"] as $prop_id => $arProp)
 {
 	$res = "";
+	$name = "";
+	$value ="";
 	$arResult["arrInputNames"][$FILTER_NAME."_pf"]=true;
 	switch ($arProp["PROPERTY_TYPE"])
 	{
@@ -531,13 +554,15 @@ foreach($arResult["arrProp"] as $prop_id => $arProp)
 			break;
 	}
 	if($res)
-		$arResult["ITEMS"][] = array(
+	{
+		$arResult["ITEMS"]["PROPERTY_".$prop_id] = array(
 			"NAME" => htmlspecialcharsbx($arProp["NAME"]),
 			"INPUT" => $res,
 			"INPUT_NAME" => $name,
 			"INPUT_VALUE" => is_array($value)? array_map("htmlspecialcharsbx", $value): htmlspecialcharsbx($value),
 			"~INPUT_VALUE" => $value,
 		);
+	}
 }
 
 $bHasOffersFilter = false;
@@ -594,11 +619,24 @@ foreach($arParams["OFFERS_FIELD_CODE"] as $field_code)
 			$arResult["arrInputNames"][$arDateField["to"]["name"]]=true;
 			$arResult["arrInputNames"][$arDateField["days_to_back"]["name"]]=true;
 
-			$field_res = CalendarPeriod(
-				$arDateField["from"]["name"], $arDateField["from"]["value"],
-				$arDateField["to"]["name"], $arDateField["to"]["value"],
-				$FILTER_NAME."_form", "Y", "class=\"inputselect\"", "class=\"inputfield\""
+			ob_start();
+			$APPLICATION->IncludeComponent(
+				'bitrix:main.calendar',
+				'',
+				array(
+					'FORM_NAME' => $FILTER_NAME."_form",
+					'SHOW_INPUT' => 'Y',
+					'INPUT_NAME' => $arDateField["from"]["name"],
+					'INPUT_VALUE' => $arDateField["from"]["value"],
+					'INPUT_NAME_FINISH' => $arDateField["to"]["name"],
+					'INPUT_VALUE_FINISH' => $arDateField["to"]["value"],
+					'INPUT_ADDITIONAL_ATTR' => 'size="10" class="inputselect inputfield"',
+				),
+				null,
+				array('HIDE_ICONS' => 'Y')
 			);
+			$field_res = ob_get_contents();
+			ob_end_clean();
 
 			if(strlen($arDateField["from"]["value"]) > 0)
 				${$FILTER_NAME}["OFFERS"][$arDateField["filter_from"]] = $arDateField["from"]["value"];
@@ -610,7 +648,7 @@ foreach($arParams["OFFERS_FIELD_CODE"] as $field_code)
 	if($field_res)
 	{
 		$bHasOffersFilter = true;
-		$arResult["ITEMS"][] = array(
+		$arResult["ITEMS"]["OFFER_".$field_code] = array(
 			"NAME" => htmlspecialcharsbx(GetMessage("IBLOCK_FIELD_".$field_code)),
 			"INPUT" => $field_res,
 			"INPUT_NAME" => $name,
@@ -623,6 +661,8 @@ foreach($arParams["OFFERS_FIELD_CODE"] as $field_code)
 foreach($arResult["arrOfferProp"] as $prop_id => $arProp)
 {
 	$res = "";
+	$name = "";
+	$value = "";
 	$arResult["arrInputNames"][$FILTER_NAME."_op"]=true;
 	switch ($arProp["PROPERTY_TYPE"])
 	{
@@ -700,7 +740,7 @@ foreach($arResult["arrOfferProp"] as $prop_id => $arProp)
 	if($res)
 	{
 		$bHasOffersFilter = true;
-		$arResult["ITEMS"][] = array(
+		$arResult["ITEMS"]["OFFER_PROPERTY_".$prop_id] = array(
 			"NAME" => htmlspecialcharsbx($arProp["NAME"]),
 			"INPUT" => $res,
 			"INPUT_NAME" => $name,
@@ -748,7 +788,7 @@ foreach($arResult["arrPrice"] as $price_code => $arPrice)
 
 	$res_price .= '<input type="text" name="'.$name.'" size="'.$arParams["NUMBER_WIDTH"].'" value="'.htmlspecialcharsbx($value).'" />';
 
-	$arResult["ITEMS"][] = array("NAME" => htmlspecialcharsbx($arPrice["TITLE"]), "INPUT" => $res_price);
+	$arResult["ITEMS"]["PRICE_".$price_code] = array("NAME" => htmlspecialcharsbx($arPrice["TITLE"]), "INPUT" => $res_price);
 
 }
 
@@ -777,7 +817,7 @@ foreach(array_merge($_GET, $_POST) as $key=>$value)
 		&& !array_key_exists($key, $arSkip)
 	)
 	{
-		$arResult["ITEMS"][] = array(
+		$arResult["ITEMS"]["HIDDEN_".htmlspecialcharsEx($key)] = array(
 			"HIDDEN" => true,
 			"INPUT" => '<input type="hidden" name="'.htmlspecialcharsbx($key).'" value="'.htmlspecialcharsbx($value).'" />',
 		);

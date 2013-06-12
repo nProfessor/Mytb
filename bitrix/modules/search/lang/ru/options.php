@@ -25,4 +25,6 @@ $MESS["SEARCH_OPTIONS_TAB_TITLE_STATISTIC"] = "Настройки времени
 $MESS["SEARCH_OPTIONS_USE_WORD_DISTANCE"] = "При ранжировании результатов учитывать расстояние между словами:";
 $MESS["SEARCH_OPTIONS_REINSTALL_MODULE"] = "Для включения этой настройки требуется переустановка модуля без сохранения таблиц с последующей полной переиндексацией.";
 $MESS["SEARCH_OPTIONS_USE_SOCIAL_RATING"] = "При ранжировании результатов учитывать рейтинг:";
+$MESS["SEARCH_OPTIONS_AGENT_STEMMING"] = "Отложить выполнение морфологического анализа (на агента):";
+$MESS["SEARCH_OPTIONS_AGENT_DURATION"] = "Максимальная длительность выполнения агента (секунд):";
 ?>

@@ -894,7 +894,7 @@
 #bx-panel .adm-warning-block-red .adm-warning-close:hover {background-position: -365px -2705px !important;}
 
 #bx-panel .adm-warning-animate {height:0 !important; opacity:0.3 !important;}
-
+.bx-quirks #bx-panel .adm-warning-animate {display: none !important;}
 
 /*===========================Toolbar==========================*/
 div.bx-component-opener {position: absolute !important; z-index: 996 !important;}

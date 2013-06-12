@@ -19,11 +19,11 @@ $MESS["MAIN_RATING_TEXT_LIKE_D"] = "Like";
 $MESS["MAIN_DEFAULT_SITE_NAME"] = "Default site";
 $MESS["MAIN_DEFAULT_LANGUAGE_NAME"] = "English";
 $MESS["MAIN_DEFAULT_LANGUAGE_FORMAT_DATE"] = "MM/DD/YYYY";
-$MESS["MAIN_DEFAULT_LANGUAGE_FORMAT_DATETIME"] = "MM/DD/YYYY HH:MI:SS";
+$MESS["MAIN_DEFAULT_LANGUAGE_FORMAT_DATETIME"] = "MM/DD/YYYY H:MI T";
 $MESS["MAIN_DEFAULT_LANGUAGE_FORMAT_NAME"] = "#NAME# #LAST_NAME#";
 $MESS["MAIN_DEFAULT_LANGUAGE_FORMAT_CHARSET"] = "iso-8859-1";
 $MESS["MAIN_DEFAULT_SITE_FORMAT_DATE"] = "MM/DD/YYYY";
-$MESS["MAIN_DEFAULT_SITE_FORMAT_DATETIME"] = "MM/DD/YYYY HH:MI:SS";
+$MESS["MAIN_DEFAULT_SITE_FORMAT_DATETIME"] = "MM/DD/YYYY H:MI T";
 $MESS["MAIN_DEFAULT_SITE_FORMAT_NAME"] = "#NAME# #LAST_NAME#";
 $MESS["MAIN_DEFAULT_SITE_FORMAT_CHARSET"] = "iso-8859-1";
 $MESS["MAIN_MODULE_NAME"] = "Main module";
@@ -107,7 +107,7 @@ Account status: #STATUS#
 Login: #LOGIN#
 
 To change your password please visit the link below:
-http://#SERVER_NAME#/auth/index.php?change_password=yes&lang=en&USER_CHECKWORD=#CHECKWORD#
+http://#SERVER_NAME#/auth/index.php?change_password=yes&lang=en&USER_CHECKWORD=#CHECKWORD#&USER_LOGIN=#LOGIN#
 
 Automatically generated message.";
 $MESS["MAIN_USER_PASS_REQUEST_EVENT_DESC"] = "Informational message from #SITE_NAME#
@@ -118,7 +118,7 @@ $MESS["MAIN_USER_PASS_REQUEST_EVENT_DESC"] = "Informational message from #SITE_N
 #MESSAGE#
 
 To change your password please visit the link below:
-http://#SERVER_NAME#/auth/index.php?change_password=yes&lang=en&USER_CHECKWORD=#CHECKWORD#
+http://#SERVER_NAME#/auth/index.php?change_password=yes&lang=en&USER_CHECKWORD=#CHECKWORD#&USER_LOGIN=#LOGIN#
 
 Your registration info:
 
@@ -216,4 +216,5 @@ $MESS["MAIN_DESKTOP_EMAIL_VALUE"] = "<a href=\"mailto:info@bitrixsoft.com\">info
 $MESS["MAIN_DESKTOP_INFO_TITLE"] = "Website info";
 $MESS["MAIN_DESKTOP_RSS_TITLE"] = "Bitrix News";
 $MESS["MAIN_RULE_AUTO_AUTHORITY_VOTE_NAME"] = "Autovote for user authority";
+$MESS["MAIN_SMILE_DEF_SET_NAME"] = "Default set";
 ?>

@@ -120,7 +120,7 @@ $MESS["top_panel_edit_mode_title"] = "Switch to Edit Mode to display components"
 $MESS["top_panel_comp"] = "Components";
 $MESS["top_panel_comp_tooltip_title"] = "Components";
 $MESS["top_panel_comp_tooltip_empty"] = "This page does not contain components.";
-$MESS["top_panel_browser"] = "The administrative toolbar does not support Internet Explorer 6. Please install any current edition of <a href=\"http://www.firefox.com\">Firefox</a>, <a href=\"http://www.google.com/chrome/\">Chrome</a>, <a href=\"http://www.opera.com\">Opera</a> or <a href=\"http://www.microsoft.com/windows/internet-explorer/\">Internet Explorer 8</a>.";
+$MESS["top_panel_browser"] = "The administrative toolbar does not support Internet Explorer 7. Please install any current edition of <a href=\"http://www.firefox.com\">Firefox</a>, <a href=\"http://www.google.com/chrome/\">Chrome</a>, <a href=\"http://www.opera.com\">Opera</a> or <a href=\"http://www.microsoft.com/windows/internet-explorer/\">Internet Explorer 8</a>.";
 $MESS["top_panel_menu"] = "Menu";
 $MESS["top_panel_start_menu_tooltip_title"] = "Menu";
 $MESS["top_panel_site"] = "Site";

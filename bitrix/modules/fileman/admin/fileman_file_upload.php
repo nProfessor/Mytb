@@ -183,10 +183,10 @@ require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_aft
 		<input type="hidden" name="nums" value="5">
 		<table id="bx-upload-tbl">
 			<tr class="heading">
-				<td style="text-align: right!important;">
+				<td style="text-align: right!important;" width="40%">
 					<span style="display: inline-block; width: 200px; text-align: left;"><?= GetMessage("FILEMAN_FILEUPLOAD_NAME")?></span>
 				</td>
-				<td style="text-align: left!important;">
+				<td style="text-align: left!important;" width="60%">
 					<?= GetMessage("FILEMAN_FILEUPLOAD_FILE")?>
 				</td class="adm-detail-content-cell-r">
 			</tr>

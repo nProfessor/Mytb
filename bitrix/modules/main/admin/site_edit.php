@@ -1,10 +1,17 @@
 <?
-##############################################
-# Bitrix Site Manager                        #
-# Copyright (c) 2002-2007 Bitrix             #
-# http://www.bitrixsoft.com                  #
-# mailto:admin@bitrixsoft.com                #
-##############################################
+/**
+ * Bitrix Framework
+ * @package bitrix
+ * @subpackage main
+ * @copyright 2001-2013 Bitrix
+ */
+
+/**
+ * Bitrix vars
+ * @global CUser $USER
+ * @global CMain $APPLICATION
+ * @global CDatabase $DB
+ */
 
 require_once(dirname(__FILE__)."/../include/prolog_admin_before.php");
 require_once($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/prolog.php");
@@ -20,12 +27,10 @@ $isAdmin = $USER->CanDoOperation('edit_other_settings') || $USER->CanDoOperation
 
 IncludeModuleLangFile(__FILE__);
 $aMsg=array(); $message=null;
-/***************************************************************************
-			Helper functions
-***************************************************************************/
 
 function SaveFileLang($strFileName, $strContent)
 {
+	/** @global CMain $APPLICATION */
 	global $APPLICATION;
 
 	if(strlen($strContent)<=0)
@@ -36,8 +41,8 @@ function SaveFileLang($strFileName, $strContent)
 	$APPLICATION->SaveFileContent($strFileName, $strContent);
 }
 
-
 $bVarsFromForm = false;
+$LID = $_REQUEST["LID"];
 $bNew = ($LID == '' || $_REQUEST['new'] == 'Y');
 
 $aTabs = array(
@@ -45,7 +50,7 @@ $aTabs = array(
 );
 $tabControl = new CAdminTabControl("tabControl", $aTabs);
 
-$arTemplates = Array();
+$arTemplates = array();
 if(!$bNew)
 {
 	$dbSiteRes = CSite::GetTemplateList($LID);
@@ -53,11 +58,10 @@ if(!$bNew)
 		$arTemplates[$arSiteRes["ID"]] = $arSiteRes['CONDITION'];
 }
 
-if($REQUEST_METHOD=="POST" && (strlen($save)>0 || strlen($apply)>0) && $isAdmin && check_bitrix_sessid())
+if($_SERVER["REQUEST_METHOD"] == "POST" && ($_POST["save"] <> '' || $_POST["apply"] <> '') && $isAdmin && check_bitrix_sessid())
 {
-
 	$em = new CEventMessage;
-	$arFields = Array(
+	$arFields = array(
 		"ACTIVE"			=> $_POST["ACTIVE"],
 		"SORT"				=> $_POST["SORT"],
 		"DEF"				=> $_POST["DEF"],
@@ -76,8 +80,8 @@ if($REQUEST_METHOD=="POST" && (strlen($save)>0 || strlen($apply)>0) && $isAdmin 
 		"DOMAINS"			=> $_POST["DOMAINS"]
 	);
 
-	$arFields["TEMPLATE"]=array();
-	$bSet=false;
+	$arFields["TEMPLATE"] = array();
+	$bSet = false;
 	foreach($_POST["SITE_TEMPLATE"] as $key=>$val)
 	{
 		if ($USER->CanDoOperation('edit_php') || $_POST['selected_type'][$key] != 'php')
@@ -139,9 +143,9 @@ if($REQUEST_METHOD=="POST" && (strlen($save)>0 || strlen($apply)>0) && $isAdmin 
 	}
 	else
 	{
-		if($SITE_MESSAGE_LINK=="C" && strlen($SITE_MESSAGE_LINK_C_SITE)>0)
+		if($_POST["SITE_MESSAGE_LINK"] == "C" && $_POST["SITE_MESSAGE_LINK_C_SITE"] <> '')
 		{
-			$db_msg = CEventMessage::GetList($o, $b, Array("SITE_ID"=>$SITE_MESSAGE_LINK_C_SITE));
+			$db_msg = CEventMessage::GetList(($o = ""), ($b = ""), array("SITE_ID"=>$_POST["SITE_MESSAGE_LINK_C_SITE"]));
 			while($ar_msg = $db_msg->Fetch())
 			{
 				unset($ar_msg["TIMESTAMP_X"]);
@@ -149,17 +153,17 @@ if($REQUEST_METHOD=="POST" && (strlen($save)>0 || strlen($apply)>0) && $isAdmin 
 				$em->Add($ar_msg);
 			}
 		}
-		elseif($SITE_MESSAGE_LINK=="E" && strlen($SITE_MESSAGE_LINK_E_SITE)>0)
+		elseif($_POST["SITE_MESSAGE_LINK"] == "E" && $_POST["SITE_MESSAGE_LINK_E_SITE"] <> '')
 		{
-			$db_msg = CEventMessage::GetList($o, $b, Array("SITE_ID"=>$SITE_MESSAGE_LINK_E_SITE));
+			$db_msg = CEventMessage::GetList(($o = ""), ($b = ""), array("SITE_ID"=>$_POST["SITE_MESSAGE_LINK_E_SITE"]));
 			while($ar_msg = $db_msg->Fetch())
 			{
 				$msg_id = $ar_msg["ID"];
 				$db_msg_sites = CEventMessage::GetSite($ar_msg["ID"]);
-				$ar_msg = Array(
-						"NAME"=>$ar_msg["NAME"],
-						"LID"=>Array($LID)
-						);
+				$ar_msg = array(
+					"NAME"=>$ar_msg["NAME"],
+					"LID"=>array($LID)
+				);
 
 				while($ar_msg_sites = $db_msg_sites->Fetch())
 					$ar_msg["LID"][] = $ar_msg_sites["SITE_ID"];
@@ -173,7 +177,8 @@ if($REQUEST_METHOD=="POST" && (strlen($save)>0 || strlen($apply)>0) && $isAdmin 
 			$rsSite = CSite::GetList($by="sort", $order="asc", array("ID" => $LID));
 			$arSite = $rsSite->GetNext();
 
-			$p = CSite::GetSiteDocRoot($LID).$arSite["DIR"];
+			$siteDir = "/".trim($arSite["DIR"], "/")."/";
+			$p = CSite::GetSiteDocRoot($LID).$siteDir;
 			CheckDirPath($p);
 
 			$indexContent = '<'.'?'.
@@ -185,23 +190,20 @@ if($REQUEST_METHOD=="POST" && (strlen($save)>0 || strlen($apply)>0) && $isAdmin 
 				'include_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/install/wizard/wizard.php");'.
 				'?'.'>';
 
-			$handler = fopen($p."/index.php","wb");
+			$handler = fopen($p."index.php", "wb");
 			fwrite($handler, $indexContent);
 			fclose($handler);
 
 			$u = "";
-			if (is_array($arSite["DOMAINS"]) && strlen($arSite["DOMAINS"][0]) > 0 || strlen($arSite["DOMAINS"]) > 0)
-				$u .= "http://";
-			if (is_array($arSite["DOMAINS"]))
-				$u .= $arSite["DOMAINS"][0];
-			else
-				$u .= $arSite["DOMAINS"];
-			$u .= $arSite["DIR"];
+			$domains = explode("\n", str_replace("\r", "", $arSite["DOMAINS"]));
+			if (!empty($domains) && $domains[0] <> '')
+				$u .= "http://".$domains[0];
+			$u .= $siteDir;
 
 			LocalRedirect($u);
 		}
 
-		if (strlen($save)>0)
+		if ($_POST["save"] <> '')
 			LocalRedirect(BX_ROOT."/admin/site_admin.php?lang=".LANGUAGE_ID);
 		else
 			LocalRedirect(BX_ROOT."/admin/site_edit.php?lang=".LANGUAGE_ID."&LID=".$LID."&".$tabControl->ActiveTabParam());
@@ -214,7 +216,12 @@ if($bNew && $COPY_ID == '')
 	$str_SORT = '1';
 	$str_DIR = '/';
 	$str_FORMAT_DATE = (LANGUAGE_ID == 'ru'? 'DD.MM.YYYY' : 'MM/DD/YYYY');
-	$str_FORMAT_DATETIME = (LANGUAGE_ID == 'ru'? 'DD.MM.YYYY HH:MI:SS' : 'MM/DD/YYYY HH:MI:SS');
+	if (LANGUAGE_ID == 'ru')
+		$str_FORMAT_DATETIME = 'DD.MM.YYYY HH:MI:SS';
+	elseif (LANGUAGE_ID == 'en')
+		$str_FORMAT_DATETIME = 'MM/DD/YYYY H:MI T';
+	else
+		$str_FORMAT_DATETIME = 'DD.MM.YYYY HH:MI:SS';
 
 	$str_FORMAT_NAME = CSite::GetDefaultNameFormat();
 	$str_WEEK_START = GetMessage('SITE_EDIT_WEEK_START_DEFAULT');
@@ -254,7 +261,7 @@ require($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/include/prolog_admin_af
 if($bNew)
 {
 	$sites_cnt = 0;
-	$r = CSite::GetList($o1, $b1, Array("ACTIVE"=>"Y"));
+	$r = CSite::GetList($o1, $b1, array("ACTIVE"=>"Y"));
 	while($r->Fetch())
 		$sites_cnt++;
 }
@@ -413,18 +420,18 @@ for ($i = 0; $i < 7; $i++)
 		<?echo GetMessage("MAIN_DOC_ROOT_TIPS")?>
 		</td>
 		<td><input type="text" name="DOC_ROOT" size="30" value="<?echo $str_DOC_ROOT?>">
-		[<a title="<?=GetMessage('MAIN_DOC_ROOT_INS')?>" href="javascript:void(0)" onClick="document.bform.DOC_ROOT.value='<?=htmlspecialcharsbx(CUtil::addslashes($_SERVER["DOCUMENT_ROOT"]))?>'; BX.fireEvent(document.bform.DOC_ROOT, 'change')"><?echo GetMessage("MAIN_DOC_ROOT_SET")?></a>]
+		<a title="<?=GetMessage('MAIN_DOC_ROOT_INS')?>" href="javascript:void(0)" onClick="document.bform.DOC_ROOT.value='<?=htmlspecialcharsbx(CUtil::addslashes($_SERVER["DOCUMENT_ROOT"]))?>'; BX.fireEvent(document.bform.DOC_ROOT, 'change')"><?echo GetMessage("MAIN_DOC_ROOT_SET")?></a>
 		</td>
 	</tr>
 	<?if($bNew):?>
 	<tr>
-		<td><?echo GetMessage("MAIN_SITE_CREATE_MESS_TEPL")?></td>
+		<td class="adm-detail-valign-top"><?echo GetMessage("MAIN_SITE_CREATE_MESS_TEPL")?></td>
 		<td>
 			<input type="radio"<?if($SITE_MESSAGE_LINK!="E" && $SITE_MESSAGE_LINK!="C") echo " checked"?> name="SITE_MESSAGE_LINK" value="N" id="SITE_MESSAGE_LINK_n" onClick="if(this.checked){document.bform.SITE_MESSAGE_LINK_E_SITE.disabled=true; document.bform.SITE_MESSAGE_LINK_C_SITE.disabled=true}"><label for="SITE_MESSAGE_LINK_n"> <?echo GetMessage("MAIN_SITE_CREATE_MESS_TEPL_N")?></label><br>
 			<input type="radio"<?if($SITE_MESSAGE_LINK=="E") echo " checked"?> name="SITE_MESSAGE_LINK" id="SITE_MESSAGE_LINK_e" value="E" onClick="if(this.checked){document.bform.SITE_MESSAGE_LINK_C_SITE.disabled=true; document.bform.SITE_MESSAGE_LINK_E_SITE.disabled=false}"><label for="SITE_MESSAGE_LINK_e"> <?echo GetMessage("MAIN_SITE_CREATE_MESS_TEPL_LINK")?></label><br>
-			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?=CSite::SelectBox("SITE_MESSAGE_LINK_E_SITE", $SITE_MESSAGE_LINK_E_SITE, "", "", ($SITE_MESSAGE_LINK!="E"?'disabled':''));?><br>
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?=CSite::SelectBox("SITE_MESSAGE_LINK_E_SITE", $SITE_MESSAGE_LINK_E_SITE, "", "", ($SITE_MESSAGE_LINK!="E"?'disabled':''));?><br>
 			<input type="radio"<?if($SITE_MESSAGE_LINK=="C") echo " checked"?> name="SITE_MESSAGE_LINK" id="SITE_MESSAGE_LINK_c" value="C" onClick="if(this.checked){document.bform.SITE_MESSAGE_LINK_E_SITE.disabled=true; document.bform.SITE_MESSAGE_LINK_C_SITE.disabled=false}"><label for="SITE_MESSAGE_LINK_c"> <?echo GetMessage("MAIN_SITE_CREATE_MESS_TEPL_COPY")?></label><br>
-			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?=CSite::SelectBox("SITE_MESSAGE_LINK_C_SITE", $SITE_MESSAGE_LINK_C_SITE, "", "", ($SITE_MESSAGE_LINK!="C"?'disabled':''));?><br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?=CSite::SelectBox("SITE_MESSAGE_LINK_C_SITE", $SITE_MESSAGE_LINK_C_SITE, "", "", ($SITE_MESSAGE_LINK!="C"?'disabled':''));?><br />
 
 		</td>
 	</tr>
@@ -443,7 +450,7 @@ for ($i = 0; $i < 7; $i++)
 			<!--
 				function TurnStartSiteWizardOn(bOn)
 				{
-					document.getElementById("ID_HIDDENABLE_TR").style.display = (bOn ? "block" : "none");
+					document.getElementById("ID_HIDDENABLE_TR").style.display = (bOn ? "" : "none");
 					document.getElementById("ID_START_SITE_WIZARD_REWRITE").disabled = (bOn ? true : false);
 				}
 			//-->
@@ -465,7 +472,7 @@ for ($i = 0; $i < 7; $i++)
 			$dbSiteRes = CSite::GetTemplateList($LID);
 			if(!$bVarsFromForm)
 			{
-				$SITE_TEMPLATE = Array();
+				$SITE_TEMPLATE = array();
 				$max_sort = 0;
 				while($arSiteRes = $dbSiteRes->Fetch())
 				{
@@ -474,11 +481,11 @@ for ($i = 0; $i < 7; $i++)
 						$max_sort = $arSiteRes["SORT"];
 				}
 				for($i=0; $i<3; $i++)
-					$SITE_TEMPLATE["N".$i] = Array("SORT"=>$max_sort+1+$i);
+					$SITE_TEMPLATE["N".$i] = array("SORT"=>$max_sort+1+$i);
 			}
 			else
 			{
-				$SITE_TEMPLATE = Array();
+				$SITE_TEMPLATE = array();
 				foreach($_POST["SITE_TEMPLATE"] as $key=>$val)
 				{
 					if ($USER->CanDoOperation('edit_php') || $_POST['selected_type'][$key] != 'php')

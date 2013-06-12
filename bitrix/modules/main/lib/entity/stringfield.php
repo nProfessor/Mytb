@@ -15,7 +15,11 @@ namespace Bitrix\Main\Entity;
  */
 class StringField extends ScalarField
 {
-	protected $format;
+	/**
+	 * Shortcut for Regexp validator
+	 * @var null|string
+	 */
+	protected $format = null;
 
 	function __construct($name, $dataType, Base $entity, $parameters = array())
 	{
@@ -27,25 +31,24 @@ class StringField extends ScalarField
 		}
 	}
 
-	public function validateValue($value)
-	{
-		if (parent::validateValue($value))
-		{
-			if ($this->format !== null)
-			{
-				// RETURN 'FORMAT'  (lang FIELD_INVALID_FORMAT)
-				// or even return array('FORMAT')
-				return (bool) preg_match($this->format, $value);
-			}
-
-			return true;
-		}
-
-		return false;
-	}
-
+	/**
+	 * Shortcut for Regexp validator
+	 * @return null|string
+	 */
 	public function getFormat()
 	{
 		return $this->format;
+	}
+
+	public function getValidators()
+	{
+		$validators = parent::getValidators();
+
+		if ($this->format !== null)
+		{
+			$validators[] = new Validator\RegExp($this->format);
+		}
+
+		return $validators;
 	}
 }

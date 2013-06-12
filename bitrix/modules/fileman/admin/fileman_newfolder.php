@@ -220,7 +220,6 @@ if ($USER->CanDoFileOperation('fm_create_new_folder',$arPath))
 	</tr>
 
 	<?if($USER->CanDoFileOperation('fm_add_to_menu',$arPath) && $USER->CanDoOperation('fileman_add_element_to_menu') ):?>
-	<tr><td colspan="2">&nbsp;</td></tr>
 
 	<tr>
 		<td><?=GetMessage("FILEMAN_NEWFOLDER_ADDMENU")?></td>
@@ -243,7 +242,6 @@ if ($USER->CanDoFileOperation('fm_create_new_folder',$arPath))
 	<?endif;?>
 
 	<?if($USER->CanDoFileOperation('fm_create_new_file',$arPath) && $USER->CanDoOperation('fileman_admin_files')):?>
-	<tr><td colspan="2">&nbsp;</td></tr>
 
 	<tr>
 		<td><?=GetMessage("FILEMAN_NEWFOLDER_MAKE_INDEX")?></td>

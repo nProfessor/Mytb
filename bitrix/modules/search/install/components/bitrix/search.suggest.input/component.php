@@ -20,7 +20,7 @@ if(!$arParams["DROPDOWN_SIZE"])
 
 $arResult["ID"] = GenerateUniqId($arParams["NAME"]);
 
-$arResult["~ADDITIONAL_VALUES"] = "pe:".$arParams["DROPDOWN_SIZE"].",md5:".$arParams["FILTER_MD5"];
+$arResult["~ADDITIONAL_VALUES"] = "pe:".$arParams["DROPDOWN_SIZE"].",md5:".$arParams["FILTER_MD5"].",site:".SITE_ID;
 $arResult["ADDITIONAL_VALUES"] = CUtil::JSEscape($arResult["~ADDITIONAL_VALUES"]);
 
 $this->IncludeComponentTemplate();

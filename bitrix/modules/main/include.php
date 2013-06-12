@@ -1,12 +1,10 @@
-<?
-/*
-##############################################
-# Bitrix Site Manager                        #
-# Copyright (c) 2002-2007 Bitrix             #
-# http://www.bitrixsoft.com                  #
-# mailto:admin@bitrixsoft.com                #
-##############################################
-*/
+<?php
+/**
+ * Bitrix Framework
+ * @package bitrix
+ * @subpackage main
+ * @copyright 2001-2013 Bitrix
+ */
 
 require_once(substr(__FILE__, 0, strlen(__FILE__) - strlen("/include.php"))."/bx_root.php");
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/start.php");
@@ -93,6 +91,19 @@ require_once($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/ajax_tools.php");
 				{
 					return array();
 				}
+
+				public static function InitiateEditionsSettings($arEditions)
+				{
+				}
+
+				public static function ModifyFeaturesSettings($arEditions, $arFeatures)
+				{
+				}
+
+				public static function IsFeatureInstalled($featureId)
+				{
+					return true;
+				}
 			}
 						//Do not remove this
 
@@ -100,6 +111,11 @@ require_once($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/ajax_tools.php");
 $GLOBALS["arCustomTemplateEngines"] = array();
 
 require_once($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/classes/general/urlrewriter.php");
+
+/**
+ * Defined in dbconn.php
+ * @param string $DBType
+ */
 
 CModule::AddAutoloadClasses(
 	"main",
@@ -122,7 +138,7 @@ CModule::AddAutoloadClasses(
 		"CFile" => "classes/".$DBType."/file.php",
 		"CTempFile" => "classes/general/file_temp.php",
 		"CFavorites" => "classes/".$DBType."/favorites.php",
-		"CUserOptions" => "classes/general/favorites.php",
+		"CUserOptions" => "classes/general/user_options.php",
 		"CGridOptions" => "classes/general/grids.php",
 		"CUndo" => "/classes/general/undo.php",
 		"CAutoSave" => "/classes/general/undo.php",
@@ -137,6 +153,7 @@ CModule::AddAutoloadClasses(
 		"CPHPCacheFiles" => "classes/general/cache_files.php",
 		"CTimeZone" => "classes/general/time.php",
 		"CDataXML" => "classes/general/xml.php",
+		"CXMLFileStream" => "classes/general/xml.php",
 		"CRsaProvider" => "classes/general/rsasecurity.php",
 		"CRsaSecurity" => "classes/general/rsasecurity.php",
 		"CRsaBcmathProvider" => "classes/general/rsabcmath.php",
@@ -167,17 +184,42 @@ CModule::AddAutoloadClasses(
 		"Bitrix\\Main\\Entity\\Query" => "lib/entity/query.php",
 		"Bitrix\\Main\\Entity\\QueryChain" => "lib/entity/querychain.php",
 		"Bitrix\\Main\\Entity\\QueryChainElement" => "lib/entity/querychainelement.php",
-		"Bitrix\\Main\\SiteEntity" => "lib/site.php",
-		"Bitrix\\Main\\Site" => "lib/site.php",
-		"Bitrix\\Main\\UserEntity" => "lib/user.php",
-		"Bitrix\\Main\\User" => "lib/user.php",
-		"Bitrix\\Main\\UtsUserEntity" => "lib/utsuser.php",
-		"Bitrix\\Main\\UtmUserEntity" => "lib/utmuser.php",
-		"Bitrix\\Main\\UserGroupEntity" => "lib/usergroup.php",
-		"Bitrix\\Main\\GroupEntity" => "lib/group.php",
-		"Bitrix\\Main\\Localization\\CultureEntity" => "lib/localization/culture.php",
-		"Bitrix\\Main\\Localization\\Culture" => "lib/localization/culture.php",
+		"Bitrix\\Main\\SiteTable" => "lib/site.php",
+		"Bitrix\\Main\\UserTable" => "lib/user.php",
+		"Bitrix\\Main\\UtsUserTable" => "lib/utsuser.php",
+		"Bitrix\\Main\\UtmUserTable" => "lib/utmuser.php",
+		"Bitrix\\Main\\UserGroupTable" => "lib/usergroup.php",
+		"Bitrix\\Main\\GroupTable" => "lib/group.php",
+		"Bitrix\\Main\\Localization\\CultureTable" => "lib/localization/culture.php",
+		"\\Bitrix\\Main\\Entity\\Base" => "lib/entity/base.php",
+		"\\Bitrix\\Main\\Entity\\DataManager" => "lib/entity/datamanager.php",
+		"\\Bitrix\\Main\\Entity\\Field" => "lib/entity/field.php",
+		"\\Bitrix\\Main\\Entity\\ScalarField" => "lib/entity/scalarfield.php",
+		"\\Bitrix\\Main\\Entity\\IntegerField" => "lib/entity/integerfield.php",
+		"\\Bitrix\\Main\\Entity\\FloatField" => "lib/entity/floatfield.php",
+		"\\Bitrix\\Main\\Entity\\StringField" => "lib/entity/stringfield.php",
+		"\\Bitrix\\Main\\Entity\\TextField" => "lib/entity/textfield.php",
+		"\\Bitrix\\Main\\Entity\\BooleanField" => "lib/entity/booleanfield.php",
+		"\\Bitrix\\Main\\Entity\\DateField" => "lib/entity/datefield.php",
+		"\\Bitrix\\Main\\Entity\\DatetimeField" => "lib/entity/datetimefield.php",
+		"\\Bitrix\\Main\\Entity\\EnumField" => "lib/entity/enumfield.php",
+		"\\Bitrix\\Main\\Entity\\ExpressionField" => "lib/entity/expressionfield.php",
+		"\\Bitrix\\Main\\Entity\\UField" => "lib/entity/ufield.php",
+		"\\Bitrix\\Main\\Entity\\ReferenceField" => "lib/entity/referencefield.php",
+		"\\Bitrix\\Main\\Entity\\Query" => "lib/entity/query.php",
+		"\\Bitrix\\Main\\Entity\\QueryChain" => "lib/entity/querychain.php",
+		"\\Bitrix\\Main\\Entity\\QueryChainElement" => "lib/entity/querychainelement.php",
+		"\\Bitrix\\Main\\SiteTable" => "lib/site.php",
+		"\\Bitrix\\Main\\UserTable" => "lib/user.php",
+		"\\Bitrix\\Main\\UtsUserTable" => "lib/utsuser.php",
+		"\\Bitrix\\Main\\UtmUserTable" => "lib/utmuser.php",
+		"\\Bitrix\\Main\\UserGroupTable" => "lib/usergroup.php",
+		"\\Bitrix\\Main\\GroupTable" => "lib/group.php",
+		"\\Bitrix\\Main\\Localization\\CultureTable" => "lib/localization/culture.php",
 		"CTableSchema" => "classes/general/table_schema.php",
+		"CCSVData" => "classes/general/csv_data.php",
+		"CSmile" => "classes/general/smile.php",
+		"CSmileSet" => "classes/general/smile.php",
 		"CUserCounter" => "classes/".$DBType."/user_counter.php",
 		"CHotKeys" => "classes/general/hot_keys.php",
 		"CHotKeysCode" => "classes/general/hot_keys.php",
@@ -185,7 +227,7 @@ CModule::AddAutoloadClasses(
 		"CBXArchive" => "classes/general/archive.php",
 		"CAdminNotify" => "classes/general/admin_notify.php",
 		"CBXFavAdmMenu" => "classes/general/favorites.php",
-		"CAdminInformer" => "classes/general/admin_informer.php"
+		"CAdminInformer" => "classes/general/admin_informer.php",
 	)
 );
 
@@ -212,9 +254,9 @@ if(file_exists(($_fname = $_SERVER["DOCUMENT_ROOT"].BX_PERSONAL_ROOT."/php_inter
 	include_once($_fname);
 
 if(!defined("BX_FILE_PERMISSIONS"))
-	define("BX_FILE_PERMISSIONS", 0777);
+	define("BX_FILE_PERMISSIONS", 0600);
 if(!defined("BX_DIR_PERMISSIONS"))
-	define("BX_DIR_PERMISSIONS", 0777);
+	define("BX_DIR_PERMISSIONS", 0700);
 
 //global var, is used somewhere
 $GLOBALS["sDocPath"] = $GLOBALS["APPLICATION"]->GetCurPage();
@@ -260,8 +302,7 @@ if(headers_sent($hs_file, $hs_line))
 
 session_start();
 
-$db_events = GetModuleEvents("main", "OnPageStart");
-while($arEvent = $db_events->Fetch())
+foreach (GetModuleEvents("main", "OnPageStart", true) as $arEvent)
 	ExecuteModuleEventEx($arEvent);
 
 //define global user object
@@ -291,8 +332,20 @@ if(
 	||
 	(
 		//session expander control
-		$_SESSION["BX_SESSION_TERMINATE_TIME"] > 0
+		isset($_SESSION["BX_SESSION_TERMINATE_TIME"])
+		&& $_SESSION["BX_SESSION_TERMINATE_TIME"] > 0
 		&& $currTime > $_SESSION["BX_SESSION_TERMINATE_TIME"]
+	)
+	||
+	(
+		//signed session
+		isset($_SESSION["BX_SESSION_SIGN"])
+		&& $_SESSION["BX_SESSION_SIGN"] <> bitrix_sess_sign()
+	)
+	||
+	(
+		//session manually expired, e.g. in $User->LoginHitByHash
+		isSessionExpired()
 	)
 )
 {
@@ -310,6 +363,8 @@ if(
 }
 $_SESSION['SESS_IP'] = $_SERVER['REMOTE_ADDR'];
 $_SESSION['SESS_TIME'] = time();
+if(!isset($_SESSION["BX_SESSION_SIGN"]))
+	$_SESSION["BX_SESSION_SIGN"] = bitrix_sess_sign();
 
 //session control from security module
 if(
@@ -331,8 +386,6 @@ if(
 		else
 		{
 			session_regenerate_id();
-			if(!version_compare(phpversion(),"4.3.3",">="))
-				setcookie(session_name(), session_id(), ini_get("session.cookie_lifetime"), "/");
 		}
 		$_SESSION['SESS_ID_TIME'] = $_SESSION['SESS_TIME'];
 	}
@@ -340,7 +393,7 @@ if(
 
 define("BX_STARTED", true);
 
-if ($_SESSION['BX_ADMIN_LOAD_AUTH'])
+if (isset($_SESSION['BX_ADMIN_LOAD_AUTH']))
 {
 	define('ADMIN_SECTION_LOAD_AUTH', 1);
 	unset($_SESSION['BX_ADMIN_LOAD_AUTH']);
@@ -348,7 +401,7 @@ if ($_SESSION['BX_ADMIN_LOAD_AUTH'])
 
 if(!defined("NOT_CHECK_PERMISSIONS") || NOT_CHECK_PERMISSIONS!==true)
 {
-	$bLogout = (strtolower($_REQUEST["logout"]) == "yes");
+	$bLogout = isset($_REQUEST["logout"]) && (strtolower($_REQUEST["logout"]) == "yes");
 
 	if($bLogout && $GLOBALS["USER"]->IsAuthorized())
 	{
@@ -383,7 +436,7 @@ if(!defined("NOT_CHECK_PERMISSIONS") || NOT_CHECK_PERMISSIONS!==true)
 	}
 
 	//Authorize user from authorization html form
-	if($_REQUEST["AUTH_FORM"] <> '')
+	if(isset($_REQUEST["AUTH_FORM"]) && $_REQUEST["AUTH_FORM"] <> '')
 	{
 		$bRsaError = false;
 		if(COption::GetOptionString('main', 'use_encrypted_auth', 'N') == 'Y')
@@ -455,12 +508,18 @@ if(!defined("ADMIN_SECTION") || ADMIN_SECTION !== true)
 }
 
 //magic parameters: show page creation time
-if($_GET["show_page_exec_time"]=="Y" || $_GET["show_page_exec_time"]=="N")
-	$_SESSION["SESS_SHOW_TIME_EXEC"] = $_GET["show_page_exec_time"];
+if(isset($_GET["show_page_exec_time"]))
+{
+	if($_GET["show_page_exec_time"]=="Y" || $_GET["show_page_exec_time"]=="N")
+		$_SESSION["SESS_SHOW_TIME_EXEC"] = $_GET["show_page_exec_time"];
+}
 
 //magic parameters: show included file processing time
-if($_GET["show_include_exec_time"]=="Y" || $_GET["show_include_exec_time"]=="N")
-	$_SESSION["SESS_SHOW_INCLUDE_TIME_EXEC"] = $_GET["show_include_exec_time"];
+if(isset($_GET["show_include_exec_time"]))
+{
+	if($_GET["show_include_exec_time"]=="Y" || $_GET["show_include_exec_time"]=="N")
+		$_SESSION["SESS_SHOW_INCLUDE_TIME_EXEC"] = $_GET["show_include_exec_time"];
+}
 
 //magic parameters: show include areas
 if(isset($_GET["bitrix_include_areas"]) && $_GET["bitrix_include_areas"] <> "")
@@ -474,8 +533,7 @@ if($GLOBALS["USER"]->IsAuthorized())
 		$GLOBALS["APPLICATION"]->set_cookie('SOUND_LOGIN_PLAYED', 'Y', 0);
 }
 
-$db_events = GetModuleEvents("main", "OnBeforeProlog");
-while($arEvent = $db_events->Fetch())
+foreach(GetModuleEvents("main", "OnBeforeProlog", true) as $arEvent)
 	ExecuteModuleEventEx($arEvent);
 
 if((!defined("NOT_CHECK_PERMISSIONS") || NOT_CHECK_PERMISSIONS!==true) && (!defined("NOT_CHECK_FILE_PERMISSIONS") || NOT_CHECK_FILE_PERMISSIONS!==true))
@@ -484,9 +542,10 @@ if((!defined("NOT_CHECK_PERMISSIONS") || NOT_CHECK_PERMISSIONS!==true) && (!defi
 	if (isset($_SERVER["REAL_FILE_PATH"]) && $_SERVER["REAL_FILE_PATH"] != "")
 		$real_path = $_SERVER["REAL_FILE_PATH"];
 
-	if(!$GLOBALS["USER"]->CanDoFileOperation('fm_view_file', Array(SITE_ID, $real_path)) || (defined("NEED_AUTH") && NEED_AUTH && !$GLOBALS["USER"]->IsAuthorized()))
+	if(!$GLOBALS["USER"]->CanDoFileOperation('fm_view_file', array(SITE_ID, $real_path)) || (defined("NEED_AUTH") && NEED_AUTH && !$GLOBALS["USER"]->IsAuthorized()))
 	{
-		if($GLOBALS["USER"]->IsAuthorized() && strlen($arAuthResult["MESSAGE"])<=0)
+		/** @noinspection PhpUndefinedVariableInspection */
+		if($GLOBALS["USER"]->IsAuthorized() && $arAuthResult["MESSAGE"] == '')
 			$arAuthResult = array("MESSAGE"=>GetMessage("ACCESS_DENIED").' '.GetMessage("ACCESS_DENIED_FILE", array("#FILE#"=>$real_path)), "TYPE"=>"ERROR");
 
 		if(defined("ADMIN_SECTION") && ADMIN_SECTION==true)
@@ -504,8 +563,14 @@ if((!defined("NOT_CHECK_PERMISSIONS") || NOT_CHECK_PERMISSIONS!==true) && (!defi
 				</script>";
 				die();
 			}
+			elseif(defined("MOBILE_APP_ADMIN") && MOBILE_APP_ADMIN==true)
+			{
+				echo json_encode(Array("status"=>"failed"));
+				die();
+			}
 		}
 
+		/** @noinspection PhpUndefinedVariableInspection */
 		$GLOBALS["APPLICATION"]->AuthForm($arAuthResult);
 	}
 }

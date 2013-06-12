@@ -29,4 +29,5 @@ $MESS["T_IBLOCK_DESC_ADD_SECTIONS_CHAIN"] = "Включать раздел в ц
 $MESS["T_IBLOCK_DESC_CHECK_DATES"] = "Показывать только активные на данный момент элементы";
 $MESS["CP_BNL_SET_STATUS_404"] = "Устанавливать статус 404, если не найдены элемент или раздел";
 $MESS["CP_BNL_CACHE_GROUPS"] = "Учитывать права доступа";
+$MESS["CP_BNL_INCLUDE_SUBSECTIONS"] = "Показывать элементы подразделов раздела";
 ?>

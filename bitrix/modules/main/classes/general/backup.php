@@ -31,7 +31,7 @@ class CBackup
 			);
 			while($f = $rsData->Fetch())
 			{
-				if ($f['ACTIVE'] != 'Y' || ($f['READ_ONLY'] == 'Y' && $arFilter['READ_ONLY'] == 'Y'))
+				if ($f['ACTIVE'] != 'Y' || ($f['READ_ONLY'] == 'Y' && $arFilter['READ_ONLY'] == 'N'))
 					continue; // sql filter currently is not supported TODO: remove in future
 
 				$arBucket[] = $f;
@@ -39,6 +39,498 @@ class CBackup
 			return count($arBucket) ? $arBucket : false;
 		}
 		return false;
+	}
+
+
+	function ignorePath($path)
+	{
+		if (!file_exists($path)) // in case of wrong symlinks
+			return true;
+
+		static $REAL_DOCUMENT_ROOT_SITE;
+		if (!$REAL_DOCUMENT_ROOT_SITE)
+			$REAL_DOCUMENT_ROOT_SITE = realpath(DOCUMENT_ROOT_SITE);
+
+		## Ignore paths
+		$ignore_path = array(
+			BX_PERSONAL_ROOT."/cache",
+			BX_PERSONAL_ROOT."/cache_image",
+			BX_PERSONAL_ROOT."/managed_cache",
+			BX_PERSONAL_ROOT."/managed_flags",
+			BX_PERSONAL_ROOT."/stack_cache",
+			BX_PERSONAL_ROOT."/html_pages",
+			BX_PERSONAL_ROOT."/tmp",
+			BX_ROOT."/tmp",
+			BX_ROOT."/help",
+			BX_ROOT."/updates",
+		);
+
+		foreach($ignore_path as $value)
+			if(DOCUMENT_ROOT_SITE.$value == $path)
+				return true;
+
+		## Clouds
+		if (IntOption('dump_do_clouds'))
+		{
+			$clouds = DOCUMENT_ROOT_SITE.BX_ROOT.'/backup/clouds/';
+			if (strpos($path, $clouds) === 0 || strpos($clouds, $path) === 0)
+				return false;
+		}
+		
+		## Backups
+		if (strpos($path, DOCUMENT_ROOT_SITE.BX_ROOT.'/backup/') === 0)
+			return true;
+
+		## Symlinks
+		if (is_dir($path))
+		{ 
+			if (is_link($path))
+			{
+				if (IntOption("skip_symlinks"))
+					return true;
+
+				if (strpos(realpath($path), $REAL_DOCUMENT_ROOT_SITE) !== false) // если симлинк ведет на папку внутри структуры сайта
+					return true;
+			}
+		} ## File size
+		elseif (($max_file_size = IntOption("dump_max_file_size")) > 0 && filesize($path) > $max_file_size * 1024)
+			return true;
+
+		## Skip mask	
+		if (CBackup::skipMask($path))
+			return true;
+
+		## Kernel vs Public
+		$dump_file_public = IntOption('dump_file_public');
+		$dump_file_kernel = IntOption('dump_file_kernel');
+
+		if ($dump_file_public == $dump_file_kernel) // если обе опции либо включены либо выключены
+			return !$dump_file_public;
+
+		if (strpos(DOCUMENT_ROOT_SITE.BX_ROOT, $path) !== false) // на пути к /bitrix
+			return false;
+
+		if (strpos($path, DOCUMENT_ROOT_SITE.BX_ROOT) === false) // за пределами /bitrix 
+			return !$dump_file_public;
+
+		$path_root = substr($path, strlen(DOCUMENT_ROOT_SITE));
+		if (preg_match('#^/bitrix/(php_interface|templates)/([^/]*)#',$path_root.'/',$regs))
+			return !$dump_file_public;
+	
+		if (preg_match('#^/bitrix/(activities|components|gadgets|wizards)/([^/]*)#',$path_root.'/',$regs))
+		{
+			if (!$regs[2])
+				return false;
+			if ($regs[2] == 'bitrix')
+				return !$dump_file_kernel;
+			return !$dump_file_public;
+		}
+
+		// всё остальное в папке bitrix - ядро
+		return !$dump_file_kernel;
+	}
+
+	function GetBucketFileList($BUCKET_ID, $path)
+	{
+		static $CACHE;
+
+		if ($CACHE[$BUCKET_ID])
+			$obBucket = $CACHE[$BUCKET_ID];
+		else
+			$CACHE[$BUCKET_ID] = $obBucket = new CCloudStorageBucket($BUCKET_ID);
+
+		if ($obBucket->Init())
+			return $obBucket->ListFiles($path);
+		return false;
+	}
+
+	function _preg_escape($str)
+	{
+		$search = array('#','[',']','.','?','(',')','^','$','|','{','}');
+		$replace = array('\#','\[','\]','\.','\?','\(','\)','\^','\$','\|','\{','\}');
+		return str_replace($search, $replace, $str);
+	}
+
+	function skipMask($abs_path)
+	{
+		if (!IntOption('skip_mask'))
+			return false;
+
+		global $skip_mask_array;
+		
+		$path = substr($abs_path,strlen(DOCUMENT_ROOT_SITE));
+		$path = str_replace('\\','/',$path);
+		
+		static $preg_mask_array;
+		if (!$preg_mask_array)
+		{
+			$preg_mask_array = array();
+			foreach($skip_mask_array as $a)
+				$preg_mask_array[] = CBackup::_preg_escape($a); 
+		}
+
+		reset($skip_mask_array);
+		foreach($skip_mask_array as $k => $mask)
+		{
+			if (strpos($mask,'/')===0) // absolute path
+			{
+				if (strpos($mask,'*') === false) // нет звездочки 
+				{
+					if (strpos($path.'/',$mask.'/') === 0)
+						return true;
+				}
+				elseif (preg_match('#^'.str_replace('*','[^/]*?',$preg_mask_array[$k]).'$#i',$path))
+					return true;
+			}
+			elseif (strpos($mask, '/')===false)
+			{
+				if (strpos($mask,'*')===false)
+				{
+					if (substr($path,-strlen($mask)) == $mask)
+						return true;
+				}
+				elseif (preg_match('#/[^/]*'.str_replace('*','[^/]*?',$preg_mask_array[$k]).'$#i',$path))
+					return true;
+			}
+		}
+	}
+
+	function GetArcName($prefix = '')
+	{
+		$arc_name = DOCUMENT_ROOT.BX_ROOT."/backup/".date("Ymd_His");
+
+		$k = IntOption('dump_file_kernel');
+		$p = IntOption('dump_file_public');
+		$b = IntOption('dump_base');
+
+		if ($k && $p && $b)
+			$arc_name .= '_full';
+		elseif (!($p xor $b))
+			$arc_name .= '_'.($k ? '' : 'no').'core';
+		elseif (!($k xor $b))
+			$arc_name .= '_'.($p ? '' : 'no').'pub';
+		elseif (!($k xor $p))
+			$arc_name .= '_'.($b ? '' : 'no').'sql';
+
+		$arc_name .= '_'.substr(md5(uniqid(rand(), true)), 0, 8);
+		return $arc_name;
+	}
+
+	function MakeDump($strDumpFile, &$arState)
+	{
+		global $DB;
+
+		if (!$arState)
+		{
+			if(!file_put_contents($strDumpFile, "-- Started: ".date('Y-m-d H:i:s')."\n", 8))
+				return false;
+
+			$rs = $DB->Query('SHOW VARIABLES LIKE "character_set_results"');
+			if (($f = $rs->Fetch()) && array_key_exists ('Value', $f))
+				if (!file_put_contents($strDumpFile, "SET NAMES '".$f['Value']."';\n", 8))
+					return false;
+
+			$arState = array('TABLES' => array());
+			$arTables = array();
+			$rsTables = $DB->Query("SHOW TABLES", false, '', array("fixed_connection"=>true));
+			while($arTable = $rsTables->Fetch())
+			{
+				list($key, $table) = each($arTable);
+
+				$rsIndexes = $DB->Query("SHOW INDEX FROM `".$DB->ForSql($table)."`", true, '', array("fixed_connection"=>true));
+				if($rsIndexes)
+				{
+					$arIndexes = array();
+					while($ar = $rsIndexes->Fetch())
+						if($ar["Non_unique"] == "0")
+							$arIndexes[$ar["Key_name"]][$ar["Seq_in_index"]-1] = $ar["Column_name"];
+
+					foreach($arIndexes as $IndexName => $arIndexColumns)
+						if(count($arIndexColumns) != 1)
+							unset($arIndexes[$IndexName]);
+
+					if(count($arIndexes) > 0)
+					{
+						foreach($arIndexes as $IndexName => $arIndexColumns)
+						{
+							foreach($arIndexColumns as $SeqInIndex => $ColumnName)
+								$key_column = $ColumnName;
+							break;
+						}
+					}
+					else
+					{
+						$key_column = false;
+					}
+				}
+				else
+				{
+					$key_column = false;
+				}
+				
+				$arState['TABLES'][$table] = array(
+					"TABLE_NAME" => $table,
+					"KEY_COLUMN" => $key_column,
+					"LAST_ID" => 0
+				);
+			}
+			$arState['TableCount'] = count($arState['TABLES']);
+			if (!haveTime())
+				return true;
+		}
+
+		foreach($arState['TABLES'] as $table => $arTable)
+		{
+			if(!$arTable["LAST_ID"])
+			{
+				$rs = $DB->Query("SHOW CREATE TABLE `".$DB->ForSQL($table)."`");
+				$row = $rs->Fetch();
+				$string = $row['Create Table'];
+				if (!$string) // VIEW
+				{
+					$string = $row['Create View'];
+					if (!file_put_contents($strDumpFile,  
+						"-- -----------------------------------\n".
+						"-- Creating view ".$DB->ForSQL($table)."\n".
+						"-- -----------------------------------\n".
+						"DROP VIEW IF EXISTS `".$DB->ForSQL($table)."`;\n".
+						$string.";\n\n", 8))
+							return false;
+					unset($arState['TABLES'][$table]);
+					continue;
+				}
+				elseif (CBackup::SkipTableData($table))
+				{
+					$string = str_replace('CREATE TABLE', 'CREATE TABLE IF NOT EXISTS', $string);
+					if (!file_put_contents($strDumpFile,  
+						"-- -----------------------------------\n".
+						"-- Creating empty table ".$DB->ForSQL($table)."\n".
+						"-- -----------------------------------\n".
+						$string.";\n\n", 8))
+							return false;
+					unset($arState['TABLES'][$table]);
+					continue;
+				}
+
+
+				if (!file_put_contents($strDumpFile,  
+					"-- -----------------------------------\n".
+					"-- Dumping table ".$DB->ForSQL($table)."\n".
+					"-- -----------------------------------\n".
+					"DROP TABLE IF EXISTS `".$DB->ForSQL($table)."`;\n".
+					$string.";\n\n", 8))
+						return false;
+
+				$arState['TABLES'][$table]['COLUMNS'] = $arTable["COLUMNS"] = CBackup::GetTableColumns($table);
+				if (($k = $arTable['KEY_COLUMN']) && $arTable['COLUMNS'][$k] > 0) // check if promary key is not numeric
+				{
+					unset($arTable['KEY_COLUMN']);
+					unset($arState['TABLES'][$table]['KEY_COLUMN']);
+				}
+			}
+
+			$strInsert = "";
+			$cnt = $LIMIT = 10000;
+			while($cnt == $LIMIT)
+			{
+				$i = $arTable['LAST_ID'];
+				if($arTable["KEY_COLUMN"])
+				{
+					$strSelect = "
+						SELECT *
+						FROM ".$arTable["TABLE_NAME"]."
+						".($arTable["LAST_ID"] ? "WHERE ".$arTable["KEY_COLUMN"]." > '".$arTable["LAST_ID"]."'": "")."
+						ORDER BY ".$arTable["KEY_COLUMN"]."
+						LIMIT ".$LIMIT;
+				}
+				else
+				{
+					$strSelect = "
+						SELECT *
+						FROM ".$arTable["TABLE_NAME"]."
+						LIMIT ".($arTable["LAST_ID"] ? $arTable["LAST_ID"].", ": "").$LIMIT;
+				}
+
+				$rsSource = $DB->Query($strSelect, false, '', array("fixed_connection"=>true));
+				$cnt = $rsSource->SelectedRowsCount();
+				while($arSource = $rsSource->Fetch())
+				{
+					if(!$strInsert)
+						$strInsert = "INSERT INTO `".$arTable["TABLE_NAME"]."` VALUES";
+					else
+						$strInsert .= ",";
+
+					foreach($arSource as $key => $value)
+					{
+						if(!isset($value) || is_null($value))
+							$arSource[$key] = 'NULL';
+						elseif($arTable["COLUMNS"][$key] == 0)
+							$arSource[$key] = $value;
+						elseif($arTable["COLUMNS"][$key] == 1)
+						{
+							if(empty($value) && $value != '0')
+								$arSource[$key] = '\'\'';
+							else
+								$arSource[$key] = '0x' . bin2hex($value);
+						}
+						elseif($arTable["COLUMNS"][$key] == 2)
+						{
+							$arSource[$key] = "'".$DB->ForSql($value)."'";
+						}
+					}
+
+					$strInsert .= "\n(".implode(", ", $arSource).")";
+
+					$arState['TABLES'][$table]['LAST_ID'] = $arTable['LAST_ID'] = $arTable["KEY_COLUMN"] ? $arSource[$arTable["KEY_COLUMN"]] : ++$i;
+
+					if (CTar::strlen($strInsert) > 1000000)
+					{
+						if(!file_put_contents($strDumpFile, $strInsert.";\n", 8))
+							return false;
+						$strInsert = "";
+					}
+
+					if (!haveTime())
+						return $strInsert ? file_put_contents($strDumpFile, $strInsert.";\n", 8) : true;
+				}
+			}
+
+			if($strInsert && !file_put_contents($strDumpFile, $strInsert.";\n", 8))
+				return false;
+
+			if ($cnt < $LIMIT)
+				unset($arState['TABLES'][$table]);
+		}
+		
+		if(!file_put_contents($strDumpFile, "-- Finished: ".date('Y-m-d H:i:s'), 8))
+			return false;
+
+		$arState['end'] = true;
+		return true;
+	}
+
+	function GetTableColumns($TableName)
+	{
+		global $DB;
+		$arResult = array();
+
+		$sql = "SHOW COLUMNS FROM `".$TableName."`";
+		$res = $DB->Query($sql, false, '', array("fixed_connection"=>true));
+		while($row = $res->Fetch())
+		{
+			if(preg_match("/^(\w*int|year|float|double|decimal)/", $row["Type"]))
+				$arResult[$row["Field"]] = 0;
+			elseif(preg_match("/^(\w*(binary|blob))/", $row["Type"]))
+				$arResult[$row["Field"]] = 1;
+			else
+				$arResult[$row["Field"]] = 2;
+		}
+
+		return $arResult;
+	}
+
+	function SkipTableData($table)
+	{
+		$table = strtolower($table);
+		if (preg_match("#^b_stat#",$table) && IntOption('dump_base_skip_stat'))
+			return true;
+		elseif (preg_match("#^b_search_%#", $table) && !preg_match('^(b_search_custom_rank|b_search_phrase)$') && IntOption('dump_base_skip_search'))
+			return true;
+		elseif($table == 'b_event_log' && IntOption('dump_base_skip_log'))
+			return true;
+		return false;
+	}
+
+	/* Deprecated */
+	function BaseDump($arc_name="", $tbl_num, $start_row, &$TotalTables = 0)
+	{
+		global $DB;
+
+		$last_row = $start_row;
+		$ret = array('st_row' => $last_row);
+		$mem = 32; // Minimum required value
+
+		$sql = "SHOW TABLES;";
+		$res = $DB->Query($sql, false, "File: ".__FILE__."<br>Line: ".__LINE__);
+		$ptab = Array();
+		while($row = $res->Fetch())
+		{
+			$ar = each($row);
+			$table = $ar[1];
+			$ptab[] = $table;
+		}
+
+		if (!$f = fopen($arc_name,"a"))
+			RaiseErrorAndDie('Can\'t open file: '.$arc_name);
+		$i = $tbl_num;
+
+		$dump = "";
+		$TotalTables = count($ptab);
+
+		while($i <= ($TotalTables - 1) && haveTime())
+		{
+			if (!strlen($ptab[$i]))
+				continue;
+
+			if($last_row == -1)
+			{
+				$table = $ptab[$i];
+				$drop = !IntOption('dump_base_skip_stat') || !preg_match("#^b_stat#i",$table); // если не переносим статистику, то не удаляем старую статистику при восстановлении 
+				if ($dump = CBackup::createTable($ptab[$i], $drop))
+					fwrite($f, $dump."\n");
+				else
+					$row_next = -1;
+
+				$next = false;
+				$ret["num"] = $i;
+				$ret["st_row"] = 0;
+				$last_row = 0;
+			}
+
+			if ($dump)
+			{
+				$res = $DB->Query("SELECT count(*) as count FROM `$ptab[$i]`");
+				$row_count = $res->Fetch();
+
+				if($row_count["count"] > 0)
+				{
+					if($ptab[$i] == 'b_xml_tree')
+						$row_next = -1;
+					elseif(IntOption('dump_base_skip_stat') && preg_match('#^b_stat#i',$ptab[$i]))
+						$row_next = -1;
+					elseif(IntOption('dump_base_skip_search') && preg_match("#^(b_search_content_site|b_search_content_group|b_search_content_stem|b_search_content_title|b_search_tags|b_search_content_freq|b_search_content|b_search_suggest)$#i",$ptab[$i]))
+						$row_next = -1;
+					elseif(IntOption('dump_base_skip_log') && $ptab[$i] == 'b_event_log')
+						$row_next = -1;
+					elseif (CTar::strpos($dump, 'DEFINER VIEW'))
+						$row_next = -1;
+					else
+						$row_next = CBackup::getData($ptab[$i], $f, $row_count["count"], $last_row, $mem);
+				}
+				else
+					$row_next = -1;
+			}
+
+			if($row_next > 0)
+			{
+				$last_row = $row_next;
+				$ret["num"] = $i;
+				$ret["st_row"] = $last_row;
+			}
+			else
+			{
+				$ret["num"] = ++$i;
+				$ret["st_row"] = -1;
+				$last_row = -1;
+			}
+		}
+
+		fclose($f);
+
+		if(!($i <= (count($ptab) - 1)))
+			$ret["end"] = true;
+
+		return $ret;
 	}
 
 	function createTable($table_name, $drop = true)
@@ -58,7 +550,11 @@ class CBackup
 		$com .= "\n";
 
 		$string = $row['Create Table'];
-	//	$string = preg_replace('#collate [a-z0-9_]+#i','',$string);
+		if (!$string)
+			$string = $row['Create View'];
+
+		if (strpos($string, 'ENGINE=MEMORY'))
+			return false;
 
 		return $com."\n\n\n".($drop ? "DROP TABLE IF EXISTS `".$table_name."`;\n".$string : str_replace('CREATE TABLE','CREATE TABLE IF NOT EXISTS',$string)).';';
 	}
@@ -143,258 +639,6 @@ class CBackup
 			return $last_row;
 	}
 
-	function ignorePath($path)
-	{
-		static $REAL_DOCUMENT_ROOT_SITE;
-		if (!$REAL_DOCUMENT_ROOT_SITE)
-			$REAL_DOCUMENT_ROOT_SITE = realpath(DOCUMENT_ROOT_SITE);
-
-		## Ignore paths
-		$ignore_path = array(
-			BX_PERSONAL_ROOT."/cache",
-			BX_PERSONAL_ROOT."/cache_image",
-			BX_PERSONAL_ROOT."/managed_cache",
-			BX_PERSONAL_ROOT."/managed_flags",
-			BX_PERSONAL_ROOT."/stack_cache",
-			BX_PERSONAL_ROOT."/html_pages",
-			BX_PERSONAL_ROOT."/tmp",
-			BX_ROOT."/tmp",
-			BX_ROOT."/help",
-			BX_ROOT."/updates",
-		);
-
-		foreach($ignore_path as $value)
-			if(DOCUMENT_ROOT_SITE.$value == $path)
-				return true;
-
-		## Clouds
-		if (IntOption('dump_do_clouds'))
-		{
-			$clouds = DOCUMENT_ROOT_SITE.BX_ROOT.'/backup/clouds/';
-			if (strpos($path, $clouds) === 0 || strpos($clouds, $path) === 0)
-				return false;
-		}
-		
-		## Backups
-		if (strpos($path, DOCUMENT_ROOT_SITE.BX_ROOT.'/backup/') === 0)
-			return true;
-
-		## Symlinks
-		if (is_dir($path) && is_link($path))
-		{ 
-			if (IntOption("skip_symlinks"))
-				return true;
-
-			$real_path = realpath($path);
-			if ($real_path != $REAL_DOCUMENT_ROOT_SITE && strpos($real_path, $REAL_DOCUMENT_ROOT_SITE) !== false) // если симлинк ведет на папку внутри структуры сайта
-				return true;
-		}
-
-		## File size
-		if (($max_file_size = IntOption("dump_max_file_size")) > 0 && filesize($path) > $max_file_size * 1024)
-			return true;
-
-		## Skip mask	
-		if (CBackup::skipMask($path))
-			return true;
-
-		## Kernel vs Public
-		$dump_file_public = IntOption('dump_file_public');
-		$dump_file_kernel = IntOption('dump_file_kernel');
-
-		if ($dump_file_public == $dump_file_kernel) // если обе опции либо включены либо выключены
-			return !$dump_file_public;
-
-		if (strpos(DOCUMENT_ROOT_SITE.BX_ROOT, $path) !== false) // на пути к /bitrix
-			return false;
-
-		if (strpos($path, DOCUMENT_ROOT_SITE.BX_ROOT) === false) // за пределами /bitrix 
-			return !$dump_file_public;
-
-		$path_root = substr($path, strlen(DOCUMENT_ROOT_SITE));
-		if (preg_match('#^/bitrix/(php_interface|templates)/([^/]*)#',$path_root.'/',$regs))
-			return !$dump_file_public;
-	
-		if (preg_match('#^/bitrix/(activities|components|gadgets|wizards)/([^/]*)#',$path_root.'/',$regs))
-		{
-			if (!$regs[2])
-				return false;
-			if ($regs[2] == 'bitrix')
-				return !$dump_file_kernel;
-			return !$dump_file_public;
-		}
-
-		// всё остальное в папке bitrix - ядро
-		return !$dump_file_kernel;
-	}
-
-	function BaseDump($arc_name="", $tbl_num, $start_row)
-	{
-		global $DB;
-
-		$ret = array();
-		$last_row = $start_row;
-		$mem = 32; // Minimum required value
-
-		$sql = "SHOW TABLES;";
-		$res = $DB->Query($sql, false, "File: ".__FILE__."<br>Line: ".__LINE__);
-		$ptab = Array();
-		while($row = $res->Fetch())
-		{
-			$ar = each($row);
-			$table = $ar[1];
-			$ptab[] = $table;
-		}
-
-		if (!$f = fopen($arc_name,"a"))
-			RaiseErrorAndDie('Can\'t open file: '.$arc_name);
-		$i = $tbl_num;
-
-		$dump = "";
-
-		while($i <= (count($ptab) - 1) && haveTime())
-		{
-			if (strlen($ptab[$i]))
-			{
-				if($last_row == -1)
-				{
-					$table = $ptab[$i];
-					$drop = !IntOption('dump_base_skip_stat') || !preg_match("#^b_stat#i",$table); // если не переносим статистику, то не удаляем старую статистику при восстановлении 
-					$dump = CBackup::createTable($ptab[$i], $drop);
-					fwrite($f, $dump."\n");
-					$next = false;
-					$ret["num"] = $i;
-					$ret["st_row"] = 0;
-					$last_row = 0;
-				}
-
-				$res = $DB->Query("SELECT count(*) as count FROM `$ptab[$i]`");
-				$row_count = $res->Fetch();
-
-				if($row_count["count"] > 0)
-				{
-					if($ptab[$i] == 'b_xml_tree')
-						$row_next = -1;
-					elseif(IntOption('dump_base_skip_stat') && preg_match('#^b_stat#i',$ptab[$i]))
-						$row_next = -1;
-					elseif(IntOption('dump_base_skip_search') && preg_match("#^(b_search_content_site|b_search_content_group|b_search_content_stem|b_search_content_title|b_search_tags|b_search_content_freq|b_search_content|b_search_suggest)$#i",$ptab[$i]))
-						$row_next = -1;
-					elseif(IntOption('dump_base_skip_log') && $ptab[$i] == 'b_event_log')
-						$row_next = -1;
-					else
-						$row_next = CBackup::getData($ptab[$i], $f, $row_count["count"], $last_row, $mem);
-				}
-				else
-					$row_next = -1;
-
-				if($row_next == -1)
-				{
-					$ret["num"] = ++$i;
-					$ret["st_row"] = -1;
-					$last_row = -1;
-				}
-				else
-				{
-					$last_row = $row_next;
-					$ret["num"] = $i;
-					$ret["st_row"] = $last_row;
-				}
-			}
-		}
-
-		fclose($f);
-
-		if(!($i <= (count($ptab) - 1)))
-			$ret["end"] = true;
-
-		return $ret;
-	}
-
-	function GetBucketFileList($BUCKET_ID, $path)
-	{
-		static $CACHE;
-
-		if ($CACHE[$BUCKET_ID])
-			$obBucket = $CACHE[$BUCKET_ID];
-		else
-			$CACHE[$BUCKET_ID] = $obBucket = new CCloudStorageBucket($BUCKET_ID);
-
-		if ($obBucket->Init())
-			return $obBucket->ListFiles($path);
-		return false;
-	}
-
-	function _preg_escape($str)
-	{
-		$search = array('#','[',']','.','?','(',')','^','$','|','{','}');
-		$replace = array('\#','\[','\]','\.','\?','\(','\)','\^','\$','\|','\{','\}');
-		return str_replace($search, $replace, $str);
-	}
-
-	function skipMask($abs_path)
-	{
-		if (!IntOption('skip_mask'))
-			return false;
-
-		global $skip_mask_array;
-		
-		$path = substr($abs_path,strlen(DOCUMENT_ROOT_SITE));
-		$path = str_replace('\\','/',$path);
-		
-		static $preg_mask_array;
-		if (!$preg_mask_array)
-		{
-			$preg_mask_array = array();
-			foreach($skip_mask_array as $a)
-				$preg_mask_array[] = CBackup::_preg_escape($a); 
-		}
-
-		reset($skip_mask_array);
-		foreach($skip_mask_array as $k => $mask)
-		{
-			if (strpos($mask,'/')===0) // absolute path
-			{
-				if (strpos($mask,'*') === false) // нет звездочки 
-				{
-					if (strpos($path.'/',$mask.'/') === 0)
-						return true;
-				}
-				elseif (preg_match('#^'.str_replace('*','[^/]*?',$preg_mask_array[$k]).'$#i',$path))
-					return true;
-			}
-			elseif (strpos($mask, '/')===false)
-			{
-				if (strpos($mask,'*')===false)
-				{
-					if (substr($path,-strlen($mask)) == $mask)
-						return true;
-				}
-				elseif (preg_match('#/[^/]*'.str_replace('*','[^/]*?',$preg_mask_array[$k]).'$#i',$path))
-					return true;
-			}
-		}
-	}
-
-	function GetArcName($prefix = '')
-	{
-		$arc_name = DOCUMENT_ROOT.BX_ROOT."/backup/".date("Y-m-d_H-i");
-
-		$k = IntOption('dump_file_kernel');
-		$p = IntOption('dump_file_public');
-		$b = IntOption('dump_base');
-
-		if ($k && $p && $b)
-			$arc_name .= '_full';
-		elseif (!($p xor $b))
-			$arc_name .= '_'.($k ? '' : 'no').'core';
-		elseif (!($k xor $b))
-			$arc_name .= '_'.($p ? '' : 'no').'pub';
-		elseif (!($k xor $p))
-			$arc_name .= '_'.($b ? '' : 'no').'sql';
-
-		$arc_name .= '_'.substr(md5(uniqid(rand(), true)), 0, 8);
-		return $arc_name;
-	}
 }
 
 class CDirScan
@@ -461,15 +705,12 @@ class CDirScan
 			{
 				$r = $this->ProcessDirBefore($dir);
 				if ($r === false)
-				{
-					$this->err[] = GetMessage('CDIR_FOLDER_ERROR').$dir;
 					return false;
-				}
 			}
 
 			if (!($handle = opendir($dir)))
 			{
-				$this->err[] = GetMessage('CDIR_FOLDER_OPEN_ERROR').$dir;
+				$this->err[] = 'Error opening dir: '.$dir;
 				return false;
 			}
 
@@ -491,10 +732,7 @@ class CDirScan
 			if (!$this->startPath) // если начальный путь найден или не задан
 			{
 				if ($this->ProcessDirAfter($dir) === false)
-				{
-					$this->err[] = GetMessage('CDIR_FOLDER_ERROR').$dir;
 					return false;
-				}
 				$this->DirCount++;
 			}
 		}
@@ -505,10 +743,7 @@ class CDirScan
 		#############################
 			$r = $this->ProcessFile($dir);
 			if ($r === false)
-			{
-				$this->err[] = GetMessage('CDIR_FILE_ERROR').$dir;
 				return false;
-			}
 			elseif ($r === 'BREAK') // если файл обработан частично
 				return $r;
 			$this->FileCount++;
@@ -574,6 +809,8 @@ class CDirRealScan extends CDirScan
 
 	function Skip($f)
 	{
+		static $bFoundDocumentRoot;
+		$res = false;
 		if ($this->startPath)
 		{
 			if (strpos($this->startPath.'/', $f.'/') === 0)
@@ -585,10 +822,58 @@ class CDirRealScan extends CDirScan
 			else
 				return true;
 		}
-		
-		$res = CBackup::ignorePath($f);
-//		echo $f.' <font color=red>'.$res.'</font> <br>';
+		elseif ($bFoundDocumentRoot)
+			$res = CBackup::ignorePath($f);
+
+		$bFoundDocumentRoot = true;
 		return $res;
+	}
+}
+
+class CPasswordStorage
+{
+	const SIGN = 'CACHE_';
+
+	function Init()
+	{
+		if (!function_exists('mcrypt_encrypt'))
+			return false;
+		return true;
+	}
+
+	function getEncryptKey()
+	{
+		static $LICENSE_KEY;
+
+		if (!$LICENSE_KEY)
+		{
+			if (file_exists($file = $_SERVER['DOCUMENT_ROOT'].BX_ROOT.'/license_key.php'))
+				include($file);
+			if (!$LICENSE_KEY)
+				$LICENSE_KEY = 'DEMO';
+		}
+		return $LICENSE_KEY;
+	}
+
+	static function Set($strName, $strVal)
+	{
+		if (!self::Init())
+			return false;
+
+		$temporary_cache = $strVal ? mcrypt_encrypt(MCRYPT_BLOWFISH, self::getEncryptKey(), self::SIGN.$strVal, MCRYPT_MODE_ECB, pack("a8",self::getEncryptKey())) : '';
+		return COption::SetOptionString('main', $strName, base64_encode($temporary_cache));
+	}
+
+	static function Get($strName)
+	{
+		if (!self::Init())
+			return false;
+
+		$temporary_cache = base64_decode(COption::GetOptionString('main', $strName, ''));
+		$pass = mcrypt_decrypt(MCRYPT_BLOWFISH, self::getEncryptKey(), $temporary_cache, MCRYPT_MODE_ECB, pack("a8",self::getEncryptKey()));
+		if (CTar::substr($pass, 0, 6) == self::SIGN)
+			return str_replace("\x0","",CTar::substr($pass, 6));
+		return false;
 	}
 }
 
@@ -610,8 +895,9 @@ class CTar
 	var $ArchiveSizeLimit;
 	const BX_EXTRA = 'BX0000';
 	const BX_SIGNATURE = 'Bitrix Encrypted File';
-	const BufferSize = 51200;
+	var $BufferSize;
 	var $Buffer;
+	var $dataSizeCache = array();
 
 	##############
 	# READ
@@ -620,6 +906,8 @@ class CTar
 	{
 		if (!isset($this->gzip) && (self::substr($file,-3)=='.gz' || self::substr($file,-4)=='.tgz'))
 			$this->gzip = true;
+
+		$this->BufferSize = 51200;
 
 		if ($this->open($file, 'r'))
 		{
@@ -651,13 +939,13 @@ class CTar
 		return $this->res;
 	}
 
-	function readBlock()
+	function readBlock($bIgnoreOpenNextError = false)
 	{
 		if (!$this->Buffer)
 		{
-			$str = $this->gzip ? gzread($this->res, self::BufferSize) : fread($this->res, self::BufferSize);
-			if ($str === '' && $this->openNext())
-				$str = $this->gzip ? gzread($this->res, self::BufferSize) : fread($this->res, self::BufferSize);
+			$str = $this->gzip ? gzread($this->res, $this->BufferSize) : fread($this->res, $this->BufferSize);
+			if ($str === '' && $this->openNext($bIgnoreOpenNextError))
+				$str = $this->gzip ? gzread($this->res, $this->BufferSize) : fread($this->res, $this->BufferSize);
 			if ($str !== '' && $key = $this->getEncryptKey())
 				$str = mcrypt_decrypt(MCRYPT_BLOWFISH, $key, $str, MCRYPT_MODE_ECB, pack("a8",$key));
 			$this->Buffer = $str;
@@ -700,7 +988,7 @@ class CTar
 		$this->Buffer = '';
 		$NewPos = $this->Block * 512;
 
-		if ($ArchiveSize = $this->getArchiveSize($file = $first_file = self::getFirstName($this->file)))
+		if ($ArchiveSize = $this->getDataSize($file = self::getFirstName($this->file)))
 		{
 			while($NewPos > $ArchiveSize)
 			{
@@ -713,7 +1001,7 @@ class CTar
 		{
 			$this->close();
 			if (!$this->open($file, $this->mode))
-				return $this->Error('Archive is corrupted. File not found: '.$file);
+				return false;
 		}
 
 		if (0 === ($this->gzip ? gzseek($this->res, $NewPos) : fseek($this->res, $NewPos)))
@@ -730,12 +1018,15 @@ class CTar
 	{
 		$str = '';
 		while(trim($str) == '')
-			if (!self::strlen($str = $this->readBlock()))
+		{
+			if (!($l = self::strlen($str = $this->readBlock($bIgnoreOpenNextError = true))))
 				return 0; // finish
+		}
+
 		if (!$Long)
 			$this->BlockHeader = $this->Block - 1;
 
-		if (self::strlen($str)!=512)
+		if ($l != 512)
 			return $this->Error('Wrong block size: '.self::strlen($str).' (block '.$this->Block.')');
 
 
@@ -810,15 +1101,15 @@ class CTar
 				if ($header['type']==5) // dir
 				{
 					if(!file_exists($f) && !self::xmkdir($f))
-						return $this->Error('Can\'t create folder: '.$f);
+						return $this->ErrorAndSkip('Can\'t create folder: '.$f);
 					//chmod($f, $header['mode']);
 				}
 				else // file
 				{
 					if (!self::xmkdir($dirname = dirname($f)))
-						return $this->Error('Can\'t create folder: '.$dirname);
+						return $this->ErrorAndSkip('Can\'t create folder: '.$dirname);
 					elseif (($rs = fopen($f, 'wb'))===false)
-						return $this->Error('Can\'t create file: '.$f);
+						return $this->ErrorAndSkip('Can\'t create file: '.$f);
 				}
 			}
 			else
@@ -835,7 +1126,7 @@ class CTar
 			if (!$rs)
 			{
 				if (($rs = fopen($f, 'ab'))===false)
-					return $this->Error('Can\'t open file: '.$f);
+					return $this->ErrorAndSkip('Can\'t open file: '.$f);
 			}
 
 			$i = 0;
@@ -873,26 +1164,21 @@ class CTar
 		return true;
 	}
 
-	function extract()
-	{
-		while ($r = $this->extractFile());
-		return $r === 0;
-	}
-
-	function openNext()
+	function openNext($bIgnoreOpenNextError)
 	{
 		if (file_exists($file = $this->getNextName()))
 		{
 			$this->close();
 			return $this->open($file,$this->mode);
 		}
-		else
+		elseif (!$bIgnoreOpenNextError)
 			return $this->Error("File doesn't exist: ".$file);
+		return false;
 	}
 
 	function getLastNum($file)
 	{
-		$file = preg_replace('#\.[0-9]+$#', '', $file);
+		$file = self::getFirstName($file);
 
 		$f = fopen($file, 'rb');
 		fseek($f, 12);
@@ -915,7 +1201,9 @@ class CTar
 		if (!isset($this->gzip) && (self::substr($file,-3)=='.gz' || self::substr($file,-4)=='.tgz'))
 			$this->gzip = true;
 
-		if (!intval($this->ArchiveSizeLimit))
+		$this->BufferSize = 51200;
+
+		if (intval($this->ArchiveSizeLimit) <= 0)
 			$this->ArchiveSizeLimit = 1024 * 1024 * 1024; // 1Gb
 
 
@@ -927,8 +1215,8 @@ class CTar
 		}
 
 		$size = 0;
-		if (file_exists($file) && !$size = $this->getArchiveSize($file))
-			return $this->Error('Can\'t get archive size: '.$file);
+		if (file_exists($file) && !$size = $this->getDataSize($file))
+			return $this->Error('Can\'t get data size: '.$file);
 
 		$this->Block += $size / 512;
 		if ($size >= $this->ArchiveSizeLimit) // если последний архив полон
@@ -989,7 +1277,7 @@ class CTar
 			$this->close();
 
 			if (!$this->open($file,$this->mode))
-				return $this->Error('Can\'t open file: '.$file);
+				return false;
 
 			$this->ArchiveSizeCurrent = 0;
 		}
@@ -999,7 +1287,7 @@ class CTar
 		$this->Block++;
 		$this->ArchiveSizeCurrent += 512;
 
-		if (self::strlen($this->Buffer) == self::BufferSize)
+		if (self::strlen($this->Buffer) == $this->BufferSize)
 			return $this->flushBuffer();
 
 		return true;
@@ -1039,7 +1327,7 @@ class CTar
 			return true;
 
 		if (!$ar = $this->getFileInfo($f))
-			return $this->Error('Can\'t get file info: '.$f);
+			return false;
 
 		if ($this->ReadBlockCurrent == 0) // read from start
 		{
@@ -1149,6 +1437,8 @@ class CTar
 				fwrite($f, pack("V", $this->ArchiveSizeCurrent));
 				fclose($f);
 
+				$this->dataSizeCache[$this->file] = $this->ArchiveSizeCurrent;
+
 				// сохраним номер последней части в первый архив для многотомных архивов
 				if (preg_match('#^(.+)\.([0-9]+)$#', $this->file, $regs))
 				{
@@ -1167,6 +1457,7 @@ class CTar
 	{
 		if (!$file)
 			$file = $this->file;
+
 		static $CACHE;
 		$c = &$CACHE[$file];
 
@@ -1213,21 +1504,16 @@ class CTar
 		return strpos($s, $a);
 	}
 
-	function getArchiveSize($file = '')
+	function getDataSize($file)
 	{
-		static $CACHE;
-		if (!$file)
-			$file = $this->file;
-
-		$size = &$CACHE[$file];
-
+		$size = &$this->dataSizeCache[$file];
 		if (!$size)
 		{
 			if (!file_exists($file))
 				$size = false;
 			else
 			{
-				if ($this->gzip)
+				if (preg_match('#\.gz(\.[0-9]+)?$#',$file))
 				{
 					$f = fopen($file, "rb");
 					fseek($f, 16);
@@ -1253,6 +1539,15 @@ class CTar
 		if ($code)
 			$this->LastErrCode = $code;
 		$this->err[] = $str;
+		return false;
+	}
+
+	function ErrorAndSkip($str = '', $code = '')
+	{
+		$this->Error($str, $code);
+		$this->SkipFile();
+		if ($this->readHeader() === 0)
+			$this->BlockHeader = $this->Block;
 		return false;
 	}
 
@@ -1298,6 +1593,9 @@ class CTar
 		if (!$info = stat($f))
 			return $this->Error('Can\'t get file info: '.$f);
 
+		if ($info['size'] < 0)
+			return $this->Error('File is too large: '.$f);
+
 		$ar['mode'] = 0777 & $info['mode'];
 		$ar['uid'] = $info['uid'];
 		$ar['gid'] = $info['gid'];
@@ -1321,6 +1619,7 @@ class CTar
 	# }
 	##############
 }
+
 class CTarCheck extends CTar
 {
 	function extractFile()
@@ -1404,3 +1703,14 @@ class CloudDownload
 	}
 }
 
+function HumanTime($t)
+{
+	$ar = array(GetMessage('TIME_S'),GetMessage('TIME_M'),GetMessage('TIME_H'));
+	if ($t < 60)
+		return sprintf('%d '.$ar[0], $t);
+	if ($t < 3600)
+		return sprintf('%d '.$ar[1], floor($t/60));
+//		return sprintf('%d '.$ar[1].' %d '.$ar[0], floor($t/60), $t%60);
+	return sprintf('%d '.$ar[2].' %d '.$ar[1], floor($t/3600), floor($t%3600/60));
+//	return sprintf('%d '.$ar[2].' %d '.$ar[1].' %d '.$ar[0], floor($t/3600), floor($t%3600/60), $t%60);
+}

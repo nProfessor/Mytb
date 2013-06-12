@@ -1,5 +1,13 @@
-<?
+<?php
+/**
+ * Bitrix Framework
+ * @package bitrix
+ * @subpackage main
+ * @copyright 2001-2013 Bitrix
+ */
+
 IncludeModuleLangFile(__FILE__);
+
 class CEventLog
 {
 	function Log($SEVERITY, $AUDIT_TYPE_ID, $MODULE_ID, $ITEM_ID, $DESCRIPTION = false, $SITE_ID = false)
@@ -23,7 +31,7 @@ class CEventLog
 
 		$url = preg_replace("/(&?sessid=[0-9a-z]+)/", "", $_SERVER["REQUEST_URI"]);
 		$SITE_ID = defined("ADMIN_SECTION") && ADMIN_SECTION==true ? false : SITE_ID;
-		
+
 		$arFields = array(
 			"SEVERITY" => array_key_exists($arFields["SEVERITY"], $arSeverity)? $arFields["SEVERITY"]: "UNKNOWN",
 			"AUDIT_TYPE_ID" => strlen($arFields["AUDIT_TYPE_ID"]) <= 0? "UNKNOWN": $arFields["AUDIT_TYPE_ID"],
@@ -55,7 +63,7 @@ class CEventLog
 		return "CEventLog::CleanUpAgent();";
 	}
 
-	function GetList($arOrder = Array("ID" => "DESC"), $arFilter = array())
+	function GetList($arOrder = Array("ID" => "DESC"), $arFilter = array(), $arNavParams = false)
 	{
 		global $DB;
 		$err_mess = "FILE: ".__FILE__."<br>LINE: ";
@@ -85,6 +93,7 @@ class CEventLog
 			{
 				case "ID":
 					$arSqlSearch[] = "L.ID=".IntVal($val);
+					break;
 				case "TIMESTAMP_X_1":
 					$arSqlSearch[] = "L.TIMESTAMP_X >= ".$DB->CharToDateFunction($DB->ForSql($val), "FULL");
 					break;
@@ -115,11 +124,11 @@ class CEventLog
 					if(is_array($val))
 					{
 						$arSqlSearch2 = array();
-						foreach($val as $item => $value)
+						foreach($val as $value)
 						{
 							$arSqlSearchTmp = array();
 							foreach($value as $item2 => $value2)
-							{   
+							{
 								if (in_array($item2, $arFields))
 									$arSqlSearchTmp[] = "L.".$item2." = '".$DB->ForSQL($value2)."'";
 							}
@@ -162,20 +171,50 @@ class CEventLog
 		}
 
 		$strSql = "
-			SELECT L.*,
-			".$DB->DateToCharFunction("L.TIMESTAMP_X")." as TIMESTAMP_X
 			FROM
 				b_event_log L
 		";
 
-		if(count($arSqlSearch) > 0)
+		if(!empty($arSqlSearch))
 			$strSql .=  " WHERE ".implode(" AND ", $arSqlSearch);
 
-		if(count($arSqlOrder) > 0)
-			$strSql .=  " ORDER BY ".implode(", ", $arSqlOrder);
+		if(is_array($arNavParams))
+		{
+			$res_cnt = $DB->Query("SELECT count(1) C".$strSql);
+			$res_cnt = $res_cnt->Fetch();
+			$cnt = $res_cnt["C"];
 
-		return $DB->Query($strSql, false, $err_mess.__LINE__);
-	}  
+			if(!empty($arSqlOrder))
+				$strSql .=  " ORDER BY ".implode(", ", $arSqlOrder);
+
+			$res = new CDBResult();
+			$res->NavQuery("
+				SELECT
+					ID
+					,".$DB->DateToCharFunction("L.TIMESTAMP_X")." as TIMESTAMP_X
+					,SEVERITY
+					,AUDIT_TYPE_ID
+					,MODULE_ID
+					,ITEM_ID
+					,REMOTE_ADDR
+					,USER_AGENT
+					,REQUEST_URI
+					,SITE_ID
+					,USER_ID
+					,GUEST_ID
+					,DESCRIPTION
+			".$strSql, $cnt, $arNavParams);
+
+			return $res;
+		}
+		else
+		{
+			if(!empty($arSqlOrder))
+				$strSql .=  " ORDER BY ".implode(", ", $arSqlOrder);
+
+			return $DB->Query("SELECT L.*, ".$DB->DateToCharFunction("L.TIMESTAMP_X")." as TIMESTAMP_X".$strSql, false, $err_mess.__LINE__);
+		}
+	}
 }
 
 class CEventMain
@@ -191,24 +230,29 @@ class CEventMain
 		$arFilter = array();
 		if(COption::GetOptionString("main", "event_log_register", "N") === "Y" || COption::GetOptionString("main", "event_log_user_delete", "N") === "Y" || COption::GetOptionString("main", "event_log_user_edit", "N") === "Y" || COption::GetOptionString("main", "event_log_user_groups", "N") === "Y")
 		{
-			$arFilter["USERS"] = GetMessage("LOG_TYPE_USERS");		    
+			$arFilter["USERS"] = GetMessage("LOG_TYPE_USERS");
 		}
 		return  $arFilter;
 	}
-	
+
 	function GetAuditTypes()
 	{
 		return array(
-			"USER_REGISTER" => "[USER_REGISTER] ".GetMessage("LOG_TYPE_NEW_USERS"), 
+			"USER_REGISTER" => "[USER_REGISTER] ".GetMessage("LOG_TYPE_NEW_USERS"),
 			"USER_DELETE" => "[USER_DELETE] ".GetMessage("LOG_TYPE_USER_DELETE"),
 			"USER_EDIT" => "[USER_EDIT] ".GetMessage("LOG_TYPE_USER_EDIT"),
 			"USER_GROUP_CHANGED" => "[USER_GROUP_CHANGED] ".GetMessage("LOG_TYPE_USER_GROUP_CHANGED"),
+			"BACKUP_ERROR" => "[BACKUP_ERROR] ".GetMessage("LOG_TYPE_BACKUP_ERROR"),
+			"BACKUP_SUCCESS" => "[BACKUP_SUCCESS] ".GetMessage("LOG_TYPE_BACKUP_SUCCESS"),
+			"SITE_CHECKER_SUCCESS" => "[SITE_CHECKER_SUCCESS] ".GetMessage("LOG_TYPE_SITE_CHECK_SUCCESS"),
+			"SITE_CHECKER_ERROR" => "[SITE_CHECKER_ERROR] ".GetMessage("LOG_TYPE_SITE_CHECK_ERROR"),
 		);
 	}
-	
+
 	function GetEventInfo($row, $arParams)
 	{
 		$DESCRIPTION = unserialize($row["DESCRIPTION"]);
+		$userURL = $EventPrint = "";
 		$rsUser = CUser::GetByID($row['ITEM_ID']);
 		if($arUser = $rsUser->GetNext())
 			$userURL = SITE_DIR.CComponentEngine::MakePathFromTemplate($arParams['USER_PATH'], array("user_id" => $row['ITEM_ID'], "SITE_ID" => ""));
@@ -223,19 +267,19 @@ class CEventMain
 				break;
 			case "USER_EDIT":
 				$EventPrint = GetMessage("LOG_USER_EDIT");
-				break;	
+				break;
 			case "USER_GROUP_CHANGED":
 				$EventPrint = GetMessage("LOG_USER_GROUP_CHANGED");
 				break;
 		}
-		
+
 		return array(
-				"eventType" => $EventPrint,
-				"eventName" => $EventName,
-				"eventURL" => $userURL, 
-			);
+			"eventType" => $EventPrint,
+			"eventName" => $EventName,
+			"eventURL" => $userURL,
+		);
 	}
-	
+
 	function GetFilterSQL($var)
 	{
 		$ar[] = array("AUDIT_TYPE_ID" => "USER_REGISTER");
@@ -243,6 +287,5 @@ class CEventMain
 		$ar[] = array("AUDIT_TYPE_ID" => "USER_EDIT");
 		$ar[] = array("AUDIT_TYPE_ID" => "USER_GROUP_CHANGED");
 		return $ar;
-	}	
+	}
 }
-?>

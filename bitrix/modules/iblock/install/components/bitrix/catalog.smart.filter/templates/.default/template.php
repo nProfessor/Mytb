@@ -24,28 +24,28 @@
 						<table border="0" cellpadding="0" cellspacing="0">
 							<tr>
 								<td>
-									<span class="max-price"><?echo GetMessage("CT_BCSF_FILTER_TO")?></span>
+									<span class="min-price"><?echo GetMessage("CT_BCSF_FILTER_FROM")?></span>
 								</td>
 								<td>
-									<span class="min-price"><?echo GetMessage("CT_BCSF_FILTER_FROM")?></span>
+									<span class="max-price"><?echo GetMessage("CT_BCSF_FILTER_TO")?></span>
 								</td>
 							</tr>
 							<tr>
-								<td><input
-									class="max-price"
-									type="text"
-									name="<?echo $arItem["VALUES"]["MAX"]["CONTROL_NAME"]?>"
-									id="<?echo $arItem["VALUES"]["MAX"]["CONTROL_ID"]?>"
-									value="<?echo $arItem["VALUES"]["MAX"]["HTML_VALUE"]?>"
-									size="5"
-									onkeyup="smartFilter.keyup(this)"
-								/></td>
 								<td><input
 									class="min-price"
 									type="text"
 									name="<?echo $arItem["VALUES"]["MIN"]["CONTROL_NAME"]?>"
 									id="<?echo $arItem["VALUES"]["MIN"]["CONTROL_ID"]?>"
 									value="<?echo $arItem["VALUES"]["MIN"]["HTML_VALUE"]?>"
+									size="5"
+									onkeyup="smartFilter.keyup(this)"
+								/></td>
+								<td><input
+									class="max-price"
+									type="text"
+									name="<?echo $arItem["VALUES"]["MAX"]["CONTROL_NAME"]?>"
+									id="<?echo $arItem["VALUES"]["MAX"]["CONTROL_ID"]?>"
+									value="<?echo $arItem["VALUES"]["MAX"]["HTML_VALUE"]?>"
 									size="5"
 									onkeyup="smartFilter.keyup(this)"
 								/></td>
@@ -83,5 +83,5 @@
 	</div>
 </form>
 <script>
-	var smartFilter = new JCSmartFilter('<?echo CUtil::JSEscape($APPLICATION->GetCurPageParam())?>');
+	var smartFilter = new JCSmartFilter('<?echo CUtil::JSEscape($arResult["FORM_ACTION"])?>');
 </script>

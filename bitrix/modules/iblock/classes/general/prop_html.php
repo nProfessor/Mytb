@@ -127,19 +127,33 @@ class CIBlockPropertyHTML
 
 	function ConvertToDB($arProperty, $value)
 	{
+		global $DB;
 		$return = false;
+
 		if(
 			is_array($value)
 			&& array_key_exists("VALUE", $value)
-			&& (strLen(trim($value["VALUE"]["TEXT"])) > 0)
 		)
 		{
-			$val = CIBlockPropertyHTML::CheckArray($value["VALUE"]);
-			$return = array(
-				"VALUE" => serialize($value["VALUE"]),
-			);
-			if(strlen(trim($value["DESCRIPTION"])) > 0)
-				$return["DESCRIPTION"] = trim($value["DESCRIPTION"]);
+			$text = trim($value["VALUE"]["TEXT"]);
+			$len = strlen($text);
+			if ($len > 0)
+			{
+				if ($DB->type === "MYSQL")
+					$limit = 63200;
+				else
+					$limit = 1950;
+
+				if ($len > $limit)
+					$value["VALUE"]["TEXT"] = substr($text, 0, $limit);
+
+				$val = CIBlockPropertyHTML::CheckArray($value["VALUE"]);
+				$return = array(
+					"VALUE" => serialize($value["VALUE"]),
+				);
+				if(strlen(trim($value["DESCRIPTION"])) > 0)
+					$return["DESCRIPTION"] = trim($value["DESCRIPTION"]);
+			}
 		}
 		return $return;
 	}

@@ -79,6 +79,12 @@ $arComponentParameters = array(
 			"TYPE" => "CHECKBOX",
 			"DEFAULT" => "N",
 		),
+		"INSTANT_RELOAD" => array(
+			"PARENT" => "ADDITIONAL_SETTINGS",
+			"NAME" => GetMessage("CP_BCSF_INSTANT_RELOAD"),
+			"TYPE" => "CHECKBOX",
+			"DEFAULT" => "N",
+		),
 	),
 );
 if(empty($arPrice))

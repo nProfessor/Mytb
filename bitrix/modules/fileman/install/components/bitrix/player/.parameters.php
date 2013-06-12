@@ -14,7 +14,7 @@ if (!function_exists('getSkinsFromDir'))
 		$basePath = $_SERVER["DOCUMENT_ROOT"].Rel2Abs("/", $path);
 		$arSkinExt = array('swf', 'zip');
 		$arPreviewExt = array('png', 'gif', 'jpg', 'jpeg');
-		$prExtCnt = count($arPreviewExt);		
+		$prExtCnt = count($arPreviewExt);
 
 		$handle  = @opendir($basePath);
 
@@ -39,7 +39,7 @@ if (!function_exists('getSkinsFromDir'))
 				{
 					if (file_exists($basePath.'/'.$name.'.'.$arPreviewExt[$i]))
 					{
-						$Skin['preview'] = $name.'.'.$arPreviewExt[$i];						
+						$Skin['preview'] = $name.'.'.$arPreviewExt[$i];
 						break;
 					}
 				}
@@ -71,10 +71,10 @@ if (!function_exists('getSkinsEx'))
 			if(!is_dir($basePath.'/'.$skinDir) || $skinDir == "." || $skinDir == ".." )
 				continue;
 
-			$arDirSkins=getSkinsFromDir($path.'/'.$skinDir);			
+			$arDirSkins=getSkinsFromDir($path.'/'.$skinDir);
 			$arSkins = array_merge($arSkins,$arDirSkins);
 		}
-		return $arSkins;		
+		return $arSkins;
 	}
 }
 
@@ -310,7 +310,7 @@ if($arCurrentValues["USE_PLAYLIST"]!='Y')
 
 //APPEARANCE   -FLV-
 if ($type != 'wmv')
-{	
+{
 	$arParams["SKIN_PATH"] = Array(
 		"PARENT" => "APPEARANCE_FLV",
 		"NAME" => GetMessage("PC_PAR_SKIN_PATH"),
@@ -432,6 +432,7 @@ if ($type != 'wmv')
 		),
 		'viral-2' => array(
 			'name' => 'Viral',
+			'test' => "qqq",
 			'flashvars' => array(
 				'viral.onpause' => 'false',
 				'viral.oncomplete' => 'true',

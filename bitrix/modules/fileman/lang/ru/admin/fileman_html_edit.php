@@ -50,4 +50,5 @@ $MESS ['FILEMAN_FILE_EDIT'] = "Редактировать";
 $MESS ['FILEMAN_FILE_TRANS_LINKED'] = "Генерация имени файла из заголовка: Включено";
 $MESS ['FILEMAN_FILE_TRANS_UNLINKED'] = "Генерация имени файла из заголовка: Выключено";
 $MESS ['FILEMAN_FILEEDIT_FILE_IMAGE_ERROR'] = "Недопустимый тип файла.";
+$MESS ['FILEMAN_BACK'] = "Папка";
 ?>

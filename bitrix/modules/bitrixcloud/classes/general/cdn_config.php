@@ -6,11 +6,18 @@ class CBitrixCloudCDNConfig
 	private $active = 0;
 	private $expires = 0; //timestamp
 	private $domain = "";
+	private $kernel_rewrite = /*.(bool).*/null;
+	private $content_rewrite = /*.(bool).*/null;
 	private $sites = /*.(array[string]string).*/ array();
+	/** @var CBitrixCloudCDNQuota $quota */
 	private $quota = /*.(CBitrixCloudCDNQuota).*/ null;
+	/** @var CBitrixCloudCDNClasses $classes */
 	private $classes = /*.(CBitrixCloudCDNClasses).*/ null;
+	/** @var CBitrixCloudCDNServerGroups $server_groups */
 	private $server_groups = /*.(CBitrixCloudCDNServerGroups).*/ null;
+	/** @var CBitrixCloudCDNLocations $locations */
 	private $locations = /*.(CBitrixCloudCDNLocations).*/ null;
+	private $debug = false;
 	/**
 	 *
 	 *
@@ -36,7 +43,7 @@ class CBitrixCloudCDNConfig
 	 * @return CBitrixCloudCDNConfig
 	 *
 	 */
-	public function updateQuota() /*. throws Exception .*/
+	public function updateQuota() /*. throws CBitrixCloudException .*/
 	{
 		$web_service = new CBitrixCloudCDNWebService($this->domain);
 		$obXML = $web_service->actionQuota();
@@ -44,7 +51,7 @@ class CBitrixCloudCDNConfig
 		if (is_object($node))
 			$this->quota = CBitrixCloudCDNQuota::fromXMLNode($node);
 		else
-			throw new Exception(GetMessage("BCL_CDN_CONFIG_XML_PARSE", array(
+			throw new CBitrixCloudException(GetMessage("BCL_CDN_CONFIG_XML_PARSE", array(
 				"#CODE#" => "6",
 			)));
 
@@ -57,12 +64,14 @@ class CBitrixCloudCDNConfig
 	 * @return CBitrixCloudCDNConfig
 	 *
 	 */
-	public function loadRemoteXML() /*. throws Exception .*/
+	public function loadRemoteXML() /*. throws CBitrixCloudException .*/
 	{
 		//Get configuration from remote service
 		$this->sites = CBitrixCloudOption::getOption("cdn_config_site")->getArrayValue();
 		$this->domain = CBitrixCloudOption::getOption("cdn_config_domain")->getStringValue();
+
 		$web_service = new CBitrixCloudCDNWebService($this->domain);
+		$web_service->setDebug($this->debug);
 		$obXML = $web_service->actionGetConfig();
 		//
 		// Parse it
@@ -83,7 +92,7 @@ class CBitrixCloudCDNConfig
 		if (is_object($node))
 			$this->quota = CBitrixCloudCDNQuota::fromXMLNode($node);
 		else
-			throw new Exception(GetMessage("BCL_CDN_CONFIG_XML_PARSE", array(
+			throw new CBitrixCloudException(GetMessage("BCL_CDN_CONFIG_XML_PARSE", array(
 				"#CODE#" => "2",
 			)));
 
@@ -91,7 +100,7 @@ class CBitrixCloudCDNConfig
 		if (is_object($node))
 			$this->classes = CBitrixCloudCDNClasses::fromXMLNode($node);
 		else
-			throw new Exception(GetMessage("BCL_CDN_CONFIG_XML_PARSE", array(
+			throw new CBitrixCloudException(GetMessage("BCL_CDN_CONFIG_XML_PARSE", array(
 				"#CODE#" => "3",
 			)));
 
@@ -99,7 +108,7 @@ class CBitrixCloudCDNConfig
 		if (is_object($node))
 			$this->server_groups = CBitrixCloudCDNServerGroups::fromXMLNode($node);
 		else
-			throw new Exception(GetMessage("BCL_CDN_CONFIG_XML_PARSE", array(
+			throw new CBitrixCloudException(GetMessage("BCL_CDN_CONFIG_XML_PARSE", array(
 				"#CODE#" => "4",
 			)));
 
@@ -107,7 +116,7 @@ class CBitrixCloudCDNConfig
 		if (is_object($node))
 			$this->locations = CBitrixCloudCDNLocations::fromXMLNode($node, $this);
 		else
-			throw new Exception(GetMessage("BCL_CDN_CONFIG_XML_PARSE", array(
+			throw new CBitrixCloudException(GetMessage("BCL_CDN_CONFIG_XML_PARSE", array(
 				"#CODE#" => "5",
 			)));
 
@@ -165,6 +174,67 @@ class CBitrixCloudCDNConfig
 	public function setDomain($domain)
 	{
 		$this->domain = $domain;
+		return $this;
+	}
+	/**
+	 * Returns flag of the kernel links (/bitrix/ or other) rewrite
+	 *
+	 * @param string $prefix
+	 * @return bool
+	 *
+	 */
+	public function isKernelPrefix($prefix)
+	{
+		return preg_match("#^/bitrix/#", $prefix) > 0;
+	}
+	/**
+	 * Returns flag of the kernel links (/bitrix/ or other) rewrite
+	 *
+	 * @return bool
+	 *
+	 */
+	public function isKernelRewriteEnabled()
+	{
+		//It is true by default
+		if(!isset($this->kernel_rewrite))
+			$this->kernel_rewrite = (CBitrixCloudOption::getOption("cdn_config_rewrite_kernel")->getStringValue() !== "false");
+		return $this->kernel_rewrite;
+	}
+	/**
+	 * Sets flag of the kernel links (/bitrix/ or other) rewrite
+	 *
+	 * @param bool $rewrite
+	 * @return CBitrixCloudCDNConfig
+	 *
+	 */
+	public function setKernelRewrite($rewrite = true)
+	{
+		$this->kernel_rewrite = ($rewrite != false);
+		return $this;
+	}
+	/**
+	 * Returns flag of the content links (not kernel) rewrite
+	 *
+	 * @return bool
+	 *
+	 */
+	public function isContentRewriteEnabled()
+	{
+		//It is false by default
+		if(!isset($this->content_rewrite))
+			$this->content_rewrite = (CBitrixCloudOption::getOption("cdn_config_content_rewrite")->getStringValue() === "true");
+		return $this->content_rewrite;
+	}
+	/**
+	 * Sets flag of the content links (not kernel) rewrite
+	 *
+	 * @param bool $rewrite
+	 * @return CBitrixCloudCDNConfig
+	 *
+	 */
+	public function setContentRewrite($rewrite = true)
+	{
+		$this->content_rewrite = ($rewrite == true);
 		return $this;
 	}
 	/**
@@ -240,17 +310,35 @@ class CBitrixCloudCDNConfig
 	/**
 	 * Returns unique array of all prefixes across all locations
 	 *
+	 * @param bool $bKernel
+	 * @param bool $bContent
 	 * @return array[int]string
 	 *
 	 */
-	public function getLocationsPrefixes()
+	public function getLocationsPrefixes($bKernel = true, $bContent = false)
 	{
-		$arPrefixes = array();
+		$arPrefixes = /*.(array[int]string).*/array();
+		/** @var CBitrixCloudCDNLocation $location */
 		$location = /*.(CBitrixCloudCDNLocation).*/ null;
 		foreach ($this->locations as $location)
 		{
 			$arPrefixes = array_merge($arPrefixes, $location->getPrefixes());
 		}
+
+		foreach ($arPrefixes as $i => $prefix)
+		{
+			if ($this->isKernelPrefix($prefix))
+			{
+				if (!$bKernel)
+					unset($arPrefixes[$i]);
+			}
+			else
+			{
+				if (!$bContent)
+					unset($arPrefixes[$i]);
+			}
+		}
+
 		return array_unique($arPrefixes);
 	}
 	/**
@@ -262,11 +350,15 @@ class CBitrixCloudCDNConfig
 	public function getLocationsExtensions()
 	{
 		$arExtensions = array();
+		/** @var CBitrixCloudCDNLocation $location */
 		$location = /*.(CBitrixCloudCDNLocation).*/ null;
 		foreach ($this->locations as $location)
 		{
 			foreach ($location->getClasses() as $file_class)
+			{
+				/** @var CBitrixCloudCDNClass $file_class */
 				$arExtensions = array_merge($arExtensions, $file_class->getExtensions());
+			}
 		}
 		return array_unique($arExtensions);
 	}
@@ -282,6 +374,10 @@ class CBitrixCloudCDNConfig
 		CBitrixCloudOption::getOption("cdn_config_expire_time")->setStringValue((string)$this->expires);
 		CBitrixCloudOption::getOption("cdn_config_domain")->setStringValue($this->domain);
 		CBitrixCloudOption::getOption("cdn_config_site")->setArrayValue($this->sites);
+		if ($this->content_rewrite !== null)
+			CBitrixCloudOption::getOption("cdn_config_content_rewrite")->setStringValue($this->content_rewrite? "true": "false");
+		if ($this->kernel_rewrite !== null)
+			CBitrixCloudOption::getOption("cdn_config_rewrite_kernel")->setStringValue($this->kernel_rewrite? "true": "false");
 		$this->quota->saveOption(CBitrixCloudOption::getOption("cdn_config_quota"));
 		$this->classes->saveOption(CBitrixCloudOption::getOption("cdn_class"));
 		$this->server_groups->saveOption(CBitrixCloudOption::getOption("cdn_server_group"));
@@ -321,6 +417,16 @@ class CBitrixCloudCDNConfig
 	public function unlock()
 	{
 		CBitrixCloudOption::unlock();
+	}
+	/**
+	 *
+	 * @param bool $bActive
+	 * @return void
+	 *
+	 */
+	public function setDebug($bActive)
+	{
+		$this->debug = $bActive === true;
 	}
 }
 ?>

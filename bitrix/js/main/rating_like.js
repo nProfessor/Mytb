@@ -15,7 +15,7 @@ RatingLike = function(likeId, entityTypeId, entityId, available, userId, localiz
 	this.localize = localize;
 	this.template = template;
 	this.pathToUserProfile = pathToUserProfile;
-	
+
 	this.box = BX('bx-ilike-button-'+likeId);
 	if (this.box === null)
 	{
@@ -35,8 +35,8 @@ RatingLike = function(likeId, entityTypeId, entityId, available, userId, localiz
 	this.popupContentPage = 1;	
 	this.popupListProcess = false;	
 	this.popupTimeout = false;	
-	this.likeTimeout = false;	
-	
+	this.likeTimeout = false;
+
 	this.lastVote = BX.hasClass(template == 'standart'? this.button: this.count, 'bx-you-like')? 'plus': 'cancel';
 }
 
@@ -44,9 +44,21 @@ RatingLike.Set = function(likeId, entityTypeId, entityId, available, userId, loc
 {
 	if (template === undefined)
 		template = 'standart';
-	BXRL[likeId] = new RatingLike(likeId, entityTypeId, entityId, available, userId, localize, template, pathToUserProfile);
-	if (BXRL[likeId].enabled)
-		RatingLike.Init(likeId);	
+
+	if (!BXRL[likeId] || BXRL[likeId].tryToSet <= 5)
+	{
+		var tryToSend = BXRL[likeId] && BXRL[likeId].tryToSet? BXRL[likeId].tryToSet: 1;
+		BXRL[likeId] = new RatingLike(likeId, entityTypeId, entityId, available, userId, localize, template, pathToUserProfile);
+		if (BXRL[likeId].enabled)
+			RatingLike.Init(likeId);
+		else
+		{
+			setTimeout(function(){
+				BXRL[likeId].tryToSet = tryToSend+1;
+				RatingLike.Set(likeId, entityTypeId, entityId, available, userId, localize, template, pathToUserProfile);
+			}, 500);
+		}
+	}
 };
 
 RatingLike.Init = function(likeId)

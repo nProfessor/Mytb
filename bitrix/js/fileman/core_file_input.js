@@ -26,12 +26,19 @@ BX.file_input.prototype.Init = function()
 		return;
 	}
 
+	if (this.arConfig.useMedialib || this.arConfig.useFileDialog)
+	{
+		this.arConfig.menuExist.push({TEXT: BX.message('ADM_FILE_INSERT_PATH'), ONCLICK: BX.proxy(this.ShowPath, this)});
+		this.arConfig.menuNew.push({TEXT: BX.message('ADM_FILE_INSERT_PATH'), ONCLICK: BX.proxy(this.ShowPath, this)});
+	}
+
 	if (this.multiple)
 		this.pCont.style.marginBottom = '14px';
 
 	this.pNewMenu = BX(this.id + '_menu_new');
 	if (this.pNewMenu)
 		this.SetOpenerMenu(this.pNewMenu, this.arConfig.menuNew);
+
 
 	// We have already saved files and we have to append for each file the menu
 	if (this.arConfig.fileExists && this.arConfig.files)
@@ -40,15 +47,28 @@ BX.file_input.prototype.Init = function()
 			this.DisplayExistFile(i);
 	}
 
-	if (this.arConfig.useMedialib || this.arConfig.useFileDialog)
-	{
-		this.arConfig.menuExist.push({TEXT: BX.message('ADM_FILE_INSERT_PATH'), ONCLICK: BX.proxy(this.ShowPath, this)});
-		this.arConfig.menuNew.push({TEXT: BX.message('ADM_FILE_INSERT_PATH'), ONCLICK: BX.proxy(this.ShowPath, this)});
-	}
-
 	this.oFiles = [];
 	this.oNewFile = this.DisplayFileBlock();
 	this.oNewFile.pTextInput.id = this.id + '_text_input';
+
+	if (!this.arConfig.useUpload)
+	{
+		if (this.multiple)
+		{
+			this.SetInputName(this.oNewFile.pTextInput, this.GetInputName('file_dialog'));
+			this.ShowFileDescription(this.oNewFile);
+			this.PushToFiles(this.oNewFile);
+		}
+		else
+		{
+			this.SetInputName(this.oNewFile.pTextInput, this.GetInputName('first_input'));
+			this.ShowFileDescription(this.oNewFile);
+		}
+	}
+	else if(!this.arConfig.fileExists && this.arConfig.useUpload)
+	{
+		this.oNewFile.pFileCont.appendChild(BX.create('INPUT', {props: {type: "file", name: this.GetInputName('first_input'), className: 'adm-designed-file adm-input-file-none', id: this.id + '_file_hidden_value_' + 0}}));
+	}
 
 	this.pCont.appendChild(this.oNewFile.pFileCont);
 
@@ -81,72 +101,83 @@ BX.file_input.prototype.DisplayExistFile = function(i)
 {
 	var file = this.arConfig.files[i];
 
-	if (!this.arConfig.viewMode)
+	if (file.FILE_NOT_FOUND)
 	{
 		var pMenu = BX(this.id + '_menu_' + i);
-		if (pMenu)
+		if (pMenu && this.arConfig.showDel)
 		{
-			var arMenu = this.multiple ? [] : BX.clone(this.arConfig.menuExist);
-
-			if(this.arConfig.showDel || this.arConfig.showDesc)
-				arMenu.push({SEPARATOR: true});
-			if(this.arConfig.showDel)
-				arMenu.push({TEXT: BX.message('ADM_FILE_DELETE'), ONCLICK: BX.proxy(this.DeleteFile, this), GLOBAL_ICON: 'adm-menu-delete'});
-			if (this.arConfig.showDesc && file.DESCRIPTION == "")
-				arMenu.push({TEXT: BX.message('ADM_FILE_ADD_DESC'), ONCLICK: BX.proxy(this.AddDescription, this), GLOBAL_ICON: 'adm-menu-add-desc'});
-
-			this.SetOpenerMenu(pMenu, arMenu);
-
-			if (!file.IS_IMAGE)
-				pMenu.style.top = '-6px';
-		}
-
-		var fileContainer = BX(this.id + '_file_cont_' + i);
-		if (fileContainer)
-		{
-			var
-				inpName = file.INPUT_NAME || this.GetInputName('first_input'),
-				inp;
-
-			if (this.arConfig.useUpload) // hack for iblock forms (for editing description)
-				inp = BX.create('INPUT', {props: {type: "file", name: inpName, className: 'adm-designed-file adm-input-file-none'}});
-			else
-				inp = BX.create('INPUT', {props: {type: "hidden", value: file.PATH || file.SRC, name: inpName}});
-
-			inp.id = this.id + '_file_hidden_value_' + i;
-			fileContainer.appendChild(inp);
+			this.SetOpenerMenu(pMenu, [{TEXT: BX.message('ADM_FILE_DELETE'), ONCLICK: BX.proxy(this.DeleteFile, this), GLOBAL_ICON: 'adm-menu-delete'}]);
 		}
 	}
-
-	if (file.IS_IMAGE)
+	else
 	{
-		var
-			pSpan = BX(this.id + '_file_disp_' + i),
-			pImg = BX.findChild(pSpan, {tag: "IMG"}, true);
+		if (!this.arConfig.viewMode)
+		{
+			var pMenu = BX(this.id + '_menu_' + i);
+			if (pMenu)
+			{
+				//var arMenu = this.multiple ? [] : BX.clone(this.arConfig.menuExist);
+				var arMenu = BX.clone(this.arConfig.menuExist);
+				if(this.arConfig.showDel || this.arConfig.showDesc)
+					arMenu.push({SEPARATOR: true});
+				if(this.arConfig.showDel)
+					arMenu.push({TEXT: BX.message('ADM_FILE_DELETE'), ONCLICK: BX.proxy(this.DeleteFile, this), GLOBAL_ICON: 'adm-menu-delete'});
+				if (this.arConfig.showDesc && file.DESCRIPTION == "")
+					arMenu.push({TEXT: BX.message('ADM_FILE_ADD_DESC'), ONCLICK: BX.proxy(this.AddDescription, this), GLOBAL_ICON: 'adm-menu-add-desc'});
 
-		if (pImg)
+				this.SetOpenerMenu(pMenu, arMenu);
+
+				if (!file.IS_IMAGE)
+					pMenu.style.top = '-6px';
+			}
+
+			var fileContainer = BX(this.id + '_file_cont_' + i);
+			if (fileContainer)
+			{
+				var
+					inpName = file.INPUT_NAME || this.GetInputName('first_input'),
+					inp;
+
+				if (this.arConfig.useUpload) // hack for iblock forms (for editing description)
+					inp = BX.create('INPUT', {props: {type: "file", name: inpName, className: 'adm-designed-file adm-input-file-none'}});
+				else
+					inp = BX.create('INPUT', {props: {type: "hidden", value: file.PATH || file.SRC, name: inpName}});
+
+				inp.id = this.id + '_file_hidden_value_' + i;
+				fileContainer.appendChild(inp);
+			}
+		}
+
+		if (file.IS_IMAGE)
 		{
 			var
-				pNode = pImg,
-				h = parseInt(pImg.getAttribute('height') || pImg.offsetHeight),
-				w = parseInt(pImg.getAttribute('width') || pImg.offsetWidth);
+				pSpan = BX(this.id + '_file_disp_' + i),
+				pImg = BX.findChild(pSpan, {tag: "IMG"}, true);
 
-			if (this.arConfig.minPreviewHeight > h || this.arConfig.minPreviewWidth > w)
+			if (pImg)
 			{
-				if (this.arConfig.minPreviewHeight < h)
-					pSpan.style.height = (h + 4) + 'px';
-				if (this.arConfig.minPreviewWidth < w)
-					pSpan.style.width = (w + 4) + 'px';
+				var
+					pNode = pImg,
+					h = parseInt(pImg.getAttribute('height') || pImg.offsetHeight),
+					w = parseInt(pImg.getAttribute('width') || pImg.offsetWidth);
 
-				if (pNode.parentNode.tagName.toLowerCase() == 'a')
-					pNode = pNode.parentNode;
+				if (this.arConfig.minPreviewHeight > h || this.arConfig.minPreviewWidth > w)
+				{
+					if (this.arConfig.minPreviewHeight < h)
+						pSpan.style.height = (h + 4) + 'px';
+					if (this.arConfig.minPreviewWidth < w)
+						pSpan.style.width = (w + 4) + 'px';
 
-				BX.addClass(pSpan, 'adm-input-file-bordered');
-				pNode.style.position = 'absolute';
-				pNode.style.top = '50%';
-				pNode.style.left = '50%';
-				pNode.style.marginTop = Math.round(- h / 2) + 'px';
-				pNode.style.marginLeft = Math.round(- w / 2) + 'px';
+					if (pNode.parentNode.tagName.toLowerCase() == 'a')
+						pNode = pNode.parentNode;
+
+					BX.addClass(pSpan, 'adm-input-file-bordered');
+					pNode.style.position = 'absolute';
+					pNode.style.top = '50%';
+					pNode.style.left = '50%';
+					pNode.style.marginTop = Math.round(- h / 2) + 'px';
+					pNode.style.marginLeft = Math.round(- w / 2) + 'px';
+				}
 			}
 		}
 	}
@@ -172,7 +203,7 @@ BX.file_input.prototype.SetOpenerMenu = function(pMenu, arMenu)
 		var i, items = pMenu.OPENER.GetMenu().ITEMS;
 		for (i in items)
 		{
-			if (items[i] && items[i].ID == "upload")
+			if (items[i] && items[i].ID == "upload" && BX.isNodeInDom(items[i].NODE))
 			{
 				_this.oNewFile.pUploadInput.setAttribute("data-bx-moved", true);
 				items[i].NODE.appendChild(_this.oNewFile.pUploadInput);
@@ -187,7 +218,7 @@ BX.file_input.prototype.SetOpenerMenu = function(pMenu, arMenu)
 		var i, items = pMenu.OPENER.GetMenu().ITEMS;
 		for (i in items)
 		{
-			if (items[i].ID == "upload")
+			if (items[i].ID == "upload" && BX.isNodeInDom(items[i].NODE))
 			{
 				BX.removeClass(items[i].NODE, "adm-input-file-ext-class");
 				BX.defer(function(){
@@ -224,17 +255,18 @@ BX.file_input.prototype.AddNewFileBlock = function()
 BX.file_input.prototype.OnUploadInputChange = function(e)
 {
 	var
-		i, p, name,
-		//inp = this.oNewFile.pUploadInput,
+		p, name,
 		inp = e.target || e.srcElement,
+		description = '',
 		value = inp.files || [inp.value];
 
 	value = value[0];
-
 	name = value.name || value;
 	p = Math.max(name.lastIndexOf('/'), name.lastIndexOf('\\'));
 	if (p > 0)
 		name = name.substring(p + 1, name.length);
+
+	this.curFileIndex = false;
 
 	if (this.arConfig.fileExists && this.arConfig.files && !this.multiple) // Works only for one file
 	{
@@ -245,7 +277,18 @@ BX.file_input.prototype.OnUploadInputChange = function(e)
 		this.oNewFile.pUploadCont.style.display = ""; // Show file control
 		this.SetInputName(this.oNewFile.pUploadInput, this.GetInputName('upload'));
 
-		this.ShowFileDescription(this.oNewFile);
+		this.SetHiddenInputName(0, '');
+
+		var pDelInput = BX.findChild(BX(this.id + '_file_cont_0'), {tagName: 'input', attr: {name: this.GetInputName('del')}});
+		if (pDelInput)
+			BX.cleanNode(pDelInput, true);
+
+		// Show description
+		var
+			curFile = this.arConfig.files && this.arConfig.files[0] ? this.arConfig.files[0] : false;
+		if (curFile && curFile.DESCRIPTION !== '')
+			description = curFile.DESCRIPTION;
+		this.ShowFileDescription(this.oNewFile, description);
 	}
 	else
 	{
@@ -256,6 +299,9 @@ BX.file_input.prototype.OnUploadInputChange = function(e)
 		}
 		else
 		{
+			if (this.multiple)
+				this.ClearNewFile();
+
 			oFile = this.AddNewFileBlock();
 			// Swap inputs
 			var _inp = oFile.pUploadInput;
@@ -269,11 +315,42 @@ BX.file_input.prototype.OnUploadInputChange = function(e)
 		oFile.pTextInput.style.display = "none"; // Hide text input if it was displayed
 		oFile.pUploadLabel.innerHTML = BX.util.htmlspecialchars(name); // Set correct file name
 		oFile.pUploadCont.style.display = ""; // Show file control
+
 		this.SetInputName(oFile.pUploadInput, this.GetInputName('upload'));
 
-		this.ShowFileDescription(oFile);
+		if (this.multiple)
+			this.curFileIndex = this.newFileCount;
 		if (this.multiple || !this.newFileCount)
 			this.PushToFiles(oFile);
+
+		var fileIndex = parseInt(this.GetCurrentFile(), 10);
+		this.SetHiddenInputName(fileIndex, '');
+
+		if (!isNaN(fileIndex) && this.multiple)
+		{
+			this.DeleteFile(false);
+			var pMenu = BX(this.id + '_menu_' + fileIndex);
+			pMenu.style.display = "none";
+			oFile.pMenu.style.display = "inline-block";
+			oFile.pMenu.setAttribute('data-bx-meta', fileIndex);
+
+			var
+				curFile = this.arConfig.files && this.arConfig.files[fileIndex] ? this.arConfig.files[fileIndex] : false,
+				fileContainer = BX(this.id + '_file_cont_' + fileIndex);
+
+			if (curFile)
+			{
+				if (curFile.DESCRIPTION !== '')
+					description = curFile.DESCRIPTION;
+				this.SetInputName(oFile.pUploadInput, curFile.INPUT_NAME);
+				this.SetInputName(oFile.pTextInput, '');
+				this.SetInputName(oFile.pDescInput, curFile.DESC_NAME);
+			}
+			fileContainer.appendChild(oFile.pFileCont);
+		}
+
+		// Show description
+		this.ShowFileDescription(oFile, description);
 
 		if (this.multiple)
 			this.pCont.appendChild(this.oNewFile.pFileCont);
@@ -284,10 +361,16 @@ BX.file_input.prototype.OnUploadInputChange = function(e)
 
 	// Close all menu
 	BX.onCustomEvent("onMenuItemSelected");
+
+	// Used to refresh form content - workaround for IE bug (mantis:37969)
+	if (BX.browser.IsIE())
+		BX(this.id + '_ie_bogus_container').innerHTML = BX(this.id + '_ie_bogus_container').innerHTML;
 };
 
 BX.file_input.prototype.OnSelectFromMedialib = function(file)
 {
+	var description = '';
+	this.curFileIndex = false;
 	if (this.arConfig.fileExists && this.arConfig.files && !this.multiple)
 	{
 		this.DeleteFile(false);
@@ -297,14 +380,22 @@ BX.file_input.prototype.OnSelectFromMedialib = function(file)
 		this.oNewFile.pUploadCont.style.display = "none";
 		this.SetInputName(this.oNewFile.pTextInput, this.GetInputName('medialib'));
 
-		// Desc
-		this.ShowFileDescription(this.oNewFile);
+
 		this.oNewFile.pDescInput.value = file.description || ''; // set description from medialibrary
-		// Show or hide input with description
-		if (this.oNewFile.pDescInput.value == "")
-			BX.removeClass(this.oNewFile.pDesc, "adm-input-file-show-desc");
-		else
-			BX.addClass(this.oNewFile.pDesc, "adm-input-file-show-desc");
+		this.SetHiddenInputName(0, '');
+
+		var pDelInput = BX.findChild(BX(this.id + '_file_cont_0'), {tagName: 'input', attr: {name: this.GetInputName('del')}});
+		if (pDelInput)
+			BX.cleanNode(pDelInput, true);
+
+		// Desc
+		description = file.description || '';
+		var curFile = this.arConfig.files && this.arConfig.files[0] ? this.arConfig.files[0] : false;
+		if (curFile && curFile.DESCRIPTION !== '')
+			description = curFile.DESCRIPTION;
+
+		// Show description
+		this.ShowFileDescription(this.oNewFile, description);
 	}
 	else
 	{
@@ -319,17 +410,38 @@ BX.file_input.prototype.OnSelectFromMedialib = function(file)
 		oFile.pUploadCont.style.display = "none";
 		this.SetInputName(oFile.pTextInput, this.GetInputName('medialib'));
 
-		// Show description
-		this.ShowFileDescription(oFile);
-		oFile.pDescInput.value = file.description || ''; // set description from medialibrary
-		// Show or hide input with description
-		if (oFile.pDescInput.value == "")
-			BX.removeClass(oFile.pDesc, "adm-input-file-show-desc");
-		else
-			BX.addClass(oFile.pDesc, "adm-input-file-show-desc");
-
+		description = file.description || '';
+		if (this.multiple)
+			this.curFileIndex = this.newFileCount;
 		if (this.multiple || !this.newFileCount)
 			this.PushToFiles(oFile);
+
+		var fileIndex = parseInt(this.GetCurrentFile(), 10);
+		this.SetHiddenInputName(fileIndex, '');
+		if (!isNaN(fileIndex) && this.multiple)
+		{
+			this.DeleteFile(false);
+			var pMenu = BX(this.id + '_menu_' + fileIndex);
+			pMenu.style.display = "none";
+			oFile.pMenu.style.display = "inline-block";
+			oFile.pMenu.setAttribute('data-bx-meta', fileIndex);
+
+			var
+				curFile = this.arConfig.files && this.arConfig.files[fileIndex] ? this.arConfig.files[fileIndex] : false,
+				fileContainer = BX(this.id + '_file_cont_' + fileIndex);
+
+			if (curFile)
+			{
+				if (curFile.DESCRIPTION !== '')
+					description = curFile.DESCRIPTION;
+				this.SetInputName(oFile.pTextInput, curFile.INPUT_NAME);
+				this.SetInputName(oFile.pDescInput, curFile.DESC_NAME);
+			}
+			fileContainer.appendChild(oFile.pFileCont);
+		}
+
+		// Show description
+		this.ShowFileDescription(oFile, description);
 
 		if (this.multiple)
 			this.pCont.appendChild(this.oNewFile.pFileCont);
@@ -341,6 +453,8 @@ BX.file_input.prototype.OnSelectFromMedialib = function(file)
 
 BX.file_input.prototype.OnSelectFromFileDialog = function(path)
 {
+	var description = '';
+	this.curFileIndex = false;
 	if (this.arConfig.fileExists && this.arConfig.files && !this.multiple)
 	{
 		this.DeleteFile(false);
@@ -351,8 +465,17 @@ BX.file_input.prototype.OnSelectFromFileDialog = function(path)
 		this.SetInputName(this.oNewFile.pTextInput, this.GetInputName('file_dialog'));
 		this.FocusInput(this.oNewFile.pTextInput);
 
-		// Desc
-		this.ShowFileDescription(this.oNewFile);
+		this.SetHiddenInputName(0, '');
+		var pDelInput = BX.findChild(BX(this.id + '_file_cont_0'), {tagName: 'input', attr: {name: this.GetInputName('del')}});
+		if (pDelInput)
+			BX.cleanNode(pDelInput, true);
+
+		// Show description
+		var
+			curFile = this.arConfig.files && this.arConfig.files[0] ? this.arConfig.files[0] : false;
+		if (curFile && curFile.DESCRIPTION !== '')
+			description = curFile.DESCRIPTION;
+		this.ShowFileDescription(this.oNewFile, description);
 	}
 	else
 	{
@@ -368,10 +491,37 @@ BX.file_input.prototype.OnSelectFromFileDialog = function(path)
 		this.SetInputName(oFile.pTextInput, this.GetInputName('file_dialog'));
 		this.FocusInput(oFile.pTextInput);
 
-		// Show description
-		this.ShowFileDescription(oFile);
+		if (this.multiple)
+			this.curFileIndex = this.newFileCount;
 		if (this.multiple || !this.newFileCount)
 			this.PushToFiles(oFile);
+
+		var fileIndex = parseInt(this.GetCurrentFile(), 10);
+		this.SetHiddenInputName(fileIndex, '');
+		if (!isNaN(fileIndex) && this.multiple)
+		{
+			this.DeleteFile(false);
+			var pMenu = BX(this.id + '_menu_' + fileIndex);
+			pMenu.style.display = "none";
+			oFile.pMenu.style.display = "inline-block";
+			oFile.pMenu.setAttribute('data-bx-meta', fileIndex);
+
+			var
+				curFile = this.arConfig.files && this.arConfig.files[fileIndex] ? this.arConfig.files[fileIndex] : false,
+				fileContainer = BX(this.id + '_file_cont_' + fileIndex);
+
+			if (curFile)
+			{
+				if (curFile.DESCRIPTION !== '')
+					description = curFile.DESCRIPTION;
+				this.SetInputName(oFile.pTextInput, curFile.INPUT_NAME);
+				this.SetInputName(oFile.pDescInput, curFile.DESC_NAME);
+			}
+			fileContainer.appendChild(oFile.pFileCont);
+		}
+
+		// Show description
+		this.ShowFileDescription(oFile, description);
 
 		if (this.multiple)
 			this.pCont.appendChild(this.oNewFile.pFileCont);
@@ -385,6 +535,8 @@ BX.file_input.prototype.OnSelectFromFileDialog = function(path)
 BX.file_input.prototype.OnCloudInputChange = function()
 {
 	var path = this.oNewFile.pTextInput.value;
+	var description = '';
+	this.curFileIndex = false;
 	if (this.arConfig.fileExists && this.arConfig.files && !this.multiple)
 	{
 		this.DeleteFile(false);
@@ -394,8 +546,16 @@ BX.file_input.prototype.OnCloudInputChange = function()
 		this.oNewFile.pUploadCont.style.display = "none";
 		this.SetInputName(this.oNewFile.pTextInput, this.GetInputName('cloud'));
 
-		// Desc
-		this.ShowFileDescription(this.oNewFile);
+		this.SetHiddenInputName(0, '');
+		var pDelInput = BX.findChild(BX(this.id + '_file_cont_0'), {tagName: 'input', attr: {name: this.GetInputName('del')}});
+		if (pDelInput)
+			BX.cleanNode(pDelInput, true);
+
+		// Show description
+		var curFile = this.arConfig.files && this.arConfig.files[0] ? this.arConfig.files[0] : false;
+		if (curFile && curFile.DESCRIPTION !== '')
+			description = curFile.DESCRIPTION;
+		this.ShowFileDescription(this.oNewFile, description);
 	}
 	else
 	{
@@ -411,11 +571,37 @@ BX.file_input.prototype.OnCloudInputChange = function()
 		oFile.pUploadCont.style.display = "none";
 		this.SetInputName(oFile.pTextInput, this.GetInputName('cloud'));
 
-		// Show description
-		this.ShowFileDescription(oFile);
-
+		if (this.multiple)
+			this.curFileIndex = this.newFileCount;
 		if (this.multiple || !this.newFileCount)
 			this.PushToFiles(oFile);
+
+		var fileIndex = parseInt(this.GetCurrentFile(), 10);
+		this.SetHiddenInputName(fileIndex, '');
+		if (!isNaN(fileIndex) && this.multiple)
+		{
+			this.DeleteFile(false);
+			var pMenu = BX(this.id + '_menu_' + fileIndex);
+			pMenu.style.display = "none";
+			oFile.pMenu.style.display = "inline-block";
+			oFile.pMenu.setAttribute('data-bx-meta', fileIndex);
+
+			var
+				curFile = this.arConfig.files && this.arConfig.files[fileIndex] ? this.arConfig.files[fileIndex] : false,
+				fileContainer = BX(this.id + '_file_cont_' + fileIndex);
+
+			if (curFile)
+			{
+				if (curFile.DESCRIPTION !== '')
+					description = curFile.DESCRIPTION;
+				this.SetInputName(oFile.pTextInput, curFile.INPUT_NAME);
+				this.SetInputName(oFile.pDescInput, curFile.DESC_NAME);
+			}
+			fileContainer.appendChild(oFile.pFileCont);
+		}
+
+		// Show description
+		this.ShowFileDescription(oFile, description);
 
 		if (this.multiple)
 			this.pCont.appendChild(this.oNewFile.pFileCont);
@@ -427,14 +613,21 @@ BX.file_input.prototype.OnCloudInputChange = function()
 	this.oNewFile.pTextInput.onchange = null;
 };
 
-BX.file_input.prototype.ShowFileDescription = function(oFile)
+BX.file_input.prototype.ShowFileDescription = function(oFile, value)
 {
 	if (this.arConfig.showDesc)
 	{
 		oFile.pDesc.style.display = "";
-		oFile.pDescInput.value = '';
+		//oFile.pDescInput.value = '';
 		this.SetInputName(oFile.pDescInput, this.GetInputName('desc'));
 		BX.removeClass(oFile.pDesc, "adm-input-file-show-desc"); // hide input
+
+		oFile.pDescInput.value = value || '';
+		// Show or hide input with description
+		if (value)
+			BX.addClass(oFile.pDesc, "adm-input-file-show-desc");
+		else
+			BX.removeClass(oFile.pDesc, "adm-input-file-show-desc");
 	}
 };
 
@@ -449,8 +642,20 @@ BX.file_input.prototype.DisplayFileBlock = function(menu)
 	pFileCont.appendChild(document.createTextNode(' '));
 	BX.bind(pUploadInput, 'change', BX.proxy(this.OnUploadInputChange, this));
 
+	var _this = this;
+	BX.bind(pUploadInput, 'mousedown', function(){
+		var par = BX.findParent(this, {className: 'adm-input-file-new'}, function(el){return (BX.hasClass(el, 'adm-input-file-ext-class') || BX.hasClass(el, 'adm-input-file-control'));});
+		if (par)
+		{
+			var pMenu = BX.findChild(par, {className: 'add-file-popup-btn'});
+			if (pMenu && pMenu.getAttribute("data-bx-meta") !== null)
+				_this.SetCurrentFile(pMenu.getAttribute("data-bx-meta"));
+		}
+	});
+
 	var pTextInput = pFileCont.appendChild(BX.create("INPUT", {props: {type: 'text', className: 'adm-input', size: this.inputSize}, style: {display: 'none'}}));
 	var pMenu = pFileCont.appendChild(BX.create("SPAN", {props: {className: "adm-btn add-file-popup-btn"}}));
+	pMenu.setAttribute('data-bx-meta', 'new');
 	this.SetOpenerMenu(pMenu, menu || this.arConfig.menuNew);
 
 	var
@@ -467,9 +672,6 @@ BX.file_input.prototype.DisplayFileBlock = function(menu)
 	{
 		pUploadCont.style.display = 'none';
 		pTextInput.style.display = '';
-
-		if (!this.multiple)
-			this.SetInputName(pTextInput, this.GetInputName('first_input'));
 	}
 
 	return {
@@ -489,11 +691,10 @@ BX.file_input.prototype.DeleteFile = function(bAddCancelMenu)
 	var
 		fileIndex = parseInt(this.GetCurrentFile(), 10),
 		file = this.arConfig.files && this.arConfig.files[fileIndex] ? this.arConfig.files[fileIndex] : false,
-		fileContainer = BX(this.id + '_file_cont_' + fileIndex),
-		hiddenInput = BX(this.id + '_file_hidden_value_' + fileIndex);
+		fileContainer = BX(this.id + '_file_cont_' + fileIndex);
 
-	if (hiddenInput)
-		this.SetInputName(hiddenInput, '');
+	if (!this.arConfig.useUpload) // Only for files on server props
+		this.SetHiddenInputName(fileIndex, '');
 
 	if (fileContainer)
 	{
@@ -536,10 +737,17 @@ BX.file_input.prototype.DeleteFile = function(bAddCancelMenu)
 
 BX.file_input.prototype.CancelDelete = function()
 {
+	var fileIndex = parseInt(this.GetCurrentFile(), 10)
+	if (isNaN(fileIndex) && !this.multiple)
+		fileIndex = 0;
+
 	var
-		fileIndex = parseInt(this.GetCurrentFile(), 10),
 		file = this.arConfig.files && this.arConfig.files[fileIndex] ? this.arConfig.files[fileIndex] : false,
-		fileContainer = BX(this.id + '_file_cont_' + fileIndex);
+		fileContainer = BX(this.id + '_file_cont_' + fileIndex),
+		hiddenInput = BX(this.id + '_file_hidden_value_' + fileIndex);
+
+	if (hiddenInput)
+		this.SetInputName(hiddenInput, file.INPUT_NAME || this.GetInputName('first_input'));
 
 	if (fileContainer)
 	{
@@ -548,14 +756,35 @@ BX.file_input.prototype.CancelDelete = function()
 		if (pDelInput)
 			BX.cleanNode(pDelInput, true);
 
-		if (this.multiple)
+		if (file.FILE_NOT_FOUND)
 		{
 			var pMenu = BX(this.id + '_menu_' + fileIndex);
-			pMenu.OPENER.SetMenu([{TEXT: BX.message('ADM_FILE_DELETE'), ONCLICK: BX.proxy(this.DeleteFile, this), GLOBAL_ICON: 'adm-menu-delete'}]);
+			if (pMenu && this.arConfig.showDel)
+			{
+				pMenu.OPENER.SetMenu([{TEXT: BX.message('ADM_FILE_DELETE'), ONCLICK: BX.proxy(this.DeleteFile, this), GLOBAL_ICON: 'adm-menu-delete'}]);
+			}
+		}
+		else if (this.multiple)
+		{
+			var pMenu = BX(this.id + '_menu_' + fileIndex);
+			//pMenu.OPENER.SetMenu([{TEXT: BX.message('ADM_FILE_DELETE'), ONCLICK: BX.proxy(this.DeleteFile, this), GLOBAL_ICON: 'adm-menu-delete'}]);
+			var arMenu = BX.clone(this.arConfig.menuExist);
+			if(this.arConfig.showDel || this.arConfig.showDesc)
+				arMenu.push({SEPARATOR: true});
+			if(this.arConfig.showDel)
+				arMenu.push({TEXT: BX.message('ADM_FILE_DELETE'), ONCLICK: BX.proxy(this.DeleteFile, this), GLOBAL_ICON: 'adm-menu-delete'});
+			if (this.arConfig.showDesc && file.DESCRIPTION == "")
+				arMenu.push({TEXT: BX.message('ADM_FILE_ADD_DESC'), ONCLICK: BX.proxy(this.AddDescription, this), GLOBAL_ICON: 'adm-menu-add-desc'});
+
+			pMenu.OPENER.SetMenu(arMenu);
 		}
 
 		if (this.oNewFile && !this.multiple)
+		{
 			this.oNewFile.pFileCont.style.display = "none";
+			this.SetInputName(this.oNewFile.pUploadInput, "");
+			this.SetInputName(this.oNewFile.pTextInput, "");
+		}
 	}
 };
 
@@ -576,7 +805,7 @@ BX.file_input.prototype.AddDescription = function()
 
 BX.file_input.prototype.GetCurrentFile = function()
 {
-	return this.currentFileId || 0;
+	return this.currentFileId;
 };
 
 BX.file_input.prototype.SetCurrentFile = function(ind)
@@ -626,7 +855,7 @@ BX.file_input.prototype.GetInputName = function(type, file)
 			name = this.arConfig.inputNameTemplate;
 		}
 
-		name = name.replace('#IND#', this.newFileCount);
+		name = name.replace('#IND#', this.curFileIndex === false ? this.newFileCount : this.curFileIndex);
 	}
 	else
 	{
@@ -658,6 +887,25 @@ BX.file_input.prototype.GetInputName = function(type, file)
 BX.file_input.prototype.ClearNewFile = function()
 {
 	var meta = this.GetCurrentFile();
+
+	if (this.multiple)
+	{
+		this.CancelDelete();
+
+		var
+			fileIndex = parseInt(this.GetCurrentFile(), 10),
+			fileContainer = BX(this.id + '_file_cont_' + fileIndex);
+
+		if (fileContainer)
+		{
+			var pNewCont = BX.findChild(fileContainer, {className: 'adm-input-file-new'});
+			if (pNewCont)
+				BX.cleanNode(pNewCont, true);
+			var pMenu = BX(this.id + '_menu_' + fileIndex);
+			pMenu.style.display = "inline-block";
+		}
+	}
+
 	if (!meta || meta.substr(0, 4) != 'new_')
 		return;
 	var ind = parseInt(meta.substr(4), 10);
@@ -692,5 +940,12 @@ BX.file_input.prototype.FocusInput = function(input)
 {
 	if (input)
 		BX.defer(function(){if(input){BX.focus(input);}})();
+};
+
+BX.file_input.prototype.SetHiddenInputName = function(ind, value)
+{
+	var hiddenInput = BX(this.id + '_file_hidden_value_' + (ind || 0));
+	if (hiddenInput)
+		this.SetInputName(hiddenInput, value || '');
 };
 })();

@@ -319,9 +319,9 @@ $tabControl->Begin();
 		else
 			$bDiff=false;
 	?>
-	<tr valign="top">
+	<tr>
 		<td>
-			[<a href="/bitrix/admin/group_edit.php?ID=<?=$g_ID?>&lang=<?=LANGUAGE_ID?>"><?=$g_ID?></a>]&nbsp;<?echo $g_NAME?>:
+			[<a href="/bitrix/admin/group_edit.php?ID=<?=$g_ID?>&lang=<?=LANGUAGE_ID?>"><?=$g_ID?></a>]&nbsp;<?echo $g_NAME?>
 		</td>
 		<td>
 			<select name="g_<?= $g_ID?>" class="typeselect" <?if($bDiff):?>onChange="Conf(this)"<?endif?>>
@@ -350,8 +350,8 @@ $tabControl->Begin();
 			<?
 			foreach ($arTask as $tid => $tmpAr):?>
 				<tr>
-					<td valign="top" align="center" align="left">
-						<?=$arPermTypes[$tid]['title']?>:
+					<td>
+						<?=$arPermTypes[$tid]['title']?>
 					</td>
 					<td valign="top" align="left">
 						<?for($i=0; $i<count($tmpAr); $i++)

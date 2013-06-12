@@ -298,9 +298,12 @@ if ((true == defined('B_ADMIN_SUBELEMENTS_LIST')) && (true == B_ADMIN_SUBELEMENT
 					{
 						$arCatalogQuantity = Array("ID" => $subID);
 						if (strlen($CATALOG_QUANTITY) > 0)
-							$arCatalogQuantity["QUANTITY"] = $CATALOG_QUANTITY;
+						{
+							if (COption::GetOptionString("catalog", "default_use_store_control") != "Y")
+								$arCatalogQuantity["QUANTITY"] = $CATALOG_QUANTITY;
+						}
 						if (strlen($CATALOG_QUANTITY_TRACE) > 0)
-							$arCatalogQuantity["QUANTITY_TRACE"] = ($CATALOG_QUANTITY_TRACE == "Y") ? "Y" : "N";
+							$arCatalogQuantity["QUANTITY_TRACE"] = (($CATALOG_QUANTITY_TRACE == "Y") ? "Y" : (($CATALOG_QUANTITY_TRACE == "D") ? "D" : "N"));
 						if (strlen($CATALOG_WEIGHT) > 0)
 							$arCatalogQuantity['WEIGHT'] = $CATALOG_WEIGHT;
 						CCatalogProduct::Add($arCatalogQuantity);
@@ -309,9 +312,12 @@ if ((true == defined('B_ADMIN_SUBELEMENTS_LIST')) && (true == B_ADMIN_SUBELEMENT
 					{
 						$arCatalogQuantity = Array();
 						if (strlen($CATALOG_QUANTITY) > 0)
-							$arCatalogQuantity["QUANTITY"] = $CATALOG_QUANTITY;
+						{
+							if (COption::GetOptionString("catalog", "default_use_store_control") != "Y")
+								$arCatalogQuantity["QUANTITY"] = $CATALOG_QUANTITY;
+						}
 						if (strlen($CATALOG_QUANTITY_TRACE) > 0)
-							$arCatalogQuantity["QUANTITY_TRACE"] = ($CATALOG_QUANTITY_TRACE == "Y") ? "Y" : "N";
+							$arCatalogQuantity["QUANTITY_TRACE"] = (($CATALOG_QUANTITY_TRACE == "Y") ? "Y" : (($CATALOG_QUANTITY_TRACE == "D") ? "D" : "N"));
 						if (strlen($CATALOG_WEIGHT) > 0)
 							$arCatalogQuantity['WEIGHT'] = $CATALOG_WEIGHT;
 						if (!empty($arCatalogQuantity))
@@ -726,7 +732,29 @@ if ($boolSubCatalog)
 		"id" => "CATALOG_WEIGHT",
 		"content" => GetMessage("IBEL_CATALOG_WEIGHT"),
 		"align" => "right",
+		"sort" => "CATALOG_WEIGHT",
 	);
+	if ($USER->CanDoOperation('catalog_purchas_info'))
+	{
+		$arHeader[] = array(
+			"id" => "CATALOG_PURCHASING_PRICE",
+			"content" => GetMessage("IBEL_CATALOG_PURCHASING_PRICE"),
+			"title" => "",
+			"align" => "right",
+			"sort" => "CATALOG_PURCHASING_PRICE",
+			"default" => false,
+		);
+	}
+	if (COption::GetOptionString("catalog", "default_use_store_control") == "Y")
+	{
+		$arHeader[] = array(
+			"id" => "CATALOG_BAR_CODE",
+			"content" => GetMessage("IBEL_CATALOG_BAR_CODE"),
+			"title" => "",
+			"align" => "right",
+			"default" => false,
+		);
+	}
 
 	$arCatGroup = Array();
 	$arBaseGroup = CCatalogGroup::GetBaseGroup();
@@ -831,42 +859,32 @@ $arSelectedFields[] = "SITE_ID";
 $arSelectedFields[] = "CODE";
 $arSelectedFields[] = "EXTERNAL_ID";
 
-$arSelectedFieldsMap = array();
-foreach ($arSelectedFields as $field)
-	$arSelectedFieldsMap[$field] = true;
-
 if ($boolSubCatalog)
 {
+	if(in_array("CATALOG_QUANTITY_TRACE", $arSelectedFields))
+		$arSelectedFields[] = "CATALOG_QUANTITY_TRACE_ORIG";
+	$boolPriceInc = false;
+	if ($USER->CanDoOperation('catalog_purchas_info'))
+	{
+		if (in_array("CATALOG_PURCHASING_PRICE", $arSelectedFields))
+		{
+			$arSelectedFields[] = "CATALOG_PURCHASING_CURRENCY";
+			$boolPriceInc = true;
+		}
+	}
 	if (is_array($arCatGroup) && !empty($arCatGroup))
 	{
-		$boolPriceInc = false;
 		foreach ($arCatGroup as &$CatalogGroups)
 		{
 			if (in_array("CATALOG_GROUP_".$CatalogGroups["ID"], $arSelectedFields))
 			{
 				$arFilter["CATALOG_SHOP_QUANTITY_".$CatalogGroups["ID"]] = 1;
+				$boolPriceInc = true;
 			}
 		}
 		unset($CatalogGroups);
-		if ($boolPriceInc)
-		{
-			$boolSubCurrency = CModule::IncludeModule('currency');
-			if ($boolSubCurrency)
-			{
-				$rsCurrencies = CCurrency::GetList(($by1="sort"), ($order1="asc"));
-				while ($arCurrency = $rsCurrencies->GetNext(true,true))
-				{
-					$arCurrencyList[] = $arCurrency;
-				}
-			}
-		}
-		unset($boolPriceInc);
 	}
-}
-
-if ($boolSubCatalog)
-{
-	if (is_array($arCatGroup) && !empty($arCatGroup))
+	if ($boolPriceInc)
 	{
 		$boolSubCurrency = CModule::IncludeModule('currency');
 		if ($boolSubCurrency)
@@ -878,7 +896,12 @@ if ($boolSubCatalog)
 			}
 		}
 	}
+	unset($boolPriceInc);
 }
+
+$arSelectedFieldsMap = array();
+foreach ($arSelectedFields as $field)
+	$arSelectedFieldsMap[$field] = true;
 
 if (!((false == B_ADMIN_SUBELEMENTS_LIST) && ($bCopy)))
 {
@@ -1036,6 +1059,12 @@ if (!((false == B_ADMIN_SUBELEMENTS_LIST) && ($bCopy)))
 		else
 		{
 			$lockStatus = "";
+		}
+
+		if (array_key_exists("CATALOG_QUANTITY_TRACE", $arSelectedFieldsMap))
+		{
+			$arRes['CATALOG_QUANTITY_TRACE'] = $arRes['CATALOG_QUANTITY_TRACE_ORIG'];
+			$f_CATALOG_QUANTITY_TRACE = $f_CATALOG_QUANTITY_TRACE_ORIG;
 		}
 
 		$arRes['lockStatus'] = $lockStatus;
@@ -1395,7 +1424,7 @@ if (!((false == B_ADMIN_SUBELEMENTS_LIST) && ($bCopy)))
 							$price = $arRes["CATALOG_PRICE_".$CatGroup["ID"]]." ".$arRes["CATALOG_CURRENCY_".$CatGroup["ID"]];
 						}
 
-						$row->AddViewField("CATALOG_GROUP_".$CatGroup["ID"], $price);
+						$row->AddViewField("CATALOG_GROUP_".$CatGroup["ID"], htmlspecialcharsex($price));
 
 						if ($USER->CanDoOperation('catalog_price') && $boolEditPrice)
 						{
@@ -1448,7 +1477,7 @@ if (!((false == B_ADMIN_SUBELEMENTS_LIST) && ($bCopy)))
 					continue;
 
 				$arStr1[$vv["TEMPLATE_ID"]] = $vv["TEMPLATE_NAME"];
-				$arStr[$vv["TEMPLATE_ID"]] .= "<a href=\"bizproc_log.php?ID=".$kk."\">".(strlen($vv["STATE_TITLE"]) > 0 ? $vv["STATE_TITLE"] : $vv["STATE_NAME"])."</a><br />";
+				$arStr[$vv["TEMPLATE_ID"]] .= "<a href=\"/bitrix/admin/bizproc_log.php?ID=".$kk."\">".(strlen($vv["STATE_TITLE"]) > 0 ? $vv["STATE_TITLE"] : $vv["STATE_NAME"])."</a><br />";
 
 				if (strlen($vv["ID"]) > 0)
 				{
@@ -1472,6 +1501,48 @@ if (!((false == B_ADMIN_SUBELEMENTS_LIST) && ($bCopy)))
 	}
 
 	$boolIBlockElementAdd = CIBlockSectionRights::UserHasRightTo($intSubIBlockID, $find_section_section, "section_element_bind");
+
+$availQuantityTrace = COption::GetOptionString("catalog", "default_quantity_trace", 'N');
+$arQuantityTrace = array(
+	"D" => GetMessage("IBEL_DEFAULT_VALUE")." (".($availQuantityTrace=='Y' ? GetMessage("IBEL_YES_VALUE") : GetMessage("IBEL_NO_VALUE")).")",
+	"Y" => GetMessage("IBEL_YES_VALUE"),
+	"N" => GetMessage("IBEL_NO_VALUE"),
+);
+
+if (COption::GetOptionString("catalog", "default_use_store_control") == "Y" && in_array("CATALOG_BAR_CODE", $arSelectedFields))
+{
+	$rsProducts = CCatalogProduct::GetList(
+		array(),
+		array("ID" => array_keys($arRows)),
+		false,
+		false,
+		array('ID', 'BARCODE_MULTI')
+	);
+	$productsWithBarCode = array();
+	while ($product = $rsProducts->Fetch())
+	{
+		if (isset($arRows[$product["ID"]]))
+		{
+			if ($product["BARCODE_MULTI"] == "Y")
+				$arRows[$product["ID"]]->arRes["CATALOG_BAR_CODE"] = GetMessage("IBEL_CATALOG_BAR_CODE_MULTI");
+			else
+				$productsWithBarCode[] = $product["ID"];
+		}
+	}
+	if (!empty($productsWithBarCode))
+	{
+		$rsProducts = CCatalogStoreBarCode::getList(array(), array(
+			"PRODUCT_ID" => $productsWithBarCode,
+		));
+		while ($product = $rsProducts->Fetch())
+		{
+			if (isset($arRows[$product["PRODUCT_ID"]]))
+			{
+				$arRows[$product["PRODUCT_ID"]]->arRes["CATALOG_BAR_CODE"] = htmlspecialcharsEx($product["BARCODE"]);
+			}
+		}
+	}
+}
 
 	$arElementOps = CIBlockElementRights::UserHasRightTo(
 		$intSubIBlockID,
@@ -1556,15 +1627,52 @@ if (!((false == B_ADMIN_SUBELEMENTS_LIST) && ($bCopy)))
 
 			if (isset($arElementOps[$f_ID]["element_edit_price"]) && $USER->CanDoOperation('catalog_price'))
 			{
-				$row->AddInputField("CATALOG_QUANTITY");
-				$row->AddCheckField("CATALOG_QUANTITY_TRACE");
+				if (COption::GetOptionString("catalog", "default_use_store_control") == "Y")
+				{
+					$row->AddInputField("CATALOG_QUANTITY", false);
+				}
+				else
+				{
+					$row->AddInputField("CATALOG_QUANTITY");
+				}
+				$row->AddSelectField("CATALOG_QUANTITY_TRACE", $arQuantityTrace);
 				$row->AddInputField("CATALOG_WEIGHT");
+				if ($USER->CanDoOperation('catalog_purchas_info'))
+				{
+					if ($row->arRes["CATALOG_PURCHASING_PRICE"] != 0.0)
+					{
+						if ($boolSubCurrency)
+						{
+							$price = CurrencyFormat($row->arRes["CATALOG_PURCHASING_PRICE"], $row->arRes["CATALOG_PURCHASING_CURRENCY"]);
+						}
+						else
+						{
+							$price = $row->arRes["CATALOG_PURCHASING_PRICE"]." ".$row->arRes["CATALOG_PURCHASING_CURRENCY"];
+						}
+						$row->AddViewField("CATALOG_PURCHASING_PRICE", htmlspecialcharsEx($price));
+					}
+				}
 			}
 			elseif ($USER->CanDoOperation('catalog_read'))
 			{
 				$row->AddInputField("CATALOG_QUANTITY", false);
-				$row->AddCheckField("CATALOG_QUANTITY_TRACE", false);
+				$row->AddCheckField("CATALOG_QUANTITY_TRACE", $arQuantityTrace, false);
 				$row->AddInputField("CATALOG_WEIGHT", false);
+				if ($USER->CanDoOperation('catalog_purchas_info'))
+				{
+					if ($row->arRes["CATALOG_PURCHASING_PRICE"] != 0.0)
+					{
+						if ($boolSubCurrency)
+						{
+							$price = CurrencyFormat($row->arRes["CATALOG_PURCHASING_PRICE"], $row->arRes["CATALOG_PURCHASING_CURRENCY"]);
+						}
+						else
+						{
+							$price = $row->arRes["CATALOG_PURCHASING_PRICE"]." ".$row->arRes["CATALOG_PURCHASING_CURRENCY"];
+						}
+						$row->AddViewField("CATALOG_PURCHASING_PRICE", htmlspecialcharsEx($price));
+					}
+				}
 			}
 		}
 		else
@@ -1582,8 +1690,23 @@ if (!((false == B_ADMIN_SUBELEMENTS_LIST) && ($bCopy)))
 			if ($boolSubCatalog)
 			{
 				$row->AddInputField("CATALOG_QUANTITY", false);
-				$row->AddCheckField("CATALOG_QUANTITY_TRACE", false);
+				$row->AddSelectField("CATALOG_QUANTITY_TRACE", $arQuantityTrace, false);
 				$row->AddInputField("CATALOG_WEIGHT", false);
+				if ($USER->CanDoOperation('catalog_purchas_info'))
+				{
+					if ($row->arRes["CATALOG_PURCHASING_PRICE"] != 0.0)
+					{
+						if ($boolSubCurrency)
+						{
+							$price = CurrencyFormat($row->arRes["CATALOG_PURCHASING_PRICE"], $row->arRes["CATALOG_PURCHASING_CURRENCY"]);
+						}
+						else
+						{
+							$price = $row->arRes["CATALOG_PURCHASING_PRICE"]." ".$row->arRes["CATALOG_PURCHASING_CURRENCY"];
+						}
+						$row->AddViewField("CATALOG_PURCHASING_PRICE", htmlspecialcharsEx($price));
+					}
+				}
 			}
 		}
 
@@ -1609,7 +1732,7 @@ if (!((false == B_ADMIN_SUBELEMENTS_LIST) && ($bCopy)))
 				"ICON" => "unlock",
 				"TEXT" => GetMessage("IBEL_A_UNLOCK"),
 				"TITLE" => GetMessage("IBLOCK_UNLOCK_ALT"),
-				"ACTION" => "if (confirm('".GetMessage("IBLOCK_UNLOCK_CONFIRM")."')) ".$lAdmin->ActionDoGroup($row->arRes['orig']['ID'], "unlock", $sThisSectionUrl)
+				"ACTION" => "if (confirm('".GetMessageJS("IBLOCK_UNLOCK_CONFIRM")."')) ".$lAdmin->ActionDoGroup($row->arRes['orig']['ID'], "unlock", $sThisSectionUrl)
 			);
 
 			if ($row->arRes['orig']['LOCK_STATUS'] == "red")
@@ -1685,7 +1808,7 @@ if (!((false == B_ADMIN_SUBELEMENTS_LIST) && ($bCopy)))
 							"ICON" => "delete",
 							"TEXT" => GetMessage('MAIN_DELETE'),
 							"TITLE" => GetMessage("IBLOCK_DELETE_ALT"),
-							"ACTION" => "if (confirm('".GetMessage('IBLOCK_CONFIRM_DEL_MESSAGE')."')) ".$lAdmin->ActionDoGroup($row->arRes['orig']['ID'], "delete", $sThisSectionUrl)
+							"ACTION" => "if (confirm('".GetMessageJS('IBLOCK_CONFIRM_DEL_MESSAGE')."')) ".$lAdmin->ActionDoGroup($row->arRes['orig']['ID'], "delete", $sThisSectionUrl)
 						);
 
 					}
@@ -1739,7 +1862,7 @@ if (!((false == B_ADMIN_SUBELEMENTS_LIST) && ($bCopy)))
 						"ICON" => "unlock",
 						"TEXT" => GetMessage("IBEL_A_UNLOCK"),
 						"TITLE" => GetMessage("IBEL_A_UNLOCK_ALT"),
-						"ACTION" => "if (confirm('".GetMessage("IBEL_A_UNLOCK_CONFIRM")."')) ".$lAdmin->ActionDoGroup($f_ID, "unlock", $sThisSectionUrl),
+						"ACTION" => "if (confirm('".GetMessageJS("IBEL_A_UNLOCK_CONFIRM")."')) ".$lAdmin->ActionDoGroup($f_ID, "unlock", $sThisSectionUrl),
 					);
 				}
 			}
@@ -1782,7 +1905,7 @@ if (!((false == B_ADMIN_SUBELEMENTS_LIST) && ($bCopy)))
 					"ICON" => "delete",
 					"TEXT" => GetMessage('MAIN_DELETE'),
 					"TITLE" => GetMessage("IBLOCK_DELETE_ALT"),
-					"ACTION" => "if (confirm('".GetMessage('IBLOCK_CONFIRM_DEL_MESSAGE')."')) ".$lAdmin->ActionDoGroup($f_ID, "delete", $sThisSectionUrl),
+					"ACTION" => "if (confirm('".GetMessageJS('IBLOCK_CONFIRM_DEL_MESSAGE')."')) ".$lAdmin->ActionDoGroup($f_ID, "delete", $sThisSectionUrl),
 				);
 			}
 		}
@@ -1833,7 +1956,7 @@ if (!((false == B_ADMIN_SUBELEMENTS_LIST) && ($bCopy)))
 					"ICON" => "delete",
 					"TEXT" => GetMessage('MAIN_DELETE'),
 					"TITLE" => GetMessage("IBLOCK_DELETE_ALT"),
-					"ACTION" => "if (confirm('".GetMessage('IBLOCK_CONFIRM_DEL_MESSAGE')."')) ".$lAdmin->ActionDoGroup($row->arRes['orig']['ID'], "delete", $sThisSectionUrl)
+					"ACTION" => "if (confirm('".GetMessageJS('IBLOCK_CONFIRM_DEL_MESSAGE')."')) ".$lAdmin->ActionDoGroup($row->arRes['orig']['ID'], "delete", $sThisSectionUrl)
 				);
 			}
 		}

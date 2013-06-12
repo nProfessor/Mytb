@@ -1,12 +1,24 @@
-<?if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
+<?php
+if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)
+	die();
+
+/**
+ * Bitrix vars
+ * @global CUser $USER
+ * @global CMain $APPLICATION
+ * @param array $arParams
+ * @param array $arResult
+ * @param CBitrixComponent $this
+ */
 
 if(!$USER->CanDoOperation('view_event_log'))
 	$APPLICATION->AuthForm(GetMessage("ACCESS_DENIED"));
 
+/** @var CEventMain[] $arModuleObjects */
+$arModuleObjects = array();
 $arAllFilter = array();
-$db_events = GetModuleEvents("main", "OnEventLogGetAuditHandlers");
 
-while($arEvent = $db_events->Fetch())
+foreach(GetModuleEvents("main", "OnEventLogGetAuditHandlers", true) as $arEvent)
 {
 	$ModuleEvent = ExecuteModuleEventEx($arEvent);
 	$arModuleObjects[] = $ModuleEvent;
@@ -19,7 +31,8 @@ if (is_array($arParams["FILTER"]))
 		$arResult["ActiveFeatures"][$val] = $arAllFilter[$val];
 	}
 }
-if (is_array($arResult["ActiveFeatures"]) && count($arResult["ActiveFeatures"]) > 0):
+if (is_array($arResult["ActiveFeatures"]) && count($arResult["ActiveFeatures"]) > 0)
+{
 	$arResult["NO_ACTIVE_FEATURES"] = false;
 	if (!isset($_REQUEST["flt_event_id"]))
 	{
@@ -47,6 +60,7 @@ if (is_array($arResult["ActiveFeatures"]) && count($arResult["ActiveFeatures"]) 
 		}
 	}
 
+	$arObjectTypes = array();
 	$arFilter["MODULE_ITEM"] = array();           //filter for GetList
 	foreach($arModuleObjects as $key => $val)
 	{
@@ -63,8 +77,11 @@ if (is_array($arResult["ActiveFeatures"]) && count($arResult["ActiveFeatures"]) 
 	if (is_array($_REQUEST["flt_created_by_id"]))
 		$_REQUEST["flt_created_by_id"] = $_REQUEST["flt_created_by_id"][0];
 
-	if (IntVal($_REQUEST["flt_created_by_id"]) > 0)
+	$find_user_id = "";
+	if (intval($_REQUEST["flt_created_by_id"]) > 0)
+	{
 		$find_user_id = $_REQUEST["flt_created_by_id"];
+	}
 	else
 	{
 		if (CModule::IncludeModule("socialnetwork"))
@@ -167,7 +184,8 @@ if (is_array($arResult["ActiveFeatures"]) && count($arResult["ActiveFeatures"]) 
 		return true;
 	}
 
-	if(CheckFilter()):
+	if(CheckFilter())
+	{
 		if ($arFilter["MODULE_ITEM"] != "")
 			$arEventFilter["=MODULE_ITEM"] = $arFilter["MODULE_ITEM"];
 		if ($arParams["LOG_DATE_FROM"] != "")
@@ -176,22 +194,31 @@ if (is_array($arResult["ActiveFeatures"]) && count($arResult["ActiveFeatures"]) 
 			$arEventFilter["TIMESTAMP_X_2"] = $arParams["LOG_DATE_TO"]." 23.59.59";
 		$arEventFilter["USER_ID"] =  ($find != '' && $find_type == "user_id" ? $find : $find_user_id);
 
-		$results = CEventLog::GetList(array('TIMESTAMP_X' => 'DESC'), $arEventFilter);
-		$results->NavStart($arParams["PAGE_NUM"], false);  //page navigation
-		$arResult["NAV"] = $results;
+		$nameFormat = CSite::GetNameFormat(false);
+		$dateFormat = CSite::GetDateFormat('SHORT');
+		$timeFormat = CSite::GetTimeFormat();
+
 		$arUsersTmp = array();
-		while($row = $results->NavNext(true, "a_"))
+
+		$arNavParams = array("nPageSize"=>$arParams["PAGE_NUM"], "bShowAll"=>false);
+		$results = CEventLog::GetList(array('TIMESTAMP_X' => 'DESC'), $arEventFilter, $arNavParams);
+		$results->NavStart($arNavParams);  //page navigation
+		$arResult["NAV"] = $results;
+		while($row = $results->NavNext())
 		{
-			if (!in_array($row['USER_ID'], array_keys($arUsersTmp)))
+			if (!isset($arUsersTmp[$row['USER_ID']]))
 			{
-				$rsUser = CUser::GetByID($row['USER_ID']);
+				$arUserInfo = array();
+				$rsUser = CUser::GetList(($by=""), ($ord=""),
+					array("ID_EQUAL_EXACT" => intval($row['USER_ID'])),
+					array("FIELDS" => array('ID', 'NAME', 'LAST_NAME', 'SECOND_NAME', 'LOGIN', 'EMAIL', 'PERSONAL_PHOTO'))
+				);
 				if($arUser = $rsUser->GetNext())
 				{
 					$arUserInfo["ID"] = $row['USER_ID'];
-					$arUserInfo["FULL_NAME"] = CUser::FormatName(CSite::GetNameFormat(false), $arUser, true);
-					$PersPhoto = $arUser["PERSONAL_PHOTO"];
+					$arUserInfo["FULL_NAME"] = CUser::FormatName($nameFormat, $arUser, true, false);
 					$arUserInfo['avatar'] = CFile::ResizeImageGet(
-						$PersPhoto,
+						$arUser["PERSONAL_PHOTO"],
 						array("width"=>30, "height"=>30),
 						BX_RESIZE_IMAGE_EXACT,
 						false
@@ -200,13 +227,15 @@ if (is_array($arResult["ActiveFeatures"]) && count($arResult["ActiveFeatures"]) 
 				}
 			}
 			else
+			{
 				$arUserInfo = $arUsersTmp[$row['USER_ID']];
+			}
 
-			$dateFormated = FormatDateFromDB($row["TIMESTAMP_X"], CSite::GetDateFormat('SHORT'));
-			$time = FormatDateFromDB($row["TIMESTAMP_X"], CSite::GetTimeFormat());
+			$dateFormated = FormatDateFromDB($row["TIMESTAMP_X"], $dateFormat);
+			$time = FormatDateFromDB($row["TIMESTAMP_X"], $timeFormat);
 			foreach($arModuleObjects as $key => $val)
 			{
-				if (in_array($row['AUDIT_TYPE_ID'], array_keys($arObjectTypes[$key])))
+				if (isset($arObjectTypes[$key][$row['AUDIT_TYPE_ID']]))
 				{
 					$res = $val->GetEventInfo($row, $arParams, $arUserInfo, $arResult["ActiveFeatures"]);
 					$res['time'] = $time;
@@ -219,9 +248,11 @@ if (is_array($arResult["ActiveFeatures"]) && count($arResult["ActiveFeatures"]) 
 				}
 			}
 		}
-	endif;
-else:
+	}
+}
+else
+{
 	$arResult["NO_ACTIVE_FEATURES"] = true;
-endif;
+}
+
 $this->IncludeComponentTemplate();
-?>

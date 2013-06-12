@@ -20,6 +20,9 @@ class Query
 		$where = array(),
 		$having = array();
 
+	/**
+	 * @var QueryChain[]
+	 */
 	protected					  // all chain storages keying by alias
 		$select_chains = array(),
 		$group_chains = array(),
@@ -434,7 +437,7 @@ class Query
 
 			if (!is_numeric($filter_def))
 			{
-				$csw_result = \CSQLWhere::MakeOperation($filter_def);
+				$csw_result = \CSQLWhere::makeOperation($filter_def);
 				list($definition, ) = array_values($csw_result);
 
 				$chain = $this->getRegisteredChain($definition, true);
@@ -530,13 +533,13 @@ class Query
 
 			if (!is_numeric($filter_def))
 			{
-				$csw_result = \CSQLWhere::MakeOperation($filter_def);
+				$csw_result = \CSQLWhere::makeOperation($filter_def);
 				list($definition, ) = array_values($csw_result);
 
 				$chain = $this->filter_chains[$definition];
 				$last = $chain->getLastElement();
 
-				$is_having = $last->getValue() instanceof ExpressionField && $last->getValue()->IsAggregated();
+				$is_having = $last->getValue() instanceof ExpressionField && $last->getValue()->isAggregated();
 			}
 			elseif (is_array($filter_match))
 			{
@@ -604,7 +607,7 @@ class Query
 			}
 
 			$prev_entity = $this->init_entity;
-			$prev_alias = Base::camel2snake($this->init_entity->getName());
+			$prev_alias = strtolower($this->init_entity->getCode());
 
 			$map_key = '';
 
@@ -821,7 +824,16 @@ class Query
 
 						foreach ($sub_chains as $sub_chain)
 						{
-							$this->registerChain('group', $this->global_chains[$sub_chain->getAlias()]);
+							// build real subchain starting from init entity
+							$real_sub_chain = clone $chain;
+
+							foreach (array_slice($sub_chain->getAllElements(), 1) as $sub_chain_elem)
+							{
+								$real_sub_chain->addElement($sub_chain_elem);
+							}
+
+							// add to query
+							$this->registerChain('group', $this->global_chains[$real_sub_chain->getAlias()]);
 						}
 					}
 				}
@@ -900,8 +912,8 @@ class Query
 			$sqlHaving = $this->buildHaving();
 			$sqlOrder = $this->buildOrder();
 
-			$sqlFrom = $this->init_entity->GetDBTableName();
-			$sqlFrom .= ' '.$this->DB->escL . Base::camel2snake($this->init_entity->getName()) . $this->table_alias_postfix . $this->DB->escR;
+			$sqlFrom = $this->init_entity->getDBTableName();
+			$sqlFrom .= ' '.$this->DB->escL . strtolower($this->init_entity->getCode()) . $this->table_alias_postfix . $this->DB->escR;
 			$sqlFrom .= ' '.$sqlJoin;
 
 			$this->query_build_parts = array_filter(array(
@@ -944,7 +956,7 @@ class Query
 		}
 		elseif (array_key_exists('nPageTop', $this->limit))
 		{
-			$query = $this->DB->TopSql($query, intval($this->limit['nPageTop']));
+			$query = $this->DB->topSql($query, intval($this->limit['nPageTop']));
 			return $query;
 		}
 		else
@@ -968,7 +980,7 @@ class Query
 
 			if (!is_numeric($filter_def))
 			{
-				$csw_result = \CSQLWhere::MakeOperation($filter_def);
+				$csw_result = \CSQLWhere::makeOperation($filter_def);
 				list($definition, ) = array_values($csw_result);
 
 				$chain = $this->filter_chains[$definition];
@@ -995,7 +1007,7 @@ class Query
 					$field_type = 'double';
 				}
 
-				//$is_having = $last->getValue() instanceof ExpressionField && $last->getValue()->IsAggregated();
+				//$is_having = $last->getValue() instanceof ExpressionField && $last->getValue()->isAggregated();
 
 				// if back-reference found (Entity:REF)
 				// if NO_DOUBLING mode enabled, then change getSQLDefinition to subquery exists(...)
@@ -1016,7 +1028,7 @@ class Query
 						$filter = array();
 
 						// add primary linking with main query
-						foreach ($init_entity->GetPrimaryArray() as $primary)
+						foreach ($init_entity->getPrimaryArray() as $primary)
 						{
 							$filter['='.$primary] = new CSQLWhereExpression('?#', $init_table_alias.'.'.$primary);
 						}
@@ -1073,7 +1085,7 @@ class Query
 			else
 			{
 				// key
-				$csw_result = \CSQLWhere::MakeOperation($k);
+				$csw_result = \CSQLWhere::makeOperation($k);
 				list($field, ) = array_values($csw_result);
 
 				if (strpos($field, 'this.') === 0)
@@ -1137,7 +1149,7 @@ class Query
 			else
 			{
 				// key
-				$csw_result = \CSQLWhere::MakeOperation($k);
+				$csw_result = \CSQLWhere::makeOperation($k);
 				list($field, ) = array_values($csw_result);
 
 				$fields[$field] = array(
@@ -1162,7 +1174,7 @@ class Query
 		foreach ($chains as $chain)
 		{
 			$last = $chain->getLastElement();
-			$is_aggr = $last->getValue() instanceof ExpressionField && $last->getValue()->IsAggregated();
+			$is_aggr = $last->getValue() instanceof ExpressionField && $last->getValue()->isAggregated();
 
 			if ($is_aggr)
 			{
@@ -1267,6 +1279,32 @@ class Query
 
 	protected function query($build_parts)
 	{
+		// nosql support with new platform only
+		if(file_exists($_SERVER["DOCUMENT_ROOT"]."/bitrix/d7.php"))
+		{
+			// check nosql configuration
+			$configuration = $this->init_entity->getConnection()->getConfiguration();
+
+			if (isset($configuration['handlersocket']['read']))
+			{
+				$nosqlConnectionName = $configuration['handlersocket']['read'];
+
+				$nosqlConnection = \Bitrix\Main\Application::getInstance()->getDbConnectionPool()->getConnection($nosqlConnectionName);
+				$isNosqlCapable = NosqlPrimarySelector::checkQuery($nosqlConnection, $this);
+
+				if ($isNosqlCapable)
+				{
+					$nosqlResult = NosqlPrimarySelector::relayQuery($nosqlConnection, $this);
+
+					$result = new \CDBResult();
+					$result->initFromArray($nosqlResult);
+
+					return $result;
+				}
+			}
+		}
+
+
 		foreach ($build_parts as $k => &$v)
 		{
 			if (strlen($v))
@@ -1302,7 +1340,7 @@ class Query
 			// select count
 			$cnt_query = 'SELECT COUNT(1) AS TMP_ROWS_CNT FROM ('.$cnt_query.') xxx';
 			$result = $this->DB->query($cnt_query);
-			$result = $result->Fetch();
+			$result = $result->fetch();
 			$cnt = $result["TMP_ROWS_CNT"];
 		}
 
@@ -1313,7 +1351,7 @@ class Query
 		}
 		elseif (!empty($this->limit) && is_null($this->offset))
 		{
-			$query = $this->DB->TopSql($query, intval($this->limit));
+			$query = $this->DB->topSql($query, intval($this->limit));
 			$result = $this->DB->query($query);
 			$result->arReplacedAliases = $replaced_aliases;
 		}
@@ -1327,7 +1365,7 @@ class Query
 				'iNumPage' => $this->offset ? (($this->offset / $this->limit) + 1) : 1,
 				'bShowAll' => true
 			);;
-			$result->NavQuery($query, $cnt, $db_limit);
+			$result->navQuery($query, $cnt, $db_limit);
 		}
 
 		$this->last_query = $query;
@@ -1365,9 +1403,73 @@ class Query
 		return array($query, $replaced);
 	}
 
+	/**
+	 * @return array|QueryChain[]
+	 */
 	public function getChains()
 	{
 		return $this->global_chains;
+	}
+
+	/**
+	 * @return array|QueryChain[]
+	 */
+	public function getGroupChains()
+	{
+		return $this->group_chains;
+	}
+
+	/**
+	 * @return array
+	 */
+	public function getHiddenChains()
+	{
+		return $this->hidden_chains;
+	}
+
+	/**
+	 * @return array|QueryChain[]
+	 */
+	public function getHavingChains()
+	{
+		return $this->having_chains;
+	}
+
+	/**
+	 * @return array|QueryChain[]
+	 */
+	public function getFilterChains()
+	{
+		return $this->filter_chains;
+	}
+
+	/**
+	 * @return array|QueryChain[]
+	 */
+	public function getOrderChains()
+	{
+		return $this->order_chains;
+	}
+
+	/**
+	 * @return array|QueryChain[]
+	 */
+	public function getSelectChains()
+	{
+		return $this->select_chains;
+	}
+
+	/**
+	 * @return array|QueryChain[]
+	 */
+	public function getWhereChains()
+	{
+		return $this->where_chains;
+	}
+
+	public function getJoinMap()
+	{
+		return $this->join_map;
 	}
 
 	public function getQuery()

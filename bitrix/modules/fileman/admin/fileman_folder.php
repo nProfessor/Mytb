@@ -353,7 +353,7 @@ $tabControl->Begin();
 				}
 				?>
 				<tr>
-					<td colspan="2" align="right">
+					<td colspan="2">
 						<input type="hidden" name="numpropsvals" value="<?echo $ind+1; ?>">
 						<input type="submit" name="propeditmore" value="<?echo GetMessage("FILEMAN_FOLDER_PROPSMORE")?>">
 					</td>

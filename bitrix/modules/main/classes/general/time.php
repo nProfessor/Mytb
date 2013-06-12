@@ -1,4 +1,11 @@
-<?
+<?php
+/**
+ * Bitrix Framework
+ * @package bitrix
+ * @subpackage main
+ * @copyright 2001-2013 Bitrix
+ */
+
 IncludeModuleLangFile(__FILE__);
 
 class CTimeZone
@@ -68,12 +75,14 @@ class CTimeZone
 
 	public static function SetAutoCookie()
 	{
+		/** @global CMain $APPLICATION */
+		global $APPLICATION, $USER;
+
 		$cookie_prefix = COption::GetOptionString('main', 'cookie_name', 'BITRIX_SM');
-		$autoTimeZone = trim($GLOBALS["USER"]->GetParam("AUTO_TIME_ZONE"));
-		if($autoTimeZone == "Y" || ($autoTimeZone == "" && COption::GetOptionString("main", "auto_time_zone", "N") == "Y"))
+		if(self::IsAutoTimeZone(trim($USER->GetParam("AUTO_TIME_ZONE"))))
 		{
-			$GLOBALS["APPLICATION"]->AddHeadString(
-				'<script type="text/javascript">var bxDate = new Date(); document.cookie="'.$cookie_prefix.'_TIME_ZONE="+bxDate.getTimezoneOffset()+","+Math.round(bxDate.getTime()/1000)+",'.time().'; path=/; expires=Fri, 01-Jan-2038 00:00:00 GMT"</script>', true
+			$APPLICATION->AddHeadString(
+				'<script type="text/javascript">var bxDate = new Date(); document.cookie="'.$cookie_prefix.'_TIME_ZONE="+bxDate.getTimezoneOffset()+"%2C"+Math.round(bxDate.getTime()/1000)+"%2C'.time().'; path=/; expires=Fri, 01-Jan-2038 00:00:00 GMT"</script>', true
 			);
 		}
 		elseif(isset($_COOKIE[$cookie_prefix."_TIME_ZONE"]))
@@ -83,8 +92,48 @@ class CTimeZone
 		}
 	}
 
-	public static function GetOffset()
+	public static function IsAutoTimeZone($autoTimeZone)
 	{
+		if($autoTimeZone == "Y")
+		{
+			return true;
+		}
+		if($autoTimeZone == '')
+		{
+			static $defAutoZone = null;
+			if($defAutoZone === null)
+			{
+				$defAutoZone = (COption::GetOptionString("main", "auto_time_zone", "N") == "Y");
+			}
+			return $defAutoZone;
+		}
+		return false;
+	}
+
+	public static function GetCookieValue()
+	{
+		static $cookie_prefix = null;
+		if($cookie_prefix === null)
+		{
+			$cookie_prefix = COption::GetOptionString('main', 'cookie_name', 'BITRIX_SM');
+		}
+
+		if(isset($_COOKIE[$cookie_prefix."_TIME_ZONE"])	&& $_COOKIE[$cookie_prefix."_TIME_ZONE"] <> '')
+		{
+			$arCookie = explode(",", $_COOKIE[$cookie_prefix."_TIME_ZONE"]);
+			if(count($arCookie) == 3)
+			{
+				return $arCookie;
+			}
+		}
+
+		return null;
+	}
+
+	public static function GetOffset($USER_ID = null)
+	{
+		global $USER;
+
 		if(!self::Enabled())
 			return 0;
 
@@ -92,51 +141,61 @@ class CTimeZone
 		{
 			$localTime = new DateTime();
 			$localOffset = $localTime->getOffset();
-	
-			$autoTimeZone = '';
-			if(is_object($GLOBALS["USER"]))
-				$autoTimeZone = trim($GLOBALS["USER"]->GetParam("AUTO_TIME_ZONE"));
+			$userOffset = $localOffset;
+
+			$autoTimeZone = $userZone = '';
+			$factOffset = 0;
+			if($USER_ID !== null)
+			{
+				$dbUser = CUser::GetByID($USER_ID);
+				if(($arUser = $dbUser->Fetch()))
+				{
+					$autoTimeZone = trim($arUser["AUTO_TIME_ZONE"]);
+					$userZone = $arUser["TIME_ZONE"];
+					$factOffset = $arUser["TIME_ZONE_OFFSET"];
+				}
+			}
+			elseif(is_object($USER))
+			{
+				$autoTimeZone = trim($USER->GetParam("AUTO_TIME_ZONE"));
+				$userZone = $USER->GetParam("TIME_ZONE");
+			}
 
 			if($autoTimeZone == "N")
 			{
 				//manually set time zone
-				$userZone = $GLOBALS["USER"]->GetParam("TIME_ZONE");
 				$userTime = ($userZone <> ""? new DateTime(null, new DateTimeZone($userZone)) : $localTime);
 				$userOffset = $userTime->getOffset();
 			}
 			else
 			{
-				//auto time zone from cookies
-				$cookie_prefix = COption::GetOptionString('main', 'cookie_name', 'BITRIX_SM');
-				if(
-					array_key_exists($cookie_prefix."_TIME_ZONE", $_COOKIE)
-					&& $_COOKIE[$cookie_prefix."_TIME_ZONE"] <> ''
-					&& (
-						$autoTimeZone == "Y"
-						|| (
-							$autoTimeZone == ''
-							&& COption::GetOptionString("main", "auto_time_zone", "N") == "Y"
-						)
-					)
-				)
+				if(self::IsAutoTimeZone($autoTimeZone))
 				{
-					$arCookie = explode(",", $_COOKIE[$cookie_prefix."_TIME_ZONE"]);
-					if($arCookie[1] >= $arCookie[2] && $arCookie[1] <= ($arCookie[2]+30*60) || $arCookie[1] <= $arCookie[2] && $arCookie[1] >= ($arCookie[2]-30*60))
+					if($USER_ID !== null)
 					{
-						//correct tz - offset from JS "as is"
-						$userOffset = -($arCookie[0])*60;
+						//auto time zone from DB
+						return $factOffset;
 					}
-					elseif($arCookie[1] > ($arCookie[2]+30*60))
+					if(($arCookie = self::GetCookieValue()) !== null)
 					{
-						//incorrect tz - try to determine offset
-						$diff = ($arCookie[1] - $arCookie[2]) % 3600;
-						return ($arCookie[1] + ($diff < 1800? -$diff : 3600-$diff)) - $arCookie[2];
-					}
-					elseif($arCookie[1] < ($arCookie[2]-30*60))
-					{
-						//incorrect tz - try to determine offset
-						$diff = ($arCookie[2] - $arCookie[1]) % 3600;
-						return ($arCookie[1] - ($diff < 1800? -$diff : 3600-$diff)) - $arCookie[2];
+						//auto time zone from cookie
+						if($arCookie[1] >= $arCookie[2] && $arCookie[1] <= ($arCookie[2]+30*60) || $arCookie[1] <= $arCookie[2] && $arCookie[1] >= ($arCookie[2]-30*60))
+						{
+							//correct tz - offset from JS "as is"
+							$userOffset = -($arCookie[0])*60;
+						}
+						elseif($arCookie[1] > ($arCookie[2]+30*60))
+						{
+							//incorrect tz - try to determine offset
+							$diff = ($arCookie[1] - $arCookie[2]) % 3600;
+							return ($arCookie[1] + ($diff < 1800? -$diff : 3600-$diff)) - $arCookie[2];
+						}
+						elseif($arCookie[1] < ($arCookie[2]-30*60))
+						{
+							//incorrect tz - try to determine offset
+							$diff = ($arCookie[2] - $arCookie[1]) % 3600;
+							return ($arCookie[1] - ($diff < 1800? -$diff : 3600-$diff)) - $arCookie[2];
+						}
 					}
 				}
 				else
@@ -155,4 +214,3 @@ class CTimeZone
 		return $userOffset - $localOffset;
 	}
 }
-?>

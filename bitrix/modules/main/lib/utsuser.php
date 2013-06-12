@@ -1,47 +1,62 @@
 <?php
-
+/**
+ * Bitrix Framework
+ * @package bitrix
+ * @subpackage main
+ * @copyright 2001-2012 Bitrix
+ */
 namespace Bitrix\Main;
 
 use Bitrix\Main\Entity;
 
-class UtsUserEntity extends Entity\Base
+class UtsUserTable extends Entity\DataManager
 {
-	protected function __construct() {}
-
-	public function initialize()
+	public static function getFilePath()
 	{
-		$this->className = __CLASS__;
-		$this->filePath = __FILE__;
+		return __FILE__;
+	}
 
-		$this->uf_id = 'USER';
+	public static function getTableName()
+	{
+		return 'b_utm_user';
+	}
 
-		// get ufields
+	public static function getUfId()
+	{
+		return 'USER';
+	}
+
+	public static function isUts()
+	{
+		return true;
+	}
+
+	public static function getMap()
+	{
+		/** @global CUserTypeManager $USER_FIELD_MANAGER */
 		global $USER_FIELD_MANAGER;
 
-		$this->fieldsMap = $USER_FIELD_MANAGER->GetUserFields($this->uf_id);
+		// get ufields
+		$fieldsMap = $USER_FIELD_MANAGER->getUserFields(static::getUfId());
 
-		foreach ($this->fieldsMap as $k => $v)
+		foreach ($fieldsMap as $k => $v)
 		{
 			if ($v['MULTIPLE'] == 'Y')
 			{
-				unset($this->fieldsMap[$k]);
+				unset($fieldsMap[$k]);
 			}
 		}
 
-		$this->fieldsMap['VALUE_ID'] = array(
+		$fieldsMap['VALUE_ID'] = array(
 			'data_type' => 'integer',
 			'primary' => true
 		);
 
-		$this->fieldsMap['SOURCE_OBJECT'] = array(
+		$fieldsMap['SOURCE_OBJECT'] = array(
 			'data_type' => 'User',
 			'reference' => array('=this.VALUE_ID' => 'ref.ID')
 		);
-	}
 
-	public function isUts()
-	{
-		return true;
+		return $fieldsMap;
 	}
 }
-

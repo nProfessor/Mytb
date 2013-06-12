@@ -238,7 +238,7 @@ $informerItemsCount = CAdminInformer::InsertMainItems();
 
 if ($USER->IsAuthorized() && $informerItemsCount>0):
 
-?><span class="adm-header-notif-block" id="adm-header-notif-block" onclick="BX.adminInformer.Toggle(this);"><span class="adm-header-notif-icon"></span><span class="adm-header-notif-counter" id="adm-header-notif-counter"><?=CAdminInformer::$alertCounter?></span></span><?
+?><span class="adm-header-notif-block" id="adm-header-notif-block" onclick="BX.adminInformer.Toggle(this);" title="<?=GetMessage("admin_panel_notif_block_title")?>"><span class="adm-header-notif-icon"></span><span class="adm-header-notif-counter" id="adm-header-notif-counter"><?=CAdminInformer::$alertCounter?></span></span><?
 endif;
 
 _showTopPanelButtonsSection($arPanelButtons, $hkInstance)

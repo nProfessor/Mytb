@@ -1,7 +1,7 @@
 <?
 $MESS ['SUPA_AERR_NAME'] = "Please enter the name of the company that owns the key";
 $MESS ['SUPA_AERR_EMAIL'] = "Please enter the contact e-mail";
-$MESS ['SUPA_AERR_EMAIL1'] = "Please chack the e-mail address correctness";
+$MESS ['SUPA_AERR_EMAIL1'] = "Please check the e-mail address correctness";
 $MESS ['SUPA_AERR_URI'] = "Please enter the address of the site that will be used with the key";
 $MESS ['SUPA_AERR_FNAME'] = "Please enter the first name of a user for whom an account at <a href=\"http://www.bitrixsoft.ru\">www.bitrixsoft.ru</a> will be created";
 $MESS ['SUPA_AERR_LNAME'] = "Please enter the last name of a user for whom an account at <a href=\"http://www.bitrixsoft.ru\">www.bitrixsoft.ru</a> will be created";

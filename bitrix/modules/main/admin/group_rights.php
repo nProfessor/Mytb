@@ -63,7 +63,7 @@ if (!function_exists("__GroupRightsShowRow"))
 			<td width="40%"><?
 			echo '<input type="hidden" name="GROUPS[]" value="'.$group_id.'">';
 			
-			$strReturnBox = '<select class="typeselect" name="RIGHTS[]" size="1" onchange="__GroupRightsChangeSite(this)" >';
+			$strReturnBox = '<select class="typeselect" name="RIGHTS[]" onchange="__GroupRightsChangeSite(this)" >';
 
 			$ref = $ar["reference"];
 			$ref_id = $ar["reference_id"];
@@ -229,7 +229,7 @@ foreach($arGROUPS as $value):
 endforeach; ?>
 
 <tr>
-	<td><select onchange="settingsSetGroupID(this)" name="GROUPS[]">
+	<td><select style="width:300px" onchange="settingsSetGroupID(this)" name="GROUPS[]">
 		<option value=""><?echo GetMessage("group_rights_select")?></option>
 		<option value="0"><?echo GetMessage("group_rights_default")?></option>		
 		<?
@@ -241,7 +241,7 @@ endforeach; ?>
 		?>
 	</select></td>
 	<td><?
-		$strReturnBox = '<select class="typeselect" name="RIGHTS[]" size="1">';
+		$strReturnBox = '<select class="typeselect" name="RIGHTS[]">';
 
 		$ref = $ar["reference"];
 		$ref_id = $ar["reference_id"];
@@ -264,7 +264,8 @@ endforeach; ?>
 	<td width="0%"></td>
 </tr>
 <tr>
-	<td colspan="4" align="center" style="padding-bottom:10px;">
+	<td></td>
+	<td style="padding-bottom:10px;">
 <script type="text/javascript">
 
 function settingsSetGroupID(el)
@@ -333,8 +334,10 @@ BX.CRightsRowNew.prototype.ChangeSite = function()
 }
 
 </script>
-<a href="javascript:void(0)" onclick="settingsAddRights(this)" hidefocus="true" class="bx-action-href"><?echo GetMessage("group_rights_add")?></a>
+		<a href="javascript:void(0)" onclick="settingsAddRights(this)" hidefocus="true" class="adm-btn"><?echo GetMessage("group_rights_add")?></a>
 	</td>
+	<td></td>
+	<td></td>
 </tr>
 
 <?endif;?>

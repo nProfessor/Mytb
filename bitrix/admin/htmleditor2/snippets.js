@@ -134,7 +134,7 @@ function BXSnippetsTaskbar()
 			tCompTitle = BX.create("TABLE", {props: {className: "componentTitle"}, style:{height: "96%"}}),
 			row = tCompTitle.insertRow(-1),
 			cell = row.insertCell(-1);
-		cell.innerHTML = "<table style='width:100%'><tr><td style='width:85%'><SPAN title='" + bxhtmlspecialchars(snippetTitle) + "' class='title'>" + bxhtmlspecialchars(snippetShortTitle) + "  (" + snippetName+")</SPAN><BR /><SPAN class='description'>" + bxhtmlspecialchars(snippetDesc) + "</SPAN></td><td style='width:15%; padding-right: 20px' align='right'><div style='width: 62px'><div id='__edit_snip_but' class= 'iconkit_c' style='width: 29px; height: 17px; background-position: -29px -62px; float:left;' title='"+BX_MESS.EditSnippet+"'></div><div id='__del_snip_but' class= 'iconkit_c' style='width: 29px; height: 17px; background-position: 0px -62px;' title='"+BX_MESS.DeleteSnippet+"'></div></td></tr></table>";
+		cell.innerHTML = "<table style='width:100%'><tr><td style='width:85%'><SPAN title='" + bxhtmlspecialchars(snippetTitle) + "' class='title'>" + bxhtmlspecialchars(snippetShortTitle) + "  (" + snippetName+")</SPAN><BR /><SPAN class='description'>" + bxhtmlspecialchars(snippetDesc) + "</SPAN></td><td style='width:15%; padding-right: 20px; text-align: right;' align='right'><div style='width: 62px; float: right;'><span id='__edit_snip_but' class= 'iconkit_c' style='width: 29px; display:inline-block; height: 17px; background-position: -29px -62px;' title='"+BX_MESS.EditSnippet+"'></span> <span id='__del_snip_but' class= 'iconkit_c' style='width: 29px; height: 17px; background-position: 0px -62px;  display:inline-block;' title='"+BX_MESS.DeleteSnippet+"'></span></td></tr></table>";
 
 		cell.className = "titlecell";
 		cell.width = "100%";
@@ -218,8 +218,28 @@ function BXSnippetsTaskbar()
 		}
 		else
 		{
-			html = html.replace(/(<div[^>]*?>)(\s*?)(<\/div>)/ig, "$1$2<br _moz_editor_bogus_node='on' />$3"); // FF 3.x hack (killing empty divs)
-			this.pMainObj.insertHTML(html);
+			//html = html.replace(/(<div[^>]*?>)(\s*?)(<\/div>)/ig, "$1$2<br _moz_editor_bogus_node='on' />$3"); // FF 3.x hack (killing empty divs)
+			//this.pMainObj.insertHTML(html);
+			var id = 'bx_editor_snippet_tmp';
+			this.pMainObj.insertHTML('<a id="' + id + '" href="#" _moz_editor_bogus_node="on">+</a>');
+			var pDoc = this.pMainObj.pEditorDocument;
+			setTimeout(function(){
+				var pTmp = pDoc.getElementById(id);
+				if (pTmp)
+				{
+					pTmp.innerHTML = html;
+					setTimeout(function(){
+						var pTmp = pDoc.getElementById(id);
+						if (pTmp)
+						{
+							for (var i = pTmp.childNodes.length - 1; i >= 0; i--)
+								pTmp.parentNode.insertBefore(pTmp.childNodes[i], pTmp);
+							if (pTmp.parentNode)
+								pTmp.parentNode.removeChild(pTmp);
+						}
+					}, 50);
+				}
+			}, 50);
 			oEl.parentNode.removeChild(oEl);
 		}
 		this.pMainObj.oPropertiesTaskbar.OnSelectionChange('always');

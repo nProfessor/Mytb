@@ -10,4 +10,5 @@ $MESS["socserv_sett_site_apply"] = "Apply individual parameters to this website:
 $MESS["soc_serv_opt_list"] = "Available services:";
 $MESS["soc_serv_opt_list_title"] = "External services";
 $MESS["socserv_twit_to_buzz"] = "Relay user tweets with hash #hash# to Activity Stream";
+$MESS["soc_serv_send_activity"] = "Post user activities to social networks";
 ?>

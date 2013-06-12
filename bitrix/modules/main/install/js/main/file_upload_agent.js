@@ -244,7 +244,7 @@ BX.FileUploadAgent.prototype.onUploadStart = function(dialog)
 
 	if (! this.uploadFile) {
 		this._mkFileInput();
-		var newdialog = new BX.FileUploadAgent(this);
+		var newdialog = this.GetNewObject();
 		newdialog.LoadDialogs(this.dialogs);
 	}
 	this.uploadFile = null;
@@ -317,6 +317,7 @@ BX.FileUploadAgent.prototype.ShowAttachedFiles = function()
 	var val = null;
 	if (! this.values)
 		return;
+	valArr = this.values.slice();
 	val = this.values.shift();
 	if (!!val) {
 		if (BX.type.isDomNode(val)) {
@@ -330,8 +331,23 @@ BX.FileUploadAgent.prototype.ShowAttachedFiles = function()
 			if (! val.element_id) {
 				val = {'element_id' : val};
 			}
-			this._mkPlace('', val.element_id);
+			
+			this.uploadResultArr = new Array();
+			for (var i=0;i<valArr.length;i++)
+			{
+				element_id = valArr[i];
+				if (typeof(valArr[i]) == "object")
+				{
+					element_id = valArr[i].element_id;
+				}
+				this._mkPlace('', element_id);
+				this.uploadResultArr[i] = {'element_id' : valArr[i].element_id, 'element_url' : valArr[i].element_url,
+					'element_name' : valArr[i].element_name, 'place' :this.place};
+			}
+			
+			//this._mkPlace('', val.element_id);
 			this.ShowUploadedFile(val);
+			this.values = [];
 		}
 	}
 }
@@ -341,26 +357,30 @@ BX.FileUploadAgent.prototype.BindLoadedFileControls = function(id, node) // even
 	this.place = node;
 	this._mkClose(node);
 	BX.onCustomEvent(this.caller, 'BindLoadedFileControls', [this, id]);
+	this._clearPlace();
 	setTimeout(BX.delegate(this.ShowAttachedFiles, this), 200);
 }
 
 BX.FileUploadAgent.prototype.ShowUploadError = function(messages)
 {
-	if (BX.type.isArray(messages))
-		messages = messages.join("\n");
-	messages = messages.replace("<br>","");
+	if (!!messages)
+	{
+		if (BX.type.isArray(messages))
+			messages = messages.join("\n");
+		messages = messages.replace("<br>","");
 
-	BX.remove(this.progress.parentNode); // .progressHolder
+		BX.remove(this.progress.parentNode); // .progressHolder
 
-	if (!! messages) {
-		BX.addClass(this.place, 'error-load');
-		while(this.place.cells.length > 1)
-			this.place.deleteCell(1); // size
-		var newCell = this.place.insertCell(-1);
-		newCell.setAttribute("colspan", 2);
-		newCell.appendChild(BX.create('SPAN', {props: {className: 'info-icon'}}));
-		newCell.appendChild(BX.create('SPAN', {props: {className: 'error-text'}, text: messages}));
-		this._mkClose(this.place);
+		if (!! messages) {
+			BX.addClass(this.place, 'error-load');
+			while(this.place.cells.length > 1)
+				this.place.deleteCell(1); // size
+			var newCell = this.place.insertCell(-1);
+			newCell.setAttribute("colspan", 2);
+			newCell.appendChild(BX.create('SPAN', {props: {className: 'info-icon'}}));
+			newCell.appendChild(BX.create('SPAN', {props: {className: 'error-text'}, text: messages}));
+			this._mkClose(this.place);
+		}
 	}
 }
 
@@ -466,7 +486,7 @@ BX.FileUploadAgent.prototype.BindUploadEvents = function(dialog)
 				this.parent.droppedFiles[i].ready = true;
 				this.uploadFile = this.parent.droppedFiles[i];
 				if ((i) < this.parent.droppedFiles.length) {
-					var newdialog = new BX.FileUploadAgent(this.parent);
+					var newdialog = this.GetNewObject(this.parent);
 					newdialog.LoadDialogs(this.dialogs);
 				}
 				break;
@@ -500,7 +520,7 @@ BX.FileUploadAgent.prototype.UploadDroppedFiles = function(files)
 		this.uploadDialog.SetFileInput(this.fileInput);
 		this._mkFileInput();
 	}
-	var newdialog = new BX.FileUploadAgent(this);
+	var newdialog = this.GetNewObject();
 	newdialog.LoadDialogs(this.dialogs);
 }
 
@@ -516,7 +536,9 @@ BX.FileUploadAgent.prototype.AddSelectedFiles = function(files)
 			}
 		}
 		if (this.values.length > 0)
+		{
 			this.ShowAttachedFiles();
+		}
 	}
 }
 
@@ -597,5 +619,8 @@ BX.FileUploadAgent.prototype.LoadDialogs = function(dialogs)
 	if (this.values.length > 0)
 		BX.show(this.controller);
 }
-
+BX.FileUploadAgent.prototype.GetNewObject = function(parent)
+{
+	return new BX.FileUploadAgent((!!parent ? parent : this));
+}
 })();

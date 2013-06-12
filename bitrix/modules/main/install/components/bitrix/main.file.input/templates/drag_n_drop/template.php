@@ -152,9 +152,7 @@ if (!function_exists('mfi_format_line'))
 							}
 						});
 <? if (sizeof($arValue) < 1) { ?>
-						setTimeout(function() {
-							BX.fx.show(<?=$controller?>, 'fade', {time:0.3});
-						}, 300);
+							BX.fx.show(<?=$controller?>, 'fade', {time:0.2});
 <? } else { ?>
 						BX.show(<?=$controller?>);
 <? } ?>
@@ -165,9 +163,9 @@ if (!function_exists('mfi_format_line'))
 					BfileUnbindDispatcher<?=$uid?>();
 			} else {
 				if (<?=$controller?>.style.display == 'block') {
-					BX.fx.hide(<?=$controller?>, 'fade', {time:0.3});
+					BX.fx.hide(<?=$controller?>, 'fade', {time:0.2});
 				} else {
-					BX.fx.show(<?=$controller?>, 'fade', {time:0.3});
+					BX.fx.show(<?=$controller?>, 'fade', {time:0.2});
 				}
 			}
 <? if (sizeof($arValue) < 1) { ?>

@@ -53,7 +53,7 @@ class CUserTypeIBlockElement extends CUserTypeEnum
 			<tr>
 				<td>'.GetMessage("USER_TYPE_IBEL_DISPLAY").':</td>
 				<td>
-					'.GetIBlockDropDownList($iblock_id, $arHtmlControl["NAME"].'[IBLOCK_TYPE_ID]', $arHtmlControl["NAME"].'[IBLOCK_ID]').'
+					'.GetIBlockDropDownList($iblock_id, $arHtmlControl["NAME"].'[IBLOCK_TYPE_ID]', $arHtmlControl["NAME"].'[IBLOCK_ID]', false, 'class="adm-detail-iblock-types"', 'class="adm-detail-iblock-list"').'
 				</td>
 			</tr>
 			';

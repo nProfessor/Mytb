@@ -63,7 +63,7 @@ div.lhe-line-end, div.lhe-line-begin {display: none;}
 .lhe-line-ie{height: 0px!important; width: 99%!important; clear:left!important; margin: 0!important; padding: 0!important; background: red!important;}
 
 /*list*/
-div.lhe-list-val-cont{position: absolute; border: 1px solid #808080; background-color: #FFFFFF; display: none; width: 150px; top: -1000px; left: -1000px;}
+div.lhe-list-val-cont{position: absolute; border: 1px solid #808080; background-color: #FFFFFF; display: none;  width: 200px; top: -1000px; left: -1000px;}
 table.lhe-smiles-cont {border-collapse: collapse; margin: 1px!important;}
 table.lhe-smiles-cont td{padding: 0!important;}
 
@@ -78,7 +78,7 @@ img.lhe-tlbr-smile-more{background-position: -65px -58px!important; width:10px!i
 div.lhe-smile-cont {float: left; padding: 2px; border: 1px solid #FFFFFF;}
 div.lhe-smile-cont-over {background-color: #FFC678; border: 1px solid #4B4B6F;}
 
-div.lhe-header-cont {padding: 0px 5px; border: 1px solid #FFFFFF;}
+div.lhe-header-cont {padding: 0px 5px; border: 1px solid #FFFFFF; white-space: nowrap;}
 div.lhe-header-cont-over {background-color: #FFC678; border: 1px solid #4B4B6F;}
 div.lhe-header-innercont , div.lhe-list-innercont {width: 100%; height: 200px; overflow: auto; overflow-x: hidden; overflow-y: auto;}
 span.lhe-list-font-span {white-space: nowrap; font-size: 12px; display: block; margin: 2px 0 2px 8px;}

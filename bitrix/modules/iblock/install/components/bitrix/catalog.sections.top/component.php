@@ -29,7 +29,7 @@ if($arParams["SECTION_SORT_ORDER"]!="desc")
 
 if(strlen($arParams["FILTER_NAME"])>0)
 {
-	global $$arParams["FILTER_NAME"];
+	global ${$arParams["FILTER_NAME"]};
 	$arrFilter = ${$arParams["FILTER_NAME"]};
 }
 if(!is_array($arrFilter))
@@ -87,6 +87,7 @@ $arParams["SHOW_PRICE_COUNT"] = intval($arParams["SHOW_PRICE_COUNT"]);
 if($arParams["SHOW_PRICE_COUNT"]<=0)
 	$arParams["SHOW_PRICE_COUNT"]=1;
 $arParams["USE_PRODUCT_QUANTITY"] = $arParams["USE_PRODUCT_QUANTITY"]==="Y";
+$arParams['QUANTITY_FLOAT'] = (isset($arParams['QUANTITY_FLOAT']) && 'Y' == $arParams['QUANTITY_FLOAT'] ? 'Y' : 'N');
 
 if(!is_array($arParams["PRODUCT_PROPERTIES"]))
 	$arParams["PRODUCT_PROPERTIES"] = array();
@@ -129,10 +130,22 @@ if (array_key_exists($arParams["ACTION_VARIABLE"], $_REQUEST) && array_key_exist
 	{
 		if (CModule::IncludeModule("sale") && CModule::IncludeModule("catalog"))
 		{
+			$QUANTITY = 0;
 			if($arParams["USE_PRODUCT_QUANTITY"])
-				$QUANTITY = intval($_REQUEST[$arParams["PRODUCT_QUANTITY_VARIABLE"]]);
-			if($QUANTITY <= 1)
-				$QUANTITY = 1;
+			{
+				if ('Y' == $arParams['QUANTITY_FLOAT'])
+				{
+					$QUANTITY = doubleval($_REQUEST[$arParams["PRODUCT_QUANTITY_VARIABLE"]]);
+					if ($QUANTITY <= 0)
+						$QUANTITY = 1;
+				}
+				else
+				{
+					$QUANTITY = intval($_REQUEST[$arParams["PRODUCT_QUANTITY_VARIABLE"]]);
+					if($QUANTITY <= 1)
+						$QUANTITY = 1;
+				}
+			}
 
 			$product_properties = array();
 			if(count($arParams["PRODUCT_PROPERTIES"]))
@@ -262,22 +275,27 @@ if($this->StartResultCache(false, array($arrFilter, CDBResult::NavStringForCache
 		// list of the element fields that will be used in selection
 		$arSelect = array(
 			"ID",
-			"NAME",
-			"CODE",
-			"ACTIVE_FROM",
-			"ACTIVE_TO",
-			"DATE_CREATE",
-			"CREATED_BY",
 			"IBLOCK_ID",
-			"IBLOCK_SECTION_ID",
-			"DETAIL_PAGE_URL",
-			"DETAIL_TEXT",
-			"DETAIL_TEXT_TYPE",
-			"DETAIL_PICTURE",
+			"CODE",
+			"XML_ID",
+			"NAME",
+			"ACTIVE",
+			"DATE_ACTIVE_FROM",
+			"DATE_ACTIVE_TO",
+			"SORT",
 			"PREVIEW_TEXT",
 			"PREVIEW_TEXT_TYPE",
-			"PREVIEW_PICTURE",
+			"DETAIL_TEXT",
+			"DETAIL_TEXT_TYPE",
+			"DATE_CREATE",
+			"CREATED_BY",
+			"TIMESTAMP_X",
+			"MODIFIED_BY",
 			"TAGS",
+			"IBLOCK_SECTION_ID",
+			"DETAIL_PAGE_URL",
+			"DETAIL_PICTURE",
+			"PREVIEW_PICTURE",
 			"PROPERTY_*",
 		);
 		if($arParams["SHOW_DESCRIPTION"])
@@ -323,6 +341,9 @@ if($this->StartResultCache(false, array($arrFilter, CDBResult::NavStringForCache
 		while($obElement = $rsElements->GetNextElement())
 		{
 			$arItem = $obElement->GetFields();
+
+			$arItem['ACTIVE_FROM'] = $arItem['DATE_ACTIVE_FROM'];
+			$arItem['ACTIVE_TO'] = $arItem['DATE_ACTIVE_TO'];
 
 			$arButtons = CIBlock::GetPanelButtons(
 				$arItem["IBLOCK_ID"],

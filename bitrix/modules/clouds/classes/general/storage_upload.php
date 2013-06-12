@@ -171,13 +171,19 @@ class CCloudStorageUpload
 			}
 
 			$strUpdate = $DB->PrepareUpdate("b_clouds_file_upload", $arFields);
-			$strSql = "UPDATE b_clouds_file_upload SET ".$strUpdate." WHERE ID = '".$this->_ID."'";
-			if(!$DB->QueryBind($strSql, $arBinds))
-				return false;
+			if ($strUpdate != "")
+			{
+				$strSql = "UPDATE b_clouds_file_upload SET ".$strUpdate." WHERE ID = '".$this->_ID."'";
+				if(!$DB->QueryBind($strSql, $arBinds))
+				{
+					unset($this->_cache);
+					return false;
+				}
+			}
 
 			unset($this->_cache);
 
-			return true;
+			return $bSuccess;
 		}
 
 		return false;

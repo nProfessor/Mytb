@@ -2,11 +2,7 @@
 
 <?if($arParams["USE_RSS"]=="Y"):?>
 	<?
-	$rss_url = str_replace(
-		array("#SECTION_ID#", "#SECTION_CODE#")
-		,array(urlencode($arResult["VARIABLES"]["SECTION_ID"]), urlencode($arResult["VARIABLES"]["SECTION_CODE"]))
-		,$arResult["FOLDER"].$arResult["URL_TEMPLATES"]["rss_section"]
-	);
+	$rss_url = CComponentEngine::makePathFromTemplate($arResult["FOLDER"].$arResult["URL_TEMPLATES"]["rss_section"], $arResult["VARIABLES"]);
 	if(method_exists($APPLICATION, 'addheadstring'))
 		$APPLICATION->AddHeadString('<link rel="alternate" type="application/rss+xml" title="'.$rss_url.'" href="'.$rss_url.'" />');
 	?>

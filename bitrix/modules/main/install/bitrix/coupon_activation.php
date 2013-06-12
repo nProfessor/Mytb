@@ -335,7 +335,7 @@ function UpdateIsAdmin($login, $password)
 {
 	global $DB;
 
-	if (strlen($login) <= 0 || strlen($password) <= 0)
+	if (!is_string($login) || $login == '' || !is_string($password) || $password == '')
 		return false;
 
 	$dbUser = $DB->Query(
@@ -378,7 +378,7 @@ header("Content-Type: text/html; charset=windows-1251");
 
 if ($_SERVER["REQUEST_METHOD"] == "POST")
 {
-	if (strlen($_POST["autoActivateCoupon"]) > 0)
+	if (is_string($_POST["autoActivateCoupon"]) && $_POST["autoActivateCoupon"] <> '')
 	{
 		$autoActivateCoupon = $_POST["autoActivateCoupon"];
 		if (preg_match("#^[A-Z0-9]{3}-[A-Z0-9]{10}-[A-Z0-9]{10}$#i", $autoActivateCoupon))
@@ -395,9 +395,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST")
 		die();
 	}
 
-	if (strlen($_POST["reincarnate"]) > 0)
+	if (is_string($_POST["reincarnate"]) && $_POST["reincarnate"] <> '')
 	{
-		if (strlen($_POST["coupon"]) <= 0)
+		if (!is_string($_POST["coupon"]) || $_POST["coupon"] == '')
 		{
 			$errorMessage .= $MESS['ERROR_EMPTY_COUPON'].". ";
 		}
@@ -488,7 +488,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST")
 										<table cellpadding="0" cellspacing="0" border="0" class="edit-table">
 											<tr>
 												<td width="40%" align="right"><?= $MESS['LOGIN_PROMT'] ?>:</td>
-												<td><input type="text" name="login" value="<?= htmlspecialchars($_POST["login"]) ?>" size="40"></td>
+												<td><input type="text" name="login" value="<?= htmlspecialchars(strval($_POST["login"])) ?>" size="40"></td>
 											</tr>
 											<tr>
 												<td width="40%" align="right"><?= $MESS['PASSWORD_PROMT'] ?>:</td>
@@ -496,7 +496,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST")
 											</tr>
 											<tr>
 												<td width="40%" align="right"><?= $MESS['COUPON_PROMT'] ?>:</td>
-												<td><input type="text" name="coupon" value="<?= htmlspecialchars($_POST["coupon"]) ?>" size="40"></td>
+												<td><input type="text" name="coupon" value="<?= htmlspecialchars(strval($_POST["coupon"])) ?>" size="40"></td>
 											</tr>
 										</table>
 										</div></div>

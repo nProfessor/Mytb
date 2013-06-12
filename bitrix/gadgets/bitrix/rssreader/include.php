@@ -15,6 +15,9 @@ class gdRssFeeds
 
 function gdGetRss($rss_url, $cache_time = 0)
 {
+	/** @global CMain $APPLICATION */
+	global $APPLICATION;
+
 	$cache = new CPHPCache();
 	if(!$cache->StartDataCache($cache_time, 'c'.$rss_url, "gdrss"))
 	{
@@ -24,25 +27,10 @@ function gdGetRss($rss_url, $cache_time = 0)
 
 	$oRssFeeds = new gdRssFeeds();
 
-	$arUrl = parse_url($rss_url);
-	if(IntVal($arUrl["port"])<=0)
-		$arUrl["port"] = 80;
-
 	$ob = new CHTTP();
 	$ob->http_timeout = 10;
-	$ob->Query(
-		"GET",
-		$arUrl["host"],
-		$arUrl["port"],
-		$arUrl["path"].($arUrl["query"] <> ''? "?".$arUrl["query"] : ''),
-		false,
-		"",
-		"N"
-	);
-
-	$errno = $ob->errno;
-	$errstr = $ob->errstr;
-
+	$ob->setFollowRedirect(true);
+	$ob->HTTPQuery("GET", $rss_url);
 	$res = $ob->result;
 
 	if(!$res)
@@ -51,11 +39,11 @@ function gdGetRss($rss_url, $cache_time = 0)
 		return false;
 	}
 
-
-	if (preg_match("/<"."\?XML[^>]{1,}encoding=[\"']([^>\"']{1,})[\"'][^>]{0,}\?".">/i", $res, $matches))
-		$charset = Trim($matches[1]);
-
-	$res = $GLOBALS["APPLICATION"]->ConvertCharset($res, $charset, SITE_CHARSET);
+	if (preg_match("/<"."\\?XML[^>]{1,}encoding=[\"']([^>\"']{1,})[\"'][^>]{0,}\\?".">/i", $res, $matches))
+	{
+		$charset = trim($matches[1]);
+		$res = $APPLICATION->ConvertCharset($res, $charset, SITE_CHARSET);
+	}
 
 	$xml = new CDataXML();
 	$xml->LoadString($res);
@@ -68,7 +56,7 @@ function gdGetRss($rss_url, $cache_time = 0)
 	}
 
 	$oRssFeeds->title = $oNode->content;
-	if (strlen(trim($oRssFeeds->title)) <= 0)
+	if (trim($oRssFeeds->title) == '')
 	{
 		if($oSubNode = $oNode->elementsByName("cdata-section"))
 			$oRssFeeds->title = $oSubNode[0]->content;
@@ -79,7 +67,7 @@ function gdGetRss($rss_url, $cache_time = 0)
 
 	if($oNode = $xml->SelectNodes("/rss/channel/description"))
 		$oRssFeeds->description = $oNode->content;
-	if (strlen(trim($oRssFeeds->description)) <= 0)
+	if (trim($oRssFeeds->description) == '')
 	{
 		if($oNode && $oSubNode = $oNode->elementsByName("cdata-section"))
 			$oRssFeeds->description = $oSubNode[0]->content;
@@ -95,12 +83,11 @@ function gdGetRss($rss_url, $cache_time = 0)
 		$oNodes = $oNode->elementsByName("item");
 		foreach($oNodes as $oNode)
 		{
-			$item = Array();
-
+			$item = array();
 
 			if($oSubNode = $oNode->elementsByName("title"))
 				$item["TITLE"] = $oSubNode[0]->content;
-			if (strlen(trim($item["TITLE"])) <= 0 && !empty($oSubNode))
+			if (trim($item["TITLE"]) == '' && !empty($oSubNode))
 			{
 				if($oSubNode = $oSubNode[0]->elementsByName("cdata-section"))
 					$item["TITLE"] = $oSubNode[0]->content;
@@ -114,7 +101,7 @@ function gdGetRss($rss_url, $cache_time = 0)
 
 			if($oSubNode = $oNode->elementsByName("description"))
 				$item["DESCRIPTION"] = $oSubNode[0]->content;
-			if (strlen(trim($item["DESCRIPTION"])) <= 0 && !empty($oSubNode))
+			if (trim($item["DESCRIPTION"]) == '' && !empty($oSubNode))
 			{
 				if($oSubNode = $oSubNode[0]->elementsByName("cdata-section"))
 					$item["DESCRIPTION"] = $oSubNode[0]->content;
@@ -122,7 +109,7 @@ function gdGetRss($rss_url, $cache_time = 0)
 
 			if($oSubNode = $oNode->elementsByName("author"))
 				$item["AUTHOR"] = $oSubNode[0]->content;
-			if (strlen(trim($item["AUTHOR"])) <= 0 && !empty($oSubNode))
+			if (trim($item["AUTHOR"]) == '' && !empty($oSubNode))
 			{
 				if($oSubNode = $oSubNode[0]->elementsByName("cdata-section"))
 					$item["AUTHOR"] = $oSubNode[0]->content;
@@ -136,4 +123,3 @@ function gdGetRss($rss_url, $cache_time = 0)
 
 	return $oRssFeeds;
 }
-?>

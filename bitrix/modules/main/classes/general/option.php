@@ -10,12 +10,12 @@ global $MAIN_OPTIONS;
 $MAIN_OPTIONS = array();
 class CAllOption
 {
-	function err_mess()
+	public static function err_mess()
 	{
 		return "<br>Class: CAllOption<br>File: ".__FILE__;
 	}
 
-	function GetOptionString($module_id, $name, $def="", $site=false, $bExactSite=false)
+	public static function GetOptionString($module_id, $name, $def="", $site=false, $bExactSite=false)
 	{
 		global $DB, $MAIN_OPTIONS;
 
@@ -45,7 +45,7 @@ class CAllOption
 		}
 		else
 		{
-			if(count($MAIN_OPTIONS)==0)
+			if(empty($MAIN_OPTIONS))
 			{
 				global $CACHE_MANAGER;
 				if($CACHE_MANAGER->Read(CACHED_b_option, "b_option"))
@@ -71,21 +71,24 @@ class CAllOption
 		if($site_id != "-" && isset($MAIN_OPTIONS["-"][$module_id][$name]))
 			return $MAIN_OPTIONS["-"][$module_id][$name];
 
-		$module_id = _normalizePath($module_id);
-		if(strlen($def)<=0 && file_exists($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/".$module_id."/default_option.php"))
+		if($def == "")
 		{
-			$var = str_replace(".", "_", $module_id)."_default_option";
-			global $$var;
-			include_once($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/".$module_id."/default_option.php");
-			$arrDefault = $$var;
-			if(is_array($arrDefault)) 
-				return $arrDefault[$name];
+			$module_id = _normalizePath($module_id);
+			if(file_exists($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/".$module_id."/default_option.php"))
+			{
+				$var = str_replace(".", "_", $module_id)."_default_option";
+				global $$var;
+				include_once($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/".$module_id."/default_option.php");
+				$arrDefault = $$var;
+				if(is_array($arrDefault))
+					return $arrDefault[$name];
+			}
 		}
 
 		return $def;
 	}
 
-	function SetOptionString($module_id, $name, $value="", $desc=false, $site="")
+	public static function SetOptionString($module_id, $name, $value="", $desc=false, $site="")
 	{
 		global $DB,$CACHE_MANAGER;
 		if(CACHED_b_option!==false) $CACHE_MANAGER->Clean("b_option");
@@ -95,12 +98,13 @@ class CAllOption
 
 		$strSqlWhere = " SITE_ID".($site==""?" IS NULL":"='".$DB->ForSql($site, 2)."'")." ";
 
+		$name = $DB->ForSql($name, 50);
 		$res = $DB->Query(
 			"SELECT 'x' ".
 			"FROM b_option ".
 			"WHERE ".$strSqlWhere.
 			"	AND MODULE_ID='".$DB->ForSql($module_id)."' ".
-			"	AND NAME='".$DB->ForSql($name)."'"
+			"	AND NAME='".$name."'"
 			);
 
 		if($res_array = $res->Fetch())
@@ -111,7 +115,7 @@ class CAllOption
 				($desc!==false?", DESCRIPTION='".$DB->ForSql($desc, 255)."'":"")." ".
 				"WHERE ".$strSqlWhere.
 				"	AND MODULE_ID='".$DB->ForSql($module_id)."' ".
-				"	AND NAME='".$DB->ForSql($name)."'"
+				"	AND NAME='".$name."'"
 				);
 		}
 		else
@@ -119,7 +123,7 @@ class CAllOption
 			$DB->Query(
 				"INSERT INTO b_option(SITE_ID, MODULE_ID, NAME, VALUE, DESCRIPTION) ".
 				"VALUES(".($site==""?"NULL":"'".$DB->ForSQL($site, 2)."'").", ".
-				"'".$DB->ForSql($module_id, 50)."', '".$DB->ForSql($name, 50)."', ".
+				"'".$DB->ForSql($module_id, 50)."', '".$name."', ".
 				"'".$DB->ForSql($value, 2000)."', '".$DB->ForSql($desc, 255)."') "
 				);
 		}
@@ -142,32 +146,33 @@ class CAllOption
 		return true;
 	}
 
-	function RemoveOption($module_id, $name="", $site=false)
+	public static function RemoveOption($module_id, $name="", $site=false)
 	{
-		global $DB,$CACHE_MANAGER;
-		if(CACHED_b_option!==false) $CACHE_MANAGER->Clean("b_option");
+		global $MAIN_OPTIONS, $DB, $CACHE_MANAGER;
 
-		$strSqlWhere = "";
-		if(strlen($name)>0)
-			$strSqlWhere = " AND NAME='".$DB->ForSql($name)."' ";
-
-		if(strlen($site)>0)
-			$strSqlWhere .= "	AND SITE_ID='".$DB->ForSql($site)."'";
-
-		if($module_id == "main")
-			$DB->Query("DELETE FROM b_option WHERE MODULE_ID='main' AND NAME NOT LIKE '~%' AND NAME<>'crc_code' AND NAME<>'admin_passwordh' AND NAME<>'server_uniq_id' AND NAME<>'PARAM_MAX_SITES' AND NAME<>'PARAM_MAX_USERS' ".$strSqlWhere);
+		if ($module_id == "main")
+			$DB->Query("
+				DELETE FROM b_option
+				WHERE MODULE_ID = 'main'
+					AND NAME NOT LIKE '~%'
+					AND NAME NOT IN ('crc_code', 'admin_passwordh', 'server_uniq_id','PARAM_MAX_SITES', 'PARAM_MAX_USERS')
+					".(strlen($name) > 0? " AND NAME = '".$DB->forSql($name)."' ": "")."
+					".(strlen($site) > 0? " AND SITE_ID = '".$DB->forSql($site)."' ": "")."
+			");
 		else
-			$DB->Query("DELETE FROM b_option WHERE MODULE_ID='".$DB->ForSql($module_id)."' AND NAME<>'~bsm_stop_date' ".$strSqlWhere);
+			$DB->Query("
+				DELETE FROM b_option
+				WHERE MODULE_ID = '".$DB->ForSql($module_id)."'
+					AND NAME NOT IN ('~bsm_stop_date')
+					".(strlen($name) > 0? " AND NAME = '".$DB->forSql($name)."' ": "")."
+					".(strlen($site) > 0? " AND SITE_ID = '".$DB->forSql($site)."' ": "")."
+			");
 
-		global $MAIN_OPTIONS;
-
-		if($site===false)
+		if ($site === false)
 		{
-			$arSites = array_keys($MAIN_OPTIONS);
-			for($i=0; $i<count($arSites); $i++)
+			foreach ($MAIN_OPTIONS as $site => $temp)
 			{
-				$site = $arSites[$i];
-				if($name == "")
+				if ($name == "")
 					unset($MAIN_OPTIONS[$site][$module_id]);
 				else
 					unset($MAIN_OPTIONS[$site][$module_id][$name]);
@@ -175,20 +180,22 @@ class CAllOption
 		}
 		else
 		{
-			if($name == "")
+			if ($name == "")
 				unset($MAIN_OPTIONS[$site][$module_id]);
 			else
 				unset($MAIN_OPTIONS[$site][$module_id][$name]);
 		}
-	//echo "<br>Remove:<pre>";print_r($MAIN_OPTIONS);echo "</pre>";
+
+		if (CACHED_b_option !== false)
+			$CACHE_MANAGER->clean("b_option");
 	}
 
-	function GetOptionInt($module_id, $name, $def="", $site=false)
+	public static function GetOptionInt($module_id, $name, $def="", $site=false)
 	{
 		return COption::GetOptionString($module_id, $name, $def, $site);
 	}
 
-	function SetOptionInt($module_id, $name, $value="", $desc="", $site="")
+	public static function SetOptionInt($module_id, $name, $value="", $desc="", $site="")
 	{
 		return COption::SetOptionString($module_id, $name, IntVal($value), $desc, $site);
 	}
@@ -229,13 +236,11 @@ class CAllPageOption
 	{
 		global $MAIN_PAGE_OPTIONS;
 
-		if($site===false)
+		if ($site === false)
 		{
-			$arSites = array_keys($MAIN_PAGE_OPTIONS);
-			for($i=0; $i<count($arSites); $i++)
+			foreach ($MAIN_PAGE_OPTIONS as $site => $temp)
 			{
-				$site = $arSites[$i];
-				if($name == "")
+				if ($name == "")
 					unset($MAIN_PAGE_OPTIONS[$site][$module_id]);
 				else
 					unset($MAIN_PAGE_OPTIONS[$site][$module_id][$name]);
@@ -243,7 +248,7 @@ class CAllPageOption
 		}
 		else
 		{
-			if($name == "")
+			if ($name == "")
 				unset($MAIN_PAGE_OPTIONS[$site][$module_id]);
 			else
 				unset($MAIN_PAGE_OPTIONS[$site][$module_id][$name]);

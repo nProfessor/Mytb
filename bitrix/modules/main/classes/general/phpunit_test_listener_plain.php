@@ -30,11 +30,11 @@ class PHPUnit_Util_Log_BX_Plain extends PHPUnit_Util_Printer implements PHPUnit_
 	public function addError(PHPUnit_Framework_Test $test, Exception $e, $time)
 	{
 		$this->writeCase(
-		  'error',
-		  $time,
-		  PHPUnit_Util_Filter::getFilteredStacktrace($e, FALSE),
-		  $e->getMessage(),
-		  $test
+			'error',
+			$time,
+			PHPUnit_Util_Filter::getFilteredStacktrace($e, FALSE),
+			$e->getMessage()." @ ".$e->getFile().":".$e->getLine(),
+			$test
 		);
 
 		$this->currentTestPass = FALSE;
@@ -164,16 +164,16 @@ class PHPUnit_Util_Log_BX_Plain extends PHPUnit_Util_Printer implements PHPUnit_
 		}
 
 		$this->write(
-		  array(
-			'event'   => 'test',
-			'suite'   => $this->currentTestSuiteName,
-			'test'	=> $this->currentTestName,
-			'status'  => $status,
-			'time'	=> $time,
-			'trace'   => $trace,
-			'message' => PHPUnit_Util_String::convertToUtf8($message),
-			'output'  => $output,
-		  )
+			array(
+				'event'   => 'test',
+				'suite'   => $this->currentTestSuiteName,
+				'test'	=> $this->currentTestName,
+				'status'  => $status,
+				'time'	=> $time,
+				'trace'   => $trace,
+				'message' => PHPUnit_Util_String::convertToUtf8($message),
+				'output'  => $output,
+			)
 		);
 	}
 

@@ -113,13 +113,7 @@ function stemming_split($sText, $sLang="ru")
 
 function stemming($sText, $sLang="ru", $bIgnoreStopWords = false, $bReturnPositions = false)
 {
-	static $WORD_CACHE=array();
 	static $STOP_CACHE=array();
-
-	if(!isset($WORD_CACHE[$sLang]))
-		$WORD_CACHE[$sLang] = array();
-	$word_cache = &$WORD_CACHE[$sLang];
-
 	if(!isset($STOP_CACHE[$sLang]))
 		$STOP_CACHE[$sLang] = array();
 	$stop_cache = &$STOP_CACHE[$sLang];
@@ -171,32 +165,25 @@ function stemming($sText, $sLang="ru", $bIgnoreStopWords = false, $bReturnPositi
 					continue;
 			}
 
-			if(isset($word_cache[$word]))
-			{
-				$stem = $word_cache[$word];
-			}
-			else
-			{
-				//Try to stem starting with desired language
-				//1 - stemming may return more than one word
-				$stem = $stem_func($word, 1);
-				$stop_lang = $sLang;
+			//Try to stem starting with desired language
+			//1 - stemming may return more than one word
+			$stem = $stem_func($word, 1);
+			$stop_lang = $sLang;
 
-				//If word equals it's stemming
-				//and has letters not from ABC
-				if(
-					!is_array($stem)
-					&& $stem === $word
-					&& preg_match($pcre_abc, $word)
-				)
+			//If word equals it's stemming
+			//and has letters not from ABC
+			if(
+				!is_array($stem)
+				&& $stem === $word
+				&& preg_match($pcre_abc, $word)
+			)
+			{
+				//Do the best to detect correct one
+				$guess = stemming_detect($word, $arStemInfo, $sLang);
+				if(strlen($guess[0]))
 				{
-					//Do the best to detect correct one
-					$guess = stemming_detect($word, $arStemInfo, $sLang);
-					if(strlen($guess[0]))
-					{
-						$stem = $guess[0];
-						$stop_lang = $guess[1];
-					}
+					$stem = $guess[0];
+					$stop_lang = $guess[1];
 				}
 			}
 
@@ -219,7 +206,7 @@ function stemming($sText, $sLang="ru", $bIgnoreStopWords = false, $bReturnPositi
 				{
 					foreach($stem as $st)
 					{
-						if(!array_key_exists($st, $stop_cache))
+						if(!isset($stop_cache[$st]))
 							$stop_cache[$st] = $stop_func($st);
 
 						if($stop_cache[$st])
@@ -228,7 +215,7 @@ function stemming($sText, $sLang="ru", $bIgnoreStopWords = false, $bReturnPositi
 				}
 				else
 				{
-					if(!array_key_exists($stem, $stop_cache))
+					if(!isset($stop_cache[$stem]))
 						$stop_cache[$stem] = $stop_func($stem);
 
 					if($stop_cache[$stem])

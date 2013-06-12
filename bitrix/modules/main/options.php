@@ -56,6 +56,9 @@ if($_SERVER["REQUEST_METHOD"] == "GET" && $USER->CanDoOperation('edit_other_sett
 }
 
 $bEmailIndex = (COption::GetOptionString("main", "new_user_email_uniq_check", "N") !== "Y") && !$DB->IndexExists("b_user", array("EMAIL"));
+$arSmileSet = CSmileSet::getFormList(true);
+foreach ($arSmileSet as $key => $value)
+	$arSmileSet[$key] = htmlspecialcharsback($value);
 
 $arAllOptions = array(
 	"main" => Array(
@@ -67,6 +70,7 @@ $arAllOptions = array(
 		Array("error_reporting", GetMessage("MAIN_ERROR_REPORTING"), E_COMPILE_ERROR|E_ERROR|E_CORE_ERROR|E_PARSE, Array("selectbox", Array(E_COMPILE_ERROR|E_ERROR|E_CORE_ERROR|E_PARSE=>GetMessage("MAIN_OPTION_ERROR1"), E_ALL^E_NOTICE=>GetMessage("MAIN_OPTION_ERROR2"), 0=>GetMessage("MAIN_OPTION_ERROR3")))),
 		Array("templates_visual_editor", GetMessage("main_options_use_editor"), "N", Array("checkbox", "Y")),
 		Array("use_hot_keys", GetMessage("main_options_use_hot_keys"), "Y", Array("checkbox", "Y")),
+		Array("smile_set_id", GetMessage("main_options_smile_set_id"), 0, Array("selectbox", $arSmileSet)),
 
 		GetMessage("main_options_mail"),
 		Array("all_bcc", GetMessage("MAIN_EMAIL"), "", Array("text", 30)),
@@ -89,7 +93,8 @@ $arAllOptions = array(
 
 		GetMessage("MAIN_OPTIMIZE_CSS_SETTINGS"),
 		Array("optimize_css_files", GetMessage("MAIN_OPTIMIZE_CSS"), "N", Array("checkbox", "Y")),
-		Array("compres_css_files", GetMessage("MAIN_COMPRES_CSS"), "N", Array("checkbox", "Y")),
+		Array("optimize_js_files", GetMessage("MAIN_OPTIMIZE_JS"), "N", Array("checkbox", "Y")),
+		Array("compres_css_js_files", GetMessage("MAIN_COMPRES_CSS_JS"), "N", Array("checkbox", "Y")),
 /*
 		GetMessage("MAIN_OPTIMIZE_TRANSLATE_SETTINGS"),
 		Array("translate_key_bing", GetMessage("MAIN_TRANSLATE_KEY_BING"), "", Array("text", 30)),
@@ -115,6 +120,7 @@ $arAllOptions = array(
 		Array("store_password", GetMessage("MAIN_REMEMBER"), "Y", Array("checkbox", "Y")),
 		Array("use_secure_password_cookies", GetMessage("MAIN_OPTION_USE_SECURE_PASSWORD_COOKIE"), "N", Array("checkbox", "Y")),
 		Array("auth_multisite", GetMessage("MAIN_OPTION_AUTH_TO_ALL_DOM"), "N", Array("checkbox", "Y")),
+		Array("allow_socserv_authorization", GetMessage("MAIN_OPTION_SOCSERV_AUTH"), "Y", Array("checkbox", "Y")),
 		Array("auth_comp2", GetMessage("MAIN_OPTION_AUTH_COMP2"), "N", Array("checkbox", "Y")),
 		Array("use_digest_auth", GetMessage("MAIN_OPT_HTTP_DIGEST"), "N", Array("checkbox", "Y")),
 		Array("note"=>GetMessage("MAIN_OPT_DIGEST_NOTE")),

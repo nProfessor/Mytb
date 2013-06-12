@@ -1,5 +1,5 @@
 <?
-$MESS["MAIN_USER_PROFILE"] = "Профайл пользователя";
+$MESS["MAIN_USER_PROFILE"] = "Профиль пользователя";
 $MESS["MAIN_WRONG_DATE_FROM"] = "Введите в фильтре правильную дату \"c\"";
 $MESS["MAIN_WRONG_DATE_TILL"] = "Введите в фильтре правильную дату \"по\"";
 $MESS["MAIN_FROM_TILL_DATE"] = "В фильтре дата \"по\" должна быть больше чем дата \"с\"";

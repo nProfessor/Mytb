@@ -99,4 +99,5 @@ $MESS["IBLIST_A_ACTIVATE"] = "Активировать";
 $MESS["IBLIST_DEFAULT_VALUE"] = "по умолчанию";
 $MESS["IBLIST_YES_VALUE"] = "да";
 $MESS["IBLIST_NO_VALUE"] = "нет";
+$MESS["IBLIST_A_CATALOG_PURCHASING_PRICE"] = "Закупочная цена";
 ?>

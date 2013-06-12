@@ -1,15 +1,15 @@
-<?
-##############################################
-# Bitrix: SiteManager                        #
-# Copyright (c) 2002-2011 Bitrix             #
-# http://www.bitrixsoft.com                  #
-# mailto:admin@bitrixsoft.com                #
-##############################################
+<?php
+/**
+ * Bitrix Framework
+ * @package bitrix
+ * @subpackage main
+ * @copyright 2001-2013 Bitrix
+ */
 
-IncludeModuleLangFile($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/classes/general/event.php");
+IncludeModuleLangFile(__FILE__);
 
 global $BX_EVENT_SITE_PARAMS;
-$BX_EVENT_SITE_PARAMS = Array();
+$BX_EVENT_SITE_PARAMS = array();
 
 class CAllEvent
 {
@@ -36,7 +36,7 @@ class CAllEvent
 			"ID" => "0",
 		);
 
-		CEvent::HandleEvent($arLocalFields);
+		return CEvent::HandleEvent($arLocalFields);
 	}
 
 	function Send($event, $lid, $arFields, $Duplicate = "Y", $message_id="")
@@ -73,7 +73,7 @@ class CAllEvent
 			$CACHE_MANAGER->Clean($cache_id);
 		}
 
-		return $DB->Add("b_event", $arLocalFields, Array("C_FIELDS"));
+		return $DB->Add("b_event", $arLocalFields, array("C_FIELDS"));
 	}
 
 	function fieldencode($s)
@@ -95,20 +95,20 @@ class CAllEvent
 
 	function ExtractMailFields($str)
 	{
-		$ar=explode("&", $str);
-		$newar=Array();
-		while (list ($key, $val) = each ($ar))
+		$ar = explode("&", $str);
+		$newar = array();
+		while (list (, $val) = each ($ar))
 		{
-			$val=str_replace("%1","&",$val);
-			$tar=explode("=", $val);
-			$key=$tar[0];
-			$val=$tar[1];
-			$key=str_replace("%3","=",$key);
-	 		$val=str_replace("%3","=",$val);
-			$key=str_replace("%2","%",$key);
-	 		$val=str_replace("%2","%",$val);
-	 		if($key!="")
-				$newar[$key]=$val;
+			$val = str_replace("%1", "&", $val);
+			$tar = explode("=", $val);
+			$key = $tar[0];
+			$val = $tar[1];
+			$key = str_replace("%3", "=", $key);
+			$val = str_replace("%3", "=", $val);
+			$key = str_replace("%2", "%", $key);
+			$val = str_replace("%2", "%", $val);
+			if($key != "")
+				$newar[$key] = $val;
 		}
 		return $newar;
 	}
@@ -131,7 +131,9 @@ class CAllEvent
 				$BX_EVENT_SITE_PARAMS[$site_id] = array(
 					"SITE_NAME" => ($arSite["SITE_NAME"]<>''? $arSite["SITE_NAME"] : $SITE_NAME),
 					"SERVER_NAME" => ($arSite["SERVER_NAME"]<>''? $arSite["SERVER_NAME"] : $SERVER_NAME),
-					"DEFAULT_EMAIL_FROM" => ($arSite["EMAIL"]<>''? $arSite["EMAIL"] : $DEFAULT_EMAIL_FROM)
+					"DEFAULT_EMAIL_FROM" => ($arSite["EMAIL"]<>''? $arSite["EMAIL"] : $DEFAULT_EMAIL_FROM),
+					"SITE_ID" => $arSite['ID'],
+					"SITE_DIR" => $arSite['DIR'],
 				);
 				return $BX_EVENT_SITE_PARAMS[$site_id];
 			}
@@ -163,10 +165,7 @@ class CAllEvent
 
 	function Is8Bit($str)
 	{
-		for($i=0; $i<strlen($str); $i++)
-			if(ord($str[$i])>>7)
-				return true;
-		return false;
+		return preg_match("/[\\x80-\\xFF]/", $str) > 0;
 	}
 
 	function EncodeMimeString($text, $charset)
@@ -262,10 +261,10 @@ class CAllEvent
 		$MESSAGE_ID = intval($arEvent["MESSAGE_ID"]);
 		if($MESSAGE_ID > 0)
 		{
-			$strSql = "SELECT 'x' FROM b_event_message M WHERE M.ID=$MESSAGE_ID";
+			$strSql = "SELECT 'x' FROM b_event_message M WHERE M.ID=".$MESSAGE_ID;
 			$z = $DB->Query($strSql);
 			if($z->Fetch())
-				$strWhere = "WHERE M.ID=$MESSAGE_ID and M.ACTIVE='Y'";
+				$strWhere = "WHERE M.ID=".$MESSAGE_ID." and M.ACTIVE='Y'";
 		}
 
 		$strSql = "
@@ -306,11 +305,10 @@ class CAllEvent
 			else
 				$arFields = $ar + CAllEvent::GetSiteFieldsArray(false);
 
-			$events = GetModuleEvents("main", "OnBeforeEventSend");
-			while ($event = $events->Fetch())
+			foreach (GetModuleEvents("main", "OnBeforeEventSend", true) as $event)
 				ExecuteModuleEventEx($event, array(&$arFields, &$db_mail_result_array));
 
-			$arMailFields = Array();
+			$arMailFields = array();
 			$arMailFields["From"] = CAllEvent::ReplaceTemplate($db_mail_result_array["EMAIL_FROM"], $arFields);
 
 			if($db_mail_result_array["BCC"]!='')
@@ -326,7 +324,7 @@ class CAllEvent
 			if($db_mail_result_array["REPLY_TO"]!='')
 				$arMailFields["Reply-To"] = CAllEvent::ReplaceTemplate($db_mail_result_array["REPLY_TO"], $arFields);
 			else
-				$arMailFields["Reply-To"] = preg_replace("/(.*)\<(.*)\>/i", '$2', $arMailFields["From"]);
+				$arMailFields["Reply-To"] = preg_replace("/(.*)\\<(.*)\\>/i", '$2', $arMailFields["From"]);
 
 			if($db_mail_result_array["IN_REPLY_TO"]!='')
 				$arMailFields["In-Reply-To"] = CAllEvent::ReplaceTemplate($db_mail_result_array["IN_REPLY_TO"], $arFields);
@@ -349,7 +347,7 @@ class CAllEvent
 			}
 
 			foreach($arMailFields as $k=>$v)
-				$arMailFields[$k] = Trim($v, "\r\n");
+				$arMailFields[$k] = trim($v, "\r\n");
 
 			//add those who want to receive all emails
 			if($arEvent["DUPLICATE"]=="Y")
@@ -365,24 +363,23 @@ class CAllEvent
 			if(COption::GetOptionString("main", "convert_mail_header", "Y")=="Y")
 			{
 				foreach($arMailFields as $k=>$v)
-					if($k == 'From')
+					if($k == 'From' || $k == 'CC')
 						$arMailFields[$k] = CAllEvent::EncodeHeaderFrom($v, $charset);
 					else
 						$arMailFields[$k] = CAllEvent::EncodeMimeString($v, $charset);
 
-				$email_to = CAllEvent::EncodeMimeString($email_to, $charset);
+				$email_to = CAllEvent::EncodeHeaderFrom($email_to, $charset);
 				$subject = CAllEvent::EncodeMimeString($subject, $charset);
 			}
 
 			if(defined("BX_MS_SMTP") && BX_MS_SMTP===true)
 			{
-				 $email_to = preg_replace("/(.*)\<(.*)\>/i", '$2', $email_to);
-				 if($arMailFields["From"]!='')
-				 	$arMailFields["From"] = preg_replace("/(.*)\<(.*)\>/i", '$2', $arMailFields["From"]);
-				 if($arMailFields["To"]!='')
-				 	$arMailFields["To"] = preg_replace("/(.*)\<(.*)\>/i", '$2', $arMailFields["To"]);
+				$email_to = preg_replace("/(.*)\\<(.*)\\>/i", '$2', $email_to);
+				if($arMailFields["From"]!='')
+					$arMailFields["From"] = preg_replace("/(.*)\\<(.*)\\>/i", '$2', $arMailFields["From"]);
+				if($arMailFields["To"]!='')
+					$arMailFields["To"] = preg_replace("/(.*)\\<(.*)\\>/i", '$2', $arMailFields["To"]);
 			}
-
 
 			if(COption::GetOptionString("main", "fill_to_mail", "N")=="Y")
 				$arMailFields["To"] = $email_to;
@@ -440,11 +437,14 @@ class CAllEvent
 
 class CAllEventMessage
 {
+	var $LAST_ERROR;
+
 	function CheckFields($arFields, $ID=false)
 	{
-		global $DB;
+		/** @global CMain $APPLICATION */
+		global $APPLICATION;
 		$this->LAST_ERROR = "";
-		$arMsg = Array();
+		$arMsg = array();
 
 		if(is_set($arFields, "EMAIL_FROM") && strlen($arFields["EMAIL_FROM"])<3)
 		{
@@ -489,23 +489,23 @@ class CAllEventMessage
 		elseif(is_set($arFields, "LID"))
 		{
 			if(!is_array($arFields["LID"]))
-				$arFields["LID"] = Array($arFields["LID"]);
+				$arFields["LID"] = array($arFields["LID"]);
 
 			foreach($arFields["LID"] as $v)
 			{
-	    			$r = CSite::GetByID($v);
-	    			if(!$r->Fetch())
-	    			{
-	    				$this->LAST_ERROR .= "'".$v."' - ".GetMessage("MAIN_EVENT_BAD_SITE")."<br>";
-	    				$arMsg[] = array("id"=>"LID", "text"=> GetMessage("MAIN_EVENT_BAD_SITE"));
-	    			}
+				$r = CSite::GetByID($v);
+				if(!$r->Fetch())
+				{
+					$this->LAST_ERROR .= "'".$v."' - ".GetMessage("MAIN_EVENT_BAD_SITE")."<br>";
+					$arMsg[] = array("id"=>"LID", "text"=> GetMessage("MAIN_EVENT_BAD_SITE"));
+				}
 			}
 		}
 
 		if(!empty($arMsg))
 		{
 			$e = new CAdminException($arMsg);
-			$GLOBALS["APPLICATION"]->ThrowException($e);
+			$APPLICATION->ThrowException($e);
 		}
 
 		if(strlen($this->LAST_ERROR)>0)
@@ -529,7 +529,8 @@ class CAllEventMessage
 		if(is_set($arFields, "ACTIVE") && $arFields["ACTIVE"]!="Y")
 			$arFields["ACTIVE"]="N";
 
-		$arLID = Array();
+		$arLID = array();
+		$str_LID = "''";
 		if(is_set($arFields, "LID"))
 		{
 			if(is_array($arFields["LID"]))
@@ -538,7 +539,6 @@ class CAllEventMessage
 				$arLID[] = $arFields["LID"];
 
 			$arFields["LID"] = false;
-			$str_LID = "''";
 			foreach($arLID as $v)
 			{
 				$arFields["LID"] = $v;
@@ -546,7 +546,7 @@ class CAllEventMessage
 			}
 		}
 
-		$ID = CDatabase::Add("b_event_message", $arFields, Array("MESSAGE"));
+		$ID = CDatabase::Add("b_event_message", $arFields, array("MESSAGE"));
 
 		if(count($arLID)>0)
 		{
@@ -575,7 +575,8 @@ class CAllEventMessage
 		if(is_set($arFields, "ACTIVE") && $arFields["ACTIVE"]!="Y")
 			$arFields["ACTIVE"]="N";
 
-		$arLID = Array();
+		$arLID = array();
+		$str_LID = "''";
 		if(is_set($arFields, "LID"))
 		{
 			if(is_array($arFields["LID"]))
@@ -584,7 +585,6 @@ class CAllEventMessage
 				$arLID[] = $arFields["LID"];
 
 			$arFields["LID"] = false;
-			$str_LID = "''";
 			foreach($arLID as $v)
 			{
 				$arFields["LID"] = $v;
@@ -592,11 +592,11 @@ class CAllEventMessage
 			}
 		}
 
-		$ID = IntVal($ID);
+		$ID = intval($ID);
 		$strUpdate = $DB->PrepareUpdate("b_event_message", $arFields);
 		$strSql = "UPDATE b_event_message SET ".$strUpdate." WHERE ID=".$ID;
 
-		$arBinds=Array();
+		$arBinds=array();
 		if(is_set($arFields, "MESSAGE"))
 			$arBinds["MESSAGE"] = $arFields["MESSAGE"];
 
@@ -623,13 +623,13 @@ class CAllEventMessage
 	///////////////////////////////////////////////////////////////////
 	function GetByID($ID)
 	{
-		return CEventMessage::GetList($o, $b, Array("ID"=>$ID));
+		return CEventMessage::GetList(($o = ""), ($b = ""), array("ID"=>$ID));
 	}
 
 	function GetSite($event_message_id)
 	{
 		global $DB;
-		$strSql = "SELECT L.*, MS.* FROM b_event_message_site MS, b_lang L WHERE L.LID=MS.SITE_ID AND MS.EVENT_MESSAGE_ID=".IntVal($event_message_id);
+		$strSql = "SELECT L.*, MS.* FROM b_event_message_site MS, b_lang L WHERE L.LID=MS.SITE_ID AND MS.EVENT_MESSAGE_ID=".intval($event_message_id);
 		return $DB->Query($strSql, false, "FILE: ".__FILE__."<br> LINE: ".__LINE__);
 	}
 
@@ -640,12 +640,15 @@ class CAllEventMessage
 
 	function Delete($ID)
 	{
-		global $DB;
+		/**
+		 * @global CMain $APPLICATION
+		 * @global CDatabase $DB
+		 */
+		global $DB, $APPLICATION;
 		$ID = Intval($ID);
 
-		$bCanDelete = true;
-		$db_events = GetModuleEvents("main", "OnBeforeEventMessageDelete");
-		while($arEvent = $db_events->Fetch())
+		foreach(GetModuleEvents("main", "OnBeforeEventMessageDelete", true) as $arEvent)
+		{
 			if(ExecuteModuleEventEx($arEvent, array($ID))===false)
 			{
 				$err = GetMessage("MAIN_BEFORE_DEL_ERR").' '.$arEvent['TO_NAME'];
@@ -654,12 +657,12 @@ class CAllEventMessage
 				$APPLICATION->throwException($err);
 				return false;
 			}
+		}
 
 		@set_time_limit(600);
 
 		//check module event for OnDelete
-		$events = GetModuleEvents("main", "OnEventMessageDelete");
-		while($arEvent = $events->Fetch())
+		foreach(GetModuleEvents("main", "OnEventMessageDelete", true) as $arEvent)
 			ExecuteModuleEventEx($arEvent, array($ID));
 
 		$DB->Query("DELETE FROM b_event_message_site WHERE EVENT_MESSAGE_ID=".$ID, true);
@@ -671,8 +674,10 @@ class CEventType
 {
 	function CheckFields($arFields = array(), $action = "ADD", $ID = array())
 	{
+		/** @global CMain $APPLICATION */
+		global $APPLICATION;
+
 		$arFilter = array();
-		$res = array();
 		$aMsg = array();
 		//ID, LID, EVENT_NAME, NAME, DESCRIPTION, SORT
 		if ($action == "ADD")
@@ -688,11 +693,13 @@ class CEventType
 			if (empty($aMsg))
 			{
 				$db_res = CEventType::GetList(array("LID" => $arFields["LID"], "EVENT_NAME" => $arFields["EVENT_NAME"]));
-				if ($db_res && $res = $db_res->Fetch())
+				if ($db_res && $db_res->Fetch())
+				{
 					$aMsg[] = array("id"=>"EVENT_NAME_EXIST", "text"=>str_replace(
-							array("#SITE_ID#", "#EVENT_NAME#"),
-							array($arFields["LID"], $arFields["EVENT_NAME"]),
-							GetMessage("EVENT_NAME_EXIST")));
+						array("#SITE_ID#", "#EVENT_NAME#"),
+						array($arFields["LID"], $arFields["EVENT_NAME"]),
+						GetMessage("EVENT_NAME_EXIST")));
+				}
 			}
 		}
 		elseif ($action == "UPDATE")
@@ -720,7 +727,7 @@ class CEventType
 				{
 					$db_res = CEventType::GetList($arFilter);
 
-					if ($db_res && $res = $db_res->Fetch())
+					if ($db_res && ($res = $db_res->Fetch()))
 					{
 						if (($action == "UPDATE") &&
 							((is_set($ID, "EVENT_NAME") && is_set($ID, "LID") &&
@@ -729,21 +736,23 @@ class CEventType
 								(is_set($ID, "EVENT_NAME") && ($res["EVENT_NAME"] != $ID["EVENT_NAME"]))))
 						{
 							$aMsg[] = array("id"=>"EVENT_NAME_EXIST", "text"=>str_replace(
-									array("#SITE_ID#", "#EVENT_NAME#"),
-									array($arFields["LID"], $arFields["EVENT_NAME"]),
-									GetMessage("EVENT_NAME_EXIST")));
+								array("#SITE_ID#", "#EVENT_NAME#"),
+								array($arFields["LID"], $arFields["EVENT_NAME"]),
+								GetMessage("EVENT_NAME_EXIST")));
 						}
 					}
 				}
 			}
 		}
 		else
+		{
 			$aMsg[] = array("id"=>"ACTION_EMPTY", "text"=>GetMessage("ACTION_EMPTY"));
+		}
 
 		if(!empty($aMsg))
 		{
 			$e = new CAdminException($aMsg);
-			$GLOBALS["APPLICATION"]->ThrowException($e);
+			$APPLICATION->ThrowException($e);
 			return false;
 		}
 		return true;
@@ -758,7 +767,7 @@ class CEventType
 
 		if (CEventType::CheckFields($arFields))
 		{
-			return $DB->Add("b_event_type", $arFields, Array("DESCRIPTION"));
+			return $DB->Add("b_event_type", $arFields, array("DESCRIPTION"));
 		}
 		return false;
 	}
@@ -766,9 +775,8 @@ class CEventType
 	function Update($arID = array(), $arFields = array())
 	{
 		global $DB;
-		$strSql = "";
+
 		$ID = array();
-		$arFieldsTemplates = array();
 		// update event type by ID, or (LID+EVENT_NAME)
 		if (is_array($arID) && !empty($arID))
 		{
@@ -782,9 +790,6 @@ class CEventType
 		{
 			foreach ($ID as $key => $val)
 				$ID[$key] = $key."='".$DB->ForSql($val)."'";
-
-			$db_res = CEventType::GetList($ID);
-			$res = $db_res->Fetch();
 
 			$arBinds = array();
 			if (is_set($arFields, "DESCRIPTION"))
@@ -837,7 +842,7 @@ class CEventType
 					$arSqlSearch[] = "ET.LID = '".$val."'";
 					break;
 				case "ID":
-					$arSqlSearch[] = "ET.ID=".IntVal($val);
+					$arSqlSearch[] = "ET.ID=".intval($val);
 					break;
 			}
 		}
@@ -874,14 +879,11 @@ class CEventType
 		$arSqlSearch = array();
 		$strSqlSearch = "";
 		$arSqlOrder = array();
-		$strSqlOrder = "";
-		$filter_keys = array_keys($arFilter);
-		for($i=0; $i<count($filter_keys); $i++)
+		foreach($arFilter as $key => $val)
 		{
-			$val = $DB->ForSql($arFilter[$filter_keys[$i]]);
-			if(strlen($val)<=0)
+			if(strlen($val) <= 0)
 				continue;
-			$key = $filter_keys[$i];
+			$val = $DB->ForSql($val);
 			$key_res = CEventType::GetFilterOperation($key);
 			$key = strToUpper($key_res["FIELD"]);
 			$strNegative = $key_res["NEGATIVE"];
@@ -941,6 +943,7 @@ class CEventType
 			LEFT JOIN b_event_message EM ON (ET.EVENT_NAME = EM.EVENT_NAME)
 			".str_replace("#TABLE_ID#", "ET", $strSqlSearch)."
 			".$strSqlOrder;
+
 		$db_res = $DB->Query($strSql, false, "FILE: ".__FILE__."<br> LINE: ".__LINE__);
 		$db_res = new _CEventTypeResult($db_res, $arParams);
 		return $db_res;
@@ -1040,7 +1043,6 @@ class _CEventTypeResult extends CDBResult
 
 	function Fetch()
 	{
-		global $DB;
 		$arr = array();
 		$arr_lid = array();
 		$arr_lids = array();
@@ -1084,4 +1086,3 @@ class _CEventTypeResult extends CDBResult
 		return $res;
 	}
 }
-?>

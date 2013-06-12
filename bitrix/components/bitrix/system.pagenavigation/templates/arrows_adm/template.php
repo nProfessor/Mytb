@@ -56,7 +56,7 @@ if(!$arResult["NavShowAlways"])
 		}
 		?>
 			<div class="adm-nav-pages-block">
-				<span class="navigation-title"><?=GetMessage("pages")?></span>
+				<span class="navigation-title"><?=GetMessage("navigation_pages")?></span>
 		<?
 		$bFirst = true;
 		$bPoints = false;
@@ -140,7 +140,7 @@ if(!$arResult["NavShowAlways"])
 		}
 		?>
 			<div class="adm-nav-pages-block">
-				<span class="navigation-title"><?=GetMessage("pages")?></span>
+				<span class="navigation-title"><?=GetMessage("navigation_pages")?></span>
 
 
 
@@ -200,7 +200,7 @@ if(!$arResult["NavShowAlways"])
 	if ($arResult["bShowAll"]):
 		if ($arResult["NavShowAll"]):
 	?>
-			<a class="adm-nav-page" href="<?=$arResult["sUrlPath"]?>?<?=$strNavQueryString?>SHOWALL_<?=$arResult["NavNum"]?>=0"><?=GetMessage("nav_paged")?></a>
+			<a class="adm-nav-page" href="<?=$arResult["sUrlPath"]?>?<?=$strNavQueryString?>SHOWALL_<?=$arResult["NavNum"]?>=0"><?=GetMessage("navigation_paged")?></a>
 	<?
 		else:
 	?>
@@ -211,7 +211,7 @@ if(!$arResult["NavShowAlways"])
 				<a class="adm-nav-page adm-nav-page-next" href="<?=$sNextHref;?>" id="<?=$ClientID?>_next_page"></a>
 			<? endif; ?>
 
-			<a class="adm-nav-page" href="<?=$arResult["sUrlPath"]?>?<?=$strNavQueryString?>SHOWALL_<?=$arResult["NavNum"]?>=1"><?=GetMessage("nav_all")?></a>
+			<a class="adm-nav-page" href="<?=$arResult["sUrlPath"]?>?<?=$strNavQueryString?>SHOWALL_<?=$arResult["NavNum"]?>=1"><?=GetMessage("navigation_all")?></a>
 	<?
 		endif;
 	endif;

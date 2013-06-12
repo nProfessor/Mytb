@@ -1,9 +1,8 @@
 JCMainLookupAdminSelector = function(arParams)
 {
 	JCMainLookupAdminSelector.superclass.constructor.apply(this,[arParams]);
-}
-
-BX.extend(JCMainLookupAdminSelector,JCMainLookupSelector);	
+};
+BX.extend(JCMainLookupAdminSelector,JCMainLookupSelector);
 
 JCMainLookupAdminSelector.prototype.SetTokenInput = function(arParams, arEventParams)
 {
@@ -31,7 +30,7 @@ JCMainLookupAdminSelector.prototype.SetTokenInput = function(arParams, arEventPa
 		this.VALUE_CONTAINER.removeChild(arEventParams.TOKEN.INPUT);
 		jsUtils.onCustomEvent('onLookupInputChange', {'CONTROL_ID': this.arParams.CONTROL_ID, 'ACTION': 'remove', 'DATA': arEventParams.TOKEN.DATA});
 	}
-}
+};
 
 JCMainLookupAdminSelector.prototype.ClearForm = function()
 {
@@ -52,9 +51,9 @@ JCMainLookupAdminSelector.prototype.ClearForm = function()
 				this.VISUAL.TEXT.style.height = this.VISUAL.arParams.MIN_HEIGHT + 'px';
 		}
 	}
-}
+};
 
 JCMainLookupAdminSelector.prototype.Clear = function()
 {
-	JCMainLookupSelector.superclass.Clear.apply(this, arguments);
-}
+	JCMainLookupAdminSelector.superclass.Clear.apply(this, arguments);
+};

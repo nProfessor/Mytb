@@ -44,8 +44,8 @@ if($REQUEST_METHOD=="POST" && strlen($Update)>0 && check_bitrix_sessid())
 	$arFields["SECTIONS"] = $SECTIONS;
 	$arFields["SORT"] = $SORT;
 	$arFields["LANG"] = Array();
-	for($i=0; $i<count($arIBTLang); $i++)
-		$arFields["LANG"][$arIBTLang[$i]["LID"]] = $LANG_FIELDS[$arIBTLang[$i]["LID"]];
+	foreach($arIBTLang as $ar)
+		$arFields["LANG"][$ar["LID"]] = $LANG_FIELDS[$ar["LID"]];
 
 	$obBlocktype = new CIBlockType;
 	if(strlen($ID)>0)
@@ -118,7 +118,7 @@ if(strlen($ID)>0)
 	$aMenu[] = array(
 		"TEXT" => GetMessage("IBTYPE_E_DEL"),
 		"TITLE" => GetMessage("IBTYPE_E_DEL_TITLE"),
-		"LINK" => "javascript:if(confirm('".GetMessage("IBTYPE_E_DEL_CONF")."')) window.location='/bitrix/admin/iblock_type_admin.php?ID=".$ID."&action=delete&lang=".LANGUAGE_ID."&".bitrix_sessid_get()."';",
+		"LINK" => "javascript:if(confirm('".GetMessageJS("IBTYPE_E_DEL_CONF")."')) window.location='/bitrix/admin/iblock_type_admin.php?ID=".$ID."&action=delete&lang=".LANGUAGE_ID."&".bitrix_sessid_get()."';",
 		"ICON" => "btn_delete"
 		);
 }
@@ -178,19 +178,19 @@ $context->Show();
 					<td><?echo GetMessage("IBTYPE_E_ELEMENTS");?></td>
 				</tr>
 				<?
-				for($i=0; $i<count($arIBTLang); $i++):
+				foreach($arIBTLang as $ar):
 					if($bVarsFromForm)
-						$ibtypelang = $LANG_FIELDS[$arIBTLang[$i]["LID"]];
+						$ibtypelang = $LANG_FIELDS[$ar["LID"]];
 					else
-						$ibtypelang = CIBlockType::GetByIDLang($str_ID, $arIBTLang[$i]["LID"], false);
+						$ibtypelang = CIBlockType::GetByIDLang($str_ID, $ar["LID"], false);
 				?>
 				<tr>
-					<td><?echo $arIBTLang[$i]["NAME"]?>:</td>
-					<td><input style="width:100%" type="text" name="LANG_FIELDS[<?echo $arIBTLang[$i]["LID"]?>][NAME]" size="20" maxlength="255" value="<?echo $ibtypelang["NAME"]?>"></td>
-					<td><input style="width:100%" type="text" name="LANG_FIELDS[<?echo $arIBTLang[$i]["LID"]?>][SECTION_NAME]" size="20" maxlength="255" value="<?echo $ibtypelang["SECTION_NAME"]?>"></td>
-					<td><input style="width:100%" type="text" name="LANG_FIELDS[<?echo $arIBTLang[$i]["LID"]?>][ELEMENT_NAME]" size="20" maxlength="255" value="<?echo $ibtypelang["ELEMENT_NAME"]?>"></td>
+					<td><?echo $ar["NAME"]?>:</td>
+					<td><input type="text" name="LANG_FIELDS[<?echo $ar["LID"]?>][NAME]" size="20" maxlength="255" value="<?echo $ibtypelang["NAME"]?>"></td>
+					<td><input type="text" name="LANG_FIELDS[<?echo $ar["LID"]?>][SECTION_NAME]" size="20" maxlength="255" value="<?echo $ibtypelang["SECTION_NAME"]?>"></td>
+					<td><input type="text" name="LANG_FIELDS[<?echo $ar["LID"]?>][ELEMENT_NAME]" size="20" maxlength="255" value="<?echo $ibtypelang["ELEMENT_NAME"]?>"></td>
 				</tr>
-				<?endfor?>
+				<?endforeach?>
 			</table>
 		</td>
 	</tr>

@@ -1,12 +1,11 @@
-<?
-/*
-##############################################
-# Bitrix Site Manager                        #
-# Copyright (c) 2002-2012 Bitrix             #
-# http://www.bitrixsoft.com                  #
-# mailto:admin@bitrixsoft.com                #
-##############################################
-*/
+<?php
+/**
+ * Bitrix Framework
+ * @package bitrix
+ * @subpackage main
+ * @copyright 2001-2013 Bitrix
+ */
+
 require($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/classes/general/agent.php");
 
 class CAgent extends CAllAgent
@@ -17,7 +16,7 @@ class CAgent extends CAllAgent
 
 		//For a while agents will execute only on primary cluster group
 		if((defined("NO_AGENT_CHECK") && NO_AGENT_CHECK===true) || (defined("BX_CLUSTER_GROUP") && BX_CLUSTER_GROUP !== 1))
-			return;
+			return null;
 
 		$agents_use_crontab = COption::GetOptionString("main", "agents_use_crontab", "N");
 		$str_crontab = "";
@@ -29,8 +28,7 @@ class CAgent extends CAllAgent
 				$str_crontab = " AND IS_PERIOD='Y' ";
 		}
 
-		$saved_time = 0;
-		if(CACHED_b_agent !== false && $CACHE_MANAGER->Read(CACHED_b_agent, $cache_id = "agents".$str_crontab, "agents"))
+		if(CACHED_b_agent !== false && $CACHE_MANAGER->Read(CACHED_b_agent, ($cache_id = "agents".$str_crontab), "agents"))
 		{
 			$saved_time = $CACHE_MANAGER->Get($cache_id);
 			if(time() < $saved_time)
@@ -42,7 +40,7 @@ class CAgent extends CAllAgent
 
 	function ExecuteAgents($str_crontab)
 	{
-		global $DB, $DOCUMENT_ROOT, $CACHE_MANAGER;
+		global $DB, $CACHE_MANAGER;
 
 		if(defined("BX_FORK_AGENTS_AND_EVENTS_FUNCTION"))
 		{
@@ -51,7 +49,8 @@ class CAgent extends CAllAgent
 		}
 
 		$saved_time = 0;
-		if(CACHED_b_agent !== false && $CACHE_MANAGER->Read(CACHED_b_agent, $cache_id = "agents".$str_crontab, "agents"))
+		$cache_id = "agents".$str_crontab;
+		if(CACHED_b_agent !== false && $CACHE_MANAGER->Read(CACHED_b_agent, $cache_id, "agents"))
 		{
 			$saved_time = $CACHE_MANAGER->Get($cache_id);
 			if(time() < $saved_time)
@@ -108,7 +107,6 @@ class CAgent extends CAllAgent
 			return "";
 		}
 
-		//$DB->LockTables("b_agent WRITE");
 		$strSql=
 			"SELECT ID, NAME, AGENT_INTERVAL, IS_PERIOD, MODULE_ID ".
 			"FROM b_agent ".
@@ -120,8 +118,10 @@ class CAgent extends CAllAgent
 
 		$db_result_agents = $DB->Query($strSql);
 		$i = 0;
+		$ids = '';
+		$agents_array = array();
 		while($db_result_agents_array = $db_result_agents->Fetch())
- 		{
+		{
 			if($i==0)
 			{
 				@set_time_limit(0);
@@ -129,13 +129,17 @@ class CAgent extends CAllAgent
 				$i=1;
 			}
 			$agents_array[] = $db_result_agents_array;
-			$strSql="UPDATE b_agent SET DATE_CHECK=DATE_ADD(IF(DATE_CHECK IS NULL, now(), DATE_CHECK), INTERVAL 600 SECOND) WHERE ID=".$db_result_agents_array["ID"];
+			$ids .= ($ids <> ''? ', ':'').$db_result_agents_array["ID"];
+		}
+		if($ids <> '')
+		{
+			$strSql = "UPDATE b_agent SET DATE_CHECK=DATE_ADD(IF(DATE_CHECK IS NULL, now(), DATE_CHECK), INTERVAL 600 SECOND) WHERE ID IN (".$ids.")";
 			$DB->Query($strSql);
 		}
-		//$DB->UnLockTables();
+
 		$DB->Query("SELECT RELEASE_LOCK('".$uniq."_agent')");
 
-		for($i=0; $i<count($agents_array); $i++)
+		for($i = 0, $n = count($agents_array); $i < $n; $i++)
 		{
 			$arAgent = $agents_array[$i];
 
@@ -172,6 +176,6 @@ class CAgent extends CAllAgent
 			}
 			$DB->Query($strSql);
 		}
+		return null;
 	}
 }
-?>

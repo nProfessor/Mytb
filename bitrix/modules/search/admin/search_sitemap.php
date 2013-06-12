@@ -265,10 +265,7 @@ $tabControl->End();
 </form>
 
 <?echo BeginNote();?>
-<table><tr>
-	<td><img src="/bitrix/images/search/warning.gif">&nbsp;</td>
-	<td><font class="legendtext"><?echo GetMessage("SEARCH_SITEMAP_NOTE")?></td>
-</tr></table>
+<?echo GetMessage("SEARCH_SITEMAP_NOTE")?>
 <?echo EndNote();?>
 
 <?

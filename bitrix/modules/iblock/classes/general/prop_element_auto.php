@@ -12,14 +12,14 @@ class CIBlockPropertyElementAutoComplete
 			"PROPERTY_TYPE" => "E",
 			"USER_TYPE" => BT_UT_AUTOCOMPLETE_CODE,
 			"DESCRIPTION" => GetMessage('BT_UT_EAUTOCOMPLETE_DESCR'),
-			"GetPropertyFieldHtml" => array("CIBlockPropertyElementAutoComplete", "GetPropertyFieldHtml"),
-			"GetPropertyFieldHtmlMulty" => array('CIBlockPropertyElementAutoComplete','GetPropertyFieldHtmlMulty'),
-			"GetAdminListViewHTML" => array("CIBlockPropertyElementAutoComplete","GetAdminListViewHTML"),
-			"GetPublicViewHTML" => array("CIBlockPropertyElementAutoComplete", "GetPublicViewHTML"),
-			"GetAdminFilterHTML" => array('CIBlockPropertyElementAutoComplete','GetAdminFilterHTML'),
-			"GetSettingsHTML" => array('CIBlockPropertyElementAutoComplete','GetSettingsHTML'),
-			"PrepareSettings" => array('CIBlockPropertyElementAutoComplete','PrepareSettings'),
-			"AddFilterFields" => array('CIBlockPropertyElementAutoComplete','AddFilterFields'),
+			"GetPropertyFieldHtml" => array(__CLASS__, "GetPropertyFieldHtml"),
+			"GetPropertyFieldHtmlMulty" => array(__CLASS__,'GetPropertyFieldHtmlMulty'),
+			"GetAdminListViewHTML" => array(__CLASS__,"GetAdminListViewHTML"),
+			"GetPublicViewHTML" => array(__CLASS__, "GetPublicViewHTML"),
+			"GetAdminFilterHTML" => array(__CLASS__,'GetAdminFilterHTML'),
+			"GetSettingsHTML" => array(__CLASS__,'GetSettingsHTML'),
+			"PrepareSettings" => array(__CLASS__,'PrepareSettings'),
+			"AddFilterFields" => array(__CLASS__,'AddFilterFields'),
 		);
 	}
 
@@ -34,7 +34,7 @@ class CIBlockPropertyElementAutoComplete
 		$intElementID = intval($intElementID);
 		if (0 >= $intElementID)
 			return false;
-		if (false == array_key_exists($intElementID,$cache))
+		if (!array_key_exists($intElementID,$cache))
 		{
 			$arFilter = array();
 			if (0 < $intIBlockID)
@@ -68,10 +68,10 @@ class CIBlockPropertyElementAutoComplete
 		if (0 < intval($arValue['VALUE']))
 		{
 			$mxResult = self::GetLinkElement($arValue['VALUE'],$arProperty['LINK_IBLOCK_ID']);
-			if (true == is_array($mxResult))
+			if (is_array($mxResult))
 			{
 				$mxResult['PROPERTY_ID'] = $arProperty['ID'];
-				if (true == isset($arProperty['PROPERTY_VALUE_ID']))
+				if (isset($arProperty['PROPERTY_VALUE_ID']))
 				{
 					$mxResult['PROPERTY_VALUE_ID'] = $arProperty['PROPERTY_VALUE_ID'];
 				}
@@ -87,7 +87,7 @@ class CIBlockPropertyElementAutoComplete
 	protected function GetPropertyViewsList($boolFull)
 	{
 		$boolFull = (true == $boolFull);
-		if (true == $boolFull)
+		if ($boolFull)
 		{
 			return array(
 				'REFERENCE' => array(
@@ -106,7 +106,7 @@ class CIBlockPropertyElementAutoComplete
 	protected function GetReplaceSymList($boolFull = false)
 	{
 		$boolFull = (true == $boolFull);
-		if (true == $boolFull)
+		if ($boolFull)
 		{
 			return array(
 				'REFERENCE' => array(
@@ -133,7 +133,7 @@ class CIBlockPropertyElementAutoComplete
 	{
 		$strResult = '';
 		$mxResult = self::GetPropertyValue($arProperty,$arValue);
-		if (true == is_array($mxResult))
+		if (is_array($mxResult))
 		{
 			$strResult = htmlspecialcharsbx(str_replace($arBanSym,$arRepSym,$mxResult['~NAME'])).' ['.$mxResult['ID'].']';
 		}
@@ -144,11 +144,11 @@ class CIBlockPropertyElementAutoComplete
 	{
 		$arResult = false;
 
-		if (true == is_array($arValues))
+		if (is_array($arValues))
 		{
 			foreach ($arValues as $intPropertyValueID => $arOneValue)
 			{
-				if (false == is_array($arOneValue))
+				if (!is_array($arOneValue))
 				{
 					$strTmp = $arOneValue;
 					$arOneValue = array(
@@ -156,7 +156,7 @@ class CIBlockPropertyElementAutoComplete
 					);
 				}
 				$mxResult = self::GetPropertyValue($arProperty,$arOneValue);
-				if (true == is_array($mxResult))
+				if (is_array($mxResult))
 				{
 					$arResult[$intPropertyValueID] = htmlspecialcharsbx(str_replace($arBanSym,$arRepSym,$mxResult['~NAME'])).' ['.$mxResult['ID'].']';
 				}
@@ -190,11 +190,11 @@ class CIBlockPropertyElementAutoComplete
 
 		$strResult = '';
 
-		if ((true == isset($strHTMLControlName['MODE'])) && ('iblock_element_admin' == $strHTMLControlName['MODE']))
+		if (array_key_exists('MODE', $strHTMLControlName) && ('iblock_element_admin' == $strHTMLControlName['MODE']))
 		{
 			$mxElement = false;
 			$mxElement = self::GetPropertyValue($arProperty,$arValue);
-			if (false == is_array($mxElement))
+			if (!is_array($mxElement))
 			{
 				$strResult = '<input type="text" name="'.htmlspecialcharsbx($strHTMLControlName["VALUE"]).'" id="'.$strHTMLControlName["VALUE"].'" value="" size="5">'.
 					'<input type="button" value="..." onClick="jsUtils.OpenWindow(\'iblock_element_search.php?lang='.LANGUAGE_ID.'&amp;IBLOCK_ID='.intval($arProperty["LINK_IBLOCK_ID"]).'&amp;n='.urlencode($strHTMLControlName["VALUE"]).'\', 600, 500);">'.
@@ -309,14 +309,14 @@ class CIBlockPropertyElementAutoComplete
 		$arSymbols = self::GetSymbols($arSettings);
 
 		$strResult = '';
-		if ((true == isset($strHTMLControlName['MODE'])) && ('iblock_element_admin' == $strHTMLControlName['MODE']))
+		if (array_key_exists('MODE', $strHTMLControlName) && ('iblock_element_admin' == $strHTMLControlName['MODE']))
 		{
 			$arResult = false;
 			foreach ($arValues as $intPropertyValueID => $arOneValue)
 			{
 				$mxElement = false;
 				$mxElement = self::GetPropertyValue($arProperty,$arOneValue);
-				if (true == is_array($mxElement))
+				if (is_array($mxElement))
 				{
 					$arResult[] = '<input type="text" name="'.$strHTMLControlName["VALUE"].'['.$intPropertyValueID.']" id="'.$strHTMLControlName["VALUE"].'['.$intPropertyValueID.']" value="'.$arOneValue['VALUE'].'" size="5">'.
 					'<input type="button" value="..." onClick="jsUtils.OpenWindow(\'iblock_element_search.php?lang='.LANGUAGE_ID.'&amp;IBLOCK_ID='.$arProperty["LINK_IBLOCK_ID"].'&amp;n='.urlencode($strHTMLControlName["VALUE"].'['.$intPropertyValueID.']').'\', 600, 500);">'.
@@ -339,7 +339,7 @@ class CIBlockPropertyElementAutoComplete
 		else
 		{
 			$mxResultValue = self::GetValueForAutoCompleteMulti($arProperty,$arValues,$arSymbols['BAN_SYM'],$arSymbols['REP_SYM']);
-			$strResultValue = (true == is_array($mxResultValue) ? htmlspecialcharsback(implode("\n",$mxResultValue)) : '');
+			$strResultValue = (is_array($mxResultValue) ? htmlspecialcharsback(implode("\n",$mxResultValue)) : '');
 
 			ob_start();
 			?><?
@@ -439,7 +439,7 @@ class CIBlockPropertyElementAutoComplete
 	{
 		$strResult = '';
 		$mxResult = self::GetPropertyValue($arProperty,$arValue);
-		if (true == is_array($mxResult)) $strResult = $mxResult['NAME'].' [<a href="iblock_element_edit.php'.
+		if (is_array($mxResult)) $strResult = $mxResult['NAME'].' [<a href="iblock_element_edit.php'.
 						'?WF=Y'.
 						'&amp;type='.urlencode($mxResult['IBLOCK_TYPE_ID']).
 						'&amp;IBLOCK_ID='.intval($mxResult['IBLOCK_ID']).
@@ -457,7 +457,7 @@ class CIBlockPropertyElementAutoComplete
 		$arValue['VALUE'] = intval($arValue['VALUE']);
 		if (0 < $arValue['VALUE'])
 		{
-			if (false == array_key_exists($arValue['VALUE'],$cache))
+			if (!array_key_exists($arValue['VALUE'],$cache))
 			{
 				$arFilter = array();
 				$intIBlockID = intval($arProperty['LINK_IBLOCK_ID']);
@@ -466,12 +466,13 @@ class CIBlockPropertyElementAutoComplete
 				$arFilter["ACTIVE"] = "Y";
 				$arFilter["ACTIVE_DATE"] = "Y";
 				$arFilter["CHECK_PERMISSIONS"] = "Y";
+				$arFilter["MIN_PERMISSION"] = "R";
 				$rsElements = CIBlockElement::GetList(array(), $arFilter, false, false, array("ID","IBLOCK_ID","NAME","DETAIL_PAGE_URL"));
 				$cache[$arValue['VALUE']] = $rsElements->GetNext(true,false);
 			}
-			if (true == is_array($cache[$arValue['VALUE']]))
+			if (is_array($cache[$arValue['VALUE']]))
 			{
-				if (isset($strHTMLControlName['MODE']) && 'CSV_EXPORT' == $strHTMLControlName['MODE'])
+				if (array_key_exists('MODE', $strHTMLControlName) && 'CSV_EXPORT' == $strHTMLControlName['MODE'])
 				{
 					$strResult = $cache[$arValue['VALUE']]['ID'];
 				}
@@ -499,21 +500,21 @@ class CIBlockPropertyElementAutoComplete
 		 */
 		$arViewsList = self::GetPropertyViewsList(false);
 		$strView = '';
-		$strView = ((true == isset($arFields['USER_TYPE_SETTINGS']['VIEW'])) && (true == in_array($arFields['USER_TYPE_SETTINGS']['VIEW'],$arViewsList)) ? $arFields['USER_TYPE_SETTINGS']['VIEW'] : current($arViewsList));
+		$strView = (isset($arFields['USER_TYPE_SETTINGS']['VIEW']) && in_array($arFields['USER_TYPE_SETTINGS']['VIEW'],$arViewsList) ? $arFields['USER_TYPE_SETTINGS']['VIEW'] : current($arViewsList));
 
-		$strShowAdd = (true == isset($arFields['USER_TYPE_SETTINGS']['SHOW_ADD']) ? $arFields['USER_TYPE_SETTINGS']['SHOW_ADD'] : '');
+		$strShowAdd = (isset($arFields['USER_TYPE_SETTINGS']['SHOW_ADD']) ? $arFields['USER_TYPE_SETTINGS']['SHOW_ADD'] : '');
 		$strShowAdd = ('Y' == $strShowAdd ? 'Y' : 'N');
 
-		$intMaxWidth = intval(true == isset($arFields['USER_TYPE_SETTINGS']['MAX_WIDTH']) ? $arFields['USER_TYPE_SETTINGS']['MAX_WIDTH'] : 0);
+		$intMaxWidth = intval(isset($arFields['USER_TYPE_SETTINGS']['MAX_WIDTH']) ? $arFields['USER_TYPE_SETTINGS']['MAX_WIDTH'] : 0);
 		if (0 >= $intMaxWidth) $intMaxWidth = 0;
 
-		$intMinHeight = intval(true == isset($arFields['USER_TYPE_SETTINGS']['MIN_HEIGHT']) ? $arFields['USER_TYPE_SETTINGS']['MIN_HEIGHT'] : 0);
+		$intMinHeight = intval(isset($arFields['USER_TYPE_SETTINGS']['MIN_HEIGHT']) ? $arFields['USER_TYPE_SETTINGS']['MIN_HEIGHT'] : 0);
 		if (0 >= $intMinHeight) $intMinHeight = 24;
 
-		$intMaxHeight = intval(true == isset($arFields['USER_TYPE_SETTINGS']['MAX_HEIGHT']) ? $arFields['USER_TYPE_SETTINGS']['MAX_HEIGHT'] : 0);
+		$intMaxHeight = intval(isset($arFields['USER_TYPE_SETTINGS']['MAX_HEIGHT']) ? $arFields['USER_TYPE_SETTINGS']['MAX_HEIGHT'] : 0);
 		if (0 >= $intMaxHeight) $intMaxHeight = 1000;
 
-		$strBannedSymbols = trim(true == isset($arFields['USER_TYPE_SETTINGS']['BAN_SYM']) ? $arFields['USER_TYPE_SETTINGS']['BAN_SYM'] : ',;');
+		$strBannedSymbols = trim(isset($arFields['USER_TYPE_SETTINGS']['BAN_SYM']) ? $arFields['USER_TYPE_SETTINGS']['BAN_SYM'] : ',;');
 		$strBannedSymbols = str_replace(' ','',$strBannedSymbols);
 		if (false === strpos($strBannedSymbols,','))
 			$strBannedSymbols .= ',';
@@ -521,13 +522,13 @@ class CIBlockPropertyElementAutoComplete
 			$strBannedSymbols .= ';';
 
 		$strOtherReplaceSymbol = '';
-		$strReplaceSymbol = (true == isset($arFields['USER_TYPE_SETTINGS']['REP_SYM']) ? $arFields['USER_TYPE_SETTINGS']['REP_SYM'] : ' ');
+		$strReplaceSymbol = (isset($arFields['USER_TYPE_SETTINGS']['REP_SYM']) ? $arFields['USER_TYPE_SETTINGS']['REP_SYM'] : ' ');
 		if (BT_UT_AUTOCOMPLETE_REP_SYM_OTHER == $strReplaceSymbol)
 		{
-			$strOtherReplaceSymbol = (true == isset($arFields['USER_TYPE_SETTINGS']['OTHER_REP_SYM']) ? substr($arFields['USER_TYPE_SETTINGS']['OTHER_REP_SYM'],0,1) : '');
+			$strOtherReplaceSymbol = (isset($arFields['USER_TYPE_SETTINGS']['OTHER_REP_SYM']) ? substr($arFields['USER_TYPE_SETTINGS']['OTHER_REP_SYM'],0,1) : '');
 			if ((',' == $strOtherReplaceSymbol) || (';' == $strOtherReplaceSymbol))
 				$strOtherReplaceSymbol = '';
-			if (('' == $strOtherReplaceSymbol) || (true == in_array($strOtherReplaceSymbol,self::GetReplaceSymList())))
+			if (('' == $strOtherReplaceSymbol) || in_array($strOtherReplaceSymbol,self::GetReplaceSymList()))
 			{
 				$strReplaceSymbol = $strOtherReplaceSymbol;
 				$strOtherReplaceSymbol = '';
@@ -539,7 +540,7 @@ class CIBlockPropertyElementAutoComplete
 			$strOtherReplaceSymbol = '';
 		}
 
-		$strIBlockMess = (true == isset($arFields['USER_TYPE_SETTINGS']['IBLOCK_MESS']) ? $arFields['USER_TYPE_SETTINGS']['IBLOCK_MESS'] : '');
+		$strIBlockMess = (isset($arFields['USER_TYPE_SETTINGS']['IBLOCK_MESS']) ? $arFields['USER_TYPE_SETTINGS']['IBLOCK_MESS'] : '');
 		if ('Y' != $strIBlockMess) $strIBlockMess = 'N';
 
 		return array(
@@ -609,17 +610,17 @@ class CIBlockPropertyElementAutoComplete
 
 		$strValue = '';
 
-		if ((true == isset($_REQUEST[$strHTMLControlName["VALUE"]])) && ((true == is_array($_REQUEST[$strHTMLControlName["VALUE"]])) || (0 < intval($_REQUEST[$strHTMLControlName["VALUE"]]))))
+		if (isset($_REQUEST[$strHTMLControlName["VALUE"]]) && (is_array($_REQUEST[$strHTMLControlName["VALUE"]]) || (0 < intval($_REQUEST[$strHTMLControlName["VALUE"]]))))
 		{
-			$arFilterValues = (true == is_array($_REQUEST[$strHTMLControlName["VALUE"]]) ? $_REQUEST[$strHTMLControlName["VALUE"]] : array($_REQUEST[$strHTMLControlName["VALUE"]]));
+			$arFilterValues = (is_array($_REQUEST[$strHTMLControlName["VALUE"]]) ? $_REQUEST[$strHTMLControlName["VALUE"]] : array($_REQUEST[$strHTMLControlName["VALUE"]]));
 			$mxResultValue = self::GetValueForAutoCompleteMulti($arProperty,$arFilterValues,$arSymbols['BAN_SYM'],$arSymbols['REP_SYM']);
-			$strValue = (true == is_array($mxResultValue) ? htmlspecialcharsback(implode("\n",$mxResultValue)) : '');
+			$strValue = (is_array($mxResultValue) ? htmlspecialcharsback(implode("\n",$mxResultValue)) : '');
 		}
-		elseif ((true == isset($GLOBALS[$strHTMLControlName["VALUE"]])) && ((true == is_array($GLOBALS[$strHTMLControlName["VALUE"]])) || (0 < intval($GLOBALS[$strHTMLControlName["VALUE"]]))))
+		elseif (isset($GLOBALS[$strHTMLControlName["VALUE"]]) && (is_array($GLOBALS[$strHTMLControlName["VALUE"]]) || (0 < intval($GLOBALS[$strHTMLControlName["VALUE"]]))))
 		{
-			$arFilterValues = (true == is_array($GLOBALS[$strHTMLControlName["VALUE"]]) ? $GLOBALS[$strHTMLControlName["VALUE"]] : array($GLOBALS[$strHTMLControlName["VALUE"]]));
+			$arFilterValues = (is_array($GLOBALS[$strHTMLControlName["VALUE"]]) ? $GLOBALS[$strHTMLControlName["VALUE"]] : array($GLOBALS[$strHTMLControlName["VALUE"]]));
 			$mxResultValue = self::GetValueForAutoCompleteMulti($arProperty,$arFilterValues,$arSymbols['BAN_SYM'],$arSymbols['REP_SYM']);
-			$strValue = (true == is_array($mxResultValue) ? htmlspecialcharsback(implode("\n",$mxResultValue)) : '');
+			$strValue = (is_array($mxResultValue) ? htmlspecialcharsback(implode("\n",$mxResultValue)) : '');
 		}
 		ob_start();
 		?><?
@@ -637,6 +638,7 @@ class CIBlockPropertyElementAutoComplete
 				"IBLOCK_ID" => $arProperty["LINK_IBLOCK_ID"],
 				'BAN_SYM' => $arSymbols['BAN_SYM_STRING'],
 				'REP_SYM' => $arSymbols['REP_SYM_STRING'],
+				'FILTER' => 'Y',
 			), null, array("HIDE_ICONS" => "Y")
 		);
 		?><?
@@ -668,13 +670,13 @@ class CIBlockPropertyElementAutoComplete
 
 		$arFilterValues = array();
 
-		if ((true == isset($_REQUEST[$strHTMLControlName["VALUE"]])) && ((true == is_array($_REQUEST[$strHTMLControlName["VALUE"]])) || (0 < intval($_REQUEST[$strHTMLControlName["VALUE"]]))))
+		if (isset($_REQUEST[$strHTMLControlName["VALUE"]]) && (is_array($_REQUEST[$strHTMLControlName["VALUE"]]) || (0 < intval($_REQUEST[$strHTMLControlName["VALUE"]]))))
 		{
-			$arFilterValues = (true == is_array($_REQUEST[$strHTMLControlName["VALUE"]]) ? $_REQUEST[$strHTMLControlName["VALUE"]] : array($_REQUEST[$strHTMLControlName["VALUE"]]));
+			$arFilterValues = (is_array($_REQUEST[$strHTMLControlName["VALUE"]]) ? $_REQUEST[$strHTMLControlName["VALUE"]] : array($_REQUEST[$strHTMLControlName["VALUE"]]));
 		}
-		elseif ((true == isset($GLOBALS[$strHTMLControlName["VALUE"]])) && ((true == is_array($GLOBALS[$strHTMLControlName["VALUE"]])) || (0 < intval($GLOBALS[$strHTMLControlName["VALUE"]]))))
+		elseif (isset($GLOBALS[$strHTMLControlName["VALUE"]]) && (is_array($GLOBALS[$strHTMLControlName["VALUE"]]) || (0 < intval($GLOBALS[$strHTMLControlName["VALUE"]]))))
 		{
-			$arFilterValues = (true == is_array($GLOBALS[$strHTMLControlName["VALUE"]]) ? $GLOBALS[$strHTMLControlName["VALUE"]] : array($GLOBALS[$strHTMLControlName["VALUE"]]));
+			$arFilterValues = (is_array($GLOBALS[$strHTMLControlName["VALUE"]]) ? $GLOBALS[$strHTMLControlName["VALUE"]] : array($GLOBALS[$strHTMLControlName["VALUE"]]));
 		}
 
 		foreach ($arFilterValues as $key => $value)
@@ -683,7 +685,7 @@ class CIBlockPropertyElementAutoComplete
 				unset($arFilterValues[$key]);
 		}
 
-		if (false == empty($arFilterValues))
+		if (!empty($arFilterValues))
 		{
 			$arFilter["=PROPERTY_".$arProperty["ID"]] = $arFilterValues;
 			$filtered = true;

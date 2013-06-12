@@ -69,11 +69,31 @@ JCSmartFilter.prototype.postHandler = function (result)
 		{
 			modef_num.innerHTML = result.ELEMENT_COUNT;
 			var hrefFILTER = BX.findChildren(modef, {tag: 'A'}, true);
+
 			if(result.FILTER_URL && hrefFILTER)
 				hrefFILTER[0].href = BX.util.htmlspecialcharsback(result.FILTER_URL);
-			if(modef.style.display == 'none')
-				modef.style.display = 'block';
-			modef.style.top = this.position.top + 'px';
+
+			if(result.FILTER_AJAX_URL && result.COMPONENT_CONTAINER_ID)
+			{
+				BX.bind(hrefFILTER[0], 'click', function(e)
+				{
+					var url = BX.util.htmlspecialcharsback(result.FILTER_AJAX_URL);
+					BX.ajax.insertToNode(url, result.COMPONENT_CONTAINER_ID);
+					return BX.PreventDefault(e);
+				});
+			}
+
+			if (result.INSTANT_RELOAD && result.COMPONENT_CONTAINER_ID)
+			{
+				var url = BX.util.htmlspecialcharsback(result.FILTER_AJAX_URL);
+				BX.ajax.insertToNode(url, result.COMPONENT_CONTAINER_ID);
+			}
+			else
+			{
+				if(modef.style.display == 'none')
+					modef.style.display = 'block';
+				modef.style.top = this.position.top + 'px';
+			}
 		}
 	}
 }

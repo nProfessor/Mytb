@@ -5,7 +5,7 @@
 /**********************************************************************/
 
 if (!defined("BX_DIR_PERMISSIONS"))
-	define("BX_DIR_PERMISSIONS", 0777);
+	define("BX_DIR_PERMISSIONS", 0700);
 
 
 if (!function_exists("file_get_contents"))

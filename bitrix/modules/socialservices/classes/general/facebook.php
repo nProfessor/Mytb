@@ -4,7 +4,7 @@ IncludeModuleLangFile(__FILE__);
 class CSocServFacebook extends CSocServAuth
 {
 	const ID = "Facebook";
-
+	const CONTROLLER_URL = "https://www.bitrix24.ru/controller";
 	public function GetSettings()
 	{
 		return array(
@@ -16,8 +16,11 @@ class CSocServFacebook extends CSocServAuth
 
 	public function GetFormHtml($arParams)
 	{
-		$redirect_uri = CSocServUtil::GetCurUrl('auth_service_id='.self::ID.'&check_key='.$_SESSION["UNIQUE_KEY"]);
-	//	$redirect_uri = "http://algerman.sam:6448/script.php?auth_service_id=".self::ID."&check_key=".$_SESSION["UNIQUE_KEY"];
+
+		if(IsModuleInstalled('bitrix24') && defined('BX24_HOST_NAME'))
+			$redirect_uri = self::CONTROLLER_URL."/redirect.php?redirect_to=".urlencode(CSocServUtil::GetCurUrl('auth_service_id='.self::ID.'&check_key='.$_SESSION["UNIQUE_KEY"]));
+		else
+			$redirect_uri = CSocServUtil::GetCurUrl('auth_service_id='.self::ID.'&check_key='.$_SESSION["UNIQUE_KEY"]);
 		$appID = trim(self::GetOption("facebook_appid"));
 		$appSecret = trim(self::GetOption("facebook_appsecret"));
 
@@ -29,18 +32,19 @@ class CSocServFacebook extends CSocServAuth
 		return '<a href="javascript:void(0)" onclick="BX.util.popup(\''.htmlspecialcharsbx(CUtil::JSEscape($url)).'\', 580, 400)" class="bx-ss-button facebook-button"></a><span class="bx-spacer"></span><span>'.$phrase.'</span>';
 
 	}
-	
+
 	public function Authorize()
 	{
 		$GLOBALS["APPLICATION"]->RestartBuffer();
 		$bSuccess = 1;
-
-			if(isset($_REQUEST["code"]) && $_REQUEST["code"] <> '')
+		if(isset($_REQUEST["code"]) && $_REQUEST["code"] <> '')
+		{
+			if(CSocServAuthManager::CheckUniqueKey())
 			{
-				if(CSocServAuthManager::CheckUniqueKey())
-				{
-				$redirect_uri = CSocServUtil::GetCurUrl('auth_service_id='.self::ID, array("code"));
-
+				if(IsModuleInstalled('bitrix24') && defined('BX24_HOST_NAME'))
+					$redirect_uri = self::CONTROLLER_URL."/redirect.php?redirect_to=".urlencode(CSocServUtil::GetCurUrl('auth_service_id='.self::ID, array("code")));
+				else
+					$redirect_uri = CSocServUtil::GetCurUrl('auth_service_id='.self::ID, array("code"));
 				$appID = trim(self::GetOption("facebook_appid"));
 				$appSecret = trim(self::GetOption("facebook_appsecret"));
 
@@ -75,6 +79,8 @@ class CSocServFacebook extends CSocServAuth
 								$arFields["PERSONAL_GENDER"] = 'F';
 						}
 						$arFields["PERSONAL_WWW"] = "http://www.facebook.com/".$arFBUser["id"];
+						if(strlen(SITE_ID) > 0)
+							$arFields["SITE_ID"] = SITE_ID;
 						$bSuccess = $this->AuthorizeUser($arFields);
 					}
 				}
@@ -82,6 +88,8 @@ class CSocServFacebook extends CSocServAuth
 		}
 		$aRemove = array("logout", "auth_service_error", "auth_service_id", "code", "error_reason", "error", "error_description", "check_key", "current_fieldset");
 		$url = $GLOBALS['APPLICATION']->GetCurPageParam(($bSuccess === true ? '' : 'auth_service_id='.self::ID.'&auth_service_error='.$bSuccess), $aRemove);
+		if(CModule::IncludeModule("socialnetwork"))
+			$url = (preg_match("/\?/", $url)) ? $url."&current_fieldset=SOCSERV" : $url."?current_fieldset=SOCSERV";
 		echo '
 <script type="text/javascript">
 if(window.opener)
@@ -92,12 +100,12 @@ window.close();
 		die();
 	}
 
-	public static function SendUserFeed($userId, $message)
+	public static function SendUserFeed($userId, $message, $messageId)
 	{
 		$appID = trim(self::GetOption("facebook_appid"));
 		$appSecret = trim(self::GetOption("facebook_appsecret"));
 		$fb = new CFacebookInterface($appID, $appSecret);
-		return $fb->SendFeed($userId, $message);
+		return $fb->SendFeed($userId, $message, $messageId);
 	}
 
 }
@@ -115,6 +123,7 @@ class CFacebookInterface
 
 	public function __construct($appID, $appSecret, $code=false)
 	{
+		$this->httpTimeout = 10;
 		$this->appID = $appID;
 		$this->appSecret = $appSecret;
 		$this->code = $code;
@@ -124,26 +133,26 @@ class CFacebookInterface
 	{
 		return self::AUTH_URL."?client_id=".$this->appID."&redirect_uri=".urlencode($redirect_uri)."&scope=email,user_birthday,publish_stream&display=popup";
 	}
-	
+
 	public function GetAccessToken($redirect_uri)
 	{
 		if($this->code === false)
 			return false;
 
-		$result = CHTTP::sGet(self::GRAPH_URL.'/oauth/access_token?client_id='.$this->appID.'&client_secret='.$this->appSecret.'&redirect_uri='.urlencode($redirect_uri).'&code='.urlencode($this->code));
+		$result = CHTTP::sGetHeader(self::GRAPH_URL.'/oauth/access_token?client_id='.$this->appID.'&client_secret='.$this->appSecret.'&redirect_uri='.urlencode($redirect_uri).'&code='.urlencode($this->code), array(), $this->httpTimeout);
 
 		$arResult = array();
 		$arResultLongLive = array();
 		parse_str($result, $arResult);
 		if(isset($arResult["access_token"]) && $arResult["access_token"] <> '')
 		{
-			$result = CHTTP::sGet(self::GRAPH_URL."/oauth/access_token?grant_type=fb_exchange_token&client_id=".$this->appID."&client_secret=".$this->appSecret."&fb_exchange_token=".$arResult["access_token"]);
+			$result = CHTTP::sGetHeader(self::GRAPH_URL."/oauth/access_token?grant_type=fb_exchange_token&client_id=".$this->appID."&client_secret=".$this->appSecret."&fb_exchange_token=".$arResult["access_token"], array(), $this->httpTimeout);
 			parse_str($result, $arResultLongLive);
 			if(isset($arResultLongLive["access_token"]) && $arResultLongLive["access_token"] <> '')
-				{
-					$arResult["access_token"] = $arResultLongLive["access_token"];
-					$_SESSION["OAUTH_DATA"] = array("OATOKEN" => $arResultLongLive["access_token"]);
-				}
+			{
+				$arResult["access_token"] = $arResultLongLive["access_token"];
+				$_SESSION["OAUTH_DATA"] = array("OATOKEN" => $arResultLongLive["access_token"]);
+			}
 
 			$this->access_token = $arResult["access_token"];
 
@@ -151,32 +160,43 @@ class CFacebookInterface
 		}
 		return false;
 	}
-	
+
 	public function GetCurrentUser()
 	{
 		if($this->access_token === false)
 			return false;
 
-		$result = CHTTP::sGet(self::GRAPH_URL.'/me?access_token='.$this->access_token."&fields=picture,id,name,first_name,last_name,gender,birthday,email");
-		
+		$result = CHTTP::sGetHeader(self::GRAPH_URL.'/me?access_token='.$this->access_token."&fields=picture,id,name,first_name,last_name,gender,birthday,email", array(), $this->httpTimeout);
+
 		if(!defined("BX_UTF"))
 			$result = CharsetConverter::ConvertCharset($result, "utf-8", LANG_CHARSET);
 
 		return CUtil::JsObjectToPhp($result);
 	}
 
-	public function SendFeed($socServUserId, $message)
+	public function SendFeed($socServUserId, $message, $messageId)
 	{
+		$isSetOauthKeys = true;
 		if(!$this->access_token || !$this->userId)
-			self::SetOauthKeys($socServUserId);
+			$isSetOauthKeys = self::SetOauthKeys($socServUserId);
+
+		if($isSetOauthKeys === false)
+		{
+			CSocServMessage::Delete($messageId);
+			return false;
+		}
 
 		$message = CharsetConverter::ConvertCharset($message, LANG_CHARSET, "utf-8");
 		$arPost = array("access_token" => $this->access_token, "message"=> $message);
-		$result = CHTTP::sPost($this::GRAPH_URL."/".$this->userId."/feed", $arPost);
-
-		if(!defined("BX_UTF"))
-			$result = CharsetConverter::ConvertCharset($result, "utf-8", LANG_CHARSET);
-		return CUtil::JsObjectToPhp($result);
+		$result = @CHTTP::sPostHeader($this::GRAPH_URL."/".$this->userId."/feed", $arPost, array(), $this->httpTimeout);
+		if($result !== false)
+		{
+			if(!defined("BX_UTF"))
+				$result = CharsetConverter::ConvertCharset($result, "utf-8", LANG_CHARSET);
+			return CUtil::JsObjectToPhp($result);
+		}
+		else
+			return false;
 	}
 
 	private function SetOauthKeys($socServUserId)
@@ -187,6 +207,9 @@ class CFacebookInterface
 			$this->access_token = $arOauth["OATOKEN"];
 			$this->userId = $arOauth["XML_ID"];
 		}
+		if(!$this->access_token || !$this->userId)
+			return false;
+		return true;
 	}
 
 }

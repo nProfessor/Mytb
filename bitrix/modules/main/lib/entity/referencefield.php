@@ -17,16 +17,18 @@ class ReferenceField extends Field
 {
 	protected $refEntity;
 
+	protected $refEntityName;
+
 	protected $reference;
 
 	protected $join_type = 'LEFT';
 
 
-	public function __construct($name, Base $entity, Base $refEntity, $reference, $parameters = array())
+	public function __construct($name, Base $entity, $refEntityName, $reference, $parameters = array())
 	{
 		parent::__construct($name, $parameters['data_type'], $entity);
 
-		$this->refEntity = $refEntity;
+		$this->refEntityName = $refEntityName;
 
 		$this->reference = $reference;
 
@@ -41,13 +43,18 @@ class ReferenceField extends Field
 		}
 	}
 
-	public function validateValue($value)
+	public function validateValue($value, $row, Result $result)
 	{
 		throw new Exception('Reference field doesn\'t support value set up and validation.');
 	}
 
 	public function getRefEntity()
 	{
+		if ($this->refEntity === null)
+		{
+			$this->refEntity = Base::getInstance($this->refEntityName);
+		}
+
 		return $this->refEntity;
 	}
 

@@ -3,7 +3,7 @@ IncludeModuleLangFile(__FILE__);
 
 class CIBlockParameters
 {
-	function GetFieldCode($name, $parent, $options = array())
+	public static function GetFieldCode($name, $parent, $options = array())
 	{
 		//Common use in components
 		$result = array(
@@ -50,7 +50,7 @@ class CIBlockParameters
 		return $result;
 	}
 
-	function GetSectionFieldCode($name, $parent, $options = array())
+	public static function GetSectionFieldCode($name, $parent, $options = array())
 	{
 		//Common use in components
 		$result = array(
@@ -81,8 +81,10 @@ class CIBlockParameters
 		return $result;
 	}
 
-	function GetDateFormat($name, $parent)
+	public static function GetDateFormat($name, $parent)
 	{
+		global $DB;
+
 		$timestamp = mktime(7,30,45,2,22,2007);
 		return array(
 			"PARENT" => $parent,
@@ -107,12 +109,12 @@ class CIBlockParameters
 				"SHORT" => GetMessage('COMP_PARAM_DATE_FORMAT_SITE'),
 				"FULL" => GetMessage('COMP_PARAM_DATETIME_FORMAT_SITE')
 			),
-			"DEFAULT" => $GLOBALS["DB"]->DateFormatToPHP(CSite::GetDateFormat("SHORT")),
+			"DEFAULT" => $DB->DateFormatToPHP(CSite::GetDateFormat("SHORT")),
 			"ADDITIONAL_VALUES" => "Y",
 		);
 	}
 
-	function GetPathTemplateMenuItems($menuType, $action_function, $menuID, $inputID = "")
+	public static function GetPathTemplateMenuItems($menuType, $action_function, $menuID, $inputID = "")
 	{
 		switch($menuType)
 		{
@@ -159,6 +161,11 @@ class CIBlockParameters
 					"TEXT" => GetMessage("IB_COMPLIB_POPUP_SECTION_CODE"),
 					"TITLE" => "#SECTION_CODE# - ".GetMessage("IB_COMPLIB_POPUP_SECTION_CODE"),
 					"ONCLICK" => "$action_function('#SECTION_CODE#', '$menuID', '$inputID')",
+				),
+				array(
+					"TEXT" => GetMessage("IB_COMPLIB_POPUP_SECTION_CODE_PATH"),
+					"TITLE" => "#SECTION_CODE_PATH# - ".GetMessage("IB_COMPLIB_POPUP_SECTION_CODE_PATH"),
+					"ONCLICK" => "$action_function('#SECTION_CODE_PATH#', '$menuID', '$inputID')",
 				),
 				array("SEPARATOR" => true),
 				array(
@@ -242,6 +249,11 @@ class CIBlockParameters
 					"ONCLICK" => "$action_function('#SECTION_CODE#', '$menuID', '$inputID')",
 				),
 				array(
+					"TEXT" => GetMessage("IB_COMPLIB_POPUP_SECTION_CODE_PATH"),
+					"TITLE" => "#SECTION_CODE_PATH# - ".GetMessage("IB_COMPLIB_POPUP_SECTION_CODE_PATH"),
+					"ONCLICK" => "$action_function('#SECTION_CODE_PATH#', '$menuID', '$inputID')",
+				),
+				array(
 					"TEXT" => GetMessage("IB_COMPLIB_POPUP_SECTION_EXTERNAL_ID"),
 					"TITLE"=>"#EXTERNAL_ID# - ".GetMessage("IB_COMPLIB_POPUP_SECTION_EXTERNAL_ID"),
 					"ONCLICK" => "$action_function('#EXTERNAL_ID#', '$menuID', '$inputID')",
@@ -284,7 +296,7 @@ class CIBlockParameters
 		}
 	}
 
-	function GetPathTemplateParam($menuType, $ID, $parameterName, $defaultValue = "", $parentID = "URL_TEMPLATES")
+	public static function GetPathTemplateParam($menuType, $ID, $parameterName, $defaultValue = "", $parentID = "URL_TEMPLATES")
 	{
 		return array(
 			"PARENT" => $parentID,
@@ -301,7 +313,7 @@ class CIBlockParameters
 		);
 	}
 
-	function AddPagerSettings(&$arComponentParameters, $pager_title, $bDescNumbering=true, $bShowAllParam=false)
+	public static function AddPagerSettings(&$arComponentParameters, $pager_title, $bDescNumbering=true, $bShowAllParam=false)
 	{
 		$arComponentParameters["GROUPS"]["PAGER_SETTINGS"] = array(
 			"NAME" => GetMessage("T_IBLOCK_DESC_PAGER_SETTINGS"),
@@ -364,7 +376,7 @@ class CIBlockParameters
 		}
 	}
 
-	function GetIBlockTypes($arTop = false)
+	public static function GetIBlockTypes($arTop = false)
 	{
 		if(is_array($arTop))
 			$arIBlockType = $arTop;

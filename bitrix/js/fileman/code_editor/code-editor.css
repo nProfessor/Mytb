@@ -67,12 +67,12 @@ font-family: consolas, monospace!important;font-size:12px!important;line-height:
 /* * * * * * * * * * * * * * */
 
 /* LIGHT THEME*/
-.bxce--light {border-right: 1px solid #EBEBEB; border-top: 1px solid #EBEBEB;}
-.bxce--light .bxce-foot-cont{background: #FFFFFF; border-bottom: 1px solid #EBEBEB; border-top: 1px solid #EBEBEB; border-right: 0 solid #EBEBEB; border-left: 1px solid #EBEBEB;}
+.bxce--light {border-right: 1px solid #D0D7D8; border-top: 1px solid #D0D7D8;}
+.bxce--light .bxce-foot-cont{background: #FFFFFF; border-bottom: 1px solid #D0D7D8; border-top: 1px solid #D0D7D8; border-right: 0 solid #D0D7D8; border-left: 1px solid #D0D7D8;}
 .bxce--light .bxce-line-num-bg, .bxce--light .bxce-line-num{background: #ECE9D8; color:#3F3F3F;}
 .bxce--light .bxce-cur-line {background: #ECE9D8; color: #000000!important;}
 .bxce--light .bxce-ta{color: #000000;}
-.bxce--light .bxce-base-cont{background-color: #FFFFFF; border-right: 1px solid #EBEBEB;}
+.bxce--light .bxce-base-cont{background-color: #FFFFFF; border-right: 1px solid #D0D7D8;}
 .bxce--light .bxce-go-to-line-cont{background:url("/bitrix/images/fileman/codeeditor/but.png") no-repeat -125px -62px;}
 .bxce--light .bxce-go-to-line{color: #000000!important;}
 
@@ -86,7 +86,7 @@ font-family: consolas, monospace!important;font-size:12px!important;line-height:
 .bxce .bxce-hl-line-num {position: absolute !important; left: 0; top: 0;z-index: 10;background: #000000;color: #AAAAAA;height: 100%;}
 .bxce .bxce-hl-line-num-text {color: #AAAAAA!important; text-align: right;width: 45px;padding: .4em .2em .4em .4em;white-space: pre !important;cursor: default;background: #000000; float: none !important;}
 .bxce .bxce-hl-line-num-text pre{margin: 0 10px 0 0!important;}
-.bxce--light .bxce-hl-line-num, .bxce--light  .bxce-hl-line-num-text{background-color: #ECE9D8!important;}
+.bxce--light .bxce-hl-line-num, .bxce--light  .bxce-hl-line-num-text{background-color: #E0E8EA!important;}
 
 
 .bxce-highlight {padding: .4em;white-space: pre;cursor: text; background-color:#3f3f3f;}

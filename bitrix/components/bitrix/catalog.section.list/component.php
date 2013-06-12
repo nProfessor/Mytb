@@ -1,5 +1,12 @@
 <?
 if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true) die();
+/** @var CBitrixComponent $this */
+/** @var array $arParams */
+/** @var array $arResult */
+/** @global CUser $USER */
+global $USER;
+/** @global CMain $APPLICATION */
+global $APPLICATION;
 
 /*************************************************************************
 	Processing of received parameters
@@ -71,7 +78,7 @@ if($this->StartResultCache(false, ($arParams["CACHE_GROUPS"]==="N"? false: $USER
 	$arResult["SECTION"] = false;
 	if(strlen($arParams["SECTION_CODE"])>0)
 	{
-		$arFilter["CODE"] = $arParams["SECTION_CODE"];
+		$arFilter["=CODE"] = $arParams["SECTION_CODE"];
 		$rsSections = CIBlockSection::GetList(array(), $arFilter, $arParams["COUNT_ELEMENTS"], $arSelect);
 		$rsSections->SetUrlTemplates("", $arParams["SECTION_URL"]);
 		$arResult["SECTION"] = $rsSections->GetNext();
@@ -87,7 +94,7 @@ if($this->StartResultCache(false, ($arParams["CACHE_GROUPS"]==="N"? false: $USER
 	if(is_array($arResult["SECTION"]))
 	{
 		unset($arFilter["ID"]);
-		unset($arFilter["CODE"]);
+		unset($arFilter["=CODE"]);
 		$arFilter["LEFT_MARGIN"]=$arResult["SECTION"]["LEFT_MARGIN"]+1;
 		$arFilter["RIGHT_MARGIN"]=$arResult["SECTION"]["RIGHT_MARGIN"];
 		$arFilter["<="."DEPTH_LEVEL"]=$arResult["SECTION"]["DEPTH_LEVEL"] + $arParams["TOP_DEPTH"];

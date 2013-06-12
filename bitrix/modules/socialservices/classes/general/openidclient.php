@@ -26,7 +26,7 @@ class COpenIDClient
 
 	function GetOpenIDServerTags($url)
 	{
-		if ($str = CHTTP::sGet($url, true))
+		if ($str = @CHTTP::sGet($url, true))
 		{
 			$server = '';
 			$delegate = '';
@@ -46,6 +46,7 @@ class COpenIDClient
 			}
 			return array('server' => $server, 'delegate' => $delegate);
 		}
+		$GLOBALS['APPLICATION']->ThrowException(GetMessage('OPENID_CLIENT_NO_OPENID_SERVER_TAG'));
 		return false;
 	}
 
@@ -78,7 +79,7 @@ class COpenIDClient
 			$server_name = $protocol.'://'.$_SERVER['SERVER_NAME'].$port;
 	
 			if ($return_to === false)
-				$return_to = $server_name.$GLOBALS['APPLICATION']->GetCurPageParam('', array(), false);
+				$return_to = $server_name.$GLOBALS['APPLICATION']->GetCurPageParam('', array('SEF_APPLICATION_CUR_PAGE_URL'), false);
 
 			if (strlen($arOpenidServerTags['delegate']) > 0)
 				$identity = $arOpenidServerTags['delegate'];
@@ -92,7 +93,7 @@ class COpenIDClient
 				'&openid.trust_root='.urlencode($trust_root).
 				'&openid.sreg.required=email,fullname'.
 				'&openid.sreg.optional=gender,dob,postcode,country,timezone';
-
+			$_SESSION['BX_OPENID_RETURN_TO'] = $return_to;
 			return $url;
 		}
 		return false;
@@ -114,10 +115,15 @@ class COpenIDClient
 					$arParams['openid.' . $s] = $_GET['openid_' . str_replace('.', '_', $s)];
 
 				$arParams['openid.mode'] = 'check_authentication';
+				if(isset($_SESSION['BX_OPENID_RETURN_TO']))
+				{
+					$arParams['openid.return_to'] = $_SESSION['BX_OPENID_RETURN_TO'];
+					unset($_SESSION['BX_OPENID_RETURN_TO']);
+				}
 
 				$str = CHTTP::sPost($arOpenidServerTags['server'], $arParams, true);
 
-				if (preg_match('/is_valid\s*\:\s*true/' . BX_UTF_PCRE_MODIFIER, $str))
+				if (preg_match('/is_valid\s*\:\s*/' . BX_UTF_PCRE_MODIFIER, $str))
 				{
 					return array(
 						'server' => $arOpenidServerTags['server'],
@@ -130,7 +136,7 @@ class COpenIDClient
 				}
 			}
 		}
-		self::CleanParam('ERROR');
+	//	self::CleanParam('ERROR');
 		$GLOBALS['APPLICATION']->ThrowException(GetMessage('OPENID_CLIENT_ERROR_AUTH'));
 		return false;
 	}
@@ -150,7 +156,7 @@ class COpenIDClient
 	function Authorize()
 	{
 		global $APPLICATION, $USER;
-
+		$errorCode = 1;
 		if ($arOpenID = $this->Validate())
 		{
 			$arFields = array(
@@ -201,7 +207,7 @@ class COpenIDClient
 			$arFields['LOGIN'] = preg_replace("#^(http://|https://)#i", "", $arFields['LOGIN']);
 
 			$USER_ID = 0;
-			$errorCode = 1;
+
 			if($GLOBALS["USER"]->IsAuthorized() && $GLOBALS["USER"]->GetID())
 			{
 				CSocServAuthDB::Add($arFields);

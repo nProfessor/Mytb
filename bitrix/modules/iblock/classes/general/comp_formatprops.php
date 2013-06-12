@@ -3,7 +3,7 @@ IncludeModuleLangFile(__FILE__);
 
 class CIBlockFormatProperties
 {
-	function GetDisplayValue($arItem, $arProperty, $event1)
+	public static function GetDisplayValue($arItem, $arProperty, $event1)
 	{
 		$arUserTypeFormat = false;
 		if(strlen($arProperty["USER_TYPE"])>0)
@@ -30,7 +30,7 @@ class CIBlockFormatProperties
 		}
 		$arDisplayValue = array();
 		$arFiles = array();
-		foreach($arValues as $key => $val)
+		foreach($arValues as $val)
 		{
 			if($arUserTypeFormat)
 			{
@@ -135,7 +135,12 @@ class CIBlockFormatProperties
 		return $arProperty;
 	}
 
-	function DateFormat($format, $timestamp)
+	/**
+	 * @param string $format
+	 * @param int $timestamp
+	 * @return string
+	 */
+	public static function DateFormat($format, $timestamp)
 	{
 		global $DB;
 

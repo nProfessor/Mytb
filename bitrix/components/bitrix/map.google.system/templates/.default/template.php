@@ -47,9 +47,9 @@ endif;
 if ($arParams['DEV_MODE'] == 'Y'):
 ?>
 function BXMapLoader_<?echo $arParams['MAP_ID']?>(MAP_KEY)
-{	
+{
 	if (null == window.bGoogleMapScriptsLoaded)
-	{		
+	{
 		if (window.google && window.google.maps)
 		{
 			window.bGoogleMapScriptsLoaded = true;
@@ -57,15 +57,15 @@ function BXMapLoader_<?echo $arParams['MAP_ID']?>(MAP_KEY)
 		}
 		else
 		{
-			if(window.bGoogleMapsScriptLoading)				
+			if(window.bGoogleMapsScriptLoading)
 			{
-				window.bInt<?echo $arParams['MAP_ID']?> = setInterval( 
-					function() 
-					{ 
-						if(window.bGoogleMapScriptsLoaded)					
+				window.bInt<?echo $arParams['MAP_ID']?> = setInterval(
+					function()
+					{
+						if(window.bGoogleMapScriptsLoaded)
 						{
 							clearInterval(window.bInt<?echo $arParams['MAP_ID']?>);
-							init_<?echo $arParams['MAP_ID']?>(); 					
+							init_<?echo $arParams['MAP_ID']?>();
 						}
 						else
 							return;
@@ -77,10 +77,13 @@ function BXMapLoader_<?echo $arParams['MAP_ID']?>(MAP_KEY)
 			}
 
 			window.bGoogleMapsScriptLoading = true;
+
+			<?$scheme = (CMain::IsHTTPS() ? "https" : "http");?>
+
 			BX.loadScript(
-				'http://www.google.com/jsapi?rnd=' + Math.random(),
-				function () 
-				{						
+				'<?=$scheme?>://www.google.com/jsapi?rnd=' + Math.random(),
+				function ()
+				{
 					if (BX.browser.IsIE())
 						setTimeout("window.google.load('maps', <?= intval($arParams['GOOGLE_VERSION'])?>, {callback: init_<?echo $arParams['MAP_ID']?>, other_params: 'sensor=false&language=<?= LANGUAGE_ID?>'})", 1000);
 					else

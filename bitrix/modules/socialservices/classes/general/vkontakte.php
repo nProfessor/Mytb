@@ -4,6 +4,8 @@ IncludeModuleLangFile(__FILE__);
 class CSocServVKontakte extends CSocServAuth
 {
 	const ID = "VKontakte";
+	const CONTROLLER_URL = "https://www.bitrix24.ru/controller";
+
 
 	public function GetSettings()
 	{
@@ -20,9 +22,17 @@ class CSocServVKontakte extends CSocServAuth
 		$appSecret = trim(self::GetOption("vkontakte_appsecret"));
 
 		$gAuth = new CVKontakteOAuthInterface($appID, $appSecret);
-		$redirect_uri = CSocServUtil::GetCurUrl('auth_service_id='.self::ID);
 
-		$state = 'site_id='.SITE_ID.'&backurl='.($GLOBALS["APPLICATION"]->GetCurPageParam('check_key='.$_SESSION["UNIQUE_KEY"], array("logout", "auth_service_error", "auth_service_id", "backurl")));
+		if(IsModuleInstalled('bitrix24') && defined('BX24_HOST_NAME'))
+		{
+			$redirect_uri = self::CONTROLLER_URL."/redirect.php";
+			$state = urlencode(CSocServUtil::GetCurUrl('auth_service_id='.self::ID.'&check_key='.$_SESSION["UNIQUE_KEY"]));
+		}
+		else
+		{
+			$redirect_uri = CSocServUtil::GetCurUrl('auth_service_id='.self::ID);
+			$state = 'site_id='.SITE_ID.'&backurl='.($GLOBALS["APPLICATION"]->GetCurPageParam('check_key='.$_SESSION["UNIQUE_KEY"], array("logout", "auth_service_error", "auth_service_id", "backurl")));
+		}
 
 		$url = $gAuth->GetAuthUrl($redirect_uri, $state);
 		$phrase = ($arParams["FOR_INTRANET"]) ? GetMessage("socserv_vk_note_intranet") : GetMessage("socserv_vk_note");
@@ -39,7 +49,10 @@ class CSocServVKontakte extends CSocServAuth
 
 		if((isset($_REQUEST["code"]) && $_REQUEST["code"] <> '') && CSocServAuthManager::CheckUniqueKey())
 		{
-			$redirect_uri = CSocServUtil::GetCurUrl('auth_service_id='.self::ID, array("code", "state", "backurl", "check_key"));
+			if(IsModuleInstalled('bitrix24') && defined('BX24_HOST_NAME'))
+				$redirect_uri = self::CONTROLLER_URL."/redirect.php";
+			else
+				$redirect_uri = CSocServUtil::GetCurUrl('auth_service_id='.self::ID, array("code", "state", "backurl", "check_key"));
 			$appID = trim(self::GetOption("vkontakte_appid"));
 			$appSecret = trim(self::GetOption("vkontakte_appsecret"));
 
@@ -84,6 +97,8 @@ class CSocServVKontakte extends CSocServAuth
 						if ($date = MakeTimeStamp($arVkUser['response']['0']['bdate'], "DD.MM.YYYY"))
 							$arFields["PERSONAL_BIRTHDAY"] = ConvertTimeStamp($date);
 					$arFields["PERSONAL_WWW"] = "http://vk.com/id".$arVkUser['response']['0']['uid'];
+					if(strlen(SITE_ID) > 0)
+						$arFields["SITE_ID"] = SITE_ID;
 
 					$bSuccess = $this->AuthorizeUser($arFields);
 				}
@@ -100,11 +115,18 @@ class CSocServVKontakte extends CSocServAuth
 			if(isset($arState['backurl']))
 				$url = parse_url($arState['backurl'], PHP_URL_PATH);
 		}
+
 		$aRemove = array("logout", "auth_service_error", "auth_service_id", "code", "error_reason", "error", "error_description", "check_key", "current_fieldset");
-		if(isset($_REQUEST["current_fieldset"]))
-			$url = $GLOBALS['APPLICATION']->GetCurPageParam(('current_fieldset='.$_REQUEST["current_fieldset"]), $aRemove);
-		if($bSuccess !== true)
-			$url = $GLOBALS['APPLICATION']->GetCurPageParam(('auth_service_id='.self::ID.'&auth_service_error='.$bSuccess), $aRemove);
+		if($bSuccess === 2)
+		{
+			$url = (preg_match("/\?/", $url)) ? $url.'&' : $url.'?';
+			$url .= 'auth_service_id='.self::ID.'&auth_service_error='.$bSuccess;
+		}
+		elseif($bSuccess !== true)
+			$url = (isset($parseUrl)) ? $parseUrl.'?auth_service_id='.self::ID.'&auth_service_error='.$bSuccess : $GLOBALS['APPLICATION']->GetCurPageParam(('auth_service_id='.self::ID.'&auth_service_error='.$bSuccess), $aRemove);
+		if(CModule::IncludeModule("socialnetwork"))
+			$url = (preg_match("/\?/", $url)) ? $url."&current_fieldset=SOCSERV" : $url."?current_fieldset=SOCSERV";
+
 		echo '
 <script type="text/javascript">
 if(window.opener)
@@ -118,7 +140,7 @@ window.close();
 
 class CVKontakteOAuthInterface
 {
-	const AUTH_URL = "http://oauth.vk.com/authorize";
+	const AUTH_URL = "https://oauth.vk.com/authorize";
 	const TOKEN_URL = "https://oauth.vk.com/access_token";
 	const CONTACTS_URL = "https://api.vk.com/method/users.get";
 
@@ -130,6 +152,7 @@ class CVKontakteOAuthInterface
 
 	public function __construct($appID, $appSecret, $code=false)
 	{
+		$this->httpTimeout = 10;
 		$this->appID = $appID;
 		$this->appSecret = $appSecret;
 		$this->code = $code;
@@ -150,12 +173,12 @@ class CVKontakteOAuthInterface
 		if($this->code === false)
 			return false;
 
-		$result = CHTTP::sPost(self::TOKEN_URL, array(
+		$result = CHTTP::sPostHeader(self::TOKEN_URL, array(
 			"client_id"=>$this->appID,
 			"client_secret"=>$this->appSecret,
 			"code"=>$this->code,
 			"redirect_uri"=>$redirect_uri,
-		));
+		), array(), $this->httpTimeout);
 
 		$arResult = CUtil::JsObjectToPhp($result);
 		if((isset($arResult["access_token"]) && $arResult["access_token"] <> '') && isset($arResult["user_id"]) && $arResult["user_id"] <> '')
@@ -173,7 +196,7 @@ class CVKontakteOAuthInterface
 		if($this->access_token === false)
 			return false;
 
-		$result = CHTTP::sGet(self::CONTACTS_URL.'?uids='.$this->userID.'&fields=uid,first_name,last_name,nickname,screen_name,sex,bdate,city,country,timezone,photo,photo_medium,photo_big,photo_rec&access_token='.urlencode($this->access_token));
+		$result = CHTTP::sGetHeader(self::CONTACTS_URL.'?uids='.$this->userID.'&fields=uid,first_name,last_name,nickname,screen_name,sex,bdate,city,country,timezone,photo,photo_medium,photo_big,photo_rec&access_token='.urlencode($this->access_token), array(), $this->httpTimeout);
 
 		if(!defined("BX_UTF"))
 			$result = CharsetConverter::ConvertCharset($result, "utf-8", LANG_CHARSET);

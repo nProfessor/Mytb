@@ -87,7 +87,9 @@ if (!function_exists(escapeFlashvar))
 				$path = Rel2Abs("/", $path);
 				$path_ = $path;
 
-				if (!file_exists($DOC_ROOT.$path))
+				$io = CBXVirtualIo::GetInstance();
+
+				if (!$io->FileExists($DOC_ROOT.$path))
 				{
 					if(CModule::IncludeModule('clouds'))
 					{
@@ -158,7 +160,7 @@ if ($player_type == 'flv') // FLASH PLAYER
 	$arResult['PATH'] = $path;
 
 	$jwConfig = array(
-		'file' => $path,
+		'file' => $GLOBALS["APPLICATION"]->ConvertCharset($path, LANG_CHARSET, "UTF-8"),
 		'height' => $arResult['HEIGHT'],
 		'width' => $arResult['WIDTH'],
 		'dock' => true,
@@ -204,7 +206,7 @@ if ($player_type == 'flv') // FLASH PLAYER
 		addFlashvar($jwConfig, 'logo.hide', 'true');
 	}
 
-	// Skining	
+	// Skining
 	$skinPath = rtrim($arParams['SKIN_PATH'], "/")."/";
 	$skinExt = strtolower(GetFileExtension($arParams['SKIN']));
 	$skinName = substr($arParams['SKIN'], 0, - strlen($skinExt) - 1);
@@ -403,5 +405,6 @@ else
 
 if (strlen($warning) > 0)
 	return CComponentUtil::__ShowError($warning);
+
 $this->IncludeComponentTemplate();
 ?>

@@ -30,3 +30,18 @@ CREATE TABLE b_clouds_file_upload
 	NEXT_STEP TEXT,
 	PRIMARY KEY pk_b_clouds_file_upload(ID)
 );
+
+CREATE TABLE b_clouds_file_resize
+(
+	ID INT(11) NOT NULL auto_increment,
+	TIMESTAMP_X TIMESTAMP NOT NULL,
+	ERROR_CODE CHAR(1) NOT NULL DEFAULT '0',
+	FILE_ID INT(11),
+	PARAMS TEXT,
+	FROM_PATH VARCHAR(500),
+	TO_PATH VARCHAR(500),
+	PRIMARY KEY pk_b_file_resize(ID),
+	INDEX ix_b_file_resize_ts (TIMESTAMP_X),
+	INDEX ix_b_file_resize_path (TO_PATH(100)),
+	INDEX ix_b_file_resize_file (FILE_ID)
+);

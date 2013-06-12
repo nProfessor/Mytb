@@ -10,5 +10,4 @@ $MESS["CATALOG_QUANTITY_TO"] = "Bis #TO#";
 $MESS["PUB_DATE"] = "Veröffentlichungsdatum:";
 $MESS["CT_BCS_QUANTITY"] = "Menge";
 $MESS["CT_BCS_ELEMENT_DELETE_CONFIRM"] = "Alle mit diesem Eintrag verbundenen Informationen gehen verloren. Wollen Sie Fortfahren?";
-$MESS["CATALOG_SUBSCRIBE"] = "Abonnieren";
 ?>

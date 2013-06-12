@@ -1,8 +1,8 @@
-﻿(function(window, undefined) {
+(function(window, undefined) {
     var axVERSION = '7.0.37.0', jVERSION = '7.0.37.0';
     var uploaderClassID = '7ECB1A47-6647-4B2C-A8DA-675569C9FF15', uploaderProgID='Aurigma.Uploader.7037.1';
     var thumbnailClassID = '493B5A90-6B34-44BF-9CB4-37B22E511415', thumbnailProgID = 'Aurigma.Thumbnail.7037.1';
-var 
+var
 // Global entry
 AU = window.Aurigma ? (window.Aurigma.ImageUploader || {}) : {},
 
@@ -223,7 +223,7 @@ propertyMaker = {
     createSimpleProperty: function (obj, property) {
         ///	<summary>
         ///		Create method with the name property.name for object obj.
-        ///     Method works like property: if we pass argument it set new value, 
+        ///     Method works like property: if we pass argument it set new value,
         ///     if we call method without arguments it return stored value.
         ///	</summary>
         ///	<param name="obj" type="Object">
@@ -243,7 +243,7 @@ propertyMaker = {
     createObjectProperty: function (obj, property, uploader) {
         ///	<summary>
         ///		Create method with the name property.name for object obj.
-        ///     Method works like property: if we pass argument it set new value, 
+        ///     Method works like property: if we pass argument it set new value,
         ///     if we call method wothout arguments it return stored value.
         ///	</summary>
         ///	<param name="obj" type="Object">
@@ -852,7 +852,7 @@ AU.debug.prototype = {
 
     mode: function (mode) {
         ///	<summary>
-        ///		Get or set debug mode. Debug mode specifies where 
+        ///		Get or set debug mode. Debug mode specifies where
         ///     the debug messages will be shown.
         ///	</summary>
         ///	<param name="mode" type="Array">
@@ -903,7 +903,7 @@ AU.debug.prototype = {
     },
 
     ///	<summary>
-    ///		Show message from Image Uploader. 
+    ///		Show message from Image Uploader.
     ///     The method called from Image Uploader trace event.
     ///	</summary>
     ///	<param name="msg" type="String">
@@ -1053,7 +1053,7 @@ baseControl.prototype = {
     type: function () {
         function detectType(typeString) {
             var types = (typeString + "").split('|');
-            // Check availability for all except last one. 
+            // Check availability for all except last one.
             // The last will be used if all previous are not available.
             for (var i = 0, imax = types.length - 1; i < imax; i++) {
                 var type = types[i].toLowerCase();
@@ -1140,7 +1140,7 @@ baseControl.prototype = {
                                 showError(eventName + " error:\n \"" + handler + "\" handler is not defined.");
                             }
                             if (eventName === 'beforeUpload' || eventName === 'afterPackageUpload') {
-                                // for beforeUpload and afterPackageUpload events 
+                                // for beforeUpload and afterPackageUpload events
                                 // we returns false if any event handler returns false
                                 if (!result1) {
                                     // already get false in prev handler
@@ -1191,7 +1191,7 @@ baseControl.prototype = {
                                     showError(eventName + " error:\n \"" + handler + "\" handler is not defined.");
                                 }
                                 if (eventName === 'beforeUpload' || eventName === 'afterPackageUpload') {
-                                    // for beforeUpload and afterPackageUpload events 
+                                    // for beforeUpload and afterPackageUpload events
                                     // we returns false if any event handler returns false
                                     if (!result1) {
                                         // already get false in prev handler
@@ -1506,7 +1506,7 @@ AU.addFilesProgressDialog.prototype = {
     },
     waitText: function (value) {
         ///	<summary>
-        ///		Gets or sets message like "Please wait, it may take some time…".
+        ///		Gets or sets message like "Please wait, it may take some time...".
         ///	</summary>
         ///	<param name="value" type="String" />
         ///	<returns type="String" />
@@ -1877,8 +1877,8 @@ AU.converter.prototype = {
         ///	<param name="value" type="String">
         ///     "mask11,mask12,...=mode1,mode2,...;mask21,mask22,...=mode1,mode2,...;..."
         ///     Where mask is the file extension, mode is the one of the string "SourceFile", "Thumbnail", "Icon", "Zip".
-        ///     For example, "*.*=SourceFile" - source file will be uploaded, 
-        ///     "*.jpg,*.png,*.gif=Thumbnail;*.*=Icon" - thumbnail will be uploaded for jpg, png, gif images, 
+        ///     For example, "*.*=SourceFile" - source file will be uploaded,
+        ///     "*.jpg,*.png,*.gif=Thumbnail;*.*=Icon" - thumbnail will be uploaded for jpg, png, gif images,
         ///     and file icon for other files.
         ///	</param>
         ///	<returns type="String" />
@@ -1924,9 +1924,9 @@ AU.converter.prototype = {
     },
     thumbnailCompressOversizedOnly: function (value) {
         ///	<summary>
-        ///		Switch that specifies whether an original file should be 
-        ///     uploaded as the specified thumbnail in case when original 
-        ///     image dimensions and file size are not bigger than dimensions 
+        ///		Switch that specifies whether an original file should be
+        ///     uploaded as the specified thumbnail in case when original
+        ///     image dimensions and file size are not bigger than dimensions
         ///     and file size of the thumbnail.
         ///	</summary>
         ///	<param name="value" type="Boolean" />
@@ -2376,7 +2376,7 @@ AU.descriptionEditor.prototype = {
         ///	<returns type="String" />
         /* will be created while initialization */
     }
-    
+
 }
 
 AU.descriptionEditor.init = propertyMaker._typicalInit;
@@ -2406,28 +2406,28 @@ AU.detailsViewColumns.prototype = {
 
     dimensionsText: function (value) {
         ///	<summary>
-        ///		Get or set title of the Dimensions column in the Details view. 
+        ///		Get or set title of the Dimensions column in the Details view.
         ///	</summary>
         ///	<param name="value" type="String" />
         ///	<returns type="String" />
     },
     fileSizeText: function (value) {
         ///	<summary>
-        ///		Get or set title of the file size column in the Details view. 
+        ///		Get or set title of the file size column in the Details view.
         ///	</summary>
         ///	<param name="value" type="String" />
         ///	<returns type="String" />
     },
     fileTypeText: function (value) {
         ///	<summary>
-        ///		Get or set title of the file type column in the Details view. 
+        ///		Get or set title of the file type column in the Details view.
         ///	</summary>
         ///	<param name="value" type="String" />
         ///	<returns type="String" />
     },
     infoText: function (value) {
         ///	<summary>
-        ///		Get or set title of the Info column in the Details view. 
+        ///		Get or set title of the Info column in the Details view.
         ///	</summary>
         ///	<param name="value" type="String" />
         ///	<returns type="String" />
@@ -2445,7 +2445,7 @@ AU.detailsViewColumns.init = propertyMaker._typicalInit;
 AU.detailsViewColumns.reinit = propertyMaker._typicalReinit;
 AU.events = function (initObj) {
     ///	<summary>
-    ///		Get or set uploader events           
+    ///		Get or set uploader events
     ///	</summary>
     ///	<param name="initObj" type="Object">
     ///		Events
@@ -2470,7 +2470,7 @@ extend(AU.events.prototype, {
         "restrictionFailed",
         "error",
         "progress",
-        "selectionChange", 
+        "selectionChange",
         "trace",
         "uploadFileCountChange",
         "viewChange"
@@ -2478,7 +2478,7 @@ extend(AU.events.prototype, {
 
     afterPackageUpload: function () {
         ///	<summary>
-        ///		AfterPackageUpload event            
+        ///		AfterPackageUpload event
         ///	</summary>
         ///	<returns type="$au.event" />
     },
@@ -2490,49 +2490,49 @@ extend(AU.events.prototype, {
     },
     afterUpload: function () {
         ///	<summary>
-        ///		AfterUpload event            
+        ///		AfterUpload event
         ///	</summary>
         ///	<returns type="$au.event" />
     },
     beforePackageUpload: function () {
         ///	<summary>
-        ///		BeforePackageUpload event            
+        ///		BeforePackageUpload event
         ///	</summary>
         ///	<returns type="$au.event" />
     },
     beforeSendRequest: function () {
         ///	<summary>
-        ///		BeforeSendRequest event            
+        ///		BeforeSendRequest event
         ///	</summary>
         ///	<returns type="$au.event" />
     },
     beforeUpload: function () {
         ///	<summary>
-        ///		BeforeUpload event            
+        ///		BeforeUpload event
         ///	</summary>
         ///	<returns type="$au.event" />
     },
     folderChange: function () {
         ///	<summary>
-        ///		FolderChange event            
+        ///		FolderChange event
         ///	</summary>
         ///	<returns type="$au.event" />
     },
     imageEditorClose: function () {
         ///	<summary>
-        ///		ImageEditorClose event            
+        ///		ImageEditorClose event
         ///	</summary>
         ///	<returns type="$au.event" />
     },
     imageRotated: function () {
         ///	<summary>
-        ///		ImageRotated event            
+        ///		ImageRotated event
         ///	</summary>
         ///	<returns type="$au.event" />
     },
     restrictionFailed: function () {
         ///	<summary>
-        ///		RestrictionFailed event            
+        ///		RestrictionFailed event
         ///	</summary>
         ///	<returns type="$au.event" />
     },
@@ -2546,7 +2546,7 @@ extend(AU.events.prototype, {
         ///	<summary>
         ///		Progress event
         ///	</summary>
-        ///	<returns type="$au.event" />    
+        ///	<returns type="$au.event" />
     },
     selectionChange: function () {
         ///	<summary>
@@ -3147,7 +3147,7 @@ AU.javaControl = function (uploader) {
 
 AU.javaControl.prototype = {
     __class: true,
-    
+
     getJarFileName: function () {
         var codeBase = this.codeBase();
         var parts = codeBase.split('/');
@@ -3210,7 +3210,7 @@ AU.javaControl.prototype = {
         ///	<returns type="String" />
         return helpers.prop(this, '_codeBase', arguments.length, value);
     },
-    
+
     className: function (value) {
         ///	<summary>
         ///		Get or set uploader java class name.
@@ -3219,7 +3219,7 @@ AU.javaControl.prototype = {
         ///	<returns type="String" />
         return helpers.prop(this, '_className', arguments.length, value);
     },
-    
+
     cached: function (value) {
         ///	<summary>
         ///		Enable or disable cache java applet.
@@ -3228,7 +3228,7 @@ AU.javaControl.prototype = {
         ///	<returns type="Boolean" />
         return helpers.prop(this, '_cached', arguments.length, value);
     },
-    
+
     version: function (value) {
         ///	<summary>
         ///		Gets or sets minimum required version of the Java applet (ImageUploader7.jar file).
@@ -3315,7 +3315,7 @@ AU.messages.prototype = {
     },
     filesNotAdded: function (value) {
         ///	<summary>
-        ///		Get or set text of the message, showing after adding files 
+        ///		Get or set text of the message, showing after adding files
         ///     if several files were not added due restrictions.
         ///	</summary>
         ///	<param name="value" type="String" />
@@ -3749,7 +3749,7 @@ AU.folderPane.prototype = {
         ///		Folder pane sort mode.
         ///	</summary>
         ///	<param name="value" type="String">
-        ///     One of the values "Name", "Size", "Type", "Modified", "Path" 
+        ///     One of the values "Name", "Size", "Type", "Modified", "Path"
         ///     or their equivalent number.
         ///	</param>
         ///	<returns type="Number" />
@@ -3792,7 +3792,7 @@ AU.folderPane.prototype = {
         ///		Folder pane view.
         ///	</summary>
         ///	<param name="value" type="String">
-        ///     One of the values "Thumbnails", "Icons", "List", "Details" 
+        ///     One of the values "Thumbnails", "Icons", "List", "Details"
         ///     or their equivalent number.
         ///	</param>
         ///	<returns type="Number" />
@@ -3887,7 +3887,7 @@ AU.qualityMeter.prototype = {
     },
     formats: function (value) {
         ///	<summary>
-        ///		A value which defines print formats for the quality meter. 
+        ///		A value which defines print formats for the quality meter.
         ///	</summary>
         ///	<param name="value" type="String">
         ///     The string in the following format:
@@ -4246,7 +4246,7 @@ AU.restrictions.prototype = {
     },
     maxFileCount: function (value) {
         ///	<summary>
-        ///		Maximum number of files allowed for upload per one session           
+        ///		Maximum number of files allowed for upload per one session
         ///	</summary>
         ///	<param name="value" type="Number">
         ///		Number of files allowed for upload.
@@ -4256,7 +4256,7 @@ AU.restrictions.prototype = {
     },
     maxFileSize: function () {
         ///	<summary>
-        ///		Maximum file size allowed for upload.           
+        ///		Maximum file size allowed for upload.
         ///	</summary>
         ///	<param name="value" type="Number">
         ///		Maximum file size.
@@ -4266,7 +4266,7 @@ AU.restrictions.prototype = {
     },
     maxImageHeight: function () {
         ///	<summary>
-        ///		Maximum image height allowed for upload.    
+        ///		Maximum image height allowed for upload.
         ///	</summary>
         ///	<param name="value" type="Number">
         ///		Maximum image height.
@@ -4276,7 +4276,7 @@ AU.restrictions.prototype = {
     },
     maxImageWidth: function () {
         ///	<summary>
-        ///		Maximum image width allowed for upload.          
+        ///		Maximum image width allowed for upload.
         ///	</summary>
         ///	<param name="value" type="Number">
         ///		Maximum image width.
@@ -4296,7 +4296,7 @@ AU.restrictions.prototype = {
     },
     minFileCount: function (value) {
         ///	<summary>
-        ///		Minimum number of files allowed for upload per one session           
+        ///		Minimum number of files allowed for upload per one session
         ///	</summary>
         ///	<param name="value" type="Number">
         ///		Number of files allowed for upload.
@@ -4306,7 +4306,7 @@ AU.restrictions.prototype = {
     },
     minFileSize: function() {
         ///	<summary>
-        ///		Minimum file size allowed for upload.           
+        ///		Minimum file size allowed for upload.
         ///	</summary>
         ///	<param name="value" type="Number">
         ///		Minimum file size.
@@ -4316,7 +4316,7 @@ AU.restrictions.prototype = {
     },
     minImageHeight: function () {
         ///	<summary>
-        ///		Minimum image height allowed for upload.       
+        ///		Minimum image height allowed for upload.
         ///	</summary>
         ///	<param name="value" type="Number">
         ///		Minimum image height.
@@ -4326,10 +4326,10 @@ AU.restrictions.prototype = {
     },
     minImageWidth: function () {
         ///	<summary>
-        ///		Minimum image width allowed for upload.            
+        ///		Minimum image width allowed for upload.
         ///	</summary>
         ///	<param name="value" type="Number">
-        ///		Minimum image width. 
+        ///		Minimum image width.
         ///	</param>
         ///	<returns type="Number" />
         /* will be created while initialization */
@@ -4434,7 +4434,7 @@ AU.treePane.prototype = {
     },
     unixFileSystemRootText: function (value) {
         ///	<summary>
-        ///		Gets or sets caption of the folder tree node which 
+        ///		Gets or sets caption of the folder tree node which
         ///     specifies the system directory at *NIX systems. .
         ///	</summary>
         ///	<param name="value" type="String" />
@@ -4443,7 +4443,7 @@ AU.treePane.prototype = {
     },
     unixHomeDirectoryText: function (value) {
         ///	<summary>
-        ///		Gets or sets caption of the folder tree node which specifies the home directory at *NIX systems. 
+        ///		Gets or sets caption of the folder tree node which specifies the home directory at *NIX systems.
         ///	</summary>
         ///	<param name="value" type="String" />
         ///	<returns type="String" />
@@ -4531,7 +4531,7 @@ AU.uploadPane.prototype = {
         ///		Get or set upload pane sort mode.
         ///	</summary>
         ///	<param name="value" type="String">
-        ///     One of the values "Name", "Size", "Type", "Modified", "Path" 
+        ///     One of the values "Name", "Size", "Type", "Modified", "Path"
         ///     or their equivalent number.
         ///	</param>
         ///	<returns type="String" />
@@ -4763,8 +4763,8 @@ AU.uploadProgressDialog.prototype = {
         ///		Get or set time format string.
         ///	</summary>
         ///	<param name="value" type="String">
-        ///     A string value that specifies a format using the following syntax: 
-        ///     "variable1=value1;variable2=value2;...", 
+        ///     A string value that specifies a format using the following syntax:
+        ///     "variable1=value1;variable2=value2;...",
         ///     where variable is one of the string "Appearance", "PresentDirection", "DigitsFormat", "HideZero".
         ///	</param>
         ///	<returns type="String" />
@@ -4901,7 +4901,7 @@ AU.uploadSettings.prototype = {
         ///	<summary>
         ///		Specifies how to calculate the total size of uploaded data.
         ///     "ByPackageSize" - Total bytes equals the size of the currently uploaded package.
-        ///     "BySourceSize" -  Total bytes equals the size of the all selected for upload files. 
+        ///     "BySourceSize" -  Total bytes equals the size of the all selected for upload files.
         ///         Only original file counting, the size of thumbnails is not included.
         ///	</summary>
         ///	<param name="value" type="String">
@@ -4925,7 +4925,7 @@ AU.uploadSettings.reinit = propertyMaker._typicalReinit;
 AU.uploader = function (obj) {
     ///	<summary>
     ///		1: uploader(id) - Get created uploader.
-    ///		2: uploader(obj) - Create new uploader.            
+    ///		2: uploader(obj) - Create new uploader.
     ///	</summary>
     ///	<param name="obj" type="Object">
     ///		1: obj - Init object for new uploader.
@@ -5326,7 +5326,7 @@ extend(AU.uploader.fn, {
     },
     height: function (value) {
         ///	<summary>
-        ///		Get or set control height            
+        ///		Get or set control height
         ///	</summary>
         ///	<param name="value" type="Number" />
         ///	<returns type="Number" />
@@ -5437,7 +5437,7 @@ extend(AU.uploader.fn, {
 
     activeXControl: function () {
         ///	<summary>
-        ///		Get or set ActiveX control parameters            
+        ///		Get or set ActiveX control parameters
         ///	</summary>
         ///	<returns type="$au.activeXControl" />
         return helpers.objProp(this, '_activeXControl', arguments.length, arguments[0]);
@@ -5456,7 +5456,7 @@ extend(AU.uploader.fn, {
     informationBar: AU.informationBar,
     javaControl: function () {
         ///	<summary>
-        ///		Get or set java control parameters            
+        ///		Get or set java control parameters
         ///	</summary>
         ///	<returns type="$au.javaControl" />
         return helpers.objProp(this, '_javaControl', arguments.length, arguments[0]);
@@ -5510,7 +5510,7 @@ extend(AU.thumbnailEvents.prototype, {
 
     click: function () {
         ///	<summary>
-        ///		Click event            
+        ///		Click event
         ///	</summary>
         ///	<returns type="$au.event" />
     }
@@ -5675,14 +5675,14 @@ extend(AU.thumbnail.fn, {
 
     activeXControl: function () {
         ///	<summary>
-        ///		Get or set ActiveX control parameters            
+        ///		Get or set ActiveX control parameters
         ///	</summary>
         ///	<returns type="$au.activeXControl" />
         return helpers.objProp(this, '_activeXControl', arguments.length, arguments[0]);
     },
     javaControl: function () {
         ///	<summary>
-        ///		Get or set java control parameters            
+        ///		Get or set java control parameters
         ///	</summary>
         ///	<returns type="$au.javaControl" />
         return helpers.objProp(this, '_javaControl', arguments.length, arguments[0]);
@@ -5702,7 +5702,7 @@ extend(AU.thumbnail.fn, {
     },
     guid: function (value) {
         ///	<summary>
-        ///		Get or set identifier (GUID) of the item which is represented with this Thumbnail control. 
+        ///		Get or set identifier (GUID) of the item which is represented with this Thumbnail control.
         ///	</summary>
         ///	<param name="value" type="String">
         ///     Guid ({XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX}) of the item in the uploader's upload list.
@@ -5713,7 +5713,7 @@ extend(AU.thumbnail.fn, {
     },
     height: function (value) {
         ///	<summary>
-        ///		Get or set control height            
+        ///		Get or set control height
         ///	</summary>
         ///	<param name="value" type="Number">
         ///		control height
@@ -5723,7 +5723,7 @@ extend(AU.thumbnail.fn, {
     },
     parentControlName: function (value) {
         ///	<summary>
-        ///		Get or set name of the ImageUploader control instance this thumbnail is associated with. 
+        ///		Get or set name of the ImageUploader control instance this thumbnail is associated with.
         ///	</summary>
         ///	<param name="value" type="String">
         ///		Id of the ImageUploader control.
@@ -5734,7 +5734,7 @@ extend(AU.thumbnail.fn, {
     },
     width: function (width) {
         ///	<summary>
-        ///		Get or set control width            
+        ///		Get or set control width
         ///	</summary>
         ///	<param name="width" type="Number">
         ///		control width
@@ -5888,7 +5888,7 @@ var activeXRenderer = function (uploader) {
                 html.push(result);
             }
         } else {
-            // ActiveX available for IE only.            
+            // ActiveX available for IE only.
             var msg = "Browser doesn't support activex.";
             showError(msg);
             throw new Error(msg);
@@ -5945,7 +5945,7 @@ var javaRenderer = function (uploader, options) {
             params.push({ name: "cache_archive", value: jarFileName });
             params.push({ name: "cache_version", value: (uploader.javaControl().version() + "").replace(/,/g, ".") });
         }
-		
+
 		// BUGBUG 0014000 Add control id in param for IE browser
 		params.push({ name: "control_id", value: id });
 

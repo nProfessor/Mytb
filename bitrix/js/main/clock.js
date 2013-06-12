@@ -453,6 +453,7 @@ SetTimeAn: function(h, m)
 
 CreateSelect: function(arValues, step, title)
 {
+	var bAmPmMode = !!this.config.AmPmMode;
 	var select = jsUtils.CreateElement('INPUT', {type: 'text', className: 'bxc-cus-sel', size: "1", title: title});
 	var spinStop = function(d)
 	{
@@ -486,11 +487,11 @@ CreateSelect: function(arValues, step, title)
 		else
 		{
 			// hacks for AM/PM 00->12
-			if (select.value == 11 && arValues[k] == 00 || select.value == 01 && arValues[k] == 00)
+			if (select.value == '11' && arValues[k] == '00' || select.value == '01' && arValues[k] == '00' && bAmPmMode)
 			{
-				select.value = 12;
+				select.value = '12';
 			}
-			else if (select.value == 12 && arValues[k] == 00)
+			else if (select.value == '12' && arValues[k] == '00')
 			{
 				select.value = '01';
 			}

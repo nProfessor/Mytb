@@ -2,7 +2,7 @@ div.empty {width:1px; height:1px; overflow:hidden;}
 
 /*Grid*/
 table.bx-interface-grid {width:100%; cursor:default; color:black; border-collapse:separate;}
-table.bx-interface-grid div {box-sizing:border-box; -moz-box-sizing:border-box; -webkit-box-sizing:border-box; background-repeat:no-repeat;}
+/*table.bx-interface-grid div {box-sizing:border-box; -moz-box-sizing:border-box; -webkit-box-sizing:border-box; background-repeat:no-repeat;}*/
 table.bx-interface-grid td {padding:5px; font-size:100%; border-right:1px solid #EDEDED;  vertical-align:top;}
 table.bx-interface-grid td.bx-left {border-left:1px solid #EDEDED;}
 table.bx-interface-grid td.bx-right {}

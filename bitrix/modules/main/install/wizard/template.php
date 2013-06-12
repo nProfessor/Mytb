@@ -21,11 +21,13 @@ class WizardTemplate extends CWizardTemplate
 				$strError .= $arError[0]."<br />";
 
 			if (strlen($strError) > 0)
-				$strError = '<div id="step-error">'.$strError."</div>";
+				$strError = '<div class="inst-note-block inst-note-block-red"><div class="inst-note-block-icon"></div><div class="inst-note-block-text">'.$strError."</div></div>";
 		}
 
 		$stepTitle = $obStep->GetTitle();
 		$stepSubTitle = $obStep->GetSubTitle();
+		if(strlen($stepSubTitle) > 0)
+			$stepSubTitle = '<div class="inst-cont-title-review">'.$stepSubTitle.'</div>';
 
 		$alertText = GetMessage("MAIN_WIZARD_WANT_TO_CANCEL");
 		$loadingText = GetMessage("MAIN_WIZARD_WAIT_WINDOW_TEXT");
@@ -48,7 +50,12 @@ class WizardTemplate extends CWizardTemplate
 		if(isset($bxProductConfig["product_wizard"]["product_name"]))
 			$title = $bxProductConfig["product_wizard"]["product_name"];
 		else
-			$title = (isset($arWizardConfig["productName"]) ? $arWizardConfig["productName"] : InstallGetMessage("INS_TITLE1"));
+			$title = (isset($arWizardConfig["productName"]) ? $arWizardConfig["productName"] : InstallGetMessage("INS_TITLE3"));
+		
+		$titleSub = "";
+		if($title == InstallGetMessage("INS_TITLE3"))
+			$titleSub = '<div class="inst-title-label">'.InstallGetMessage("INS_TITLE2").'</div>';
+
 		$title = str_replace("#VERS#", $productVersion , $title);
 		$browserTitle = strip_tags(str_replace(Array("<br>", "<br />"), " ",$title));
 
@@ -67,6 +74,9 @@ class WizardTemplate extends CWizardTemplate
 		else
 			$support = (isset($arWizardConfig["supportText"]) ? $arWizardConfig["supportText"] : InstallGetMessage("SUPPORT"));
 
+		if(file_exists($_SERVER["DOCUMENT_ROOT"]."/readme.php") || file_exists($_SERVER["DOCUMENT_ROOT"]."/readme.html"))
+			$support = InstallGetMessage("SUPPORT_README").$support;
+		
 		//Images
 		$logoImage = "";
 		$boxImage = "";
@@ -79,6 +89,8 @@ class WizardTemplate extends CWizardTemplate
 		{
 			if (isset($arWizardConfig["imageLogoSrc"]) && file_exists($_SERVER["DOCUMENT_ROOT"].$arWizardConfig["imageLogoSrc"]))
 				$logoImage = '<img src="'.$arWizardConfig["imageLogoSrc"].'" alt="" />';
+			elseif (file_exists($_SERVER["DOCUMENT_ROOT"]."/bitrix/images/install/".LANGUAGE_ID."/logo.png"))
+				$logoImage = '<img src="/bitrix/images/install/'.LANGUAGE_ID.'/logo.png" alt="" />';
 			elseif (file_exists($_SERVER["DOCUMENT_ROOT"]."/bitrix/images/install/".LANGUAGE_ID."/logo.gif"))
 				$logoImage = '<img src="/bitrix/images/install/'.LANGUAGE_ID.'/logo.gif" alt="" />';
 			elseif (file_exists($_SERVER["DOCUMENT_ROOT"]."/bitrix/images/install/en/logo.gif"))
@@ -93,6 +105,8 @@ class WizardTemplate extends CWizardTemplate
 		{
 			if (isset($arWizardConfig["imageBoxSrc"]) && file_exists($_SERVER["DOCUMENT_ROOT"].$arWizardConfig["imageBoxSrc"]))
 				$boxImage = '<img src="'.$arWizardConfig["imageBoxSrc"].'" alt="" />';
+			elseif (file_exists($_SERVER["DOCUMENT_ROOT"]."/bitrix/images/install/".LANGUAGE_ID."/box-new.jpg"))
+				$boxImage = '<img src="/bitrix/images/install/'.LANGUAGE_ID.'/box-new.jpg" alt="" />';
 			elseif (file_exists($_SERVER["DOCUMENT_ROOT"]."/bitrix/images/install/".LANGUAGE_ID."/box.jpg"))
 				$boxImage = '<img src="/bitrix/images/install/'.LANGUAGE_ID.'/box.jpg" alt="" />';
 			elseif (file_exists($_SERVER["DOCUMENT_ROOT"]."/bitrix/images/install/en/box.jpg"))
@@ -113,29 +127,22 @@ class WizardTemplate extends CWizardTemplate
 		{
 			if ($stepID == $currentStep)
 			{
-				$class = 'class="selected"';
+				$class = ' inst-active-step';
 				$currentSuccess = true;
 			}
 			elseif ($currentSuccess)
 				$class = '';
 			else
-				$class = 'class="done"';
+				$class = ' inst-past-stage';
 
 			$strNavigation .= '
-			<tr '.$class.'>
-				<td class="menu-number">'.$stepNumber.'</td>
-				<td class="menu-name">'.$stepObject->GetTitle().'</td>
-				<td class="menu-end"></td>
-			</tr>
-			<tr class="menu-separator">
-				<td colspan="3"></td>
-			</tr>';
+			<div class="inst-sequence-step-item'.$class.'"><span class="inst-sequence-step-num">'.$stepNumber.'</span><span class="inst-sequence-step-text">'.$stepObject->GetTitle().'</span></div>';
 
 			$stepNumber++;
 		}
 
 		if (strlen($strNavigation) > 0)
-			$strNavigation = '<table width="100%" cellpadding="0" cellspacing="0" id="menu">'.$strNavigation.'</table>';
+			$strNavigation = '<div class="inst-sequence-steps">'.$strNavigation.'</div>';
 
 		$currentStep = $wizard->GetCurrentStepID();
 		$jsBeforeOnload = "";
@@ -154,10 +161,12 @@ class WizardTemplate extends CWizardTemplate
 
 
 		return <<<HTML
+<!DOCTYPE html>
 <html>
 	<head>
 		<title>{$browserTitle}</title>
 		<meta http-equiv="Content-Type" content="text/html; charset={$charset}">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
 		<noscript>
 			<style type="text/css">
 				div {display: none;}
@@ -165,150 +174,7 @@ class WizardTemplate extends CWizardTemplate
 			</style>
 			<p id="noscript">{$noscriptInfo}</p>
 		</noscript>
-
-		<style type="text/css">
-
-			html {height:100%;}
-
-			body 
-			{
-				background:#4a507b url(/bitrix/images/install/bg_fill.gif) repeat;
-				margin:0;
-				padding:0;
-				padding-bottom:6px;
-				font-family: Arial, Verdana, Helvetica, sans-serif;
-				font-size:82%;
-				height:100%;
-				color:black;
-				box-sizing:border-box;
-				-moz-box-sizing:border-box;
-				-webkit-box-sizing: border-box;
-				-khtml-box-sizing: border-box;
-			}
-
-			table {font-size:100.01%;}
-
-			a {color:#2676b9}
-
-			h3 {font-size:120%;}
-
-			#container
-			{
-				padding-top:6px;
-				height:100%;
-				background: transparent url(/bitrix/images/install/bg_top.gif) repeat-x;
-				box-sizing:border-box;
-				-moz-box-sizing:border-box;
-				-webkit-box-sizing: border-box;
-				-khtml-box-sizing: border-box;
-			}
-
-			#main-table
-			{
-				width:760px;
-				height:100%;
-				border-collapse:collapse;
-			}
-
-			#main-table td {padding:0;}
-
-			td.wizard-title
-			{
-				background:#e3f0f9 url(/bitrix/images/install/top_gradient_fill.gif) repeat-x; 
-				height:77px; 
-				color:#19448a; 
-				font-size:140%; 
-			}
-			#step-title
-			{
-				color:#cd4d3e; 
-				margin: 20px; 
-				padding-bottom:20px; 
-				border-bottom:1px solid #d9d9d9; 
-				font-weight:bold;
-				font-size:120%;
-			}
-			#step-content {margin:20px 25px; zoom:1;}
-
-			table.data-table
-			{
-				width:100%;
-				border-collapse:collapse;
-				border:1px solid #d0d0d0;
-			}
-
-			table.data-table td
-			{
-				padding:5px !important;
-				border:1px solid #d0d0d0;
-			}
-
-			table.data-table td.header
-			{
-				text-align:center;
-				background: #e3f0f9;
-				font-weight: bold;
-			}
-
-			#menu td.menu-number, #menu td.menu-name
-			{
-				background:#eaeaea url(/bitrix/images/install/menu_fill.gif) repeat-x;
-				height:40px;
-				color:#c0c0c0;
-			}
-
-			#menu tr.menu-separator
-			{
-				height:2px;
-				background: none;
-			}
-
-			#menu tr.selected td.menu-number, #menu tr.selected td.menu-name
-			{
-				background:#b41d07 url(/bitrix/images/install/menu_fill_selected.gif) repeat-x;
-				color:white;
-			}
-
-			#menu tr.done
-			{
-				color:black;
-			}
-
-			#menu td.menu-end
-			{
-				background: url(/bitrix/images/install/menu_end.gif) repeat-x;
-				width:11px;
-			}
-
-			#menu tr.selected td.menu-end
-			{
-				background: url(/bitrix/images/install/menu_end_selected.gif) repeat-x;
-				width:11px;
-			}
-
-			#menu td.menu-number
-			{
-				width:30px;
-				font-size: 170%;
-				text-align:center;
-			}
-
-			#menu td.menu-name
-			{
-				font-size:110%;
-				padding-bottom:1px;
-			}
-
-			#copyright {font-size:95%; color:#606060; margin:4px 7px 0 7px; zoom:1;}
-
-			input.wizard-prev-button {background: #ffe681 url(/bitrix/images/install/prev.gif); border:none; width:116px; height:31px; font-weight:bold; padding-bottom:4px; cursor:pointer; cursor:hand;}
-			input.wizard-next-button {background: #ffe681 url(/bitrix/images/install/next.gif); border:none; width:116px; height:31px; font-weight:bold; padding-bottom:4px; cursor:pointer; cursor:hand;}
-
-			form {margin:0; padding:0;}
-			#step-error {color:red; padding:4px 4px 4px 25px;margin-bottom:4px; background:url(/bitrix/images/install/error.gif) no-repeat;}
-			small{font-size:85%;}
-
-		</style>
+		<link rel="stylesheet" href="/bitrix/images/install/installer_style.css">
 		<script type="text/javascript">
 		<!--
 			document.onkeydown = EnterKeyPress;
@@ -363,82 +229,57 @@ class WizardTemplate extends CWizardTemplate
 	</head>
 
 <body id="bitrix_install_template">
-<div id="container">
-
-	<table id="main-table" align="center">
-		<tr>
-			<td width="10" height="10"><img src="/bitrix/images/install/corner_top_left.gif" width="10" height="10" alt="" /></td>
-			<td width="100%">
-				<table width="100%" height="100%" cellpadding="0" cellspacing="0">
-					<tr>
-						<td width="215" height="10" style="background:white;"></td>
-						<td width="525" height="10" style="background:#e3f0f9;"></td>
-					</tr>
-				</table>
-			</td>
-			<td width="10" height="10"><img src="/bitrix/images/install/corner_top_right.gif" width="10" height="10" alt="" /></td>
-		</tr>
-		<tr>
-			<td colspan="3" height="100%" style="background:white">
-				<table width="100%" height="100%" cellpadding="0" cellspacing="0">
-					<tr>
-						<td width="225" valign="top">
-							<!-- Left column -->
-							<table width="100%" height="100%" cellpadding="0" cellspacing="0">
-								<tr><td align="center" height="185">{$boxImage}</td></tr>
-								<tr>
-									<td height="100%" valign="top">
-										<!-- Menu -->
-										{$strNavigation}
-									</td>
-								</tr>
-								<tr><td align="center" height="100">{$logoImage}</td></tr>
-							</table>
-						</td>
-						<td width="535" valign="top">
-							<!-- Right column -->
-							<table width="100%" height="77" cellpadding="0" cellspacing="0">
-								<tr>
-									<td width="9" style="background:#e3f0f9;"><img src="/bitrix/images/install/top_gradient_begin.gif" width="9" height="77" alt="" /></td>
-									<td class="wizard-title" width="14">&nbsp;</td>
-									<td class="wizard-title">{$title}</td>
-								</tr>
-							</table>
-							<div id="step-title">{$stepTitle}</div>
-							{#FORM_START#}
-							<div id="step-content">
-								{$strError}
-								{#CONTENT#}
-								<br /><br /><br /><div align="right">{#BUTTONS#}</div><br />
-							</div>
-							
-							{#FORM_END#}
-						</td>
-					</tr>
-				</table>
-			</td>
-		</tr>
-
-		<tr height="20" style="background:#e8e8e8;">
-			<td colspan="3">
-				<div id="copyright">
-					<table width="100%" height="100%" cellpadding="0" cellspacing="5">
+<table class="installer-main-table" id="container">
+	<tr>
+		<td class="installer-main-table-cell">
+			<div class="installer-block-wrap">
+				<div class="installer-block">
+					{#FORM_START#}
+					<table class="installer-block-table">
 						<tr>
-							<td>{$copyright}</td>
-							<td align="right">{$support}</td>
+							<td class="installer-block-cell-left">
+								<table class="inst-left-side-img-table">
+									<tr>
+										<td class="inst-left-side-img-cell">{$boxImage}</td>
+									</tr>
+								</table>
+								{$strNavigation}
+							</td>
+							<td class="installer-block-cell-right">
+								<div class="inst-title-block">
+									{$titleSub}
+									<div class="inst-title">{$title}</div>
+								</div>
+								<div class="inst-cont-title-wrap">
+									<div class="inst-cont-title">{$stepTitle}</div>
+									{$stepSubTitle}
+								</div>
+								<div id="step-content">
+									{$strError}
+									{#CONTENT#}
+								</div>
+								<div class="instal-btn-wrap">
+									{#BUTTONS#}
+								</div>
+							</td>
+						</tr>
+						<tr>
+							<td class="installer-block-cell-left installer-block-cell-bottom">{$logoImage}</td>
+							<td class="installer-block-cell-right installer-block-cell-bottom"></td>
 						</tr>
 					</table>
+					{#FORM_END#}
 				</div>
-		</tr>
-		<tr>
-			<td width="10" height="10" valign="bottom"><img src="/bitrix/images/install/corner_bottom_left.gif" width="10" height="10" alt="" /></td>
-			<td width="100%" style="background:#e8e8e8;"></td>
-			<td width="10" height="10" valign="bottom"><img src="/bitrix/images/install/corner_bottom_right.gif" width="10" height="10" alt="" /></td>
-		</tr>
-	</table>
-	<script type="text/javascript">PreloadImages();</script>
-
-</div>
+				<div class="installer-footer">
+					<div class="instal-footer-left-side">{$copyright}</div>
+					<div class="instal-footer-right-side">{$support}</div>
+				</div>
+			</div>
+		</td>
+	</tr>
+</table>
+<script type="text/javascript">PreloadImages();</script>
+<div class="instal-bg"><div class="instal-bg-inner"></div></div>
 </body>
 </html>
 

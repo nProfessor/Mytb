@@ -26,7 +26,7 @@ class CCloudStorageService_ClodoRU extends CCloudStorageService_OpenStackStorage
 			$arSettings = unserialize($arBucket["SETTINGS"]);
 
 		if(!is_array($arSettings))
-			$arSettings = array("HOST" => "testapi.clodo.ru", "USER" => "", "KEY" => "");
+			$arSettings = array("HOST" => "api.clodo.ru", "USER" => "", "KEY" => "");
 
 		$htmlID = htmlspecialcharsbx($this->GetID());
 
@@ -45,14 +45,6 @@ class CCloudStorageService_ClodoRU extends CCloudStorageService_OpenStackStorage
 		</tr>
 		';
 		return $result;
-	}
-
-	function CheckSettings($arBucket, &$arSettings)
-	{
-		if(is_array($arSettings))
-			$arSettings["HOST"] = "testapi.clodo.ru";
-
-		return parent::CheckSettings($arBucket, $arSettings);
 	}
 }
 ?>

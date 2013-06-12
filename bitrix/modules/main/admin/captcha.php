@@ -280,7 +280,8 @@ if(strlen($Preview) > 0)
 	$cpt->SetTTFFonts($result["arTTFFiles"]);
 
 	$arChars = array();
-	for($i = 0; $i < strlen($result["letters"]); $i++)
+	$l = strlen($result["letters"]);
+	for($i = 0; $i < $l; $i++)
 		$arChars[] = substr($result["letters"], $i, 1);
 	$cpt->SetCodeChars($arChars);
 
@@ -523,9 +524,9 @@ function set_presets()
 <?=bitrix_sessid_post()?>
 <?$tabControl->BeginNextTab();?>
 <tr>
-	<td with="30%"><?echo GetMessage("MAIN_ADM_CAPTCHA_PRESETS")?>:</td>
-	<td with="40%">
-	<select size="1" id="presets" name="presets" onchange="set_presets()">
+	<td width="40%"><?echo GetMessage("MAIN_ADM_CAPTCHA_PRESETS")?>:</td>
+	<td width="300">
+	<select id="presets" name="presets" onchange="set_presets()">
 		<option value="0" <?if(COption::GetOptionInt("main", "CAPTCHA_presets") == 0) echo "selected"?>><?echo GetMessage("MAIN_ADM_CAPTCHA_PRESET_0")?></option>
 		<option value="1" <?if(COption::GetOptionInt("main", "CAPTCHA_presets") == 1) echo "selected"?>><?echo GetMessage("MAIN_ADM_CAPTCHA_PRESET_1")?></option>
 		<option value="2" <?if(COption::GetOptionInt("main", "CAPTCHA_presets") == 2) echo "selected"?>><?echo GetMessage("MAIN_ADM_CAPTCHA_PRESET_2")?></option>
@@ -535,9 +536,9 @@ function set_presets()
 		<option value="6" <?if(COption::GetOptionInt("main", "CAPTCHA_presets") == 6) echo "selected"?>><?echo GetMessage("MAIN_ADM_CAPTCHA_PRESET_6")?></option>
 	</select>
 	</td>
-	<td  with="30%" rowspan="<?echo count($arSettings)+1?>">
-		<?for($i=0;$i < 10; $i++):?>
-			<img id="CAPTCHA_<?echo $i?>" src="/bitrix/admin/captcha.php?Preview=Y&amp;captcha_sid=<?echo $CAPTCHA_CODE?>&amp;i=<?echo $i?>&amp;j=0" width="180" height="40" alt="CAPTCHA" /><br>
+	<td valign="top" rowspan="<?echo count($arSettings)+1?>">
+		<?for($i=0;$i < 12; $i++):?>
+			<img id="CAPTCHA_<?echo $i?>" src="/bitrix/admin/captcha.php?Preview=Y&amp;captcha_sid=<?echo $CAPTCHA_CODE?>&amp;i=<?echo $i?>&amp;j=0" width="180" height="40" alt="CAPTCHA" /><br><br><br>
 		<?endfor?>
 	</td>
 </tr>

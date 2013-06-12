@@ -1,4 +1,15 @@
 <?
+/**
+ * Bitrix Framework
+ * @package bitrix
+ * @subpackage main
+ * @copyright 2001-2013 Bitrix
+ *
+ * Bitrix vars
+ * @global CUser $USER
+ * @global CMain $APPLICATION
+ */
+
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_js.php");
 
@@ -53,7 +64,7 @@ function __struct_get_file_info($abs_path, $file)
 			$f = $io->GetFile($abs_path."/".$file);
 			$sContent = $f->GetContents();
 			$arContent = ParseFileContent($sContent);
-			$arFile["name"] = $arContent["TITLE"];
+			$arFile["name"] = CUtil::ConvertToLangCharset($arContent["TITLE"]);
 			$arFile["properties"] = $arContent["PROPERTIES"];
 		}
 	}
@@ -175,7 +186,9 @@ function __struct_show_files($arFiles, $doc_root, $path, $open_path, $dirsonly=f
 
 function __struct_get_files($doc_root, $path="", $open_path="", $dirsonly=false)
 {
-	if(!$GLOBALS['USER']->CanDoFileOperation('fm_view_listing', array($_GET['site'], $path)))
+	global $USER;
+
+	if(!$USER->CanDoFileOperation('fm_view_listing', array($_GET['site'], $path)))
 		return '';
 
 	$arFiles = array();
@@ -298,15 +311,15 @@ window.structRegisterDD = function(arSrc, arDest)
 		obEl.onbxdrag = Struct_Drag;
 		jsDD.registerObject(obEl);
 	}
-	for(var i=0, n=arDest.length; i<n; i++)
+	for(i=0, n=arDest.length; i<n; i++)
 	{
-		var obEl = document.getElementById(arDest[i]);
+		obEl = document.getElementById(arDest[i]);
 		obEl.onbxdestdraghover = Struct_DragHover;
 		obEl.onbxdestdraghout = Struct_DragOut;
 		obEl.onbxdestdragfinish = Struct_DragFinish;
 		jsDD.registerDest(obEl);
 	}
-}
+};
 
 window.structGetSubDir = function(el, div_id, path, dirsonly)
 {
@@ -331,7 +344,7 @@ window.structGetSubDir = function(el, div_id, path, dirsonly)
 	}
 	el.className = (el.className == 'bx-struct-plus'? 'bx-struct-minus':'bx-struct-plus');
 	div.style.display = (div.style.display == 'none'? 'block':'none');
-}
+};
 
 window.structGetSubdirAction = function(id)
 {
@@ -341,7 +354,7 @@ window.structGetSubdirAction = function(id)
 		setTimeout(function(){if(window.structMenu)	window.structMenu.PopupHide();}, 50);
 		el.onclick();
 	}
-}
+};
 
 window.structReload = function(path, params)
 {
@@ -357,7 +370,7 @@ window.structReload = function(path, params)
 	};
 	setTimeout(ShowWaitWindow, 50);
 	CHttpRequest.Send('/bitrix/admin/public_structure.php?ajax=Y&reload=Y&<?="lang=".$encLang."&site=".$encSite?>&path='+path+(params? '&'+params:''));
-}
+};
 
 window.structReloadDirs = function(path)
 {
@@ -371,24 +384,27 @@ window.structReloadDirs = function(path)
 	};
 	setTimeout(ShowWaitWindow, 50);
 	CHttpRequest.Send('/bitrix/admin/public_structure.php?ajax=Y&reload=Y&<?="lang=".$encLang."&site=".$encSite?>&dirsonly=Y&path='+path);
-}
+};
 
 window.structNameOver = function(el)
 {
 	el.className += ' bx-struct-name-over';
-}
+};
 
 window.structNameOut = function(el)
 {
 	el.className = el.className.replace(/\s*bx-struct-name-over/ig, "");
-}
+};
 
-window.jsPopup_subdialog = new JCPopup({'suffix':'subdialog', 'zIndex':parseInt(<?=$obJSPopup->jsPopup?>.zIndex)+20});
+window.structPopup = <?=$obJSPopup->jsPopup?>;
+
+window.jsPopup_subdialog = new JCPopup({'suffix':'subdialog', 'zIndex':parseInt(window.structPopup.zIndex)+20});
+
 window.structShowSubDialog = function()
 {
-	setTimeout(function(){<?=$obJSPopup->jsPopup?>.bDenyEscKey = true}, 200);
-	jsUtils.addCustomEvent('OnBeforeCloseDialog', function(){setTimeout(function(){<?=$obJSPopup->jsPopup?>.bDenyEscKey = false;}, 50);});
-}
+	setTimeout(function(){window.structPopup.bDenyEscKey = true}, 200);
+	jsUtils.addCustomEvent('OnBeforeCloseDialog', function(){setTimeout(function(){window.structPopup.bDenyEscKey = false;}, 50);});
+};
 
 window.structAddFile = function(path, isFolder)
 {
@@ -398,9 +414,9 @@ window.structAddFile = function(path, isFolder)
 		"URL"=>"/bitrix/admin/public_file_new.php?subdialog=Y&lang=".$encLang."&site=".$encSite."&templateID=".$encTemplateID."&path=#PATH#", 
 		"PARAMS"=> Array("min_width"=>450, "min_height" => 250)), "subdialog");
 	$url = str_replace("#PATH#", "'+path+(isFolder==true? '&newFolder=Y':'')+'", $url);
+	echo $url.";";
 ?>
-	<?=$url?>;
-}
+};
 
 window.structAccessDialog = function(path)
 {
@@ -410,9 +426,9 @@ window.structAccessDialog = function(path)
 		"URL"=>"/bitrix/admin/public_access_edit.php?subdialog=Y&lang=".$encLang."&site=".$encSite."&path=#PATH#",
 		"PARAMS" => Array("min_width"=>450, "min_height" => 250)), "subdialog");
 	$url = str_replace("#PATH#", "'+path+'", $url);
+	echo $url.";";
 ?>
-	<?=$url?>;
-}
+};
 
 window.structEditFolder = function(path)
 {
@@ -422,11 +438,11 @@ window.structEditFolder = function(path)
 		"URL"=>"/bitrix/admin/public_folder_edit.php?subdialog=Y&lang=".$encLang."&site=".$encSite."&path=#PATH#",
 		"PARAMS" => Array("min_width"=>450, "min_height" => 250)), "subdialog");
 	$url = str_replace("#PATH#", "'+path+'", $url);
+	echo $url.";";
 ?>
-	<?=$url?>;
-}
+};
 
-jsPopup_editor = new JCPopup({'suffix':'editor', 'zIndex':parseInt(<?=$obJSPopup->jsPopup?>.zIndex)+20});
+jsPopup_editor = new JCPopup({'suffix':'editor', 'zIndex':parseInt(window.structPopup.zIndex)+20});
 window.structEditFile = function(path)
 {
 //	structShowSubDialog();
@@ -436,10 +452,9 @@ window.structEditFile = function(path)
 		"URL"=>"/bitrix/admin/public_file_edit.php?bxpublic=Y&subdialog=Y&lang=".$encLang."&path=#PATH#&site=".$encSite, 
 		"PARAMS"=>array("width"=>780, "height"=>570, "resize"=>true)), "editor");
 	$url = str_replace("#PATH#", "'+path+'", $url);
+	echo $url.";";
 ?>
-	<?=$url?>;
-
-}
+};
 
 window.structEditFileHtml = function(path)
 {
@@ -449,9 +464,9 @@ window.structEditFileHtml = function(path)
 		"URL"=>"/bitrix/admin/public_file_edit.php?bxpublic=Y&subdialog=Y&lang=".$encLang."&noeditor=Y&path=#PATH#&site=".$encSite, 
 		"PARAMS"=>array("width"=>780, "height"=>570, "resize"=>true)), "editor");
 	$url = str_replace("#PATH#", "'+path+'", $url);
+	echo $url.";";
 ?>
-	<?=$url?>;
-}
+};
 
 window.structFileProp = function(path)
 {
@@ -461,9 +476,9 @@ window.structFileProp = function(path)
 		"URL"=>"/bitrix/admin/public_file_property.php?subdialog=Y&lang=".$encLang."&site=".$encSite."&path=#PATH#",
 		"PARAMS" => Array("min_width"=>450, "min_height" => 250)), "subdialog");
 	$url = str_replace("#PATH#", "'+path+'", $url);
+	echo $url.";";
 ?>
-	<?=$url?>;
-}
+};
 
 window.structDelFile = function(path)
 {
@@ -473,15 +488,15 @@ window.structDelFile = function(path)
 		"URL" => "/bitrix/admin/public_file_delete.php?subdialog=Y&lang=".$encLang."&site=".$encSite."&path=#PATH#",
 		"PARAMS" => Array("min_width"=>250, "min_height" => 150, 'height' => 150, 'width' => 350)), "subdialog");
 	$url = str_replace("#PATH#", "'+path+'", $url);
+	echo $url.";";
 ?>
-	<?=$url?>;
-}
+};
 
 window.structDelFolder = function(path)
 {
 	if(confirm('<?=CUtil::JSEscape(GetMessage("pub_struct_folder_del_confirm"))?>'))
 		structReload(path, 'action=delfolder&<?="lang=".$encLang."&site=".$encSite."&".bitrix_sessid_get()?>&path='+path);
-}
+};
 
 window.structShowDirMenu = function(el, dirsonly, arPerm)
 {
@@ -504,7 +519,7 @@ window.structShowDirMenu = function(el, dirsonly, arPerm)
 <?endif;?>
 	
 	window.structShowMenu(el, items, dirsonly);
-}
+};
 
 window.structShowFileMenu = function(el, arPerm)
 {
@@ -533,7 +548,7 @@ window.structShowFileMenu = function(el, arPerm)
 	items[items.length] = {'ICONCLASS': 'panel-file-delete', 'TEXT': (bText? '<?=CUtil::JSEscape(GetMessage("pub_struct_file_del"))?>':'<?=CUtil::JSEscape(GetMessage("pub_struct_file_del_title"))?>'), 'ONCLICK': 'structDelFile(\''+path+'\')', 'TITLE': '<?=CUtil::JSEscape(GetMessage("pub_struct_file_del_title1"))?>', 'DISABLED':!arPerm.del_file};
 	
 	window.structShowMenu(el, items);
-}
+};
 
 window.structEditFileAction = function(el)
 {
@@ -545,41 +560,41 @@ window.structEditFileAction = function(el)
 		if(ext == 'php' || ext == 'htm' || ext == 'html')
 			structEditFile(path);
 	}
-}
+};
 
 window.structShowMenu = function(el, items, dirsonly)
 {
 	if(!window.structMenu)
 	{
 		window.structMenu = new PopupMenu('structure_menu');
-		window.structMenu.Create(parseInt(<?=$obJSPopup->jsPopup?>.zIndex)+15);
+		window.structMenu.Create(parseInt(window.structPopup.zIndex)+15);
 	}
 
 	if(window['structHint'+el.id])
 		window['structHint'+el.id].Freeze();
-	<?=$obJSPopup->jsPopup?>.bDenyEscKey = true;
+	window.structPopup.bDenyEscKey = true;
 	jsUtils.addCustomEvent('OnBeforeCloseDialog', window.structMenu.PopupHide, [], window.structMenu);
 	
 	//var dY = document.getElementById((dirsonly? 'bx_struct_dirs_content':'bx_popup_content')).scrollTop;
 	var dY = 0; /*(
 		dirsonly 
 			? BX('bx_struct_dirs_content') 
-			: BX.findParent(<?=$obJSPopup->jsPopup?>.GetContent(), {tag: 'DIV'})  // hack ;-(
+			: BX.findParent(window.structPopup.GetContent(), {tag: 'DIV'})  // hack ;-(
 		).scrollTop;*/
 	
 	var dPos = {'left':0, 'right':0, 'top':-dY+1, 'bottom':-dY+1};
 		
 	window.structMenu.ShowMenu(el, items, false, dPos, function(){
-		setTimeout(function(){<?=$obJSPopup->jsPopup?>.bDenyEscKey = false}, 50);
+		setTimeout(function(){window.structPopup.bDenyEscKey = false}, 50);
 		if(window['structHint'+el.id])
 			window['structHint'+el.id].UnFreeze();
 	});
-}
+};
 
 window.structShowSettingsMenu = function(el)
 {
 	if(!window.structSettingsMenu)
-		window.structSettingsMenu = new PopupMenu('structure_menu', parseInt(<?=$obJSPopup->jsPopup?>.zIndex)+10);
+		window.structSettingsMenu = new PopupMenu('structure_menu', parseInt(window.structPopup.zIndex)+10);
 
 	var items = [
 		{'ICONCLASS': (window.structOptions['show_all_files'] == true? 'checked':''), 
@@ -595,21 +610,21 @@ window.structShowSettingsMenu = function(el)
 	window.structSettingsMenu.SetItems(items);
 	window.structSettingsMenu.BuildItems();
 
-	<?=$obJSPopup->jsPopup?>.bDenyEscKey = true;
+	window.structPopup.bDenyEscKey = true;
 	jsUtils.addCustomEvent('OnBeforeCloseDialog', window.structSettingsMenu.PopupHide, [], window.structSettingsMenu);
 	
-	window.structSettingsMenu.ShowMenu(el, false, false, false, function(){setTimeout(function(){<?=$obJSPopup->jsPopup?>.bDenyEscKey = false}, 50)});
-}
+	window.structSettingsMenu.ShowMenu(el, false, false, false, function(){setTimeout(function(){window.structPopup.bDenyEscKey = false}, 50)});
+};
 
 window.structOpenDirs = function(el)
 {
 	if(document.getElementById('bx_struct_dirs'))
 		return;
-	var strDiv = <?=$obJSPopup->jsPopup?>.Get();
+	var strDiv = window.structPopup.Get();
 	var div = jsFloatDiv.Create({
 		'id':'bx_struct_dirs', 
 		'className':'bx-popup-form', 
-		'zIndex':parseInt(<?=$obJSPopup->jsPopup?>.zIndex)+10,
+		'zIndex':parseInt(window.structPopup.zIndex)+10,
 		'width':250, 'height':strDiv.offsetHeight
 	});
 
@@ -637,17 +652,17 @@ window.structOpenDirs = function(el)
 			
 				jsDD.registerContainer(cont);
 
-				div.style.zIndex = parseInt(<?=$obJSPopup->jsPopup?>.zIndex)+2;
+				div.style.zIndex = parseInt(window.structPopup.zIndex)+2;
 				jsFloatDiv.Show(div, pos["left"]-250-1, pos["top"], 0, true);
 				BX.closeWait(strDiv);
 			}
 		}
 	);
-	window.structUpdateTop = function() {div.style.top = strDiv.style.top;}
-	BX.addCustomEvent(<?=$obJSPopup->jsPopup?>, 'onWindowClose', structCloseDirs);
-	BX.addCustomEvent(<?=$obJSPopup->jsPopup?>, 'onWindowExpand', window.structUpdateTop);
-	BX.addCustomEvent(<?=$obJSPopup->jsPopup?>, 'onWindowNarrow', window.structUpdateTop);
-}
+	window.structUpdateTop = function() {div.style.top = strDiv.style.top;};
+	BX.addCustomEvent(window.structPopup, 'onWindowClose', structCloseDirs);
+	BX.addCustomEvent(window.structPopup, 'onWindowExpand', window.structUpdateTop);
+	BX.addCustomEvent(window.structPopup, 'onWindowNarrow', window.structUpdateTop);
+};
 
 window.structCloseDirs = function()
 {
@@ -657,15 +672,15 @@ window.structCloseDirs = function()
 		jsFloatDiv.Close(div);
 		div.parentNode.removeChild(div);
 	}
-	BX.removeCustomEvent(<?=$obJSPopup->jsPopup?>, 'onWindowClose', structCloseDirs);
+	BX.removeCustomEvent(window.structPopup, 'onWindowClose', structCloseDirs);
 	
 	if (window.structUpdateTop)
 	{
-		BX.removeCustomEvent(<?=$obJSPopup->jsPopup?>, 'onWindowExpand', window.structUpdateTop);
-		BX.removeCustomEvent(<?=$obJSPopup->jsPopup?>, 'onWindowNarrow', window.structUpdateTop);
+		BX.removeCustomEvent(window.structPopup, 'onWindowExpand', window.structUpdateTop);
+		BX.removeCustomEvent(window.structPopup, 'onWindowNarrow', window.structUpdateTop);
 		window.structUpdateTop = null;
 	}
-}
+};
 
 /* DD handlers */
 
@@ -673,7 +688,7 @@ window.Struct_DragStart = function()
 {
 	var div = document.body.appendChild(document.createElement("DIV"));
 	div.style.position = 'absolute';
-	div.style.zIndex = parseInt(<?=$obJSPopup->jsPopup?>.zIndex)+30;
+	div.style.zIndex = parseInt(window.structPopup.zIndex)+30;
 	div.className = 'bx-struct-drag';
 	this.__dragCopyDiv = div;
 
@@ -684,7 +699,7 @@ window.Struct_DragStart = function()
 	div.innerHTML = drag_div.innerHTML;
 	drag_div.className = 'bx-struct-name bx-struct-name-drag';
 
-	window.structContainers = [BX.findParent(<?=$obJSPopup->jsPopup?>.GetContent(), {tag: 'DIV'}), document.getElementById('bx_struct_dirs_content')];
+	window.structContainers = [BX.findParent(window.structPopup.GetContent(), {tag: 'DIV'}), document.getElementById('bx_struct_dirs_content')];
 	window.structContainerPos = [];
 	for(var i=0; i<window.structContainers.length; i++)
 		if(window.structContainers[i])
@@ -695,7 +710,7 @@ window.Struct_DragStart = function()
 		hint.Freeze();
 
 	return true;
-}
+};
 
 window.Struct_Drag = function(x, y)
 {
@@ -715,7 +730,7 @@ window.Struct_Drag = function(x, y)
 	}
 
 	return true;
-}
+};
 
 window.Struct_DragStop = function()
 {
@@ -733,19 +748,19 @@ window.Struct_DragStop = function()
 		hint.UnFreeze();
 	
 	return true;
-}
+};
 
 window.Struct_DragHover = function(obDrag, x, y)
 {
 	this.className += ' bx-struct-dragover';
 	return true;
-}
+};
 
 window.Struct_DragOut = function(obDrag, x, y)
 {
 	this.className = this.className.replace(/\s*bx-struct-dragover/ig, "");
 	return true;
-}
+};
 
 window.Struct_DragFinish = function(obDrag, x, y, e)
 {
@@ -783,10 +798,10 @@ window.Struct_DragFinish = function(obDrag, x, y, e)
 		structReload(enc_to, 'action='+(e.ctrlKey? 'copy':'move')+'&from='+enc_from+'&to='+enc_to+'&<?=bitrix_sessid_get()?>');
 
 	return true;
-}
+};
 
 jsDD.Reset();
-//jsDD.registerContainer(BX.findParent(<?=$obJSPopup->jsPopup?>.GetContent(), {tag: 'DIV'}));
+//jsDD.registerContainer(BX.findParent(window.structPopup.GetContent(), {tag: 'DIV'}));
 jsDD.registerContainer(BX.WindowManager.Get().GetContent());
 
 </script>

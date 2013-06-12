@@ -52,13 +52,14 @@ $arResult["~LAST_LOGIN"] = $_COOKIE[COption::GetOptionString("main", "cookie_nam
 $arResult["LAST_LOGIN"] = htmlspecialcharsbx($arResult["~LAST_LOGIN"]);
 $arResult["STORE_PASSWORD"] = COption::GetOptionString("main", "store_password", "Y") == "Y" ? "Y" : "N";
 $arResult["NEW_USER_REGISTRATION"] = (COption::GetOptionString("main", "new_user_registration", "N") == "Y" ? "Y" : "N");
+$arResult["ALLOW_SOCSERV_AUTHORIZATION"] = (COption::GetOptionString("main", "allow_socserv_authorization", "Y") != "N" ? "Y" : "N");
 
 $arResult["AUTH_SERVICES"] = false;
 $arResult["CURRENT_SERVICE"] = false;
 $arResult["FOR_INTRANET"] = false;
 if(IsModuleInstalled("intranet"))
 	$arResult["FOR_INTRANET"] = true;
-if(!$USER->IsAuthorized() && CModule::IncludeModule("socialservices"))
+if(!$USER->IsAuthorized() && CModule::IncludeModule("socialservices") && ($arResult["ALLOW_SOCSERV_AUTHORIZATION"] == 'Y'))
 {
 	$oAuthManager = new CSocServAuthManager();
 	$arServices = $oAuthManager->GetActiveAuthServices($arResult);

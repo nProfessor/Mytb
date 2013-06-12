@@ -28,11 +28,11 @@ class CBitrixCloudCDN
 		{
 			if (self::$config->lock())
 			{
+				$delayExpiration = true;
 				try
 				{
 					try
 					{
-						$delayExpiration = true;
 						self::$config = CBitrixCloudCDNConfig::getInstance()->loadRemoteXML();
 						self::$config->saveToOptions();
 						self::$config->unlock();
@@ -67,7 +67,7 @@ class CBitrixCloudCDN
 		}
 
 		if(!self::$config->isActive())
-			return false;
+			return;
 
 		$sites = self::$config->getSites();
 		if (defined("ADMIN_SECTION"))
@@ -90,7 +90,7 @@ class CBitrixCloudCDN
 		$arPrefixes = array_map(array(
 			"CBitrixCloudCDN",
 			"_preg_quote",
-		), self::$config->getLocationsPrefixes());
+		), self::$config->getLocationsPrefixes(self::$config->isKernelRewriteEnabled(), self::$config->isContentRewriteEnabled()));
 
 		$arExtensions = array_map(array(
 			"CBitrixCloudCDN",
@@ -129,7 +129,7 @@ class CBitrixCloudCDN
 	 * @return void
 	 *
 	 */
-	public function domainChanged()
+	public static function domainChanged()
 	{
 		self::$domain_changed = true;
 	}
@@ -170,12 +170,13 @@ class CBitrixCloudCDN
 
 		foreach (self::$config->getLocations() as $location)
 		{
+			/** @var CBitrixCloudCDNLocation $location */
 			if ($location->getProto() === self::$proto)
 			{
 				$server = $location->getServerNameByPrefixAndExtension($prefix, $extension, $link);
 				if ($server !== "")
 				{
-					if ($params === '"')
+					if ($params === '')
 					{
 						if (file_exists($_SERVER["DOCUMENT_ROOT"].$prefix.$link.$extension))
 							$params = "?".filemtime($_SERVER["DOCUMENT_ROOT"].$prefix.$link.$extension).$params;
@@ -193,7 +194,7 @@ class CBitrixCloudCDN
 	 * @return void
 	 *
 	 */
-	private static function stop() /*. throws Exception .*/
+	private static function stop() /*. throws CBitrixCloudException .*/
 	{
 		$o = CBitrixCloudCDNConfig::getInstance()->loadFromOptions();
 		$a = new CBitrixCloudCDNWebService($o->getDomain());
@@ -204,7 +205,7 @@ class CBitrixCloudCDN
 	 * @return bool
 	 *
 	 */
-	public function IsActive()
+	public static function IsActive()
 	{
 		$bActive = false;
 		foreach (GetModuleEvents("main", "OnEndBufferContent", true) as $arEvent)
@@ -223,11 +224,9 @@ class CBitrixCloudCDN
 	 * @return bool
 	 *
 	 */
-	public function SetActive($bActive)
+	public static function SetActive($bActive)
 	{
-		/**
-		 * @global CMain $APPLICATION
-		 */
+		/** @global CMain $APPLICATION */
 		global $APPLICATION;
 		if ($bActive)
 		{
@@ -240,9 +239,9 @@ class CBitrixCloudCDN
 					RegisterModuleDependences("main", "OnEndBufferContent", "bitrixcloud", "CBitrixCloudCDN", "OnEndBufferContent");
 					self::$domain_changed = false;
 				}
-				catch(exception $e)
+				catch(CBitrixCloudException $e)
 				{
-					$ex = new CApplicationException($e->getMessage());
+					$ex = new CApplicationException($e->getMessage()."\n".$e->getDebugInfo());
 					$APPLICATION->ThrowException($ex);
 					return false;
 				}
@@ -255,9 +254,9 @@ class CBitrixCloudCDN
 					$o->saveToOptions();
 					self::$domain_changed = false;
 				}
-				catch(exception $e)
+				catch(CBitrixCloudException $e)
 				{
-					$ex = new CApplicationException($e->getMessage());
+					$ex = new CApplicationException($e->getMessage()."\n".$e->getDebugInfo());
 					$APPLICATION->ThrowException($ex);
 					return false;
 				}
@@ -272,10 +271,10 @@ class CBitrixCloudCDN
 					self::stop();
 					UnRegisterModuleDependences("main", "OnEndBufferContent", "bitrixcloud", "CBitrixCloudCDN", "OnEndBufferContent");
 				}
-				catch(exception $e)
+				catch(CBitrixCloudException $e)
 				{
 					UnRegisterModuleDependences("main", "OnEndBufferContent", "bitrixcloud", "CBitrixCloudCDN", "OnEndBufferContent");
-					$ex = new CApplicationException($e->getMessage());
+					$ex = new CApplicationException($e->getMessage()."\n".$e->getDebugInfo());
 					$APPLICATION->ThrowException($ex);
 					return false;
 				}
@@ -300,55 +299,45 @@ class CBitrixCloudCDN
 		if (CBitrixCloudCDN::IsActive())
 		{
 			$CDNAIParams["FOOTER"] = '<a href="/bitrix/admin/bitrixcloud_cdn.php?lang='.LANGUAGE_ID.'">'.GetMessage("BCL_CDN_AI_SETT").'</a>';
-			try
+
+			$cdn_config = CBitrixCloudCDNConfig::getInstance()->loadFromOptions();
+			$cdn_quota = $cdn_config->getQuota();
+			$PROGRESS_TOTAL = $cdn_quota->getAllowedSize();
+			$PROGRESS_VALUE = $cdn_quota->getTrafficSize();
+
+			if ($PROGRESS_TOTAL > 0.0 || $PROGRESS_VALUE > 0.0)
 			{
-				$cdn_config = CBitrixCloudCDNConfig::getInstance()->loadFromOptions();
-				$cdn_quota = $cdn_config->getQuota();
-				$PROGRESS_TOTAL = $cdn_quota->getAllowedSize();
-				$PROGRESS_VALUE = $cdn_quota->getTrafficSize();
+				$PROGRESS_AVAILABLE = $PROGRESS_TOTAL-$PROGRESS_VALUE;
+				if($PROGRESS_AVAILABLE < 0.0)
+					$PROGRESS_AVAILABLE = 0.0;
 
-				if ($PROGRESS_TOTAL > 0.0 || $PROGRESS_VALUE > 0.0)
-				{
-					$PROGRESS_AVAILABLE = $PROGRESS_TOTAL-$PROGRESS_VALUE;
-					if($PROGRESS_AVAILABLE < 0)
-						$PROGRESS_AVAILABLE = 0;
+				$PROGRESS_FREE = 0.0;
+				if($PROGRESS_TOTAL > 0.0)
+					$PROGRESS_FREE = round(($PROGRESS_TOTAL-$PROGRESS_VALUE)/$PROGRESS_TOTAL*100);
 
-					if($PROGRESS_TOTAL > 0)
-						$PROGRESS_FREE = round(($PROGRESS_TOTAL-$PROGRESS_VALUE)/$PROGRESS_TOTAL*100);
-					else
-						$PROGRESS_FREE = 0;
+				$PROGRESS_FREE_BAR = $PROGRESS_FREE > 100.0? 100: intval($PROGRESS_FREE);
+				$PROGRESS_FREE_BAR = $PROGRESS_FREE < 0.0? 0: intval($PROGRESS_FREE_BAR);
 
-					$PROGRESS_FREE_BAR = $PROGRESS_FREE > 100? 100: $PROGRESS_FREE;
-					$PROGRESS_FREE_BAR = $PROGRESS_FREE < 0? 0: $PROGRESS_FREE_BAR;
+				$CDNAIParams["ALERT"] = false;
+				if ($PROGRESS_FREE < 10.0)
+					$CDNAIParams["ALERT"] = true;
+				elseif (!$cdn_config->isActive())
+					$CDNAIParams["ALERT"] = true;
 
-					$CDNAIParams["ALERT"] = false;
-					if ($PROGRESS_FREE < 10)
-						$CDNAIParams["ALERT"] = true;
-					elseif (!$cdn_config->isActive())
-						$CDNAIParams["ALERT"] = true;
-
-					$CDNAIParams["HTML"] = '
-						<div class="adm-informer-item-section">
-							<span class="adm-informer-item-l">
-								<span class="adm-informer-strong-text">'.GetMessage("BCL_CDN_AI_USAGE_TOTAL").'</span> '.CFile::FormatSize($PROGRESS_TOTAL, 0).'
-							</span>
-							<span class="adm-informer-item-r">
-									<span class="adm-informer-strong-text">'.GetMessage("BCL_CDN_AI_USAGE_AVAIL").'</span> '.CFile::FormatSize($PROGRESS_AVAILABLE, 0).'
-							</span>
-						</div>
-						<div class="adm-informer-status-bar-block" >
-							<div class="adm-informer-status-bar-indicator" style="width:'.(100-$PROGRESS_FREE_BAR).'%; "></div>
-							<div class="adm-informer-status-bar-text">'.(100-$PROGRESS_FREE).'%</div>
-						</div>
-					';
-				}
-
-			}
-			catch (Exception $e)
-			{
-				$CDNAIParams["TITLE"] .= " - ".GetMessage("top_panel_ai_title_err");
-				$CDNAIParams["ALERT"] = true;
-				$CDNAIParams["HTML"] = $e->getMessage();
+				$CDNAIParams["HTML"] = '
+					<div class="adm-informer-item-section">
+						<span class="adm-informer-item-l">
+							<span class="adm-informer-strong-text">'.GetMessage("BCL_CDN_AI_USAGE_TOTAL").'</span> '.CFile::FormatSize($PROGRESS_TOTAL, 0).'
+						</span>
+						<span class="adm-informer-item-r">
+								<span class="adm-informer-strong-text">'.GetMessage("BCL_CDN_AI_USAGE_AVAIL").'</span> '.CFile::FormatSize($PROGRESS_AVAILABLE, 0).'
+						</span>
+					</div>
+					<div class="adm-informer-status-bar-block" >
+						<div class="adm-informer-status-bar-indicator" style="width:'.(100-$PROGRESS_FREE_BAR).'%; "></div>
+						<div class="adm-informer-status-bar-text">'.(100-$PROGRESS_FREE).'%</div>
+					</div>
+				';
 			}
 		}
 		else

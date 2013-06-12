@@ -26,7 +26,10 @@ if(strlen($Reindex)>0 && check_bitrix_sessid())
 	else
 		$NS = unserialize($_REQUEST['NS']);
 
-	$res = CUrlRewriter::ReIndexAll(($NS["stepped"]=="Y"? $NS["max_execution_time"]:0), $NS);
+	if (class_exists("\\Bitrix\\Main\\Application", false))
+		$res = \Bitrix\Main\UrlRewriter::reindexAll(($NS["stepped"]=="Y"? $NS["max_execution_time"]:0), $NS);
+	else
+		$res = CUrlRewriter::ReIndexAll(($NS["stepped"]=="Y"? $NS["max_execution_time"]:0), $NS);
 
 	if(is_array($res)):
 		//$res["STAT"]=$NS["STAT"];

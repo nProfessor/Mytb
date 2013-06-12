@@ -1,4 +1,16 @@
 <?
+/**
+ * Bitrix Framework
+ * @package bitrix
+ * @subpackage main
+ * @copyright 2001-2013 Bitrix
+ */
+
+/**
+ * Bitrix vars
+ * @global CUser $USER
+ * @global CMain $APPLICATION
+ */
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
 require_once($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/prolog.php");
 
@@ -10,10 +22,10 @@ if(!defined('NOT_CHECK_PERMISSIONS') || NOT_CHECK_PERMISSIONS !== true)
 
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/classes/general/checklist.php");
 IncludeModuleLangFile(__FILE__);
-$APPLICATION->AddHeadString(
-	'<link type="text/css" rel="stylesheet" href="/bitrix/themes/.default/check-list-style.css">'
-);
+
+$APPLICATION->SetAdditionalCSS("/bitrix/themes/.default/check-list-style.css");
 $APPLICATION->SetTitle(GetMessage("CL_TITLE_CHECKLIST"));
+
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_after.php");
 
 CUtil::InitJSCore(Array('ajax','window','popup','fx'));
@@ -46,6 +58,7 @@ if ((($res = CCheckListResult::GetList(Array(),Array("REPORT"=>"N"))->Fetch()) |
 		}
 		else
 		{
+			$arPointFields = array();
 			if ($_POST["COMMENTS"] == "Y")//update only comments
 			{
 				$arPointFields["COMMENTS"] = $arPoints[$arTestID]["STATE"]["COMMENTS"];
@@ -71,7 +84,7 @@ if ((($res = CCheckListResult::GetList(Array(),Array("REPORT"=>"N"))->Fetch()) |
 			if ($_POST["STATUS"])//update only status
 				$arPointFields["STATUS"] = $_POST["STATUS"];
 
-				$checklist->PointUpdate($arTestID,$arPointFields);
+			$checklist->PointUpdate($arTestID, $arPointFields);
 			if ($checklist->Save())
 			{
 				$arResult = Array(
@@ -361,8 +374,7 @@ if ((($res = CCheckListResult::GetList(Array(),Array("REPORT"=>"N"))->Fetch()) |
 				showOnce: false,
 				preventHide: true,
 				min_width: 250,
-				hint: '<?=CUtil::JSEscape(GetMessage('CL_SAVE_SEND_REPORT_HINT'))?>',
-				//title: 'title'
+				hint: '<?=CUtil::JSEscape(GetMessage('CL_SAVE_SEND_REPORT_HINT'))?>'
 			});
 			el.BXHINT.Show();
 		}
@@ -388,7 +400,7 @@ if ((($res = CCheckListResult::GetList(Array(),Array("REPORT"=>"N"))->Fetch()) |
 		var showHiddenReports = "<?=$showHiddenReports?>";
 		var bx_autotest_step = 0;
 		var bx_test_num = 0;
-		var ErrorSections = new Array();
+		var ErrorSections = [];
 		var bx_autotest=false;
 		var bx_stoptest=false;
 		var Dialog = false;
@@ -412,7 +424,7 @@ if ((($res = CCheckListResult::GetList(Array(),Array("REPORT"=>"N"))->Fetch()) |
 				BX.hasClass(this.parentNode,'testlist-open')?BX.removeClass(this.parentNode, 'testlist-open'):BX.addClass(this.parentNode, 'testlist-open');
 			},
 			hover_border:function(event){
-				var event = event || window.event;
+				event = event || window.event;
 				if(event.type=='mouseover') BX.findChild(this,{className:'checklist-testlist-level3-cont-border'}, true).style.borderBottom='1px dashed';
 				if(event.type=='mouseout') BX.findChild(this,{className:'checklist-testlist-level3-cont-border'}, true).style.borderBottom='none';
 			},
@@ -433,26 +445,28 @@ if ((($res = CCheckListResult::GetList(Array(),Array("REPORT"=>"N"))->Fetch()) |
 		{
 			for (var i=0;i<arStates["SECTIONS"].length;i++)
 				ChangeSection(arStates["SECTIONS"][i]);
-			for (var i=0;i<arStates["POINTS"].length;i++)
+			for (i=0;i<arStates["POINTS"].length;i++)
 				ChangeStatus(arStates["POINTS"][i]);
 			if (CanClose == "Y")
 				ShowCloseProject();
 			if (ErrorSections.length>0)
-				for(var i=0;i<ErrorSections.length;i++)
+			{
+				for(i=0;i<ErrorSections.length;i++)
 				{
 					if (BX(ErrorSections[i]+"_name").parentNode)
 						BX.addClass(BX(ErrorSections[i]+"_name").parentNode, 'testlist-open');
 				}
+			}
 		}
 
 		function textarea_edit(_this, effect){
 			if(effect){
-				_this.value=="<?=GetMessage("CL_ADD_COMMENT");?>"?_this.value="":false;
+				_this.value=='<?=GetMessageJS("CL_ADD_COMMENT");?>'?_this.value="":false;
 				BX.addClass(_this, "checklist-textarea-active");
 			}
 			if(!effect){
 				if(_this.value==''){
-					_this.value='<?=GetMessage("CL_ADD_COMMENT");?>';
+					_this.value='<?=GetMessageJS("CL_ADD_COMMENT");?>';
 					BX.removeClass(_this, "checklist-textarea-active");
 				}
 			}
@@ -461,7 +475,7 @@ if ((($res = CCheckListResult::GetList(Array(),Array("REPORT"=>"N"))->Fetch()) |
 		function loadButton(id){
 			BX.toggleClass(BX(id), 'bx_start_button');
 			var buttonText =  BX.findChild(BX(id), {className:'checklist-button-cont'}, true, false);
-			buttonText.innerHTML=='<?=GetMessage("CL_BEGIN_AUTOTEST");?>' ? buttonText.innerHTML='<?=GetMessage("CL_END_TEST");?>' : buttonText.innerHTML='<?=GetMessage("CL_BEGIN_AUTOTEST");?>';
+			buttonText.innerHTML=='<?=GetMessageJS("CL_BEGIN_AUTOTEST");?>' ? buttonText.innerHTML='<?=GetMessageJS("CL_END_TEST");?>' : buttonText.innerHTML='<?=GetMessageJS("CL_BEGIN_AUTOTEST");?>';
 			return false
 		}
 
@@ -482,7 +496,7 @@ if ((($res = CCheckListResult::GetList(Array(),Array("REPORT"=>"N"))->Fetch()) |
 					width: "780"
 				}
 			);
-			Dialog.SetButtons(['<input id="prev" type="button" onclick="Move(\'prev\');"name="prev" value="<?=GetMessage("CL_PREV_TEST");?>"><input id="next" type="button" name="next" onclick="Move(\'next\');" value="<?=GetMessage("CL_NEXT_TEST");?>">', {title: '<?=GetMessage('CL_DONE')?>', id: 'close', name: 'close', action: function () {this.parentWindow.Close();}}]);
+			Dialog.SetButtons(['<input id="prev" type="button" onclick="Move(\'prev\');"name="prev" value="<?=GetMessageJS("CL_PREV_TEST");?>"><input id="next" type="button" name="next" onclick="Move(\'next\');" value="<?=GetMessageJS("CL_NEXT_TEST");?>">', {title: '<?=GetMessageJS('CL_DONE')?>', id: 'close', name: 'close', action: function () {this.parentWindow.Close();}}]);
 			for (var i=0;i<arStates["POINTS"].length;i++)
 			{
 				if (arStates["POINTS"][i].TEST_ID == testID)
@@ -490,7 +504,7 @@ if ((($res = CCheckListResult::GetList(Array(),Array("REPORT"=>"N"))->Fetch()) |
 
 
 					if (arStates["POINTS"][i].IS_REQUIRE == "Y")
-						Dialog.SetTitle(head_name+" - "+testID+" ("+"<?=GetMessage("CL_TEST_IS_REQUIRE");?>"+")");
+						Dialog.SetTitle(head_name+" - "+testID+" ("+'<?=GetMessageJS("CL_TEST_IS_REQUIRE");?>'+")");
 
 					current = i;
 					ReCalc(current);
@@ -527,9 +541,9 @@ if ((($res = CCheckListResult::GetList(Array(),Array("REPORT"=>"N"))->Fetch()) |
 				var bx_info = document.createElement('div');
 				BX.addClass(bx_info,"checklist-alert-comment");
 				var result = "";
-				result+= "<?=addslashes(GetMessage("CL_CANT_CLOSE_PROJECT"));?>";
-				result+= "<br><br><?=addslashes(GetMessage("CL_CANT_CLOSE_PROJECT_PASSED_REQUIRE"));?>"+"<b>"+arMainStat.REQUIRE_CHECK+"<?=GetMessage("CL_FROM")?>"+arMainStat.REQUIRE+"</b>"
-				result+= "<br><?=addslashes(GetMessage("CL_CANT_CLOSE_PROJECT_FAILED"));?>"+"<b>"+arMainStat.FAILED+"</b>";
+				result+= '<?=GetMessageJS("CL_CANT_CLOSE_PROJECT");?>';
+				result+= '<br><br><?=GetMessageJS("CL_CANT_CLOSE_PROJECT_PASSED_REQUIRE");?>'+"<b>"+arMainStat.REQUIRE_CHECK+'<?=GetMessageJS("CL_FROM")?>'+arMainStat.REQUIRE+"</b>";
+				result+= '<br><?=GetMessageJS("CL_CANT_CLOSE_PROJECT_FAILED");?>'+"<b>"+arMainStat.FAILED+"</b>";
 				bx_info.innerHTML = result;
 				var project_info = BX.PopupWindowManager.create(
 					"project_info",
@@ -543,7 +557,7 @@ if ((($res = CCheckListResult::GetList(Array(),Array("REPORT"=>"N"))->Fetch()) |
 				);
 				project_info.setContent(bx_info);
 				project_info.setButtons([
-				new BX.PopupWindowButton({text : "<?=GetMessage("CL_CLOSE");?>", className : "", events : { click : function(){
+				new BX.PopupWindowButton({text : '<?=GetMessageJS("CL_CLOSE");?>', className : "", events : { click : function(){
 				if (ErrorSections.length>0)
 				for(var i=0;i<ErrorSections.length;i++)
 				{
@@ -622,7 +636,7 @@ if ((($res = CCheckListResult::GetList(Array(),Array("REPORT"=>"N"))->Fetch()) |
 		{
 			arTestResult.total++;
 			ChangeStatus(json_data);
-			BX("progress").innerHTML = parseInt(json_data.SUCCESS)+"<?=GetMessage("CL_FROM")?> "+json_data.TOTAL;
+			BX("progress").innerHTML = parseInt(json_data.SUCCESS)+'<?=GetMessageJS("CL_FROM")?> '+json_data.TOTAL;
 			BX("progress_bar").style.width = Math.round((parseInt(json_data.SUCCESS))/(json_data.TOTAL*0.01))+"%";
 			BX("success").innerHTML = json_data.SUCCESS;
 			BX("success_r").innerHTML = parseInt(json_data.REQUIRE) - parseInt(json_data.SUCCESS_R);
@@ -651,7 +665,7 @@ if ((($res = CCheckListResult::GetList(Array(),Array("REPORT"=>"N"))->Fetch()) |
 				if (json_data && json_data.STATUS)
 				{
 					RefreshCheckList(json_data);
-					Dialog.Notify("<?=GetMessage("CL_SAVE_SUCCESS");?>");
+					Dialog.Notify('<?=GetMessageJS("CL_SAVE_SUCCESS");?>');
 					//setTimeout("Dialog.hideNotify()",2000);
 				}
 			}catch(e){
@@ -675,7 +689,7 @@ if ((($res = CCheckListResult::GetList(Array(),Array("REPORT"=>"N"))->Fetch()) |
 					else if (json_data.IN_PROGRESS == "Y" && bx_stoptest == false)
 					{
 						BX("percent").innerHTML = " &mdash; "+json_data.PERCENT+"%";
-						AutoTest(json_data.TEST_ID,TestResultHandler,bx_autotest_step);
+						AutoTest(json_data.TEST_ID,TestResultHandler, bx_autotest_step);
 						return;
 					}
 				}
@@ -685,7 +699,6 @@ if ((($res = CCheckListResult::GetList(Array(),Array("REPORT"=>"N"))->Fetch()) |
 
 			if (bx_autotest == true)
 			{
-				bx_autotest_step = 0;
 				bx_test_num++;
 				if (bx_test_num<arAutoCheck.length && bx_stoptest == false)
 				{
@@ -702,7 +715,7 @@ if ((($res = CCheckListResult::GetList(Array(),Array("REPORT"=>"N"))->Fetch()) |
 				bx_autotest_step = 0;
 				bx_autotest = false;
 				bx_stoptest = false;
-				BX("current_test_name").innerHTML = "<?=GetMessage("CL_AUTOTEST_DONE");?>";
+				BX("current_test_name").innerHTML = '<?=GetMessageJS("CL_AUTOTEST_DONE");?>';
 				BX("percent").innerHTML = "";
 				CloseWaitWindow();
 				return;
@@ -730,12 +743,12 @@ if ((($res = CCheckListResult::GetList(Array(),Array("REPORT"=>"N"))->Fetch()) |
 			animation.start();
 		}
 
-		function StartAutoCheck(testID)
+		function StartAutoCheck()
 		{
 			if (bx_autotest == true || bx_stoptest == true)
 			{
 				var buttonText =  BX.findChild(BX("bx_start_button"), {className:'checklist-button-cont'}, true, false);
-				buttonText.innerHTML = "<?=GetMessage("CL_END_TEST_PROCCESS");?>";
+				buttonText.innerHTML = '<?=GetMessageJS("CL_END_TEST_PROCCESS");?>';
 				bx_stoptest = true;
 				return;
 			}
@@ -743,7 +756,7 @@ if ((($res = CCheckListResult::GetList(Array(),Array("REPORT"=>"N"))->Fetch()) |
 			bx_autotest = true;
 			loadButton("bx_start_button");
 			arTestResult = {"total":0,"success":0,"failed":0};
-			BX("current_test_name").innerHTML = "<?=GetMessage("CL_TEST");?>: "+arAutoCheckName[bx_test_num];
+			BX("current_test_name").innerHTML = '<?=GetMessageJS("CL_TEST");?>: '+arAutoCheckName[bx_test_num];
 			AutoTest(arAutoCheck[bx_test_num],TestResultHandler,bx_autotest_step);
 		}
 
@@ -754,7 +767,7 @@ if ((($res = CCheckListResult::GetList(Array(),Array("REPORT"=>"N"))->Fetch()) |
 			{
 				if(testID == arAutoCheck[i])
 				{
-					BX("current_test_name").innerHTML = "<?=GetMessage("CL_TEST");?>: "+arAutoCheckName[i];
+					BX("current_test_name").innerHTML = '<?=GetMessageJS("CL_TEST");?>: '+arAutoCheckName[i];
 					break;
 				}
 			}
@@ -771,10 +784,10 @@ if ((($res = CCheckListResult::GetList(Array(),Array("REPORT"=>"N"))->Fetch()) |
 			var error_message = "";
 
 			if(BX("COMPANY_NAME").value == "" || BX("TESTER").value == "" || BX("EMAIL").value == "" )
-				error_message = "<?=GetMessage("CL_REQUIRE_FIELDS2");?>";
+				error_message = '<?=GetMessageJS("CL_REQUIRE_FIELDS2");?>';
 			if (error_message.length>0)
 			{
-				alert(error_message)
+				alert(error_message);
 				return true;
 			}
 			else
@@ -797,28 +810,28 @@ if ((($res = CCheckListResult::GetList(Array(),Array("REPORT"=>"N"))->Fetch()) |
 				return;
 			var bx_info = document.createElement('div');
 			var result = "";
-			result+="<?=GetMessage("CL_TEST_TOTAL");?>: "+arMainStat.TOTAL;
-			result+="<br><?=GetMessage("CL_TEST_CHECKED");?>: "+arMainStat.SUCCESS;
-			result+= "<br><?=GetMessage("CL_TEST_FAILED");?>: "+arMainStat.FAILED;
-			result+= "<br><?=GetMessage("CL_TEST_REQUIRE");?>: "+arMainStat.REQUIRE_CHECK;
-			result+= "<br><br><b><?=GetMessage("CL_MANUAL_MINI_2");?></b>";
-			result+= "<br><br>" +
+			result += '<?=GetMessageJS("CL_TEST_TOTAL");?>: '+arMainStat.TOTAL;
+			result += '<br><?=GetMessageJS("CL_TEST_CHECKED");?>: '+arMainStat.SUCCESS;
+			result += '<br><?=GetMessageJS("CL_TEST_FAILED");?>: '+arMainStat.FAILED;
+			result += '<br><?=GetMessageJS("CL_TEST_REQUIRE");?>: '+arMainStat.REQUIRE_CHECK;
+			result += '<br><br><b><?=GetMessageJS("CL_MANUAL_MINI_2");?></b>';
+			result += "<br><br>" +
 					"<form id='about_tester' method='POST' action='checklist.php?lang=<?=LANG?>'>" +
 					'<?=bitrix_sessid_post()?>' +
 					"<input type='hidden' name='ACTION' value='ADDREPORT'>" +
 						"<table border=0>" +
-							"<tr><td><?=GetMessage('CL_REPORT_FIO_TESTER')?>:</td><td><input type='text' id='TESTER' name='TESTER' size=60 /></td></tr>" +
-							"<tr><td><?=GetMessage('CL_REPORT_COMPANY_NAME')?>:</td><td><input type='text' id='COMPANY_NAME' name='COMPANY_NAME' size=60 /></td></tr>" +
-							"<tr><td><?=GetMessage('CL_REPORT_EMAIL')?>:</td><td><input type='text' id='EMAIL' name='EMAIL' size=60 /></td></tr>" +
-						"</table>" +
-					"</form>";
+							'<tr><td><?=GetMessageJS('CL_REPORT_FIO_TESTER')?>:</td><td><input type="text" id="TESTER" name="TESTER" size="60" /></td></tr>' +
+							'<tr><td><?=GetMessageJS('CL_REPORT_COMPANY_NAME')?>:</td><td><input type="text" id="COMPANY_NAME" name="COMPANY_NAME" size="60" /></td></tr>' +
+							'<tr><td><?=GetMessageJS('CL_REPORT_EMAIL')?>:</td><td><input type="text" id="EMAIL" name="EMAIL" size="60" /></td></tr>' +
+						'</table>' +
+					'</form>';
 			bx_info.innerHTML = result;
 			BX.addClass(bx_info,"checklist-manual checklist-detail-popup-result");
 
 			if (closePopup == undefined)
 				closePopup= new BX.CAdminDialog(
 				{
-					title: "<?=GetMessage("CL_RESULT_TEST");?>",
+					title: '<?=GetMessageJS("CL_RESULT_TEST");?>',
 					head: "",
 					content: result,
 					icon: "head-block",
@@ -826,7 +839,7 @@ if ((($res = CCheckListResult::GetList(Array(),Array("REPORT"=>"N"))->Fetch()) |
 					draggable: true,
 					//height: "140",
 					//width: "300",
-					buttons: ['<input type="button" onclick="if (Dialog) Dialog.Close(); SaveReport();" value="<?=GetMessage("CL_SAVE_REPORT");?>">', BX.CAdminDialog.btnClose]
+					buttons: ['<input type="button" onclick="if (Dialog) Dialog.Close(); SaveReport();" value="<?=GetMessageJS("CL_SAVE_REPORT");?>">', BX.CAdminDialog.btnClose]
 				});
 			closePopup.Show();
 			showedShowCloseProject = true;
@@ -847,11 +860,11 @@ if ((($res = CCheckListResult::GetList(Array(),Array("REPORT"=>"N"))->Fetch()) |
 		{
 			var bx_info = document.createElement('div');
 			var result = "";
-			result+="<?=GetMessage("CL_TEST_TOTAL");?>: "+arTestResult.total;
-			result+="<br><?=GetMessage("CL_TEST_CHECKED");?>: "+arTestResult.success;
-			result+= "<br><?=GetMessage("CL_TEST_FAILED");?>: "+arTestResult.failed;
+			result += '<?=GetMessageJS("CL_TEST_TOTAL");?>: '+arTestResult.total;
+			result += '<br><?=GetMessageJS("CL_TEST_CHECKED");?>: '+arTestResult.success;
+			result += '<br><?=GetMessageJS("CL_TEST_FAILED");?>: '+arTestResult.failed;
 //			if (start == "N")
-			result+='<br><br><hr><?=GetMessage("CL_MANUAL_MINI");?>';
+			result += '<br><br><hr><?=GetMessageJS("CL_MANUAL_MINI");?>';
 			bx_info.innerHTML = result;
 
 			BX.addClass(bx_info,"checklist-manual checklist-detail-popup-result");
@@ -859,7 +872,7 @@ if ((($res = CCheckListResult::GetList(Array(),Array("REPORT"=>"N"))->Fetch()) |
 
 			popupInfo = new BX.CAdminDialog(
 			{
-				title: "<?=GetMessage("CL_AUTOTEST_RESULT");?>",
+				title: '<?=GetMessageJS("CL_AUTOTEST_RESULT");?>',
 				head: "",
 				content: result,
 				icon: "head-block",
@@ -867,7 +880,7 @@ if ((($res = CCheckListResult::GetList(Array(),Array("REPORT"=>"N"))->Fetch()) |
 				draggable: true,
 				//height: "90",
 				//width: "300",
-				buttons: ['<input type="button" onclick="openErrorSection(); popupInfo.Close();" value="<?=GetMessage("CL_CLOSE");?>">']
+				buttons: ['<input type="button" onclick="openErrorSection(); popupInfo.Close();" value="<?=GetMessageJS("CL_CLOSE");?>">']
 			});
 			popupInfo.Show();
 		}
@@ -884,9 +897,9 @@ if ((($res = CCheckListResult::GetList(Array(),Array("REPORT"=>"N"))->Fetch()) |
 				draggable: false,
 				closeIcon:true,
 				autoHide: false,
-				angle:{position:"right",offset:94},
+				angle:{position:"right"},
 				offsetLeft:-360,
-				offsetTop:-120,
+				offsetTop:-35,
 				zIndex:1500,
 				closeByEsc: false,
 				bindOptions: {
@@ -897,13 +910,13 @@ if ((($res = CCheckListResult::GetList(Array(),Array("REPORT"=>"N"))->Fetch()) |
 			});
 			BX.addCustomEvent(data.parent,"onWindowClose",function(){window.xssHelpPopup.close();});
 		}
-		for(i in fileboxes)
+		for(var i in fileboxes)
 		{
-			button = new BX.PopupWindowButton({
+			var button = new BX.PopupWindowButton({
 						text : "?",
 						events:{
 							click:BX.proxy(function(){
-								help = BX.findChild(this,{className:"checklist-vulnscan-helpbox"},true);
+								var help = BX.findChild(this,{className:"checklist-vulnscan-helpbox"},true);
 								var text = help.innerHTML;
 								_this = BX.proxy_context;
 								if(help)
@@ -969,8 +982,7 @@ if ((($res = CCheckListResult::GetList(Array(),Array("REPORT"=>"N"))->Fetch()) |
 				showOnce: false,
 				preventHide: true,
 				min_width: 250,
-				hint: '<?=CUtil::JSEscape(GetMessage('CL_SAVE_SEND_REPORT_HINT'))?>',
-				//title: 'title'
+				hint: '<?=GetMessageJS('CL_SAVE_SEND_REPORT_HINT')?>'
 			});
 			el.BXHINT.Show();
 		}
@@ -988,8 +1000,8 @@ if ((($res = CCheckListResult::GetList(Array(),Array("REPORT"=>"N"))->Fetch()) |
 
 			if(BX("CLIENT").value == "" || BX("CLIENT_POST").value == "" || BX("PHONE").value == "" || BX("EMAIL").value == "" || BX("COMPANY_NAME").value == "")
 			{
-				error_message = "<?=GetMessage("CL_REQUIRE_FIELDS");?>";
-				alert(error_message)
+				error_message = '<?=GetMessageJS("CL_REQUIRE_FIELDS");?>';
+				alert(error_message);
 				return true;
 			}
 			else
@@ -1036,7 +1048,8 @@ if ((($res = CCheckListResult::GetList(Array(),Array("REPORT"=>"N"))->Fetch()) |
 		<?echo EndNote();?>
 	<?}?>
 </div>
-<?function ShowReportList()
+<?
+function ShowReportList()
 {
 	global $showHiddenReports;
 	$arFilter = array("REPORT"=>"Y");
@@ -1044,6 +1057,7 @@ if ((($res = CCheckListResult::GetList(Array(),Array("REPORT"=>"N"))->Fetch()) |
 	{
 		$arFilter['HIDDEN'] = 'N';
 	}
+	$arReports = array();
 	$dbReport = CCheckListResult::GetList(Array(),$arFilter);
 	while ($arReport = $dbReport->Fetch())
 		$arReports[]=$arReport;?>
@@ -1065,15 +1079,15 @@ if ((($res = CCheckListResult::GetList(Array(),Array("REPORT"=>"N"))->Fetch()) |
 			</div>
 			<div class="checklist-result-form-content-field">
 				<label><?=GetMessage("CL_REPORT_PHONE");?></label>
-				<table width="100%" style="border-spacing: 0px">
+				<table width="100%" style="border-spacing: 0">
 					<tr>
-					<td width="65%" style="border: 0px; padding: 0">
+					<td width="65%" style="border: 0; padding: 0">
 					<input id="PHONE" name="PHONE" type="text" style="width:100%"/>
 					</td>
-					<td width="55" style="border: 0px; padding: 0">
+					<td width="55" style="border: 0; padding: 0">
 					<div style="text-align: right"><?=GetMessage("CL_REPORT_PHONE_ADD");?>&nbsp;</div>
 					</td>
-					<td style="border: 0px">
+					<td style="border: 0">
 					<input id="PHONE_ADD" name="PHONE_ADD" type="text"/>
 					</td>
 					</tr>
@@ -1085,7 +1099,7 @@ if ((($res = CCheckListResult::GetList(Array(),Array("REPORT"=>"N"))->Fetch()) |
 			<div class="checklist-result-textarea-wrap">
 				<label><?=GetMessage("CL_REPORT_COMMENT");?></label>
 				<div class="checklist-result-textarea">
-					<textarea style="color: #AAAAAA" id="report_comment" OnFocus="if (this.value =='<?=GetMessage("CL_REPORT_COMMENT_HELP")?>') {this.value = ''; this.style.color = '#000000';}" OnBlur="if (this.value == '') {this.value = '<?=GetMessage("CL_REPORT_COMMENT_HELP")?>'; this.style.color = '#AAAAAA';}" name="COMMENT" class="checklist-textarea"><?=GetMessage("CL_REPORT_COMMENT_HELP")?></textarea>
+					<textarea style="color: #AAAAAA" id="report_comment" OnFocus="if (this.value =='<?=GetMessageJS("CL_REPORT_COMMENT_HELP")?>') {this.value = ''; this.style.color = '#000000';}" OnBlur="if (this.value == '') {this.value = '<?=GetMessageJS("CL_REPORT_COMMENT_HELP")?>'; this.style.color = '#AAAAAA';}" name="COMMENT" class="checklist-textarea"><?=GetMessage("CL_REPORT_COMMENT_HELP")?></textarea>
 				</div>
 			</div>
 			<input id="type_action" type="hidden" name="ACTION" value="ADDSENDREPORT">
@@ -1168,6 +1182,7 @@ if ((($res = CCheckListResult::GetList(Array(),Array("REPORT"=>"N"))->Fetch()) |
 
 function SendReportToBitrix ($arFields)
 {
+	/** @global CMain $APPLICATION */
 	global $APPLICATION;
 
 	$APPLICATION->RestartBuffer();

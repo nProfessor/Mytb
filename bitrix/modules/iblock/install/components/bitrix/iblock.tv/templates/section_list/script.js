@@ -29,7 +29,7 @@ if(!jsPublicTVCollector)
 	}
 
 function jsPublicTV()
-{	
+{
 	this.DescriptionBlockID = null;
 	this.DescriptionValues =
 	{
@@ -120,6 +120,7 @@ jsPublicTV.prototype.Init = function(arValues, TBID, DBID, arStart)
 		this.PlayerConfig.block_id = arStart.block_id;
 		this.PlayerConfig.obj_id = arStart.obj_id;
 		this.PlayerConfig.logo = arStart.logo;
+		this.PlayerConfig.windowless = 'true';
 
 		//create player
 		this.GeneratePlayer();
@@ -153,7 +154,7 @@ jsPublicTV.prototype.GeneratePlayer = function()
 			this.Player.wmv = new jeroenwijering.Player(BX(this.PlayerConfig.obj_id.wmv), '/bitrix/components/bitrix/player/wmvplayer/wmvplayer.xaml',  this.PlayerConfig);
 			this.PlayerConfig.height +=4; //height fix
 
-			//state listener			
+			//state listener
 			this.RunDelayFunction(function(){_this.SetListener('STATE', function(oldstate, newstate){_this.StateListener(oldstate, newstate);}, 'wmv')}, 50, 0);
 		}
 		else if(curItem.Type == 'flv') //FLW
@@ -371,7 +372,7 @@ jsPublicTV.prototype.PlayFile = function(i, j, autoplay, handle)
 
 		if(flv)
 			flv.style.display = 'none';
-		
+
 	}
 	else if (params.type == 'flv')
 	{
@@ -396,13 +397,13 @@ jsPublicTV.prototype.PlayFile = function(i, j, autoplay, handle)
 				link: params.file,
 				image: params.image
 			};
-			
+
 			this.Player.oJw.onPlaylist(function() { _this.Player.oJw.play(!!autoplay); });
 
-			this.Player.oJw.load(flvparams);			
-			
+			this.Player.oJw.load(flvparams);
+
 /*			setTimeout(function()
-			{				
+			{
 				_this.Player.oJw.play(!!autoplay);
 			}, 500);
 */
@@ -496,10 +497,10 @@ jsPublicTV.prototype.GetNextItem = function(in_section)
 }
 
 jsPublicTV.prototype.PlayNextItem = function()
-{	
+{
 	var nextItem = this.GetNextItem();
 	var _this = this;
-	
+
 	if(nextItem===false)
 		return;
 
@@ -508,7 +509,7 @@ jsPublicTV.prototype.PlayNextItem = function()
 		setTimeout(
 			function()
 			{
-				_this.PlayFile(nextItem.Section, nextItem.Item, true);		
+				_this.PlayFile(nextItem.Section, nextItem.Item, true);
 				_this.SetDescription(nextItem.Section, nextItem.Item);
 			}
 		,1000);
@@ -586,8 +587,8 @@ jsPublicTV.prototype.SetListener = function(type, func, playertype)
 }
 
 jsPublicTV.prototype.StateListener = function(oldstate, newstate)
-{	
-	var complState = oldstate + '+' + newstate;	
+{
+	var complState = oldstate + '+' + newstate;
 	if('Completed' == newstate && this.SavedState != complState)
 	{
 		if(this.PlayOrder !== false)

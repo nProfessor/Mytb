@@ -244,6 +244,10 @@ else
 
 					$oResponse->status = "200 OK";
 					$oResponse->arParameters['USER_INFO'] = $arSaveUser;
+					if (defined("FORMAT_DATE"))
+						$oResponse->arParameters['FORMAT_DATE'] = FORMAT_DATE;
+					if (defined("FORMAT_DATETIME"))
+						$oResponse->arParameters['FORMAT_DATETIME'] = FORMAT_DATETIME;
 				}
 				else
 				{

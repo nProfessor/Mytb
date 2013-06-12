@@ -176,7 +176,6 @@ class CMedialib
 				window.BX = top.BX;
 
 			<?CMedialib::AppendLangMessages();?>
-
 			window.<?= $arConfig['event']?> = function(bLoadJS)
 			{
 				if (window.oBXMedialib && window.oBXMedialib.bOpened)

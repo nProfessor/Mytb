@@ -102,6 +102,7 @@ Class clouds extends CModule
 			RegisterModuleDependences("clouds", "OnGetStorageService", "clouds", "CCloudStorageService_OpenStackStorage", "GetObject");
 			RegisterModuleDependences("clouds", "OnGetStorageService", "clouds", "CCloudStorageService_RackSpaceCloudFiles", "GetObject");
 			RegisterModuleDependences("clouds", "OnGetStorageService", "clouds", "CCloudStorageService_ClodoRU", "GetObject");
+			RegisterModuleDependences("clouds", "OnGetStorageService", "clouds", "CCloudStorageService_Selectel", "GetObject");
 
 			return true;
 		}
@@ -134,6 +135,7 @@ Class clouds extends CModule
 		UnRegisterModuleDependences("clouds", "OnGetStorageService", "clouds", "CCloudStorageService_OpenStackStorage", "GetObject");
 		UnRegisterModuleDependences("clouds", "OnGetStorageService", "clouds", "CCloudStorageService_RackSpaceCloudFiles", "GetObject");
 		UnRegisterModuleDependences("clouds", "OnGetStorageService", "clouds", "CCloudStorageService_ClodoRU", "GetObject");
+		UnRegisterModuleDependences("clouds", "OnGetStorageService", "clouds", "CCloudStorageService_Selectel", "GetObject");
 
 		UnRegisterModule("clouds");
 
@@ -163,7 +165,8 @@ Class clouds extends CModule
 	{
 		if($_ENV["COMPUTERNAME"]!='BX')
 		{
-			CopyDirFiles($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/clouds/install/admin/", $_SERVER["DOCUMENT_ROOT"]."/bitrix/admin");
+			CopyDirFiles($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/clouds/install/admin", $_SERVER["DOCUMENT_ROOT"]."/bitrix/admin");
+			CopyDirFiles($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/clouds/install/themes", $_SERVER["DOCUMENT_ROOT"]."/bitrix/themes", true, true);
 		}
 		return true;
 	}
@@ -173,6 +176,7 @@ Class clouds extends CModule
 		if($_ENV["COMPUTERNAME"]!='BX')
 		{
 			DeleteDirFiles($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/clouds/install/admin/", $_SERVER["DOCUMENT_ROOT"]."/bitrix/admin");
+			DeleteDirFiles($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/clouds/install/themes/.default/", $_SERVER["DOCUMENT_ROOT"]."/bitrix/themes/.default");
 		}
 		return true;
 	}
@@ -183,13 +187,7 @@ Class clouds extends CModule
 		if($USER->IsAdmin())
 		{
 			$step = IntVal($step);
-			if(!CBXFeatures::IsFeatureEditable("Clouds"))
-			{
-				$this->errors = array(GetMessage("MAIN_FEATURE_ERROR_EDITABLE"));
-				$GLOBALS["errors"] = $this->errors;
-				$APPLICATION->IncludeAdminFile(GetMessage("CLO_INSTALL_TITLE"), $_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/clouds/install/step2.php");
-			}
-			elseif($step < 2)
+			if($step < 2)
 			{
 				$APPLICATION->IncludeAdminFile(GetMessage("CLO_INSTALL_TITLE"), $_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/clouds/install/step1.php");
 			}
@@ -198,7 +196,6 @@ Class clouds extends CModule
 				if($this->InstallDB())
 				{
 					$this->InstallFiles();
-					CBXFeatures::SetFeatureEnabled("Clouds", true);
 				}
 				$GLOBALS["errors"] = $this->errors;
 				$APPLICATION->IncludeAdminFile(GetMessage("CLO_INSTALL_TITLE"), $_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/clouds/install/step2.php");
@@ -222,7 +219,6 @@ Class clouds extends CModule
 					"save_tables" => $_REQUEST["save_tables"],
 				));
 				$this->UnInstallFiles();
-				CBXFeatures::SetFeatureEnabled("Clouds", false);
 				$GLOBALS["errors"] = $this->errors;
 				$APPLICATION->IncludeAdminFile(GetMessage("CLO_UNINSTALL_TITLE"), $_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/clouds/install/unstep2.php");
 			}

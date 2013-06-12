@@ -1,5 +1,5 @@
 <?
-$MESS["RATING_COMPONENT_DESC"] = "Abstimmungsergebnisse - %s (davon: %s dafur und %s dagegen)";
+$MESS["RATING_COMPONENT_DESC"] = "Abstimmungsergebnisse - %s (davon: %s dafür und %s dagegen)";
 $MESS["RATING_COMPONENT_NO_VOTES"] = "Keine Abstimmungsergebnisse";
 $MESS["RATING_TEXT_LIKE_Y"] = "Gefällt mir";
 $MESS["RATING_TEXT_LIKE_N"] = "Gefällt mir nicht mehr";

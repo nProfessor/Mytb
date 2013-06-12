@@ -1,11 +1,15 @@
-<?
-##############################################
-# Bitrix Site Manager                        #
-# Copyright (c) 2002-2011 Bitrix             #
-# http://www.bitrixsoft.com                  #
-# mailto:admin@bitrixsoft.com                #
-##############################################
+<?php
+/**
+ * Bitrix Framework
+ * @package bitrix
+ * @subpackage main
+ * @copyright 2001-2013 Bitrix
 
+ * @global CMain $APPLICATION
+ * @global CUser $USER
+ * @global CDatabase $DB
+ * @global CUserTypeManager $USER_FIELD_MANAGER
+ */
 require_once(dirname(__FILE__)."/../include/prolog_admin_before.php");
 require_once($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/prolog_user.php");
 define("HELP_FILE", "users/user_edit.php");
@@ -19,10 +23,15 @@ $canViewUserList = ($USER->CanDoOperation('view_subordinate_users') || $USER->Ca
 if(!($USER->CanDoOperation('view_own_profile') || $USER->CanDoOperation('edit_own_profile') || $canViewUserList))
 	$APPLICATION->AuthForm(GetMessage("ACCESS_DENIED"));
 
+$ID = intval($_REQUEST["ID"]);
+$COPY_ID = intval($_REQUEST["COPY_ID"]);
+
+$uid = $USER->GetID();
+
 if($USER->CanDoOperation('edit_own_profile') && !$canViewUserList)
 {
-	$ID = $USER->GetID();
-	if(intval($ID) <= 0)
+	$ID = $uid;
+	if($ID <= 0)
 		$APPLICATION->AuthForm(GetMessage("ACCESS_DENIED"));
 	$COPY_ID = 0;
 }
@@ -30,15 +39,9 @@ if($USER->CanDoOperation('edit_own_profile') && !$canViewUserList)
 IncludeModuleLangFile(__FILE__);
 
 $PROPERTY_ID = "USER";
-
 $message = null;
 $strError = '';
 $res = true;
-
-$ID = intval($ID);
-$COPY_ID = intval($COPY_ID);
-
-$uid = $USER->GetID();
 
 if($COPY_ID<=0)
 {
@@ -52,9 +55,10 @@ else
 
 $selfEdit = ($USER->CanDoOperation('edit_own_profile') && $ID == $uid);
 
+$arUserSubordinateGroups = array();
 if($USER->CanDoOperation('edit_subordinate_users') && !$USER->CanDoOperation('edit_all_users'))
 {
-	$arUserSubordinateGroups = Array(2);
+	$arUserSubordinateGroups = array(2);
 	$arUserGroups_u = CUser::GetUserGroup($uid);
 	for ($j = 0,$len = count($arUserGroups_u); $j < $len; $j++)
 	{
@@ -80,27 +84,28 @@ if($ID==$uid && !($USER->CanDoOperation('edit_php') || ($USER->CanDoOperation('e
 
 $showGroupTabs = (($USER->CanDoOperation('view_subordinate_users') || $USER->CanDoOperation('view_all_users')) && $canSelfEdit);
 
-$aTabs = Array();
+$aTabs = array();
 $aTabs[] = array("DIV" => "edit1", "TAB" => GetMessage("MAIN_USER_TAB1"), "ICON"=>"main_user_edit", "TITLE"=>GetMessage("MAIN_USER_TAB1_TITLE"));
 
 if($showGroupTabs)
 	$aTabs[] = array("DIV" => "edit2", "TAB" => GetMessage("GROUPS"), "ICON"=>"main_user_edit", "TITLE"=>GetMessage("MAIN_USER_TAB2_TITLE"));
 $aTabs[] = array("DIV" => "edit3", "TAB" => GetMessage("USER_PERSONAL_INFO"), "ICON"=>"main_user_edit", "TITLE"=>GetMessage("USER_PERSONAL_INFO"));
 $aTabs[] = array("DIV" => "edit4", "TAB" => GetMessage("MAIN_USER_TAB4"), "ICON"=>"main_user_edit", "TITLE"=>GetMessage("USER_WORK_INFO"));
-$aTabs[] = array("DIV" => "edit5", "TAB" => GetMessage("USER_RATING_INFO"), "ICON"=>"main_user_edit", "TITLE"=>GetMessage("USER_RATING_INFO"));
+$aTabs[] = array("DIV" => "edit_rating", "TAB" => GetMessage("USER_RATING_INFO"), "ICON"=>"main_user_edit", "TITLE"=>GetMessage("USER_RATING_INFO"));
 
 $i = 1;
 $db_opt_res = CModule::GetList();
 while ($opt_res = $db_opt_res->Fetch())
 {
 	$mdir = $opt_res["ID"];
-	if (file_exists($DOCUMENT_ROOT.BX_ROOT."/modules/".$mdir) && is_dir($DOCUMENT_ROOT.BX_ROOT."/modules/".$mdir))
+	if (file_exists($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/".$mdir) && is_dir($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/".$mdir))
 	{
-		$ofile = $DOCUMENT_ROOT.BX_ROOT."/modules/".$mdir."/options_user_settings.php";
+		$ofile = $_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/".$mdir."/options_user_settings.php";
 		if(file_exists($ofile))
 		{
 			include(GetLangFileName($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/".$mdir."/lang/", "/options_user_settings.php"));
-			$aTabs[] = array("DIV" => "edit".($i+5), "TAB" => GetMessage($mdir."_TAB"), "ICON"=>"main_user_edit", "TITLE"=>GetMessage($mdir."_TAB_TITLE"));
+			$mname = str_replace(".", "_", $mdir);
+			$aTabs[] = array("DIV" => "edit".($i+4), "TAB" => GetMessage($mname."_TAB"), "ICON"=>"main_user_edit", "TITLE"=>GetMessage($mname."_TAB_TITLE"));
 			$i++;
 		}
 	}
@@ -151,9 +156,6 @@ if(
 	{
 		$user = new CUser;
 
-		if ($ID=="1" && $COPY_ID<=0)
-			$ACTIVE = "Y";
-
 		$arPERSONAL_PHOTO = $_FILES["PERSONAL_PHOTO"];
 		$arWORK_LOGO = $_FILES["WORK_LOGO"];
 
@@ -173,7 +175,7 @@ if(
 			$arWORK_LOGO["del"] = $_POST["WORK_LOGO_del"];
 		}
 
-		$arFields = Array(
+		$arFields = array(
 			"NAME"					=> $_POST["NAME"],
 			"LAST_NAME"				=> $_POST["LAST_NAME"],
 			"SECOND_NAME"			=> $_POST["SECOND_NAME"],
@@ -220,24 +222,27 @@ if(
 
 		if($USER->CanDoOperation('edit_all_users') || $USER->CanDoOperation('edit_subordinate_users'))
 		{
-			if(strlen($LID)>0)
-				$arFields["LID"] = $LID;
+			if($_POST["LID"] <> '')
+				$arFields["LID"] = $_POST["LID"];
 
-			if(is_set($_REQUEST, 'EXTERNAL_AUTH_ID'))
-				$arFields['EXTERNAL_AUTH_ID'] = $EXTERNAL_AUTH_ID;
+			if(is_set($_POST, 'EXTERNAL_AUTH_ID'))
+				$arFields['EXTERNAL_AUTH_ID'] = $_POST["EXTERNAL_AUTH_ID"];
 
-			$arFields["ACTIVE"]=$ACTIVE;
+			if ($ID == 1 && $COPY_ID <= 0)
+				$arFields["ACTIVE"] = "Y";
+			else
+				$arFields["ACTIVE"] = $_POST["ACTIVE"];
 
 			if($showGroupTabs && isset($_REQUEST["GROUP_ID_NUMBER"]))
 			{
-				$GROUP_ID_NUMBER = IntVal($GROUP_ID_NUMBER);
+				$GROUP_ID_NUMBER = intval($_REQUEST["GROUP_ID_NUMBER"]);
 				$GROUP_ID = array();
 				$ind = -1;
 				for ($i = 0; $i <= $GROUP_ID_NUMBER; $i++)
 				{
 					if (${"GROUP_ID_ACT_".$i} == "Y")
 					{
-						$gr_id = IntVal(${"GROUP_ID_".$i});
+						$gr_id = intval(${"GROUP_ID_".$i});
 
 						if($gr_id == 1 && !$USER->IsAdmin())
 							continue;
@@ -264,13 +269,13 @@ if(
 			}
 
 			if (($editable && $ID!=$USER->GetID()) || $USER->IsAdmin())
-				$arFields["ADMIN_NOTES"]=$ADMIN_NOTES;
+				$arFields["ADMIN_NOTES"] = $_POST["ADMIN_NOTES"];
 		}
 
-		if(strlen($NEW_PASSWORD) > 0)
+		if($_POST["NEW_PASSWORD"] <> '')
 		{
-			$arFields["PASSWORD"] = $NEW_PASSWORD;
-			$arFields["CONFIRM_PASSWORD"] = $NEW_PASSWORD_CONFIRM;
+			$arFields["PASSWORD"] = $_POST["NEW_PASSWORD"];
+			$arFields["CONFIRM_PASSWORD"] = $_POST["NEW_PASSWORD_CONFIRM"];
 		}
 
 		$USER_FIELD_MANAGER->EditFormAddFields($PROPERTY_ID, $arFields);
@@ -281,13 +286,13 @@ if(
 		elseif($USER->CanDoOperation('edit_all_users') || $USER->CanDoOperation('edit_subordinate_users'))
 		{
 			$ID = $user->Add($arFields);
-			$res = ($ID>0);
+			$res = ($ID > 0);
 			if(COption::GetOptionString("main", "event_log_register", "N") === "Y" && $res)
 			{
-				$res_log["user"] = ($NAME != "" || $LAST_NAME != "") ? trim($NAME." ".$LAST_NAME) : $LOGIN;
+				$res_log["user"] = ($_POST["NAME"] != "" || $_POST["LAST_NAME"] != "") ? trim($_POST["NAME"]." ".$_POST["LAST_NAME"]) : $_POST["LOGIN"];
 				CEventLog::Log("SECURITY", "USER_REGISTER", "main", $ID, serialize($res_log));
 			}
-			$new="Y";
+			$new = "Y";
 		}
 		if ($USER->CanDoOperation('edit_ratings') && ($selfEdit || $ID!=$USER->GetID()) && is_array($_POST['RATING_BONUS']))
 		{
@@ -303,45 +308,46 @@ if(
 		}
 
 		$strError .= $user->LAST_ERROR;
-		if ($GLOBALS['APPLICATION']->GetException())
+		if ($APPLICATION->GetException())
 		{
-			$err = $GLOBALS['APPLICATION']->GetException();
+			$err = $APPLICATION->GetException();
 			$strError .= $err->GetString();
-			$GLOBALS['APPLICATION']->ResetException();
+			$APPLICATION->ResetException();
 		}
 	}
 
 	if($strError == '' && $ID>0)
 	{
-		if(is_array($profile_module_id) && count($profile_module_id)>0)
+		if(is_array($_REQUEST["profile_module_id"]) && count($_REQUEST["profile_module_id"])>0)
 		{
 			$db_opt_res = CModule::GetList();
 			while ($opt_res = $db_opt_res->Fetch())
 			{
-				if (in_array($opt_res["ID"],$profile_module_id))
+				if (in_array($opt_res["ID"], $_REQUEST["profile_module_id"]))
 				{
 					$mdir = $opt_res["ID"];
-					if (file_exists($DOCUMENT_ROOT.BX_ROOT."/modules/".$mdir) && is_dir($DOCUMENT_ROOT.BX_ROOT."/modules/".$mdir))
+					if (file_exists($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/".$mdir) && is_dir($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/".$mdir))
 					{
-						$ofile = $DOCUMENT_ROOT.BX_ROOT."/modules/".$mdir."/options_user_settings_set.php";
+						$ofile = $_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/".$mdir."/options_user_settings_set.php";
 						if (file_exists($ofile))
 						{
 							$MODULE_RIGHT = $APPLICATION->GetGroupRight($mdir);
 							if ($MODULE_RIGHT>="R")
 							{
 								include($ofile);
-								if(!${$mdir."_res"})
+								$mname = str_replace(".", "_", $mdir);
+								if(!${$mname."_res"})
 								{
 									$res = false;
-									if($GLOBALS['APPLICATION']->GetException())
+									if($APPLICATION->GetException())
 									{
-										$err = $GLOBALS['APPLICATION']->GetException();
+										$err = $APPLICATION->GetException();
 										$strError .= $err->GetString();
-										$GLOBALS['APPLICATION']->ResetException();
+										$APPLICATION->ResetException();
 									}
 									else
 									{
-										$strError .= ${$mdir."WarningTmp"};
+										$strError .= ${$mname."WarningTmp"};
 									}
 								}
 							}
@@ -353,24 +359,24 @@ if(
 
 		if($strError == '' && $res)
 		{
-			if($user_info_event=="Y")
+			if($_POST["user_info_event"] == "Y")
 			{
 				$arMess = false;
-				$res_site = CSite::GetByID($LID);
+				$res_site = CSite::GetByID($_POST["LID"]);
 				if($res_site_arr = $res_site->Fetch())
 					$arMess = IncludeModuleLangFile(__FILE__, $res_site_arr["LANGUAGE_ID"], true);
 
 				if($new=="Y")
-					$user->SendUserInfo($ID, $LID, ($arMess !== false? $arMess["ACCOUNT_INSERT"]:GetMessage("ACCOUNT_INSERT")), true);
+					CUser::SendUserInfo($ID, $_POST["LID"], ($arMess !== false? $arMess["ACCOUNT_INSERT"]:GetMessage("ACCOUNT_INSERT")), true);
 				else
-					$user->SendUserInfo($ID, $LID, ($arMess !== false? $arMess["ACCOUNT_UPDATE"]:GetMessage("ACCOUNT_UPDATE")), true);
+					CUser::SendUserInfo($ID, $_POST["LID"], ($arMess !== false? $arMess["ACCOUNT_UPDATE"]:GetMessage("ACCOUNT_UPDATE")), true);
 			}
 
 			if($USER->CanDoOperation('edit_all_users') || $USER->CanDoOperation('edit_subordinate_users') || ($USER->CanDoOperation('edit_own_profile') && $ID==$uid))
 			{
-				if(strlen($save)>0)
+				if($_POST["save"] <> '')
 					LocalRedirect($strRedirect_admin);
-				elseif(strlen($apply)>0)
+				elseif($_POST["apply"] <> '')
 					LocalRedirect($strRedirect."&ID=".$ID."&".$tabControl->ActiveTabParam());
 				elseif(strlen($save_and_add)>0)
 					LocalRedirect($strRedirect."&ID=0&".$tabControl->ActiveTabParam());
@@ -395,8 +401,8 @@ else
 	$dbUserGroup = CUser::GetUserGroupList($ID);
 	while ($arUserGroup = $dbUserGroup->Fetch())
 	{
-		$str_GROUP_ID[IntVal($arUserGroup["GROUP_ID"])]["DATE_ACTIVE_FROM"] = $arUserGroup["DATE_ACTIVE_FROM"];
-		$str_GROUP_ID[IntVal($arUserGroup["GROUP_ID"])]["DATE_ACTIVE_TO"] = $arUserGroup["DATE_ACTIVE_TO"];
+		$str_GROUP_ID[intval($arUserGroup["GROUP_ID"])]["DATE_ACTIVE_FROM"] = $arUserGroup["DATE_ACTIVE_FROM"];
+		$str_GROUP_ID[intval($arUserGroup["GROUP_ID"])]["DATE_ACTIVE_TO"] = $arUserGroup["DATE_ACTIVE_TO"];
 	}
 }
 
@@ -416,14 +422,14 @@ if($strError <> '' || !$res)
 	$str_PERSONAL_PHOTO = $save_PERSONAL_PHOTO;
 	$str_WORK_LOGO = $save_WORK_LOGO;
 
-	$GROUP_ID_NUMBER = IntVal($GROUP_ID_NUMBER);
+	$GROUP_ID_NUMBER = intval($_REQUEST["GROUP_ID_NUMBER"]);
 	$str_GROUP_ID = array();
 	for ($i = 0; $i <= $GROUP_ID_NUMBER; $i++)
 	{
 		if (${"GROUP_ID_ACT_".$i} == "Y")
 		{
-			$str_GROUP_ID[IntVal(${"GROUP_ID_".$i})]["DATE_ACTIVE_FROM"] = ${"GROUP_ID_FROM_".$i};
-			$str_GROUP_ID[IntVal(${"GROUP_ID_".$i})]["DATE_ACTIVE_TO"] = ${"GROUP_ID_TO_".$i};
+			$str_GROUP_ID[intval(${"GROUP_ID_".$i})]["DATE_ACTIVE_FROM"] = ${"GROUP_ID_FROM_".$i};
+			$str_GROUP_ID[intval(${"GROUP_ID_".$i})]["DATE_ACTIVE_TO"] = ${"GROUP_ID_TO_".$i};
 		}
 	}
 }
@@ -433,7 +439,7 @@ if($ID>0 && $COPY_ID<=0)
 else
 	$APPLICATION->SetTitle(GetMessage("NEW_USER_TITLE"));
 
-require_once ($DOCUMENT_ROOT.BX_ROOT."/modules/main/include/prolog_admin_after.php");
+require_once ($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/include/prolog_admin_after.php");
 
 $aMenu = array();
 if($canViewUserList)
@@ -499,7 +505,7 @@ if($strError <> '')
 $tabControl->BeginPrologContent();
 if(method_exists($USER_FIELD_MANAGER, 'showscript'))
 	echo $USER_FIELD_MANAGER->ShowScript();
-echo CAdminCalendar::ShowScript();
+CAdminCalendar::ShowScript();
 $tabControl->EndPrologContent();
 $tabControl->BeginEpilogContent();
 ?>
@@ -509,14 +515,15 @@ $tabControl->BeginEpilogContent();
 <?
 $tabControl->EndEpilogContent();
 
+$limitUsersCount = $users_cnt = 0;
 if($ID <= 0)
 {
 	$users_cnt = CUser::GetActiveUsersCount();
-	$limitUsersCount = IntVal(COption::GetOptionInt("main", "PARAM_MAX_USERS", 0));
+	$limitUsersCount = intval(COption::GetOptionInt("main", "PARAM_MAX_USERS", 0));
 }
 
 $tabControl->Begin(array(
-	"FORM_ACTION" => $APPLICATION->GetCurPage()."?ID=".IntVal($ID)."&lang=".LANG,
+	"FORM_ACTION" => $APPLICATION->GetCurPage()."?ID=".intval($ID)."&lang=".LANG,
 	"FORM_ATTRIBUTES" => ($ID <= 0 && $limitUsersCount > 0 && $limitUsersCount <= $users_cnt? 'onsubmit="alert(\''.GetMessage("USER_EDIT_WARNING_MAX").'\')"':''),
 ));
 
@@ -604,7 +611,14 @@ $tabControl->EndCustomField("PASSWORD");
 		<tr>
 		<td><?echo $tabControl->GetCustomLabelHTML()?></td>
 		<td>
-			<select id="bx_EXTERNAL_AUTH_ID" name="EXTERNAL_AUTH_ID"<?if(!$canSelfEdit) echo " disabled"?> onchange="BX('bx_pass_row').style.display = BX('bx_pass_confirm_row').style.display = (this.value == ''? '':'none');">
+<script type="text/javascript">
+function BXAuthSwitch(val)
+{
+	BX('bx_user_info_event').disabled = (val != '');
+	BX('bx_pass_row').style.display = BX('bx_pass_confirm_row').style.display = (val == ''? '':'none');
+}
+</script>
+			<select id="bx_EXTERNAL_AUTH_ID" name="EXTERNAL_AUTH_ID"<?if(!$canSelfEdit) echo " disabled"?> onchange="BXAuthSwitch(this.value)">
 				<option value=""><?echo GetMessage("MAIN_USERED_AUTH_INT")?></option>
 				<?foreach($arAuthList as $arExtAuth):?>
 				<option value="<?=$arExtAuth['ID']?>"<?if($str_EXTERNAL_AUTH_ID == $arExtAuth['ID']) echo ' selected';?>><?=$arExtAuth['NAME']?></option>
@@ -625,12 +639,17 @@ if($USER->CanDoOperation('view_subordinate_users') || $USER->CanDoOperation('vie
 	<tr>
 		<td><?echo $tabControl->GetCustomLabelHTML()?></td>
 		<?if(!$canSelfEdit) $dis = " disabled"?>
-		<td><?=CSite::SelectBox("LID", $str_LID, "", "",$dis);?></td>
+		<td><?=CSite::SelectBox("LID", $str_LID, "", "", "style=\"width:220px\"".$dis);?></td>
 	</tr>
 <?
 	$tabControl->EndCustomField("LID", '<input type="hidden" name="LID" value="'.$str_LID.'">');
 
-	$tabControl->AddCheckBoxField("user_info_event", GetMessage('INFO_FOR_USER'), false, "Y", ($user_info_event=="Y"), (!$canSelfEdit? array("disabled"):array()));
+	$params = array('id="bx_user_info_event"');
+	if(!$canSelfEdit || $str_EXTERNAL_AUTH_ID <> '')
+	{
+		$params[] = "disabled";
+	}
+	$tabControl->AddCheckBoxField("user_info_event", GetMessage('INFO_FOR_USER'), false, "Y", ($_REQUEST["user_info_event"]=="Y"), $params);
 endif;
 
 if(CTimeZone::Enabled())
@@ -654,7 +673,7 @@ if($showGroupTabs):
 			</tr>
 			<?
 			$ind = -1;
-			$dbGroups = CGroup::GetList(($b = "c_sort"), ($o = "asc"), Array("ANONYMOUS" => "N"));
+			$dbGroups = CGroup::GetList(($b = "c_sort"), ($o = "asc"), array("ANONYMOUS" => "N"));
 			while ($arGroups = $dbGroups->Fetch())
 			{
 				if (!$USER->CanDoOperation('edit_all_users') && $USER->CanDoOperation('edit_subordinate_users') && !in_array($arGroups["ID"], $arUserSubordinateGroups) || $arGroups["ID"] == 2)
@@ -664,16 +683,16 @@ if($showGroupTabs):
 				$ind++;
 				?>
 				<tr>
-					<td style="vertical-align: middle">
+					<td>
 						<input type="hidden" name="GROUP_ID_<?=$ind?>" value="<?=$arGroups["ID"]?>" /><input type="checkbox" name="GROUP_ID_ACT_<?=$ind?>" id="GROUP_ID_ACT_ID_<?=$ind?>" value="Y"<?
 						if (array_key_exists($arGroups["ID"], $str_GROUP_ID))
 							echo " checked=\"checked\"";
 						?> />
 					</td>
-					<td style="vertical-align: middle">
+					<td>
 						<label for="GROUP_ID_ACT_ID_<?= $ind ?>"><?=htmlspecialcharsbx($arGroups["NAME"])?> [<a href="/bitrix/admin/group_edit.php?ID=<?=$arGroups["ID"]?>&lang=<?=LANGUAGE_ID?>" title="<?=GetMessage("MAIN_VIEW_GROUP")?>"><?echo intval($arGroups["ID"])?></a>]</label>
 					</td>
-					<td style="white-space: nowrap;">
+					<td>
 						<?= CalendarDate("GROUP_ID_FROM_".$ind, (array_key_exists($arGroups["ID"], $str_GROUP_ID) ? htmlspecialcharsbx($str_GROUP_ID[$arGroups["ID"]]["DATE_ACTIVE_FROM"]) : ""), $tabControl->GetFormName(), "22")?>
 						<?= CalendarDate("GROUP_ID_TO_".$ind, (array_key_exists($arGroups["ID"], $str_GROUP_ID) ? htmlspecialcharsbx($str_GROUP_ID[$arGroups["ID"]]["DATE_ACTIVE_TO"]) : ""), $tabControl->GetFormName(), "22")?>
 					</td>
@@ -750,13 +769,13 @@ $tabControl->AddEditField("WORK_MAILBOX", GetMessage('USER_MAILBOX'), false, arr
 $tabControl->AddTextField("WORK_NOTES", GetMessage("USER_NOTES"), $str_WORK_NOTES, array("cols"=>40, "rows"=>5));
 
 $tabControl->BeginNextFormTab();
-$tabControl->BeginCustomField("RATING_BOX", '', false);
+$tabControl->BeginCustomField("RATING_BOX", GetMessage("USER_RATING_INFO"), false);
 ?>
 	<tr>
 		<td width="100%" colspan="100%">
 		<?
 		$i = 1;
-		$aTabs2 = Array();
+		$aTabs2 = array();
 		$arRatings = array();
 		$rsRatings = CRatings::GetList(array('ID' => 'ASC'), array('ACTIVE' => 'Y', 'ENTITY_ID' => 'USER'));
 		while ($arRatingsTmp = $rsRatings->GetNext())
@@ -764,7 +783,7 @@ $tabControl->BeginCustomField("RATING_BOX", '', false);
 			if ($arRatingsTmp['AUTHORITY'] == 'Y')
 				$arRatingsTmp['NAME'] = '<span class="required">[A]</span> '.$arRatingsTmp['NAME'];
 
-			$aTabs2[] = Array("DIV"=>"rating_".$i, "TAB" => $arRatingsTmp['NAME'], "TITLE" => GetMessage('RATING_TAB_INFO'));
+			$aTabs2[] = array("DIV"=>"rating_".$i, "TAB" => $arRatingsTmp['NAME'], "TITLE" => GetMessage('RATING_TAB_INFO'));
 			$arRatings[$arRatingsTmp['ID']] = $arRatingsTmp;
 			$i++;
 		}
@@ -773,7 +792,7 @@ $tabControl->BeginCustomField("RATING_BOX", '', false);
 		{
 			$ratingWeightType 	 = COption::GetOptionString("main", "rating_weight_type", "auto");
 			$authorityRatingId	 = CRatings::GetAuthorityRating();
-			$arAuthorityUserProp = CRatings::GetRatingUserProp($authorityRatingId, $ID);
+			$arAuthorityUserProp = CRatings::GetRatingUserPropEx($authorityRatingId, $ID);
 
 			$viewTabControl = new CAdminViewTabControl("tabControlRating", $aTabs2);
 			$viewTabControl->Begin();
@@ -781,7 +800,7 @@ $tabControl->BeginCustomField("RATING_BOX", '', false);
 			foreach($arRatings as $ratingId => $arRating)
 			{
 				$arRatingResult = CRatings::GetRatingResult($ratingId, $ID);
-				$arRatingUserProp = CRatings::GetRatingUserProp($ratingId, $ID);
+				$arRatingUserProp = CRatings::GetRatingUserPropEx($ratingId, $ID);
 
 				if ($ratingId == $authorityRatingId && $arRatingUserProp['BONUS'] == 0)
 					$arRatingUserProp['BONUS'] = COption::GetOptionString("main", "rating_start_authority", 3);
@@ -800,7 +819,7 @@ $tabControl->BeginCustomField("RATING_BOX", '', false);
 						<td>
 						<?$APPLICATION->IncludeComponent(
 							"bitrix:rating.result", "",
-							Array(
+							array(
 								"RESULT_TYPE" 			=> 'POSITION',
 								"SHOW_RATING_NAME"		=> 'N',
 								"RATING_ID" 			=> $arRatingResult['RATING_ID'],
@@ -880,15 +899,16 @@ $db_opt_res = CModule::GetList();
 while ($opt_res = $db_opt_res->Fetch())
 {
 	$mdir = $opt_res["ID"];
-	if (file_exists($DOCUMENT_ROOT.BX_ROOT."/modules/".$mdir) && is_dir($DOCUMENT_ROOT.BX_ROOT."/modules/".$mdir))
+	if (file_exists($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/".$mdir) && is_dir($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/".$mdir))
 	{
-		$ofile = $DOCUMENT_ROOT.BX_ROOT."/modules/".$mdir."/options_user_settings.php";
+		$ofile = $_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/".$mdir."/options_user_settings.php";
 		if (file_exists($ofile))
 		{
+			$mname = str_replace(".", "_", $mdir);
 			$tabControl->BeginNextFormTab();
-			$tabControl->BeginCustomField("MODULE_TAB_".$mdir, GetMessage($mdir."_TAB"));
+			$tabControl->BeginCustomField("MODULE_TAB_".$mname, GetMessage($mname."_TAB"));
 			include($ofile);
-			$tabControl->EndCustomField("MODULE_TAB_".$mdir);
+			$tabControl->EndCustomField("MODULE_TAB_".$mname);
 		}
 	}
 }
@@ -943,6 +963,6 @@ $tabControl->ShowWarnings($tabControl->GetName(), $message);
 <span class="required">2</span> <?echo GetMessage("RATING_BONUS_NOTICE")?><br>
 <?echo EndNote();?>
 <?endif;?>
+
 <?
-require_once ($DOCUMENT_ROOT.BX_ROOT."/modules/main/include/epilog_admin.php");
-?>
+require_once ($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/include/epilog_admin.php");

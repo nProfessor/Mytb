@@ -21,4 +21,6 @@ $MESS["MPF_TAG_TITLE"] = "Добавить тег";
 $MESS["MPF_ADD_TAG1"] = "Добавить";
 $MESS["MPF_MENTION_TITLE"] = "Добавить упоминание";
 $MESS["MPF_IMAGE_TITLE"] = "Вставить изображение в сообщение";
+$MESS["MPF_FILE_INSERT_IN_TEXT"] = "Вставить<br /> в текст";
+$MESS["MPF_FILE_IN_TEXT"] = "В тексте";
 ?>

@@ -1,36 +1,42 @@
-<?
+<?php
 IncludeModuleLangFile(__FILE__);
 
 class CAllIBlock
 {
+	public $LAST_ERROR = "";
 	function ShowPanel($IBLOCK_ID=0, $ELEMENT_ID=0, $SECTION_ID="", $type="news", $bGetIcons=false, $componentName="", $arLabels=array())
 	{
+		/** @global CMain $APPLICATION */
+		global $APPLICATION;
+		/** @global CUser $USER */
+		global $USER;
 
-		global $APPLICATION, $USER;
-		if(!(($USER->IsAuthorized() || $APPLICATION->ShowPanel===true) && $APPLICATION->ShowPanel!==false))
-			return;
-
-		if(!CModule::IncludeModule("iblock") || !strlen($type))
-			return;
-
-		$arButtons = CIBlock::GetPanelButtons($IBLOCK_ID, $ELEMENT_ID, $SECTION_ID, array(
-			"LABELS" => $arLabels,
-		));
-
-		$mode = $APPLICATION->GetPublicShowMode();
-
-		if($bGetIcons)
+		if (($USER->IsAuthorized() || $APPLICATION->ShowPanel===true) && $APPLICATION->ShowPanel!==false)
 		{
-			return CIBlock::GetComponentMenu($mode, $arButtons);
+			if (CModule::IncludeModule("iblock") && strlen($type) > 0)
+			{
+				$arButtons = CIBlock::GetPanelButtons($IBLOCK_ID, $ELEMENT_ID, $SECTION_ID, array(
+					"LABELS" => $arLabels,
+				));
+
+				$mode = $APPLICATION->GetPublicShowMode();
+
+				if($bGetIcons)
+				{
+					return CIBlock::GetComponentMenu($mode, $arButtons);
+				}
+				else
+				{
+					CIBlock::AddPanelButtons($mode, $componentName, $arButtons);
+				}
+			}
 		}
-		else
-		{
-			CIBlock::AddPanelButtons($mode, $componentName, $arButtons);
-		}
+		return null;
 	}
 
 	function AddPanelButtons($mode, $componentName, $arButtons)
 	{
+		/** @global CMain $APPLICATION */
 		global $APPLICATION;
 
 		$arImages = array(
@@ -50,7 +56,7 @@ class CAllIBlock
 			if(strlen($componentName) <= 0 && function_exists("debug_backtrace"))
 			{
 				$arTrace = debug_backtrace();
-				foreach($arTrace as $i => $arCallInfo)
+				foreach($arTrace as $arCallInfo)
 				{
 					if(array_key_exists("file", $arCallInfo))
 					{
@@ -118,13 +124,14 @@ class CAllIBlock
 
 		if(count($arButtons["intranet"]) > 0 && CModule::IncludeModule("intranet"))
 		{
+			/** @global CIntranetToolbar $INTRANET_TOOLBAR */
 			global $INTRANET_TOOLBAR;
 			foreach($arButtons["intranet"] as $arButton)
 				$INTRANET_TOOLBAR->AddButton($arButton);
 		}
 	}
 
-	function GetComponentMenu($mode, $arButtons)
+	public static function GetComponentMenu($mode, $arButtons)
 	{
 		$arImages = array(
 			"add_element" => "/bitrix/images/iblock/icons/new_element.gif",
@@ -148,9 +155,10 @@ class CAllIBlock
 		return $arResult;
 	}
 
-	function GetPanelButtons($IBLOCK_ID=0, $ELEMENT_ID=0, $SECTION_ID=0, $arOptions=array())
+	public static function GetPanelButtons($IBLOCK_ID=0, $ELEMENT_ID=0, $SECTION_ID=0, $arOptions=array())
 	{
-		global $APPLICATION, $USER;
+		/** @global CMain $APPLICATION */
+		global $APPLICATION;
 
 		$arButtons = array(
 			"view" => array(),
@@ -257,7 +265,7 @@ class CAllIBlock
 				"bxpublic" => "Y",
 				"from_module" => "iblock",
 				"return_url" => $return_url["edit_element"],
-			));
+			)).$s;
 
 			$action = $APPLICATION->GetPopupLink(
 				array(
@@ -364,9 +372,9 @@ class CAllIBlock
 			$arButton = array(
 				"TEXT" => (strlen($arLabels["ELEMENT_DELETE_TEXT"])? $arLabels["ELEMENT_DELETE_TEXT"]: $arIBlock["ELEMENT_DELETE"]),
 				"TITLE" => (strlen($arLabels["ELEMENT_DELETE_TITLE"])? $arLabels["ELEMENT_DELETE_TITLE"]: $arIBlock["ELEMENT_DELETE"]),
-				"ACTION"=>"javascript:if(confirm('".GetMessage("IBLOCK_PANEL_ELEMENT_DEL_CONF")."'))jsUtils.Redirect([], '".CUtil::JSEscape($url)."')",
+				"ACTION"=>"javascript:if(confirm('".GetMessageJS("IBLOCK_PANEL_ELEMENT_DEL_CONF")."'))jsUtils.Redirect([], '".CUtil::JSEscape($url)."')",
 				"ACTION_URL" => $url,
-				"ONCLICK"=>"if(confirm('".GetMessage("IBLOCK_PANEL_ELEMENT_DEL_CONF")."'))jsUtils.Redirect([], '".CUtil::JSEscape($url)."')",
+				"ONCLICK"=>"if(confirm('".GetMessageJS("IBLOCK_PANEL_ELEMENT_DEL_CONF")."'))jsUtils.Redirect([], '".CUtil::JSEscape($url)."')",
 				"ICON" => "bx-context-toolbar-delete-icon",
 				"ID" => "bx-context-toolbar-delete-element"
 			);
@@ -476,9 +484,9 @@ class CAllIBlock
 					$arButton = array(
 						"TEXT" => (strlen($arLabels["SECTION_DELETE_TEXT"])? $arLabels["SECTION_DELETE_TEXT"]: $arIBlock["SECTION_DELETE"]),
 						"TITLE" => (strlen($arLabels["SECTION_DELETE_TITLE"])? $arLabels["SECTION_DELETE_TITLE"]: $arIBlock["SECTION_DELETE"]),
-						"ACTION" => "javascript:if(confirm('".GetMessage("IBLOCK_PANEL_SECTION_DEL_CONF")."'))jsUtils.Redirect([], '".CUtil::JSEscape($url)."')",
+						"ACTION" => "javascript:if(confirm('".GetMessageJS("IBLOCK_PANEL_SECTION_DEL_CONF")."'))jsUtils.Redirect([], '".CUtil::JSEscape($url)."')",
 						"ACTION_URL" => $url,
-						"ONCLICK" => "if(confirm('".GetMessage("IBLOCK_PANEL_SECTION_DEL_CONF")."'))jsUtils.Redirect([], '".CUtil::JSEscape($url)."')",
+						"ONCLICK" => "if(confirm('".GetMessageJS("IBLOCK_PANEL_SECTION_DEL_CONF")."'))jsUtils.Redirect([], '".CUtil::JSEscape($url)."')",
 						"ICON" => "bx-context-toolbar-delete-icon",
 						"ID" => "bx-context-toolbar-delete-section"
 					);
@@ -546,9 +554,15 @@ class CAllIBlock
 		return $arButtons;
 	}
 
-	function GetSite($iblock_id)
+	/**
+	 * @param int $iblock_id
+	 * @return CDBResult
+	 */
+	public static function GetSite($iblock_id)
 	{
+		/** @global CDatabase $DB */
 		global $DB;
+
 		$strSql = "SELECT L.*, BS.* FROM b_iblock_site BS, b_lang L WHERE L.LID=BS.SITE_ID AND BS.IBLOCK_ID=".IntVal($iblock_id);
 		return $DB->Query($strSql);
 	}
@@ -561,8 +575,14 @@ class CAllIBlock
 		return CIBlock::GetList(Array(), Array("ID"=>$ID));
 	}
 
-	function GetArrayByID($ID, $FIELD = "")
+	/**
+	 * @param int $ID
+	 * @param string $FIELD
+	 * @return mixed
+	 */
+	public static function GetArrayByID($ID, $FIELD = "")
 	{
+		/** @global CDatabase $DB */
 		global $DB;
 		$ID = intval($ID);
 
@@ -645,6 +665,9 @@ class CAllIBlock
 
 	function CleanCache($ID)
 	{
+		/** @global CCacheManager $CACHE_MANAGER */
+		global $CACHE_MANAGER;
+
 		$ID = intval($ID);
 		if(CACHED_b_iblock !== false)
 		{
@@ -654,7 +677,7 @@ class CAllIBlock
 			$bucket = intval($ID/$bucket_size);
 			$cache_id = $bucket_size."iblock".$bucket;
 
-			$GLOBALS["CACHE_MANAGER"]->Clean($cache_id, "b_iblock");
+			$CACHE_MANAGER->Clean($cache_id, "b_iblock");
 		}
 	}
 
@@ -663,7 +686,11 @@ class CAllIBlock
 	///////////////////////////////////////////////////////////////////
 	function Add($arFields)
 	{
+		/** @global CCacheManager $CACHE_MANAGER */
+		global $CACHE_MANAGER;
+		/** @global CDatabase $DB */
 		global $DB;
+		$SAVED_PICTURE = null;
 
 		//Default Yes
 		$arFields["ACTIVE"] = isset($arFields["ACTIVE"]) && $arFields["ACTIVE"] === "N"? "N": "Y";
@@ -835,7 +862,7 @@ class CAllIBlock
 			ExecuteModuleEventEx($arEvent, array(&$arFields));
 
 		if(defined("BX_COMP_MANAGED_CACHE"))
-			$GLOBALS["CACHE_MANAGER"]->ClearByTag("iblock_id_new");
+			$CACHE_MANAGER->ClearByTag("iblock_id_new");
 
 		return $Result;
 	}
@@ -845,8 +872,12 @@ class CAllIBlock
 	///////////////////////////////////////////////////////////////////
 	function Update($ID, $arFields)
 	{
+		/** @global CCacheManager $CACHE_MANAGER */
+		global $CACHE_MANAGER;
+		/** @global CDatabase $DB */
 		global $DB;
-		$ID = IntVal($ID);
+		$ID = intval($ID);
+		$SAVED_PICTURE = null;
 
 		if(is_set($arFields, "EXTERNAL_ID"))
 			$arFields["XML_ID"] = $arFields["EXTERNAL_ID"];
@@ -902,7 +933,8 @@ class CAllIBlock
 		}
 		else
 		{
-			$arLID = Array();
+			$arLID = array();
+			$str_LID = "";
 			if(is_set($arFields, "LID"))
 			{
 				if(is_array($arFields["LID"]))
@@ -989,7 +1021,7 @@ class CAllIBlock
 					CIBlock::SetPermission($ID, $arFields["GROUP_ID"]);
 			}
 
-			if(count($arLID)>0)
+			if(!empty($arLID))
 			{
 				$strSql = "DELETE FROM b_iblock_site WHERE IBLOCK_ID=".$ID;
 				$DB->Query($strSql, false, "FILE: ".__FILE__."<br> LINE: ".__LINE__);
@@ -1004,8 +1036,8 @@ class CAllIBlock
 
 			if(CModule::IncludeModule("search"))
 			{
-				$dbafter = $DB->Query("SELECT ACTIVE FROM b_iblock WHERE ID=".$ID);
-				$arAfter = $dbafter->Fetch();
+				$dbAfter = $DB->Query("SELECT ACTIVE FROM b_iblock WHERE ID=".$ID);
+				$arAfter = $dbAfter->Fetch();
 				if($arAfter["ACTIVE"] != "Y")
 					CSearch::DeleteIndex("iblock", false, false, $ID);
 			}
@@ -1019,12 +1051,11 @@ class CAllIBlock
 		$arFields["ID"] = $ID;
 		$arFields["RESULT"] = &$Result;
 
-		$events = GetModuleEvents("iblock", "OnAfterIBlockUpdate");
-		while ($arEvent = $events->Fetch())
+		foreach (GetModuleEvents("iblock", "OnAfterIBlockUpdate", true) as $arEvent)
 			ExecuteModuleEventEx($arEvent, array(&$arFields));
 
 		if(defined("BX_COMP_MANAGED_CACHE"))
-			$GLOBALS["CACHE_MANAGER"]->ClearByTag("iblock_id_".$ID);
+			$CACHE_MANAGER->ClearByTag("iblock_id_".$ID);
 
 		return $Result;
 	}
@@ -1032,16 +1063,22 @@ class CAllIBlock
 	///////////////////////////////////////////////////////////////////
 	// Function deletes iblock by ID
 	///////////////////////////////////////////////////////////////////
-	function Delete($ID)
+	public static function Delete($ID)
 	{
 		$err_mess = "FILE: ".__FILE__."<br>LINE: ";
-		global $DB, $APPLICATION, $USER_FIELD_MANAGER, $CACHE_MANAGER;
+		/** @global CDatabase $DB */
+		global $DB;
+		/** @global CMain $APPLICATION */
+		global $APPLICATION;
+		/** @global CUserTypeManager $USER_FIELD_MANAGER */
+		global $USER_FIELD_MANAGER;
+		/** @global CCacheManager $CACHE_MANAGER */
+		global $CACHE_MANAGER;
 
 		$ID = IntVal($ID);
 
 		$APPLICATION->ResetException();
-		$db_events = GetModuleEvents("iblock", "OnBeforeIBlockDelete");
-		while($arEvent = $db_events->Fetch())
+		foreach(GetModuleEvents("iblock", "OnBeforeIBlockDelete", true) as $arEvent)
 		{
 			if(ExecuteModuleEventEx($arEvent, array($ID)) === false)
 			{
@@ -1054,29 +1091,28 @@ class CAllIBlock
 			}
 		}
 
-		$events = GetModuleEvents("iblock", "OnIBlockDelete");
-		while($arEvent = $events->Fetch())
+		foreach (GetModuleEvents("iblock", "OnIBlockDelete", true) as $arEvent)
 			ExecuteModuleEventEx($arEvent, array($ID));
 
-		$iblocksections = CIBlockSection::GetList(Array(), Array(
+		$iblockSections = CIBlockSection::GetList(Array(), Array(
 			"IBLOCK_ID" => $ID,
 			"DEPTH_LEVEL" => 1,
 			"CHECK_PERMISSIONS" => "N",
 		), false, Array("ID"));
-		while($iblocksection = $iblocksections->Fetch())
+		while($iblockSection = $iblockSections->Fetch())
 		{
-			if(!CIBlockSection::Delete($iblocksection["ID"], false))
+			if(!CIBlockSection::Delete($iblockSection["ID"], false))
 				return false;
 		}
 
-		$iblockelements = CIBlockElement::GetList(Array(), Array(
+		$iblockElements = CIBlockElement::GetList(Array(), Array(
 			"IBLOCK_ID" => $ID,
 			"SHOW_NEW" => "Y",
 			"CHECK_PERMISSIONS" => "N",
 		), false, false, array("IBLOCK_ID", "ID"));
-		while($iblockelement = $iblockelements->Fetch())
+		while($iblockElement = $iblockElements->Fetch())
 		{
-			if(!CIBlockElement::Delete($iblockelement["ID"]))
+			if(!CIBlockElement::Delete($iblockElement["ID"]))
 				return false;
 		}
 
@@ -1136,7 +1172,8 @@ class CAllIBlock
 	///////////////////////////////////////////////////////////////////
 	function CheckFields(&$arFields, $ID=false)
 	{
-		global $APPLICATION, $DB, $USER;
+		/** @global CMain $APPLICATION */
+		global $APPLICATION;
 		$this->LAST_ERROR = "";
 
 		$NAME = isset($arFields["NAME"])? $arFields["NAME"]: "";
@@ -1221,14 +1258,14 @@ class CAllIBlock
 
 		$APPLICATION->ResetException();
 		if($ID===false)
-			$db_events = GetModuleEvents("iblock", "OnBeforeIBlockAdd");
+			$db_events = GetModuleEvents("iblock", "OnBeforeIBlockAdd", true);
 		else
 		{
 			$arFields["ID"] = $ID;
-			$db_events = GetModuleEvents("iblock", "OnBeforeIBlockUpdate");
+			$db_events = GetModuleEvents("iblock", "OnBeforeIBlockUpdate", true);
 		}
 
-		while($arEvent = $db_events->Fetch())
+		foreach($db_events as  $arEvent)
 		{
 			$bEventRes = ExecuteModuleEventEx($arEvent, array(&$arFields));
 			if($bEventRes===false)
@@ -1261,6 +1298,7 @@ class CAllIBlock
 
 	function SetPermission($IBLOCK_ID, $arGROUP_ID)
 	{
+		/** @global CDatabase $DB */
 		global $DB;
 		$IBLOCK_ID = intval($IBLOCK_ID);
 		static $letters = "RUWX";
@@ -1336,6 +1374,7 @@ class CAllIBlock
 
 	function SetMessages($ID, $arFields)
 	{
+		/** @global CDatabase $DB */
 		global $DB;
 		$ID = intval($ID);
 		if($ID > 0)
@@ -1383,8 +1422,9 @@ class CAllIBlock
 		}
 	}
 
-	function GetMessages($ID, $type="")
+	public static function GetMessages($ID, $type="")
 	{
+		/** @global CDatabase $DB */
 		global $DB;
 		$ID = intval($ID);
 		$arMessages = array(
@@ -1627,6 +1667,7 @@ REQ
 
 	function SetFields($ID, $arFields)
 	{
+		/** @global CDatabase $DB */
 		global $DB;
 		$ID = intval($ID);
 		if($ID > 0)
@@ -1915,6 +1956,7 @@ REQ
 
 	function GetFields($ID)
 	{
+		/** @global CDatabase $DB */
 		global $DB;
 		$ID = intval($ID);
 		$arDefFields = CIBlock::GetFieldsDefaults();
@@ -1977,6 +2019,7 @@ REQ
 
 	function GetGroupPermissions($ID)
 	{
+		/** @global CDatabase $DB */
 		global $DB;
 		$arRes = array();
 
@@ -1993,7 +2036,10 @@ REQ
 
 	function GetPermission($IBLOCK_ID, $FOR_USER_ID = false)
 	{
-		global $DB, $USER;
+		/** @global CDatabase $DB */
+		global $DB;
+		/** @global CUser $USER */
+		global $USER;
 		static $CACHE = array();
 		$USER_ID = is_object($USER)? intval($USER->GetID()): 0;
 
@@ -2049,7 +2095,11 @@ REQ
 
 	function OnBeforeLangDelete($lang)
 	{
-		global $APPLICATION, $DB;
+		/** @global CDatabase $DB */
+		global $DB;
+		/** @global CMain $APPLICATION */
+		global $APPLICATION;
+
 		$r = $DB->Query("
 			SELECT IBLOCK_ID
 			FROM b_iblock_site
@@ -2072,13 +2122,14 @@ REQ
 
 	function OnLangDelete($lang)
 	{
-		global $DB;
 		return true;
 	}
 
 	function OnGroupDelete($group_id)
 	{
+		/** @global CDatabase $DB */
 		global $DB;
+
 		return $DB->Query("DELETE FROM b_iblock_group WHERE GROUP_ID=".IntVal($group_id), true);
 	}
 
@@ -2112,19 +2163,22 @@ REQ
 			return Array("FIELD"=>$key, "OPERATION"=>"E"); // field LIKE val
 	}
 
-	function FilterCreate($fname, $vals, $type, $cOperationType=false, $bSkipEmpty = true)
+	public static function FilterCreate($field_name, $values, $type, $cOperationType=false, $bSkipEmpty = true)
 	{
-		return CIBlock::FilterCreateEx($fname, $vals, $type, $bFullJoin, $cOperationType, $bSkipEmpty);
+		return CIBlock::FilterCreateEx($field_name, $values, $type, $bFullJoin, $cOperationType, $bSkipEmpty);
 	}
 
 	function ForLIKE($str)
 	{
+		/** @global CDatabase $DB */
 		global $DB;
+
 		return str_replace("%", "\\%", str_replace("_", "\\_", $DB->ForSQL($str)));
 	}
 
 	function FilterCreateEx($fname, $vals, $type, &$bFullJoin, $cOperationType=false, $bSkipEmpty = true)
 	{
+		/** @global CDatabase $DB */
 		global $DB;
 
 		if(!is_array($vals))
@@ -2317,7 +2371,7 @@ REQ
 		return $strResult;
 	}
 
-	function _MergeIBArrays($iblock_id, $iblock_code = false, $iblock_id2 = false, $iblock_code2 = false)
+	public static function _MergeIBArrays($iblock_id, $iblock_code = false, $iblock_id2 = false, $iblock_code2 = false)
 	{
 		if(!is_array($iblock_id))
 		{
@@ -2353,6 +2407,7 @@ REQ
 
 	function OnSearchGetURL($arFields)
 	{
+		/** @global CDatabase $DB */
 		global $DB;
 		static $arIBlockCache = array();
 
@@ -2391,7 +2446,7 @@ REQ
 			return CIBlock::ReplaceDetailUrl($arIBlockCache[$IBLOCK_ID]["SECTION_PAGE_URL"], $arr, false, "S");
 	}
 
-	function ReplaceSectionUrl($url, $arr, $server_name = false, $arrType = false)
+	public static function ReplaceSectionUrl($url, $arr, $server_name = false, $arrType = false)
 	{
 		$url = str_replace("#ID#", "#SECTION_ID#", $url);
 		$url = str_replace("#CODE#", "#SECTION_CODE#", $url);
@@ -2487,26 +2542,26 @@ REQ
 		return $product_url;
 	}
 
-	function ReplaceDetailUrl($url, $arr, $server_name = false, $arrType = false)
+	public static function ReplaceDetailUrl($url, $arr, $server_name = false, $arrType = false)
 	{
+		/** @global CDatabase $DB */
 		global $DB;
 		static $arSectionCache = array();
+		static $arSectionPathCache = array();
 
 		if($server_name)
 		{
 			$url = str_replace("#LANG#", $arr["LANG_DIR"], $url);
 			if((defined("ADMIN_SECTION") && ADMIN_SECTION===true) || !defined("BX_STARTED"))
 			{
-				static $lcache;
-				if(!is_array($lcache))
-					$lcache = array();
-				if(!is_set($lcache, $arr["LID"]))
+				static $cache = array();
+				if(!isset($cache[$arr["LID"]]))
 				{
 					$db_lang = CLang::GetByID($arr["LID"]);
 					$arLang = $db_lang->Fetch();
-					$lcache[$arr["LID"]] = $arLang;
+					$cache[$arr["LID"]] = $arLang;
 				}
-				$arLang = $lcache[$arr["LID"]];
+				$arLang = $cache[$arr["LID"]];
 				$url = str_replace("#SITE_DIR#", $arLang["DIR"], $url);
 				$url = str_replace("#SERVER_NAME#", $arLang["SERVER_NAME"], $url);
 			}
@@ -2521,7 +2576,7 @@ REQ
 			$url = str_replace("#PRODUCT_URL#", CIBlock::_GetProductUrl($arr["ID"], $arr["IBLOCK_ID"], $server_name, $arrType), $url);
 
 		static $arSearch = array(
-			/*Theese come from GetNext*/
+			/*Thees come from GetNext*/
 			"#SITE_DIR#",
 			"#ID#",
 			"#CODE#",
@@ -2530,11 +2585,12 @@ REQ
 			"#IBLOCK_ID#",
 			"#IBLOCK_CODE#",
 			"#IBLOCK_EXTERNAL_ID#",
-			/*And theese was born during components 2 development*/
+			/*And thees was born during components 2 development*/
 			"#ELEMENT_ID#",
 			"#ELEMENT_CODE#",
 			"#SECTION_ID#",
 			"#SECTION_CODE#",
+			"#SECTION_CODE_PATH#",
 		);
 		$arReplace = array(
 			$arr["LANG_DIR"],
@@ -2554,25 +2610,72 @@ REQ
 			#Deal with symbol codes
 			$SECTION_CODE = "";
 			$SECTION_ID = intval($arr["IBLOCK_SECTION_ID"]);
-			if(strpos($url, "#SECTION_CODE#") !== false && $SECTION_ID > 0)
+			if(
+				$SECTION_ID > 0
+				&& (
+					strpos($url, "#SECTION_CODE#") !== false
+					|| strpos($url, "#SECTION_CODE_PATH#") !== false
+				)
+			)
 			{
 				if(!array_key_exists($SECTION_ID, $arSectionCache))
 				{
-					$res = $DB->Query("SELECT CODE FROM b_iblock_section WHERE ID = ".$SECTION_ID);
+					$res = $DB->Query("SELECT IBLOCK_ID, CODE FROM b_iblock_section WHERE ID = ".$SECTION_ID);
 					$arSectionCache[$SECTION_ID] = $res->Fetch();
 				}
 				if(is_array($arSectionCache[$SECTION_ID]))
 					$SECTION_CODE = $arSectionCache[$SECTION_ID]["CODE"];
 			}
+			$SECTION_CODE_PATH = "";
+			if(
+				$SECTION_ID > 0
+				&& array_key_exists($SECTION_ID, $arSectionCache)
+				&& strpos($url, "#SECTION_CODE_PATH#") !== false
+			)
+			{
+				if(!array_key_exists($SECTION_ID, $arSectionPathCache))
+				{
+					$res = CIBlockSection::GetNavChain($arSectionCache[$SECTION_ID]["IBLOCK_ID"], $SECTION_ID, array("ID", "IBLOCK_SECTION_ID", "CODE"));
+					while ($a = $res->Fetch())
+						$arSectionPathCache[$SECTION_ID] .= urlencode($a["CODE"])."/";
+
+				}
+				if(isset($arSectionCache[$SECTION_ID]))
+					$SECTION_CODE_PATH = rtrim($arSectionPathCache[$SECTION_ID], "/");
+			}
 			$arReplace[] = $SECTION_ID > 0? $SECTION_ID: "";
 			$arReplace[] = urlencode($SECTION_CODE);
+			$arReplace[] = $SECTION_CODE_PATH;
 		}
 		elseif($arrType === "S")
 		{
+			$SECTION_ID = intval($arr["ID"]);
+			$SECTION_CODE_PATH = "";
+			if(strpos($url, "#SECTION_CODE_PATH#") !== false && $SECTION_ID > 0)
+			{
+				if(!array_key_exists($SECTION_ID, $arSectionCache))
+				{
+					$res = $DB->Query("SELECT IBLOCK_ID, CODE FROM b_iblock_section WHERE ID = ".$SECTION_ID);
+					$arSectionCache[$SECTION_ID] = $res->Fetch();
+				}
+				if(is_array($arSectionCache[$SECTION_ID]))
+				{
+					if(!array_key_exists($SECTION_ID, $arSectionPathCache))
+					{
+						$res = CIBlockSection::GetNavChain($arSectionCache[$SECTION_ID]["IBLOCK_ID"], $SECTION_ID, array("ID", "IBLOCK_SECTION_ID", "CODE"));
+						while ($a = $res->Fetch())
+							$arSectionPathCache[$SECTION_ID] .= urlencode($a["CODE"])."/";
+
+					}
+					if(isset($arSectionCache[$SECTION_ID]))
+						$SECTION_CODE_PATH = rtrim($arSectionPathCache[$SECTION_ID], "/");
+				}
+			}
 			$arReplace[] = "";
 			$arReplace[] = "";
-			$arReplace[] = intval($arr["ID"]) > 0? intval($arr["ID"]): "";
+			$arReplace[] = $SECTION_ID > 0? $SECTION_ID: "";
 			$arReplace[] = urlencode(isset($arr["~CODE"])? $arr["~CODE"]: $arr["CODE"]);
+			$arReplace[] = $SECTION_CODE_PATH;
 		}
 		else
 		{
@@ -2580,6 +2683,7 @@ REQ
 			$arReplace[] = urlencode(isset($arr["~ELEMENT_CODE"])? $arr["~ELEMENT_CODE"]: $arr["ELEMENT_CODE"]);
 			$arReplace[] = intval($arr["IBLOCK_SECTION_ID"]) > 0? intval($arr["IBLOCK_SECTION_ID"]): "";
 			$arReplace[] = urlencode(isset($arr["~SECTION_CODE"])? $arr["~SECTION_CODE"]: $arr["SECTION_CODE"]);
+			$arReplace[] = "";
 		}
 
 		$url = str_replace($arSearch, $arReplace, $url);
@@ -2590,6 +2694,9 @@ REQ
 
 	function OnSearchReindex($NS=Array(), $oCallback=NULL, $callback_method="")
 	{
+		/** @global CUserTypeManager $USER_FIELD_MANAGER */
+		global $USER_FIELD_MANAGER;
+		/** $global CDatabase $DB */
 		global $DB;
 
 		$strNSJoin1 = "";
@@ -2784,7 +2891,6 @@ REQ
 						"PARAM2" => $IBLOCK_ID,
 						"DATE_FROM" => (strlen($arIBlockElement["DATE_FROM"])>0? $arIBlockElement["DATE_FROM"] : false),
 						"DATE_TO" => (strlen($arIBlockElement["DATE_TO"])>0? $arIBlockElement["DATE_TO"] : false),
-						"SITE_ID" => $arSITE,
 						"PERMISSIONS" => $arPermissions,
 						"URL" => $DETAIL_URL
 					);
@@ -2839,7 +2945,7 @@ REQ
 						:
 							$arIBlockSection["DESCRIPTION"]
 						);
-					$BODY .= $GLOBALS["USER_FIELD_MANAGER"]->OnSearchIndex("IBLOCK_".$arIBlockSection["IBLOCK_ID"]."_SECTION", $arIBlockSection["ID"]);
+					$BODY .= $USER_FIELD_MANAGER->OnSearchIndex("IBLOCK_".$arIBlockSection["IBLOCK_ID"]."_SECTION", $arIBlockSection["ID"]);
 
 					if($arIBlock["RIGHTS_MODE"] !== "E")
 						$arPermissions = $arGroups;
@@ -2857,7 +2963,6 @@ REQ
 						"SITE_ID" => $arSITE,
 						"PARAM1" => $arIBlock["IBLOCK_TYPE_ID"],
 						"PARAM2" => $IBLOCK_ID,
-						"SITE_ID" => $arSITE,
 						"PERMISSIONS" => $arPermissions,
 						"URL" => $DETAIL_URL,
 						);
@@ -2886,7 +2991,9 @@ REQ
 
 	function GetElementCount($iblock_id)
 	{
+		/** @global CDatabase $DB */
 		global $DB;
+
 		$res = $DB->Query("
 			SELECT COUNT('x') as C
 			FROM b_iblock_element BE
@@ -2900,7 +3007,7 @@ REQ
 		return intval($ar["C"]);
 	}
 
-	function ResizePicture($arFile, $arResize)
+	public static function ResizePicture($arFile, $arResize)
 	{
 		if(strlen($arFile["tmp_name"]) <= 0)
 			return $arFile;
@@ -2919,7 +3026,7 @@ REQ
 		if($width <= 0 && $height <= 0)
 			return $arFile;
 
-		$orig = CFile::GetImageSize($file);
+		$orig = CFile::GetImageSize($file, true);
 		if(!is_array($orig))
 			return GetMessage("IBLOCK_BAD_FILE_NOT_PICTURE");
 
@@ -2984,11 +3091,11 @@ REQ
 				imagepalettecopy($image_p, $image);
 
 				//Save transparency for GIFs
-				$transparentcolor = imagecolortransparent($image);
-				if($transparentcolor >= 0 && $transparentcolor < imagecolorstotal($image))
+				$transparentColor = imagecolortransparent($image);
+				if($transparentColor >= 0 && $transparentColor < imagecolorstotal($image))
 				{
-					$transparentcolor = imagecolortransparent($image_p, $transparentcolor);
-					imagefilledrectangle($image_p, 0, 0, $width, $height, $transparentcolor);
+					$transparentColor = imagecolortransparent($image_p, $transparentColor);
+					imagefilledrectangle($image_p, 0, 0, $width, $height, $transparentColor);
 				}
 
 				if($arResize["METHOD"] === "resample")
@@ -3000,9 +3107,9 @@ REQ
 			else
 			{
 				//Save transparency for PNG
-				$transparentcolor = imagecolorallocatealpha($image_p, 0, 0, 0, 127);
-				imagefilledrectangle($image_p, 0, 0, $width, $height, $transparentcolor);
-				$transparentcolor = imagecolortransparent($image_p, $transparentcolor);
+				$transparentColor = imagecolorallocatealpha($image_p, 0, 0, 0, 127);
+				imagefilledrectangle($image_p, 0, 0, $width, $height, $transparentColor);
+				$transparentColor = imagecolortransparent($image_p, $transparentColor);
 
 				imagealphablending($image_p, false);
 				if($arResize["METHOD"] === "resample")
@@ -3027,30 +3134,29 @@ REQ
 		}
 	}
 
-	function FilterPicture($filePath, $arFilter)
+	public static function FilterPicture($filePath, $arFilter)
 	{
-		$io = CBXVirtualIo::GetInstance();
-		if (!$io->FileExists($filePath))
+		if (!file_exists($filePath))
 			return false;
 
-		$arFileSize = CFile::GetImageSize($filePath);
+		$arFileSize = CFile::GetImageSize($filePath, true);
 		if(!is_array($arFileSize))
 			return false;
 
 		switch ($arFileSize[2])
 		{
 		case IMAGETYPE_GIF:
-			$picture = imagecreatefromgif($io->GetPhysicalName($filePath));
+			$picture = imagecreatefromgif($filePath);
 			$bHasAlpha = true;
 			break;
 
 		case IMAGETYPE_PNG:
-			$picture = imagecreatefrompng($io->GetPhysicalName($filePath));
+			$picture = imagecreatefrompng($filePath);
 			$bHasAlpha = true;
 			break;
 
 		case IMAGETYPE_JPEG:
-			$picture = imagecreatefromjpeg($io->GetPhysicalName($filePath));
+			$picture = imagecreatefromjpeg($filePath);
 			$bHasAlpha = false;
 			break;
 
@@ -3068,13 +3174,13 @@ REQ
 			switch ($arFileSize[2])
 			{
 			case IMAGETYPE_GIF:
-				imagegif($picture, $io->GetPhysicalName($filePath));
+				imagegif($picture, $filePath);
 				break;
 
 			case IMAGETYPE_PNG:
 				imagealphablending($picture, false);
 				imagesavealpha($picture, true);
-				imagepng($picture, $io->GetPhysicalName($filePath));
+				imagepng($picture, $filePath);
 				break;
 
 			case IMAGETYPE_JPEG:
@@ -3082,7 +3188,7 @@ REQ
 				if ($jpgQuality <= 0 || $jpgQuality > 100)
 					$jpgQuality = 95;
 
-				imagejpeg($picture, $io->GetPhysicalName($filePath), $jpgQuality);
+				imagejpeg($picture, $filePath, $jpgQuality);
 				break;
 			}
 		}
@@ -3090,7 +3196,7 @@ REQ
 		return true;
 	}
 
-	function NumberFormat($num)
+	public static function NumberFormat($num)
 	{
 		if (strlen($num) > 0)
 		{
@@ -3134,10 +3240,10 @@ REQ
 		return $o;
 	}
 
-	function GetAdminSectionEditLink($IBLOCK_ID, $SECTION_ID, $arParams = array(), $strAdd = "")
+	public static function GetAdminSectionEditLink($IBLOCK_ID, $SECTION_ID, $arParams = array(), $strAdd = "")
 	{
 		if (
-			(defined("CATALOG_PRODUCT") || $arParams["force_catalog"])
+			(defined("CATALOG_PRODUCT") || $arParams["force_catalog"] || array_key_exists('catalog', $arParams))
 			&& !array_key_exists("menu", $arParams)
 		)
 			$url = "cat_section_edit.php";
@@ -3156,7 +3262,7 @@ REQ
 		return $url.$strAdd;
 	}
 
-	function GetAdminElementEditLink($IBLOCK_ID, $ELEMENT_ID, $arParams = array(), $strAdd = "")
+	public static function GetAdminElementEditLink($IBLOCK_ID, $ELEMENT_ID, $arParams = array(), $strAdd = "")
 	{
 		if (
 			(defined("CATALOG_PRODUCT") || $arParams["force_catalog"])
@@ -3178,7 +3284,7 @@ REQ
 		return $url.$strAdd;
 	}
 
-	function GetAdminElementListLink($IBLOCK_ID, $arParams = array(), $strAdd = "")
+	public static function GetAdminElementListLink($IBLOCK_ID, $arParams = array(), $strAdd = "")
 	{
 		if (defined("CATALOG_PRODUCT") && !array_key_exists("menu", $arParams))
 			$url = "cat_product_admin.php";
@@ -3197,9 +3303,9 @@ REQ
 		return $url.$strAdd;
 	}
 
-	function GetAdminSectionListLink($IBLOCK_ID, $arParams = array(), $strAdd = "")
+	public static function GetAdminSectionListLink($IBLOCK_ID, $arParams = array(), $strAdd = "")
 	{
-		if (defined("CATALOG_PRODUCT") && !array_key_exists("menu", $arParams))
+		if ((defined("CATALOG_PRODUCT") || array_key_exists('catalog', $arParams)) && !array_key_exists("menu", $arParams))
 			$url = "cat_section_admin.php";
 		elseif (CIBlock::GetAdminListMode($IBLOCK_ID) == 'C')
 			$url = "iblock_list_admin.php";
@@ -3216,7 +3322,7 @@ REQ
 		return $url.$strAdd;
 	}
 
-	function GetAdminListMode($IBLOCK_ID)
+	public static function GetAdminListMode($IBLOCK_ID)
 	{
 		$list_mode = CIBlock::GetArrayByID($IBLOCK_ID, "LIST_MODE");
 
@@ -3266,7 +3372,7 @@ REQ
 		);
 	}
 
-	function roundDB($value)
+	public static function roundDB($value)
 	{
 		$len = 18;
 		$dec = 4;
@@ -3284,8 +3390,35 @@ REQ
 
 	function _transaction_lock($IBLOCK_ID)
 	{
+		/** @global CDatabase $DB */
 		global $DB;
+
 		$DB->Query("UPDATE b_iblock set TMP_ID = '".md5(mt_rand())."' WHERE ID = ".$IBLOCK_ID);
 	}
+
+	function isShortDate($strDate)
+	{
+		$arDate = ParseDateTime($strDate, FORMAT_DATETIME);
+		unset($arDate["DD"]);
+		unset($arDate["MMMM"]);
+		unset($arDate["MM"]);
+		unset($arDate["M"]);
+		unset($arDate["YYYY"]);
+		return array_sum($arDate) == 0;
+	}
+
+	function _Upper($str)
+	{
+		return $str;
+	}
+
+	function _Add($ID)
+	{
+		return false;
+	}
+
+	function _NotEmpty($column)
+	{
+		return "";
+	}
 }
-?>

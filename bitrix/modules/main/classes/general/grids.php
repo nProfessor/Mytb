@@ -1,4 +1,4 @@
-<?
+<?php
 IncludeModuleLangFile(__FILE__);
 
 class CGridOptions
@@ -158,6 +158,15 @@ class CGridOptions
 					unset($_SESSION["main.interface.grid"][$this->grid_id]["filter"][$field["id"]]);
 			}
 		}
+
+		//Check for filter ID -->
+		if(isset($_REQUEST["apply_filter"]) && $_REQUEST["apply_filter"] === 'Y' && isset($_REQUEST["grid_filter_id"]))
+		{
+			$aRes["GRID_FILTER_APPLIED"] = true;
+			$aRes["GRID_FILTER_ID"] = $_REQUEST["grid_filter_id"];
+		}
+		//<-- Check for filter ID
+
 		if(!empty($aRes))
 			$_SESSION["main.interface.grid"][$this->grid_id]["filter"] = $aRes;
 		elseif($_REQUEST["clear_filter"] <> '')
@@ -242,22 +251,49 @@ class CGridOptions
 			unset($_SESSION["main.interface.grid"][$this->grid_id]["sort_order"]);
 	}
 	
-	public function SetFilterRows($rows)
+	public function SetFilterRows($rows, $filter_id='')
 	{
 		$aColsTmp = explode(",", $rows);
 		$aCols = array();
 		foreach($aColsTmp as $col)
 			if(($col = trim($col)) <> "")
 				$aCols[] = $col;
-		$this->all_options["filter_rows"] = implode(",", $aCols);
+		if($filter_id <> '')
+			$this->all_options["filters"][$filter_id]["filter_rows"] = implode(",", $aCols);
+		else
+			$this->all_options["filter_rows"] = implode(",", $aCols);
 	}
 
 	public function SetFilterSettings($filter_id, $settings)
 	{
-		$this->all_options["filters"][$filter_id] = array(
+		$option = array(
 			"name"=>$settings["name"],
-			"fields"=>$settings['fields'],
+			"fields"=>$settings["fields"],
 		);
+
+		if(isset($settings["rows"]))
+		{
+			$rows = $settings["rows"];
+			if(is_array($rows))
+			{
+				$result = array();
+				foreach($rows as $id)
+				{
+					$id = trim($id);
+					if($id !== "")
+					{
+						$result[] = $id;
+					}
+				}
+				$option["filter_rows"] = implode(",", $result);
+			}
+			elseif(is_string($settings["rows"]))
+			{
+				$option["filter_rows"] = $settings["rows"];
+			}
+		}
+
+		$this->all_options["filters"][$filter_id] = $option;
 	}
 
 	public function DeleteFilter($filter_id)
@@ -354,5 +390,26 @@ class CGridOptions
 		uasort($arThemes, create_function('$a, $b', 'return strcmp($a["name"], $b["name"]);'));
 		return $arThemes;
 	}
+
+	public static function GetTheme($grid_id)
+	{
+		$aOptions = CUserOptions::GetOption("main.interface.grid", $grid_id, array());
+		if($aOptions["theme"] == '')
+		{
+			$aGlobalOptions = CUserOptions::GetOption("main.interface", "global", array(), 0);
+			if($aGlobalOptions["theme_template"][SITE_TEMPLATE_ID] <> '')
+				$theme = $aGlobalOptions["theme_template"][SITE_TEMPLATE_ID];
+			else
+				$theme = "";
+		}
+		else
+		{
+			$theme = $aOptions["theme"];
+		}
+		if($theme <> '')
+		{
+			$theme = preg_replace("/[^a-z0-9_.-]/i", "", $theme);
+		}
+		return $theme;
+	}
 }
-?>

@@ -29,16 +29,6 @@ else:
 			$arTransParams['WAIT_FOR_EVENT'] = $arParams['WAIT_FOR_EVENT'];
 	}
 ?>
-<div class="bx-yandex-view-layout">
-	<div class="bx-yandex-view-map">
-<?
-//echo '<pre>'; print_r($arResult['POSITION']); echo '</pre>';
-
-	$APPLICATION->IncludeComponent('bitrix:map.yandex.system', '.default', $arTransParams, false, array('HIDE_ICONS' => 'Y'));
-?>
-	</div>
-</div>
-
 <script type="text/javascript">
 function BX_SetPlacemarks_<?echo $arParams['MAP_ID']?>(map)
 {
@@ -70,6 +60,15 @@ function BX_SetPlacemarks_<?echo $arParams['MAP_ID']?>(map)
 ?>
 }
 </script>
+<div class="bx-yandex-view-layout">
+	<div class="bx-yandex-view-map">
+<?
+//echo '<pre>'; print_r($arResult['POSITION']); echo '</pre>';
+
+	$APPLICATION->IncludeComponent('bitrix:map.yandex.system', '.default', $arTransParams, false, array('HIDE_ICONS' => 'Y'));
+?>
+	</div>
+</div>
 <?
 endif;
 ?>

@@ -192,7 +192,7 @@ LHEDialog.prototype = {
 		obLHEDialog.SetButtons([
 			new BX.CWindowButton(
 				{
-					title: LHE_MESS.DialogSave,
+					title: BX.message.DialogSave,
 					action: function()
 					{
 						var res = true;
@@ -551,7 +551,7 @@ LHEColorPicker.prototype = {
 		row = tbl.insertRow(-1);
 		cell = row.insertCell(-1);
 		cell.colSpan = 8;
-		var defBut = cell.appendChild(BX.create("SPAN", {props: {className: 'lha-colpic-def-but'}, text: LHE_MESS.DefaultColor}));
+		var defBut = cell.appendChild(BX.create("SPAN", {props: {className: 'lha-colpic-def-but'}, text: BX.message.DefaultColor}));
 		defBut.onmouseover = function()
 		{
 			this.className = 'lha-colpic-def-but lha-colpic-def-but-over';

@@ -1,6 +1,5 @@
 <?
 $MESS["BCL_TITLE"] = "CDN Web Accelerator";
-$MESS["BCL_MAIN_TAB"] = "CDN Parameters";
 $MESS["BCL_MAIN_TAB_TITLE"] = "CDN parameters and status";
 $MESS["BCL_SITES_TAB"] = "Websites";
 $MESS["BCL_SITES_TAB_TITLE"] = "Website acceleration parameters";
@@ -15,4 +14,13 @@ $MESS["BCL_DOMAIN_ERROR"] = "The website URL is required.";
 $MESS["BCL_EXTENDED_TAB"] = "Extended";
 $MESS["BCL_EXTENDED_TAB_TITLE"] = "Extended settings";
 $MESS["BCL_SERVER_URL"] = "Source website URL (containing CSS, scripts, images etc. for use by CDN)";
+$MESS["MODULE_INCLUDE_ERROR"] = "Error accessing the Bitrix Cloud module.";
+$MESS["MODULE_INTRANET_ERROR"] = "Website Accelerator cannot be used if the Intranet module is installed.";
+$MESS["BCL_MAIN_TAB1"] = "Accelerator";
+$MESS["BCL_FOLDERS_TAB"] = "Accelerated Items";
+$MESS["BCL_FOLDERS_TAB_TITLE"] = "Select items for acceleration.";
+$MESS["BCL_KERNEL"] = "Website template (recommended)";
+$MESS["BCL_KERNEL_NOTE"] = "Improves website speed. Does not affect SEO.";
+$MESS["BCL_UPLOAD"] = "Website content";
+$MESS["BCL_CONTENT_NOTE"] = "Improves image download speed.";
 ?>

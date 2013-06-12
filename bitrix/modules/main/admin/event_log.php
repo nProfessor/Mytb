@@ -1,10 +1,17 @@
 <?php
-##############################################
-# Bitrix Site Manager                        #
-# Copyright (c) 2002-2008 Bitrix             #
-# http://www.bitrixsoft.com                  #
-# mailto:admin@bitrixsoft.com                #
-##############################################
+/**
+ * Bitrix Framework
+ * @package bitrix
+ * @subpackage main
+ * @copyright 2001-2013 Bitrix
+ */
+
+/**
+ * Bitrix vars
+ *
+ * @global CMain $APPLICATION
+ * @global CUser $USER
+ */
 
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
 require_once($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/prolog.php");
@@ -33,20 +40,18 @@ $arAuditTypes = array(
 	"TASK_CHANGED" => "[TASK_CHANGED] ".GetMessage("MAIN_EVENTLOG_TASK"),
 );
 
-$db_events = GetModuleEvents("main", "OnEventLogGetAuditTypes");
-while($arEvent = $db_events->Fetch())
+foreach(GetModuleEvents("main", "OnEventLogGetAuditTypes", true) as $arEvent)
 {
 	$ar = ExecuteModuleEventEx($arEvent);
 	if(is_array($ar))
 		$arAuditTypes = array_merge($ar, $arAuditTypes);
 }
 
-
 $sTableID = "tbl_event_log";
 $oSort = new CAdminSorting($sTableID, "ID", "DESC");
 $lAdmin = new CAdminList($sTableID, $oSort);
 
-$arFilterFields = Array(
+$arFilterFields = array(
 	"find",
 	"find_type",
 	"find_id",
@@ -87,9 +92,25 @@ function CheckFilter()
 	return true;
 }
 
-$arFilter = Array();
+$arFilter = array();
 $lAdmin->InitFilter($arFilterFields);
 InitSorting();
+
+$find = $_REQUEST["find"];
+$find_id = $_REQUEST["find_id"];
+$find_severity = $_REQUEST["find_severity"];
+$find_audit_type = $_REQUEST["find_audit_type"];
+$find_type = $_REQUEST["find_type"];
+$find_audit_type_id = $_REQUEST["find_audit_type_id"];
+$find_timestamp_x_1 = $_REQUEST["find_timestamp_x_1"];
+$find_timestamp_x_2 = $_REQUEST["find_timestamp_x_2"];
+$find_module_id = $_REQUEST["find_module_id"];
+$find_item_id = $_REQUEST["find_item_id"];
+$find_site_id = $_REQUEST["find_site_id"];
+$find_guest_id = $_REQUEST["find_guest_id"];
+$find_remote_addr = $_REQUEST["find_remote_addr"];
+$find_request_uri = $_REQUEST["find_request_uri"];
+$find_user_agent = $_REQUEST["find_user_agent"];
 
 if(CheckFilter())
 {
@@ -123,7 +144,7 @@ if(CheckFilter())
 		$audit_type_id_filter = "(".$audit_type_id_filter.")|(".$find_audit_type_id.")";
 	}
 
-	$arFilter = Array(
+	$arFilter = array(
 		"TIMESTAMP_X_1" => $find_timestamp_x_1,
 		"TIMESTAMP_X_2" => $find_timestamp_x_2,
 		"SEVERITY" => is_array($find_severity) && count($find_severity) > 0? implode("|", $find_severity): "",
@@ -139,9 +160,16 @@ if(CheckFilter())
 	);
 }
 
-$rsData = CEventLog::GetList(array($by => $order), $arFilter);
+if(isset($_REQUEST["mode"]) && $_REQUEST["mode"] == "excel")
+	$arNavParams = false;
+else
+	$arNavParams = array("nPageSize"=>CAdminResult::GetNavSize($sTableID));
+
+/** @global string $by  */
+/** @global string $order  */
+$rsData = CEventLog::GetList(array($by => $order), $arFilter, $arNavParams);
 $rsData = new CAdminResult($rsData, $sTableID);
-$rsData->NavStart(20);
+$rsData->NavStart();
 $lAdmin->NavText($rsData->GetNavPrint(GetMessage("MAIN_EVENTLOG_LIST_PAGE")));
 
 $arHeaders = array(
@@ -217,6 +245,7 @@ $lAdmin->AddHeaders($arHeaders);
 $arUsersCache = array();
 $arGroupsCache = array();
 $arForumCache = array("FORUM" => array(), "TOPIC" => array(), "MESSAGE" => array());
+$a_ID = $a_AUDIT_TYPE_ID = $a_GUEST_ID = $a_USER_ID = $a_ITEM_ID = $a_REQUEST_URI = $a_DESCRIPTION = $a_REMOTE_ADDR = '';
 while($db_res = $rsData->NavNext(true, "a_"))
 {
 	$row =& $lAdmin->AddRow($a_ID, $db_res);
@@ -283,7 +312,7 @@ while($db_res = $rsData->NavNext(true, "a_"))
 		case "FORUM_MESSAGE_UNAPPROVE":
 		case "FORUM_MESSAGE_MOVE":
 		case "FORUM_MESSAGE_EDIT":
-			if (intVal($a_ITEM_ID) <= 0):
+			if (intval($a_ITEM_ID) <= 0):
 				continue;
 			elseif (!array_key_exists($a_ITEM_ID, $arForumCache["MESSAGE"])):
 				CModule::IncludeModule("forum");
@@ -315,7 +344,7 @@ while($db_res = $rsData->NavNext(true, "a_"))
 		case "FORUM_TOPIC_CLOSE":
 		case "FORUM_TOPIC_MOVE":
 		case "FORUM_TOPIC_EDIT":
-			if (intVal($a_ITEM_ID) <= 0):
+			if (intval($a_ITEM_ID) <= 0):
 				continue;
 			elseif (!array_key_exists($a_ITEM_ID, $arForumCache["TOPIC"])):
 				CModule::IncludeModule("forum");
@@ -357,7 +386,7 @@ while($db_res = $rsData->NavNext(true, "a_"))
 		case "IBLOCK_DELETE":
 			$elementLink = CIBlock::GetAdminElementListLink($a_ITEM_ID, array('filter_section'=>-1));
 			parse_str($elementLink);
-			if (empty($type)) 
+			if (empty($type))
 			{
 				$a_ITEM_ID = GetMessage("MAIN_EVENTLOG_IBLOCK_DELETE");
 			}
@@ -365,7 +394,7 @@ while($db_res = $rsData->NavNext(true, "a_"))
 			{
 				if(CModule::IncludeModule('iblock'))
 					$a_ITEM_ID = '<a href="'.htmlspecialcharsbx($elementLink).'">'.$a_ITEM_ID.'</a>';
-			} 
+			}
 
 			$row->AddViewField("ITEM_ID", '['.$a_ITEM_ID.'] '.GetMessage("MAIN_EVENTLOG_IBLOCK"));
 			break;
@@ -477,7 +506,9 @@ $oFilter->Begin();
 </tr>
 <?
 $arSiteDropdown = array("reference" => array(), "reference_id" => array());
-$rs = CSite::GetList(($v1="sort"), ($v2="asc"));
+$v1 = "sort";
+$v2 = "asc";
+$rs = CSite::GetList($v1, $v2);
 while ($ar = $rs->Fetch())
 {
 	$arSiteDropdown["reference_id"][] = $ar["ID"];
@@ -521,4 +552,3 @@ $lAdmin->DisplayList();
 
 require($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/include/epilog_admin.php");
 ?>
-

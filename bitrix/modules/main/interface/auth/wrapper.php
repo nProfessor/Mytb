@@ -1,5 +1,19 @@
 <?
+/**
+ * Bitrix Framework
+ * @package bitrix
+ * @subpackage main
+ * @copyright 2001-2013 Bitrix
+ */
+
+/**
+ * Bitrix vars
+ * @global CMain $APPLICATION
+ * @param string $inc_file From CMain::AuthForm()
+ * @param array $arAuthResult From CMain::AuthForm()
+ */
 if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true) die();
+
 IncludeModuleLangFile(__FILE__);
 
 $arFormsList = array("authorize", "forgot_password", "change_password");
@@ -20,7 +34,8 @@ function dump_post_var($vname, $vvalue, $var_stack=array())
 		if(count($var_stack)>0)
 		{
 			$var_name=$var_stack[0];
-			for($i=1; $i<count($var_stack);$i++)
+			$varStackCount = count($var_stack);
+			for($i = 1; $i < $varStackCount; $i++)
 				$var_name.="[".$var_stack[$i]."]";
 			$var_name.="[".$vname."]";
 		}
@@ -34,7 +49,7 @@ function dump_post_var($vname, $vvalue, $var_stack=array())
 if (isset($_REQUEST['bxsender']))
 {
 	if ($_REQUEST['bxsender'] != 'core_autosave')
-		require('wrapper_popup.php');
+		require($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/interface/auth/wrapper_popup.php");
 
 	return;
 }
@@ -88,18 +103,34 @@ new BX.adminLogin({
 	url: '<?echo CUtil::JSEscape($sDocPath.(($s=DeleteParam(array("logout", "login"))) == ""? "":"?".$s));?>'
 });
 </script>
-<form name="form_auth" method="post" target="auth_frame" class="bx-admin-auth-form" action="" novalidate>
-	<div class="login-popup-alignment">
-		<div class="login-popup-alignment-2" id="popup_alignment">
-			<input type="hidden" name="AUTH_FORM" value="Y">
 
-			<div id="auth_form_wrapper"><?require($inc_file.'.php')?></div>
+	<table class="login-popup-alignment">
+		<tr>
+			<td class="login-popup-alignment-2" id="popup_alignment">
+				<div class="login-header">
+					<a href="/" class="login-logo">
+						<span class="login-logo-img"></span><span class="login-logo-text"><?=$_SERVER["SERVER_NAME"]?></span>
+					</a>
+					<div class="login-language-btn-wrap"><div class="login-language-btn" id="login_lang_button"><?=$arLangButton['TEXT']?></div></div>
+				</div>
 
-			<?=bitrix_sessid_post()?>
+				<div class="login-footer">
+					<div class="login-footer-left"><?=$sCopyright?></div>
+					<div class="login-footer-right">
+						<?if(file_exists($_SERVER["DOCUMENT_ROOT"].BX_PERSONAL_ROOT."/php_interface/this_site_support.php")):?><?include($_SERVER["DOCUMENT_ROOT"].BX_PERSONAL_ROOT."/php_interface/this_site_support.php");?><?else:?><?echo $sLinks?><?endif;?>
+					</div>
+				</div>
+				<form name="form_auth" method="post" target="auth_frame" class="bx-admin-auth-form" action="" novalidate>
+					<input type="hidden" name="AUTH_FORM" value="Y">
 
-		</div>
-	</div>
-</form>
+					<div id="auth_form_wrapper"><?require($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/interface/auth/".$inc_file.'.php')?></div>
+
+					<?=bitrix_sessid_post()?>
+				</form>
+			</td>
+		</tr>
+	</table>
+
 <iframe name="auth_frame" src="" style="display:none;"></iframe>
 
 <div id="login_variants" style="display: none;">
@@ -108,7 +139,7 @@ foreach ($arFormsList as $form)
 {
 	if ($form != $inc_file)
 	{
-		require($form.".php");
+		require($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/interface/auth/".$form.".php");
 	}
 }
 ?>

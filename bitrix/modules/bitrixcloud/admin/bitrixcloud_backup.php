@@ -2,6 +2,8 @@
 define("ADMIN_MODULE_NAME", "bitrixcloud");
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
 IncludeModuleLangFile(__FILE__);
+/** @global CMain $APPLICATION */
+/** @global CUser $USER */
 if (!$USER->IsAdmin() || !CModule::IncludeModule("bitrixcloud"))
 	$APPLICATION->AuthForm(GetMessage("ACCESS_DENIED"));
 
@@ -33,9 +35,9 @@ try
 	$rsData->InitFromArray($arFiles);
 	$rsData = new CAdminResult($rsData, $sTableID);
 
-	while($arRes = $rsData->NavNext(true, "f_"))
+	while($arRes = $rsData->GetNext())
 	{
-		$row =& $lAdmin->AddRow($f_FILE_NAME, $arRes);
+		$row = $lAdmin->AddRow($arRes["FILE_NAME"], $arRes);
 		$row->AddViewField("FILE_SIZE", CFile::FormatSize($arRes["FILE_SIZE"]));
 	}
 

@@ -11,12 +11,10 @@ class CFavorites extends CAllFavorites
 		$strSqlSearch = "";
 		if (is_array($arFilter))
 		{
-			$filter_keys = array_keys($arFilter);
-			for ($i=0; $i<count($filter_keys); $i++)
+			foreach ($arFilter as $key => $val)
 			{
-				$val = $arFilter[$filter_keys[$i]];
 				if (strlen($val)<=0 || $val=="NOT_REF") continue;
-				switch(strtoupper($filter_keys[$i]))
+				switch(strtoupper($key))
 				{
 				case "ID":
 					$arSqlSearch[] = GetFilterQuery("F.ID",$val,"N");
@@ -114,6 +112,7 @@ class CFavorites extends CAllFavorites
 			".$strSqlOrder;
 
 		$res = $DB->Query($strSql, false, $err_mess.__LINE__);
+
 		return $res;
 	}
 }

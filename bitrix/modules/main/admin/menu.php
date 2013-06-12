@@ -362,9 +362,34 @@ if($USER->CanDoOperation('view_other_settings'))
 			),
 			array(
 				"text" => GetMessage("MAIN_MENU_DUMP"),
-				"url" => "dump.php?lang=".LANGUAGE_ID,
-				"more_url" => array("dump.php", "restore_export.php"),
 				"title" => GetMessage("MAIN_MENU_DUMP_ALT"),
+				"items_id" => "backup",
+				"items" => array(
+					array(
+						"text" => GetMessage("MAIN_MENU_DUMP_NEW"),
+						"url" => "dump.php?lang=".LANGUAGE_ID,
+						"more_url" => array("dump.php"),
+						"title" => GetMessage("MAIN_MENU_DUMP_ALT"),
+					),
+					array(
+						"text" => GetMessage("MAIN_MENU_DUMP_LIST"),
+						"url" => "dump_list.php?lang=".LANGUAGE_ID,
+						"more_url" => array("dump_list.php"),
+						"title" => GetMessage("MAIN_MENU_DUMP_ALT"),
+					),
+					array(
+						"text" => GetMessage("MAIN_MENU_DUMP_AUTO"),
+						"url" => "dump_auto.php?lang=".LANGUAGE_ID,
+						"more_url" => array("dump_auto.php"),
+						"title" => GetMessage("MAIN_MENU_DUMP_ALT"),
+					),
+					array(
+						"text" => GetMessage("MAIN_MENU_DUMP_LOG"),
+						"url" => "event_log.php?lang=".LANGUAGE_ID."&set_filter=Y&find_type=audit_type_id&find_audit_type[]=BACKUP_ERROR&find_audit_type[]=BACKUP_SUCCESS",
+						"more_url" => array(),
+						"title" => GetMessage("MAIN_MENU_DUMP_ALT"),
+					),
+				),
 			),
 			(strtoupper($DBType) == "MYSQL"?
 				Array(
@@ -436,28 +461,41 @@ if($USER->CanDoOperation('install_updates'))
 
 						if(!empty($arResult) && is_array($arResult))
 						{
-							foreach($arResult["categories"]["#"]["category"] as $category)
+							if(!empty($arResult["categories"]["#"]["category"]))
 							{
-								$arCategory = Array();
-								$arUrls = Array();
-								foreach($category["#"]["items"][0]["#"]["item"] as $catIn)
+								foreach($arResult["categories"]["#"]["category"] as $category)
 								{
-									$url = "update_system_market.php?category=".$catIn["#"]["id"][0]["#"];
-									$arCategory[] = Array(
-											"text" => $catIn["#"]["name"][0]["#"]." (".$catIn["#"]["count"][0]["#"].")",
-											"title" => GetMessage("MAIN_MENU_MP_CATEGORY")." ".$catIn["#"]["name"][0]["#"],
-											"url" => $url."&lang=".LANGUAGE_ID,
+									$arCategory = Array();
+									$arUrls = Array();
+									if(!empty($category["#"]["items"][0]["#"]["item"]))
+									{
+										foreach($category["#"]["items"][0]["#"]["item"] as $catIn)
+										{
+											$url = "update_system_market.php?category=".$catIn["#"]["id"][0]["#"];
+											$arCategory[] = Array(
+													"text" => $catIn["#"]["name"][0]["#"]." (".$catIn["#"]["count"][0]["#"].")",
+													"title" => GetMessage("MAIN_MENU_MP_CATEGORY")." ".$catIn["#"]["name"][0]["#"],
+													"url" => $url."&lang=".LANGUAGE_ID,
+												);
+											$arUrls[] = $url;
+										}
+									}
+									if(IntVal($category["#"]["id"][0]["#"]) > 0)
+									{
+										$url = "update_system_market.php?category=".$category["#"]["id"][0]["#"];
+										$arUrls[] = $url;
+									}
+									else
+										$url = $arUrls[0];
+									$arMarket[] = array(
+										"text" => $category["#"]["name"][0]["#"].(IntVal($category["#"]["count"][0]["#"]) > 0 ? " (".$category["#"]["count"][0]["#"].")" : ""),
+										"url" => $url."&lang=".LANGUAGE_ID,
+										"more_url" => $arUrls,
+										"title" => GetMessage("MAIN_MENU_MP_CATEGORY")." ".$category["#"]["name"][0]["#"],
+										"items_id" => "menu_update_section_".count($arMarket),
+										"items" => $arCategory,
 										);
-									$arUrls[] = $url;
 								}
-								$arMarket[] = array(
-									"text" => $category["#"]["name"][0]["#"],
-									"url" => $arUrls[0]."&lang=".LANGUAGE_ID,
-									"more_url" => $arUrls,
-									"title" => GetMessage("MAIN_MENU_MP_CATEGORY")." ".$category["#"]["name"][0]["#"],
-									"items_id" => "menu_update_section_".count($arMarket),
-									"items" => $arCategory,
-									);
 							}
 						}
 					}
@@ -520,12 +558,47 @@ if($USER->CanDoOperation('install_updates'))
 		"title" => GetMessage("MAIN_MENU_UPDATES_NEW_ALT"),
 	);
 }
+if($USER->CanDoOperation('edit_other_settings'))
+{
+	$aMenu[] = array(
+		"parent_menu" => "global_menu_services",
+		"section" => "smile",
+		"sort" => 600,
+		"text" => GetMessage("MAIN_MENU_SMILE"),
+		"title" => GetMessage("MAIN_MENU_SMILE_ALT"),
+		"icon" => "smile_menu_icon",
+		"page_icon" => "smile_page_icon",
+		"items_id" => "menu_smile",
+		"items" => array(
+			array(
+				"page_icon" => "smile_page_icon",
+				"text" => GetMessage("MAIN_MENU_SMILE_LIST"),
+				"title" => GetMessage("MAIN_MENU_SMILE_LIST_ALT"),
+				"url" => "smile.php?lang=".LANGUAGE_ID,
+				"more_url" => array("smile_edit.php"),
+			),
+			array(
+				"page_icon" => "smile_set_page_icon",
+				"text" => GetMessage("MAIN_MENU_SMILE_SET_LIST"),
+				"title" => GetMessage("MAIN_MENU_SMILE_SET_LIST_ALT"),
+				"url" => "smile_set.php?lang=".LANGUAGE_ID,
+				"more_url" => array("smile_set_edit.php"),
+			),
+			array(
+				"page_icon" => "smile_import_page_icon",
+				"text" => GetMessage("MAIN_MENU_SMILE_IMPORT_LIST"),
+				"title" => GetMessage("MAIN_MENU_SMILE_IMPORT_LIST_ALT"),
+				"url" => "smile_import.php?lang=".LANGUAGE_ID,
+			),
+		),
+	);
+}
 if($USER->CanDoOperation('edit_ratings'))
 {
 	$aMenu[] = array(
 		"parent_menu" => "global_menu_services",
 		"section" => "rating",
-		"sort" => 300,
+		"sort" => 610,
 		"text" => GetMessage("MAIN_MENU_RATING"),
 		"title" => GetMessage("MAIN_MENU_RATING_ALT"),
 		"icon" => "rating_menu_icon",

@@ -474,8 +474,8 @@ $tabControl->BeginNextTab();
 	?>
 
 	<tr>
-		<td valign="top"><?=GetMessage("FILEMAN_MENU_EDIT_TYPE")?></td>
-		<td valign="top">
+		<td><?=GetMessage("FILEMAN_MENU_EDIT_TYPE")?></td>
+		<td>
 			<script>
 			function ChType(ob)
 			{
@@ -499,8 +499,8 @@ $tabControl->BeginNextTab();
 
 	<?if(!$bSimple):?>
 	<tr>
-		<td valign="top"><?=GetMessage("FILEMAN_MENU_EDIT_TEMPLATE")?></td>
-		<td valign="top">
+		<td><?=GetMessage("FILEMAN_MENU_EDIT_TEMPLATE")?></td>
+		<td>
 			<input type="text" name="template" size="50" maxlength="255" value="<?if(strlen($sMenuTemplateTmp)>0) echo htmlspecialcharsex($sMenuTemplateTmp); else echo GetMessage("FILEMAN_MENU_EDIT_DEF");?>"
 			OnFocus="if(this.value=='<?=GetMessage("FILEMAN_MENU_EDIT_DEF")?>')this.value=''"
 			onfocusout="if(this.value=='')this.value='<?=GetMessage("FILEMAN_MENU_EDIT_DEF")?>';">
@@ -551,16 +551,11 @@ $tabControl->BeginNextTab();
 		<?ConditionJS(array('enable_false'=>true));?>
 		<table border="0" cellpadding="2" cellspacing="1" width="100%" id="t" class="internal">
 		<tr class="heading">
-		<td valign="top" colspan="2">
-			<table cellpadding="0" cellspacing="0" width="100%" border="0">
-			<tr>
-				<td align="left"><?=GetMessage("FILEMAN_MENU_EDIT_ITEMS")?></td>
-			</tr>
-			</table>
+			<td valign="top" colspan="2"><?=GetMessage("FILEMAN_MENU_EDIT_ITEMS")?></td>
 		</tr>
 		<?if(!$only_edit):?>
 		<tr id="0">
-			<td align="right" colspan="2"><input type="button" onClick="AddMenuItem(this)" value="<?=GetMessage("FILEMAN_MENU_EDIT_ADD_ITEM")?>"></td>
+			<td colspan="2"><input type="button" onClick="AddMenuItem(this)" value="<?=GetMessage("FILEMAN_MENU_EDIT_ADD_ITEM")?>"></td>
 		</tr>
 		<?endif;?>
 		<?

@@ -643,129 +643,6 @@ CREATE TABLE b_rating_weight
 );
 insert into b_rating_weight (RATING_FROM, RATING_TO, WEIGHT, COUNT) VALUES (-1000000, 1000000, 1, 10);
 
-insert into b_operation (ID,NAME,MODULE_ID,DESCRIPTION,BINDING) values(1,'view_own_profile','main',null,'module');
-insert into b_operation (ID,NAME,MODULE_ID,DESCRIPTION,BINDING) values(2,'view_subordinate_users','main',null,'module');
-insert into b_operation (ID,NAME,MODULE_ID,DESCRIPTION,BINDING) values(3,'view_all_users','main',null,'module');
-insert into b_operation (ID,NAME,MODULE_ID,DESCRIPTION,BINDING) values(4,'view_groups','main',null,'module');
-insert into b_operation (ID,NAME,MODULE_ID,DESCRIPTION,BINDING) values(5,'view_tasks','main',null,'module');
-insert into b_operation (ID,NAME,MODULE_ID,DESCRIPTION,BINDING) values(6,'view_other_settings','main',null,'module');
-insert into b_operation (ID,NAME,MODULE_ID,DESCRIPTION,BINDING) values(7,'edit_own_profile','main',null,'module');
-insert into b_operation (ID,NAME,MODULE_ID,DESCRIPTION,BINDING) values(8,'edit_all_users','main',null,'module');
-insert into b_operation (ID,NAME,MODULE_ID,DESCRIPTION,BINDING) values(9,'edit_subordinate_users','main',null,'module');
-insert into b_operation (ID,NAME,MODULE_ID,DESCRIPTION,BINDING) values(10,'edit_groups','main',null,'module');
-insert into b_operation (ID,NAME,MODULE_ID,DESCRIPTION,BINDING) values(11,'edit_tasks','main',null,'module');
-insert into b_operation (ID,NAME,MODULE_ID,DESCRIPTION,BINDING) values(12,'edit_other_settings','main',null,'module');
-insert into b_operation (ID,NAME,MODULE_ID,DESCRIPTION,BINDING) values(13,'cache_control','main',null,'module');
-insert into b_operation (ID,NAME,MODULE_ID,DESCRIPTION,BINDING) values(14,'edit_php','main',null,'module');
-insert into b_operation (ID,NAME,MODULE_ID,DESCRIPTION,BINDING) values(15,'fm_view_permission','main',null,'file');
-insert into b_operation (ID,NAME,MODULE_ID,DESCRIPTION,BINDING) values(16,'fm_edit_permission','main',null,'file');
-insert into b_operation (ID,NAME,MODULE_ID,DESCRIPTION,BINDING) values(17,'fm_edit_existent_folder','main',null,'file');
-insert into b_operation (ID,NAME,MODULE_ID,DESCRIPTION,BINDING) values(18,'fm_create_new_file','main',null,'file');
-insert into b_operation (ID,NAME,MODULE_ID,DESCRIPTION,BINDING) values(19,'fm_edit_existent_file','main',null,'file');
-insert into b_operation (ID,NAME,MODULE_ID,DESCRIPTION,BINDING) values(20,'fm_create_new_folder','main',null,'file');
-insert into b_operation (ID,NAME,MODULE_ID,DESCRIPTION,BINDING) values(21,'fm_delete_file','main',null,'file');
-insert into b_operation (ID,NAME,MODULE_ID,DESCRIPTION,BINDING) values(22,'fm_delete_folder','main',null,'file');
-insert into b_operation (ID,NAME,MODULE_ID,DESCRIPTION,BINDING) values(23,'fm_view_file','main',null,'file');
-insert into b_operation (ID,NAME,MODULE_ID,DESCRIPTION,BINDING) values(24,'fm_view_listing','main',null,'file');
-insert into b_operation (ID,NAME,MODULE_ID,DESCRIPTION,BINDING) values(25,'fm_edit_in_workflow','main',null,'file');
-insert into b_operation (ID,NAME,MODULE_ID,DESCRIPTION,BINDING) values(26,'fm_rename_file','main',null,'file');
-insert into b_operation (ID,NAME,MODULE_ID,DESCRIPTION,BINDING) values(27,'fm_rename_folder','main',null,'file');
-insert into b_operation (ID,NAME,MODULE_ID,DESCRIPTION,BINDING) values(28,'fm_upload_file','main',null,'file');
-insert into b_operation (ID,NAME,MODULE_ID,DESCRIPTION,BINDING) values(29,'fm_add_to_menu','main',null,'file');
-insert into b_operation (ID,NAME,MODULE_ID,DESCRIPTION,BINDING) values(30,'fm_download_file','main',null,'file');
-insert into b_operation (ID,NAME,MODULE_ID,DESCRIPTION,BINDING) values(31,'fm_lpa','main',null,'file');
-insert into b_operation (ID,NAME,MODULE_ID,DESCRIPTION,BINDING) values(32,'lpa_template_edit','main',null,'module');
-insert into b_operation (ID,NAME,MODULE_ID,DESCRIPTION,BINDING) values(33,'view_event_log','main',null,'module');
-insert into b_operation (ID,NAME,MODULE_ID,DESCRIPTION,BINDING) values(34,'edit_ratings','main',null,'module');
-insert into b_operation (ID,NAME,MODULE_ID,DESCRIPTION,BINDING) values(35,'manage_short_uri','main',null,'module');
-
-insert into b_task (ID,NAME,LETTER,MODULE_ID,SYS,DESCRIPTION,BINDING) values(1,'main_denied','D','main','Y',null,'module');
-insert into b_task (ID,NAME,LETTER,MODULE_ID,SYS,DESCRIPTION,BINDING) values(2,'main_change_profile','P','main','Y',null,'module');
-insert into b_task (ID,NAME,LETTER,MODULE_ID,SYS,DESCRIPTION,BINDING) values(3,'main_view_all_settings','R','main','Y',null,'module');
-insert into b_task (ID,NAME,LETTER,MODULE_ID,SYS,DESCRIPTION,BINDING) values(4,'main_view_all_settings_change_profile','T','main','Y',null,'module');
-insert into b_task (ID,NAME,LETTER,MODULE_ID,SYS,DESCRIPTION,BINDING) values(5,'main_edit_subordinate_users','V','main','Y',null,'module');
-insert into b_task (ID,NAME,LETTER,MODULE_ID,SYS,DESCRIPTION,BINDING) values(6,'main_full_access','W','main','Y',null,'module');
-insert into b_task (ID,NAME,LETTER,MODULE_ID,SYS,DESCRIPTION,BINDING) values(7,'fm_folder_access_denied','D','main','Y',null,'file');
-insert into b_task (ID,NAME,LETTER,MODULE_ID,SYS,DESCRIPTION,BINDING) values(8,'fm_folder_access_read','R','main','Y',null,'file');
-insert into b_task (ID,NAME,LETTER,MODULE_ID,SYS,DESCRIPTION,BINDING) values(9,'fm_folder_access_write','W','main','Y',null,'file');
-insert into b_task (ID,NAME,LETTER,MODULE_ID,SYS,DESCRIPTION,BINDING) values(10,'fm_folder_access_full','X','main','Y',null,'file');
-insert into b_task (ID,NAME,LETTER,MODULE_ID,SYS,DESCRIPTION,BINDING) values(11,'fm_folder_access_workflow','U','main','Y',null,'file');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('2','1');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('2','7');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('3','1');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('3','3');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('3','4');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('3','5');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('3','6');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('4','1');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('4','3');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('4','4');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('4','5');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('4','6');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('4','7');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('5','1');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('5','2');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('5','4');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('5','5');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('5','6');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('5','7');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('5','9');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('6','1');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('6','3');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('6','4');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('6','5');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('6','6');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('6','7');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('6','8');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('6','10');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('6','11');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('6','12');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('6','13');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('6','32');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('6','33');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('6','34');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('8','15');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('8','23');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('8','24');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('9','15');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('9','17');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('9','18');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('9','19');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('9','20');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('9','21');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('9','22');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('9','23');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('9','24');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('9','25');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('9','26');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('9','27');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('9','28');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('9','29');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('9','30');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('9','31');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('10','15');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('10','16');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('10','17');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('10','18');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('10','19');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('10','20');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('10','21');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('10','22');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('10','23');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('10','24');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('10','25');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('10','26');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('10','27');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('10','28');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('10','29');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('10','30');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('10','31');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('11','15');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('11','19');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('11','23');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('11','24');
-insert into b_task_operation (TASK_ID,OPERATION_ID) VALUES ('11','25');
-
 CREATE TABLE b_event_log
 (
 	/*SYSTEM GENERATED*/
@@ -1060,4 +937,56 @@ CREATE TABLE b_filters
 	SORT int(18) null,
 	SORT_FIELD varchar(255) null,
 	PRIMARY KEY (ID)
+);
+
+CREATE TABLE b_component_params
+(
+	ID int NOT NULL AUTO_INCREMENT,
+	SITE_ID char(2) not null,
+	COMPONENT_NAME varchar(255) NOT NULL,
+	TEMPLATE_NAME varchar(255),
+	REAL_PATH varchar(255) NOT NULL,
+	SEF_MODE char(1) DEFAULT 'Y' NOT NULL,
+	SEF_FOLDER varchar(255),
+	START_CHAR int NOT NULL,
+	END_CHAR int NOT NULL,
+	PARAMETERS text,
+	PRIMARY KEY (ID),
+	index ix_comp_params_name(COMPONENT_NAME),
+	index ix_comp_params_path(SITE_ID, REAL_PATH),
+	index ix_comp_params_sname(SITE_ID, COMPONENT_NAME)
+);
+
+CREATE TABLE b_smile
+(
+	ID int(18) not null auto_increment,
+	TYPE char(1) not null default 'S',
+	SET_ID int(18) not null default 0,
+	SORT int(10) not null default '150',
+	TYPING varchar(100) null,
+	CLICKABLE char(1) not null default 'Y',
+	IMAGE varchar(255) not null,
+	IMAGE_HR char(1) not null default 'N',
+	IMAGE_WIDTH int not null default 0,
+	IMAGE_HEIGHT int not null default 0,
+	primary key (ID)
+);
+
+CREATE TABLE b_smile_set
+(
+	ID int(18) not null auto_increment,
+	STRING_ID varchar(255) null,
+	SORT int(10) not null default '150',
+	primary key (ID)
+);
+
+CREATE TABLE b_smile_lang
+(
+	ID int(18) not null auto_increment,
+	TYPE char(1) not null default 'S',
+	SID int not null,
+	LID char(2) not null,
+	NAME varchar(255) not null,
+	primary key (ID),
+	unique UX_SMILE_SL (TYPE, SID, LID)
 );

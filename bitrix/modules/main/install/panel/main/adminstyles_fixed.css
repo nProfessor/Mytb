@@ -292,3 +292,5 @@ table.adm-search-result tr.adm-search-selected td, table.adm-search-result tr.ad
 
 
 .bx-popup-menu-item-default .menu-popup-item-text {font-weight: bold;}
+
+.field-name {text-align: right;}

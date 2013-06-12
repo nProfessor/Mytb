@@ -6,6 +6,13 @@
 # mailto:admin@bitrixsoft.com                #
 ##############################################
 
+/**
+ * @global CMain $APPLICATION
+ * @global CUser $USER
+ * @global CDatabase $DB
+ * @global array $BX_GROUP_POLICY;
+ */
+
 require_once(dirname(__FILE__)."/../include/prolog_admin_before.php");
 require_once($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/prolog_user.php");
 define("HELP_FILE", "users/group_edit.php");
@@ -17,23 +24,22 @@ if (!$USER->CanDoOperation('view_groups'))
 
 IncludeModuleLangFile(__FILE__);
 $modules = COperation::GetAllowedModules();
-for($i = 0, $l=count($modules);$i < $l;$i++)
+for($i = 0, $l = count($modules); $i < $l; $i++)
 	IncludeModuleLangFile($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/".$modules[$i]."/admin/task_description.php");
-/***************************************************************************
-GET | POST handlers
-****************************************************************************/
-$strError="";
-$ID=intval($ID);
-$COPY_ID=intval($COPY_ID);
-if($COPY_ID>0)
+
+$strError = "";
+$ID = intval($_REQUEST["ID"]);
+$COPY_ID = intval($_REQUEST["COPY_ID"]);
+if($COPY_ID > 0)
 	$ID = $COPY_ID;
+
 $modules = CModule::GetList();
 $arModules = array();
 while ($mr = $modules->Fetch())
 	$arModules[] = $mr["ID"];
 
 $arSites = array();
-$rsSites = CSite::GetList($by="sort", $order="asc", Array("ACTIVE" => "Y"));
+$rsSites = CSite::GetList($by="sort", $order="asc", array("ACTIVE" => "Y"));
 while ($arSite = $rsSites->GetNext())
 {
 	$arSites["reference_id"][] = $arSite["ID"];
@@ -44,7 +50,7 @@ $USER_COUNT = CUser::GetCount();
 $USER_COUNT_MAX = 25;
 
 $arBXGroupPolicy = array(
-	"parent" => Array(
+	"parent" => array(
 		"SESSION_TIMEOUT" => "",
 		"SESSION_IP_MASK" => "",
 		"MAX_STORE_NUM" => "",
@@ -58,7 +64,7 @@ $arBXGroupPolicy = array(
 		"PASSWORD_PUNCTUATION" => "N",
 		"LOGIN_ATTEMPTS" => "",
 	),
-	"low" => Array(
+	"low" => array(
 		"SESSION_TIMEOUT" => 30, //minutes
 		"SESSION_IP_MASK" => "0.0.0.0",
 		"MAX_STORE_NUM" => 20,
@@ -72,7 +78,7 @@ $arBXGroupPolicy = array(
 		"PASSWORD_PUNCTUATION" => "N",
 		"LOGIN_ATTEMPTS" => 0,
 	),
-	"middle" => Array(
+	"middle" => array(
 		"SESSION_TIMEOUT" => 20, //minutes
 		"SESSION_IP_MASK" => "255.255.0.0",
 		"MAX_STORE_NUM" => 10,
@@ -86,7 +92,7 @@ $arBXGroupPolicy = array(
 		"PASSWORD_PUNCTUATION" => "N",
 		"LOGIN_ATTEMPTS" => 0,
 	),
-	"high" => Array(
+	"high" => array(
 		"SESSION_TIMEOUT" => 15, //minutes
 		"SESSION_IP_MASK" => "255.255.255.255",
 		"MAX_STORE_NUM" => 1,
@@ -102,7 +108,7 @@ $arBXGroupPolicy = array(
 	),
 );
 
-$BX_GROUP_POLICY_CONTROLS = Array(
+$BX_GROUP_POLICY_CONTROLS = array(
 	"SESSION_TIMEOUT"	=>	array("text", 5),
 	"SESSION_IP_MASK"	=>	array("text", 20),
 	"MAX_STORE_NUM"		=>	array("text", 5),
@@ -127,7 +133,7 @@ if($ID!=1 || $COPY_ID>0 || (COption::GetOptionString("main", "controller_member"
 }
 $tabControl = new CAdminTabControl("tabControl", $aTabs);
 
-if($REQUEST_METHOD=="POST" && (strlen($save)>0 || strlen($apply)>0) && $USER->CanDoOperation('edit_groups') && check_bitrix_sessid())
+if($_SERVER["REQUEST_METHOD"] == "POST" && ($_REQUEST["save"] <> '' || $_REQUEST["apply"] <> '') && $USER->CanDoOperation('edit_groups') && check_bitrix_sessid())
 {
 	if($ID <= 2 && $ID != 0)
 		$ACTIVE = "Y";
@@ -145,17 +151,17 @@ if($REQUEST_METHOD=="POST" && (strlen($save)>0 || strlen($apply)>0) && $USER->Ca
 	}
 
 	$arFields = array(
-			"ACTIVE" => $ACTIVE,
-			"C_SORT" => $C_SORT,
-			"NAME" => $NAME,
-			"DESCRIPTION" => $DESCRIPTION,
-			"STRING_ID" => $STRING_ID,
-			"SECURITY_POLICY" => serialize($arGroupPolicy)
-		);
+		"ACTIVE" => $_POST["ACTIVE"],
+		"C_SORT" => $_POST["C_SORT"],
+		"NAME" => $_POST["NAME"],
+		"DESCRIPTION" => $_POST["DESCRIPTION"],
+		"STRING_ID" => $_POST["STRING_ID"],
+		"SECURITY_POLICY" => serialize($arGroupPolicy)
+	);
 
 	if ($USER_COUNT <= $USER_COUNT_MAX)
 	{
-		$USER_ID_NUMBER = IntVal($USER_ID_NUMBER);
+		$USER_ID_NUMBER = intval($_REQUEST["USER_ID_NUMBER"]);
 		$USER_ID = array();
 		$ind = -1;
 		for ($i = 0; $i <= $USER_ID_NUMBER; $i++)
@@ -163,7 +169,7 @@ if($REQUEST_METHOD=="POST" && (strlen($save)>0 || strlen($apply)>0) && $USER->Ca
 			if (${"USER_ID_ACT_".$i} == "Y")
 			{
 				$ind++;
-				$USER_ID[$ind]["USER_ID"] = IntVal(${"USER_ID_".$i});
+				$USER_ID[$ind]["USER_ID"] = intval(${"USER_ID_".$i});
 				$USER_ID[$ind]["DATE_ACTIVE_FROM"] = ${"USER_ID_FROM_".$i};
 				$USER_ID[$ind]["DATE_ACTIVE_TO"] = ${"USER_ID_TO_".$i};
 			}
@@ -196,19 +202,19 @@ if($REQUEST_METHOD=="POST" && (strlen($save)>0 || strlen($apply)>0) && $USER->Ca
 		if (intval($ID) != 1 || (COption::GetOptionString("main", "controller_member", "N") == "Y" && COption::GetOptionString("main", "~controller_limited_admin", "N") == "Y"))
 		{
 			// set per module rights
-			reset($arModules);
-			$arTasks = Array();
+			$arTasks = array();
 			foreach ($arModules as $MID)
 			{
-				if(isset(${"TASKS_".$MID}))
+				$moduleName = str_replace(".", "_", $MID);
+				if(isset(${"TASKS_".$moduleName}))
 				{
-					$arTasks[$MID] = ${"TASKS_".$MID};
+					$arTasks[$MID] = ${"TASKS_".$moduleName};
 					$rt = CTask::GetLetter($arTasks[$MID]);
 				}
 				else
 				{
-					$rt = ${"RIGHTS_".$MID};
-					$st = ${"SITES_".$MID};
+					$rt = ${"RIGHTS_".$moduleName};
+					$st = ${"SITES_".$moduleName};
 
 // echo "Delete group rights for all sites<br>";
 					$APPLICATION->DelGroupRight($MID, array($ID), false);
@@ -243,34 +249,36 @@ if($REQUEST_METHOD=="POST" && (strlen($save)>0 || strlen($apply)>0) && $USER->Ca
 			$arTaskIds = $arTasksModules['main'];
 			$handle_subord = false;
 			$l = count($arTaskIds);
-			for ($i=0;$i<$l;$i++)
+			for ($i = 0; $i < $l; $i++)
 			{
 				if ($arTaskIds[$i]['ID'] == $arTasks['main'])
 				{
 					$arOpInTask = CTask::GetOperations($arTaskIds[$i]['ID']);
-					if (in_array($nID,$arOpInTask) || in_array($nID2,$arOpInTask))
+					if (in_array($nID, $arOpInTask) || in_array($nID2, $arOpInTask))
 						$handle_subord = true;
 					break;
 				}
 			}
 			if ($handle_subord)
 			{
-				$arSubordinateGroups = (isset($_POST['subordinate_groups'])) ? $_POST['subordinate_groups'] : Array();
+				$arSubordinateGroups = (isset($_POST['subordinate_groups'])) ? $_POST['subordinate_groups'] : array();
 				CGroup::SetSubordinateGroups($ID, $arSubordinateGroups);
 			}
 			else
+			{
 				CGroup::SetSubordinateGroups($ID);
+			}
 
-			$old_arTasks = CGroup::GetTasks($ID,true);
-			if (count(array_diff($old_arTasks, $arTasks)) > 0 || count(array_diff($arTasks,$old_arTasks)) > 0)
+			$old_arTasks = CGroup::GetTasks($ID, true);
+			if (count(array_diff($old_arTasks, $arTasks)) > 0 || count(array_diff($arTasks, $old_arTasks)) > 0)
 				CGroup::SetTasks($ID, $arTasks);
 		}
 
-		if($USER->CanDoOperation('edit_groups') && strlen($save)>0)
+		if($USER->CanDoOperation('edit_groups') && $_REQUEST["save"] <> '')
 			LocalRedirect("group_admin.php?lang=".LANGUAGE_ID);
-		elseif($USER->CanDoOperation('edit_groups') && strlen($apply)>0)
+		elseif($USER->CanDoOperation('edit_groups') && $_REQUEST["apply"] <> '')
 			LocalRedirect($APPLICATION->GetCurPage()."?lang=".LANGUAGE_ID."&ID=".$ID."&".$tabControl->ActiveTabParam());
-		elseif($new=="Y")
+		elseif($new == "Y")
 			LocalRedirect($APPLICATION->GetCurPage()."?lang=".LANGUAGE_ID."&ID=".$ID."&".$tabControl->ActiveTabParam());
 	}
 }
@@ -289,8 +297,8 @@ else
 	$dbUserGroup = CGroup::GetGroupUserEx($ID);
 	while ($arUserGroup = $dbUserGroup->Fetch())
 	{
-		$str_USER_ID[IntVal($arUserGroup["USER_ID"])]["DATE_ACTIVE_FROM"] = $arUserGroup["DATE_ACTIVE_FROM"];
-		$str_USER_ID[IntVal($arUserGroup["USER_ID"])]["DATE_ACTIVE_TO"] = $arUserGroup["DATE_ACTIVE_TO"];
+		$str_USER_ID[intval($arUserGroup["USER_ID"])]["DATE_ACTIVE_FROM"] = $arUserGroup["DATE_ACTIVE_FROM"];
+		$str_USER_ID[intval($arUserGroup["USER_ID"])]["DATE_ACTIVE_TO"] = $arUserGroup["DATE_ACTIVE_TO"];
 	}
 }
 
@@ -298,14 +306,14 @@ if (strlen($strError)>0)
 {
 	$DB->InitTableVarsForEdit("b_group", "", "str_");
 
-	$USER_ID_NUMBER = IntVal($USER_ID_NUMBER);
+	$USER_ID_NUMBER = intval($_REQUEST["USER_ID_NUMBER"]);
 	$str_USER_ID = array();
 	for ($i = 0; $i <= $USER_ID_NUMBER; $i++)
 	{
 		if (${"USER_ID_ACT_".$i} == "Y")
 		{
-			$str_USER_ID[IntVal(${"USER_ID_".$i})]["DATE_ACTIVE_FROM"] = ${"USER_ID_FROM_".$i};
-			$str_USER_ID[IntVal(${"USER_ID_".$i})]["DATE_ACTIVE_TO"] = ${"USER_ID_TO_".$i};
+			$str_USER_ID[intval(${"USER_ID_".$i})]["DATE_ACTIVE_FROM"] = ${"USER_ID_FROM_".$i};
+			$str_USER_ID[intval(${"USER_ID_".$i})]["DATE_ACTIVE_TO"] = ${"USER_ID_TO_".$i};
 		}
 	}
 }
@@ -369,7 +377,9 @@ if($USER->CanDoOperation('edit_groups'))
 $context = new CAdminContextMenu($aMenu);
 $context->Show();
 ?>
-<?=CAdminMessage::ShowMessage($strError);?>
+
+<?CAdminMessage::ShowMessage($strError);?>
+
 <form method="POST" action="<?echo $APPLICATION->GetCurPage()?>?" name="form1">
 <?=bitrix_sessid_post()?>
 <input type="hidden" name="lang" value="<?echo LANG?>">
@@ -395,7 +405,7 @@ $tabControl->BeginNextTab();
 			?>
 			<tr>
 				<td><?echo GetMessage('MAIN_TOTAL_USERS')?></td>
-				<td><a href="user_admin.php?lang=<?=LANG?>&find_group_id[]=<?=$ID?>&set_filter=Y" title="<?=GetMessage("MAIN_VIEW_USER_GROUPS")?>"><?= IntVal($arGroupTmp["USERS"]) ?></a></td>
+				<td><a href="user_admin.php?lang=<?=LANG?>&find_group_id[]=<?=$ID?>&set_filter=Y" title="<?=GetMessage("MAIN_VIEW_USER_GROUPS")?>"><?= intval($arGroupTmp["USERS"]) ?></a></td>
 			</tr>
 			<?
 		}
@@ -408,8 +418,8 @@ $tabControl->BeginNextTab();
 	</tr>
 	<?endif;?>
 	<tr>
-		<td width="50%"><?=GetMessage("MAIN_C_SORT")?></td>
-		<td width="50%"><input type="text" name="C_SORT" size="5" maxlength="18" value="<?echo $str_C_SORT?>"></td>
+		<td width="40%"><?=GetMessage("MAIN_C_SORT")?></td>
+		<td width="60%"><input type="text" name="C_SORT" size="5" maxlength="18" value="<?echo $str_C_SORT?>"></td>
 	</tr>
 	<tr class="adm-detail-required-field">
 		<td><?echo GetMessage('NAME')?></td>
@@ -658,8 +668,8 @@ $tabControl->BeginNextTab();
 	}
 	</script>
 	<tr>
-		<td width="50%"><?=GetMessage('MUG_PREDEFINED_FIELD')?>:</td>
-		<td width="50%">
+		<td width="40%"><?=GetMessage('MUG_PREDEFINED_FIELD')?>:</td>
+		<td width="60%">
 			<select name="gp_level" OnChange="gpLevel()">
 				<option value=""><?=GetMessage('MUG_SELECT_LEVEL1')?></option>
 				<option value="parent"><?=GetMessage('MUG_PREDEFINED_PARENT')?></option>
@@ -718,8 +728,8 @@ $tabControl->BeginNextTab();
 	<?if (intval($ID)!=1 || $COPY_ID>0 || (COption::GetOptionString("main", "controller_member", "N") == "Y" && COption::GetOptionString("main", "~controller_limited_admin", "N") == "Y")) :?>
 	<?$tabControl->BeginNextTab();?>
 	<tr>
-		<td width="50%"><?=GetMessage("KERNEL")?></td>
-		<td width="50%">
+		<td width="40%"><?=GetMessage("KERNEL")?></td>
+		<td width="60%">
 			<script>var arSubordTasks = [];</script>
 			<?
 			$arTasksModules = CTask::GetTasksInModules(true,false,'module');
@@ -778,7 +788,7 @@ $tabControl->BeginNextTab();
 			<select id="subordinate_groups" name="subordinate_groups[]" multiple size="6">
 			<?
 			$arSubordinateGroups = CGroup::GetSubordinateGroups($ID);
-			$rsData = CGroup::GetList($by, $order, $arFilter, "Y");
+			$rsData = CGroup::GetList($by, $order, array(), "Y");
 			while($arRes = $rsData->Fetch())
 			{
 				if ($arRes['ID'] == 1 || $arRes['ID'] == $ID)
@@ -802,7 +812,7 @@ $tabControl->BeginNextTab();
 						break;
 					}
 				}
-			}
+			};
 
 			function settingsAddRights(a)
 			{
@@ -832,11 +842,13 @@ $tabControl->BeginNextTab();
 		</td>
 	</tr>
 	<?
-	reset($arModules);
-	while (list(,$MID) = each($arModules)) :
-		if ($MID!="main") :
-		if ($module = CModule::CreateModuleObject($MID)) :
-			if ($module->MODULE_GROUP_RIGHTS=="Y") :
+	foreach($arModules as $MID):
+		if($MID == "main")
+			continue;
+		/** @var CModule $module */
+		if (($module = CModule::CreateModuleObject($MID))):
+			if ($module->MODULE_GROUP_RIGHTS == "Y") :
+				$moduleName = str_replace(".", "_", $MID);
 	?>
 	<tr>
 		<td><?=$module->MODULE_NAME.":"?></td>
@@ -846,11 +858,11 @@ $tabControl->BeginNextTab();
 			if (isset($arTasksModules[$MID]))
 			{
 				if($strError <> '')
-					$v = $_REQUEST["TASKS_".$MID];
+					$v = $_REQUEST["TASKS_".$moduleName];
 				else
 					$v = (isset($arTasks[$MID])) ? $arTasks[$MID] : false;
 
-				echo SelectBoxFromArray("TASKS_".$MID, $arTasksModules[$MID], $v, GetMessage("DEFAULT"));
+				echo SelectBoxFromArray("TASKS_".$moduleName, $arTasksModules[$MID], $v, GetMessage("DEFAULT"));
 			}
 			else
 			{
@@ -864,15 +876,15 @@ $tabControl->BeginNextTab();
 				if($strError <> '')
 				{
 					$k_site = 0;
-					if (array_key_exists("SITES_".$MID, $_REQUEST) && is_array($_REQUEST["SITES_".$MID]))
-						foreach($_REQUEST["SITES_".$MID] as $k => $site_id_k)
+					if (array_key_exists("SITES_".$moduleName, $_REQUEST) && is_array($_REQUEST["SITES_".$moduleName]))
+						foreach($_REQUEST["SITES_".$moduleName] as $k => $site_id_k)
 							if ($site_id_k == "")
 							{
 								$k_site = $k;
 								break;
 							}
 
-					$v = $_REQUEST["RIGHTS_".$MID][$k_site];
+					$v = $_REQUEST["RIGHTS_".$moduleName][$k_site];
 				}
 				else
 					$v = $APPLICATION->GetGroupRight($MID, array($ID), "N", "N", false);
@@ -897,13 +909,13 @@ $tabControl->BeginNextTab();
 					}
 
 					$use_padding = true;
-					?><td style="padding: 3px;"><input type="hidden" name="SITES_<?=$MID?>[]" value=""><?
+					?><td style="padding: 3px;"><input type="hidden" name="SITES_<?=$moduleName?>[]" value=""><?
 						echo GetMessage("ALL_SITES");
 					?></td><?
 				}
 
 				?><td <?if ($use_padding):?>style="padding: 3px;"<?endif;?>><?
-					echo SelectBoxFromArray("RIGHTS_".$MID."[]", $ar, htmlspecialcharsbx($v), GetMessage("DEFAULT"));
+					echo SelectBoxFromArray("RIGHTS_".$moduleName."[]", $ar, htmlspecialcharsbx($v), GetMessage("DEFAULT"));
 				?></td>
 				<td></td><?
 				
@@ -920,10 +932,10 @@ $tabControl->BeginNextTab();
 						$site_selected = false;
 						if($strError <> '')
 						{
-							if (array_key_exists("SITES_".$MID, $_REQUEST) && is_array($_REQUEST["SITES_".$MID]))
+							if (array_key_exists("SITES_".$moduleName, $_REQUEST) && is_array($_REQUEST["SITES_".$moduleName]))
 							{
 								$k_site = false;
-								foreach($_REQUEST["SITES_".$MID] as $k => $site_id_k)
+								foreach($_REQUEST["SITES_".$moduleName] as $k => $site_id_k)
 									if ($site_id_k == $site_id_tmp)
 									{
 										$k_site = $k;
@@ -935,7 +947,7 @@ $tabControl->BeginNextTab();
 							if ($k_site === false)
 								$v = false;
 							else
-								$v = $_REQUEST["RIGHTS_".$MID][$k_site];
+								$v = $_REQUEST["RIGHTS_".$moduleName][$k_site];
 						}
 						else
 						{
@@ -947,10 +959,10 @@ $tabControl->BeginNextTab();
 						{
 							?><tr>
 								<td style="padding: 3px;">
-								<? echo SelectBoxFromArray("SITES_".$MID."[]", $arSites, $site_selected, GetMessage("SITE_SELECT")); ?>
+								<? echo SelectBoxFromArray("SITES_".$moduleName."[]", $arSites, $site_selected, GetMessage("SITE_SELECT")); ?>
 								</td><?
 								?><td style="padding: 3px;"><?
-									echo SelectBoxFromArray("RIGHTS_".$MID."[]", $arRightsUseSites, htmlspecialcharsbx($v), GetMessage("DEFAULT"));
+									echo SelectBoxFromArray("RIGHTS_".$moduleName."[]", $arRightsUseSites, htmlspecialcharsbx($v), GetMessage("DEFAULT"));
 								?></td>
 								<td style="padding: 3px;"><a href="javascript:void(0)" onClick="settingsDeleteRow(this)"><img src="/bitrix/themes/.default/images/actions/delete_button.gif" border="0" width="20" height="20"></a></td>
 							</tr><?					
@@ -959,8 +971,8 @@ $tabControl->BeginNextTab();
 					
 					?>
 					<tr id="hidden-rights-row" style="display: none;">
-						<td style="padding: 3px;"><? echo SelectBoxFromArray("SITES_".$MID."[]", $arSites, "", GetMessage("SITE_SELECT")); ?></td>
-						<td style="padding: 3px;"><? echo SelectBoxFromArray("RIGHTS_".$MID."[]", $arRightsUseSites, "", GetMessage("DEFAULT"));?></td>
+						<td style="padding: 3px;"><? echo SelectBoxFromArray("SITES_".$moduleName."[]", $arSites, "", GetMessage("SITE_SELECT")); ?></td>
+						<td style="padding: 3px;"><? echo SelectBoxFromArray("RIGHTS_".$moduleName."[]", $arRightsUseSites, "", GetMessage("DEFAULT"));?></td>
 						<td><a href="javascript:void(0)" onClick="settingsDeleteRow(this)"><img src="/bitrix/themes/.default/images/actions/delete_button.gif" border="0" width="20" height="20"></a></td>
 					</tr>
 					<?
@@ -976,15 +988,14 @@ $tabControl->BeginNextTab();
 			&& count($ar["use_site"]) > 0
 		)
 		{
-			?><a href="javascript:void(0)" onclick="settingsAddRights(this)" hidefocus="true" class="bx-action-href"><?echo GetMessage("RIGHTS_ADD")?></a><?
+			?><a href="javascript:void(0)" onclick="settingsAddRights(this)" class="bx-action-href"><?echo GetMessage("RIGHTS_ADD")?></a><?
 		}
 		?></td>
 	</tr>
 	<?
 			endif;
 		endif;
-		endif;
-	endwhile;
+	endforeach;
 	?>
 	<?endif;?>
 <?

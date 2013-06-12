@@ -103,13 +103,39 @@ endforeach;
 window['<?=$arParams["LHE"]["id"]?>Settings'] = <?=CUtil::PhpToJSObject(
 	array(
 		'parsers' => $res,
-		'arFiles' => array_keys($arParams["FILES"]["VALUE_HTML"]),
+		'arFiles' => array_keys($arParams["FILES"]["VALUE_JS"]),
 		'showEditor' => ($arParams["TEXT"]["SHOW"] == "Y"),
 		'formID' => $arParams["FORM_ID"],
 		'objName' => $arParams["JS_OBJECT_NAME"],
 		'buttons' => $arParams["BUTTONS"]
 	)
 );?>;
-BX.addCustomEvent(window, 'LHE_OnBeforeParsersInit', function(pEditor){__LHE_OnBeforeParsersInit(pEditor);});
-BX.addCustomEvent(window, 'LHE_OnInit', function(pEditor){__LHE_OnInit(pEditor);});
+BX.addCustomEvent(window, 'LHE_OnBeforeParsersInit', __LHE_OnBeforeParsersInit);
+BX.addCustomEvent(window, 'LHE_OnInit', function(pEditor) {
+	if (pEditor.id == '<?=$arParams["LHE"]["id"]?>')
+	{
+		BX.onCustomEvent(
+			BX('div<?=$arParams["LHE"]["jsObjName"]?>'),
+			'OnBeforeShowLHE',
+			['<?=$arParams["LHE"]["jsObjName"]?>', '<?=$arParams["LHE"]["id"]?>', true]
+		);
+		BX.addCustomEvent(
+			pEditor,
+			'onShow',
+			function(pEditor) {
+				BX.onCustomEvent(
+					BX('div<?=$arParams["LHE"]["jsObjName"]?>'),
+					'OnAfterShowLHE',
+					['<?=$arParams["LHE"]["jsObjName"]?>', '<?=$arParams["LHE"]["id"]?>', true]
+				);
+			}
+		);
+		if (!!window['<?=$arParams["JS_OBJECT_NAME"]?>'])
+		{
+			window['<?=$arParams["JS_OBJECT_NAME"]?>']['oEditor'] = pEditor;
+		}
+	}
+});
+BX.addCustomEvent(window, 'LHE_OnInit', __LHE_OnInit);
+BX.addCustomEvent(window, 'LHE_OnShowEditor', showLHEEditor);
 </script>

@@ -300,6 +300,7 @@ if (($arID = $lAdmin->GroupAction()) && ($USER->CanDoOperation('fileman_admin_fi
 		switch ($_REQUEST['action'])
 		{
 			case "delete":
+
 				if (!($USER->CanDoFileOperation('fm_delete_file',$arPath_i) || $USER->CanDoFileOperation('fm_delete_folder',$arPath_i)))
 					break;
 
@@ -419,15 +420,17 @@ else // Displaying search result
 	$arDirContent = Array();
 	$date_format = CDatabase::DateFormatToPHP(CLang::GetDateFormat("FULL"));
 
-	CUtil::JSPostUnescape();
+	//CUtil::JSPostUnescape(); http://jabber.bx/view.php?id=32552
 
 	if (isset($_POST['sres']) && CFilemanSearch::CheckSearchSess($searchSess))
 		$searchRes = CFilemanSearch::SetSearchResult($_POST['sres'], $searchSess);
 	else
 		$searchRes = CFilemanSearch::GetSearchResult($searchSess, array($by, $order));
 
+
 	for($i = 0, $l = count($searchRes); $i < $l; $i++)
 	{
+
 		$elPath = $searchRes[$i]['path'];
 		$fullPath = $_SERVER["DOCUMENT_ROOT"].$elPath;
 		$bIsDir = $io->DirectoryExists($fullPath);
@@ -499,9 +502,9 @@ if(!$bSearch && strlen($path) > 0 && ($logical != "Y" || rtrim($arSite["DIR"], "
 	$row =& $lAdmin->AddRow(".", array("NAME" => GetMessage("FILEMAN_UP")));
 
 	if($logical == "Y")
-		$showField = "<a href=\"javascript:".$sTableID.".GetAdminList('fileman_admin.php?".$addUrl_s."&site=".$site."&path=".urlencode(urlencode($arParsedPath["PREV"]))."&show_perms_for=".IntVal($show_perms_for)."', GALCallBack);\"><span class=\"fileman_icon_folder_up\" alt=\"".GetMessage("FILEMAN_UP")."\"></span>&nbsp;<a href=\"javascript:".$sTableID.".GetAdminList('fileman_admin.php?".$addUrl_s."&site=".$site."&path=".urlencode(urlencode($arParsedPath["PREV"]))."&show_perms_for=".IntVal($show_perms_for)."', GALCallBack);\">..</a>";
+		$showField = "<a href=\"javascript:".$sTableID.".GetAdminList('fileman_admin.php?".$addUrl_s."&site=".$site."&path=".urlencode(urlencode($arParsedPath["PREV"]))."&show_perms_for=".IntVal($show_perms_for)."', GALCallBack);\"><span class=\"adm-submenu-item-link-icon fileman_icon_folder_up\" alt=\"".GetMessage("FILEMAN_UP")."\"></span>&nbsp;<a href=\"javascript:".$sTableID.".GetAdminList('fileman_admin.php?".$addUrl_s."&site=".$site."&path=".urlencode(urlencode($arParsedPath["PREV"]))."&show_perms_for=".IntVal($show_perms_for)."', GALCallBack);\">..</a>";
 	else
-		$showField = "<a href=\"javascript:".$sTableID.".GetAdminList('fileman_admin.php?".$addUrl_s."&site=".$site."&path=".urlencode(urlencode($arParsedPath["PREV"]))."&show_perms_for=".IntVal($show_perms_for)."', GALCallBack);\"><span class=\"fileman_icon_folder_up\" alt=\"".GetMessage("FILEMAN_UP")."\"></span>&nbsp;<a href=\"javascript:".$sTableID.".GetAdminList('fileman_admin.php?".$addUrl_s."&site=".$site."&path=".urlencode(urlencode($arParsedPath["PREV"]))."&show_perms_for=".IntVal($show_perms_for)."', GALCallBack);\">..</a>";
+		$showField = "<a href=\"javascript:".$sTableID.".GetAdminList('fileman_admin.php?".$addUrl_s."&site=".$site."&path=".urlencode(urlencode($arParsedPath["PREV"]))."&show_perms_for=".IntVal($show_perms_for)."', GALCallBack);\"><span class=\"adm-submenu-item-link-icon fileman_icon_folder_up\" alt=\"".GetMessage("FILEMAN_UP")."\"></span>&nbsp;<a href=\"javascript:".$sTableID.".GetAdminList('fileman_admin.php?".$addUrl_s."&site=".$site."&path=".urlencode(urlencode($arParsedPath["PREV"]))."&show_perms_for=".IntVal($show_perms_for)."', GALCallBack);\">..</a>";
 
 	$row->AddField("NAME", $showField);
 	$row->AddField("LOGIC_NAME", $showField);
@@ -532,7 +535,8 @@ while($Elem = $db_DirContent->NavNext(true, "f_"))
 	$arPath = Array($site, $Elem['ABS_PATH']);
 	$fpath = $bSearch ? $Elem['ABS_PATH'] : $path."/".$Elem["NAME"];
 	$fpathUrl = urlencode($fpath);
-	$fname = $documentRoot.$path."/".$Elem["NAME"];
+	//$fname = $documentRoot.$path."/".$Elem["NAME"];
+	$fname = $documentRoot.$fpath;
 	$fnameConverted = CBXVirtualIoFileSystem::ConvertCharset($fname); //http://www.jabber.bx/view.php?id=26893
 
 	if(!file_exists($fnameConverted))
@@ -548,7 +552,7 @@ while($Elem = $db_DirContent->NavNext(true, "f_"))
 	$showFieldText = "";
 	if($Elem["TYPE"] == "D")
 	{
-		$showFieldIcon = "<a href=\"fileman_admin.php?".$addUrl_s."&site=".urlencode($site)."&path=".$fpathUrl."&show_perms_for=".IntVal($show_perms_for)."\" onclick=\"".$sTableID.".GetAdminList('fileman_admin.php?".$addUrl_s."&site=".urlencode($site)."&path=".$fpathUrl."&show_perms_for=".IntVal($show_perms_for)."', GALCallBack);return false;\"><span class='fileman_icon_folder'></span></a>";
+		$showFieldIcon = "<a href=\"fileman_admin.php?".$addUrl_s."&site=".urlencode($site)."&path=".$fpathUrl."&show_perms_for=".IntVal($show_perms_for)."\" onclick=\"".$sTableID.".GetAdminList('fileman_admin.php?".$addUrl_s."&site=".urlencode($site)."&path=".$fpathUrl."&show_perms_for=".IntVal($show_perms_for)."', GALCallBack);return false;\"><span class='adm-submenu-item-link-icon fileman_icon_folder'></span></a>";
 		$showFieldText = "<a href=\"fileman_admin.php?".$addUrl_s."&site=".urlencode($site)."&path=".$fpathUrl."&show_perms_for=".IntVal($show_perms_for)."\" onclick=\"".$sTableID.".GetAdminList('fileman_admin.php?".$addUrl_s."&site=".urlencode($site)."&path=".$fpathUrl."&show_perms_for=".IntVal($show_perms_for)."', GALCallBack);return false;\">".$f_NAME."</a>";
 	}
 	else
@@ -600,7 +604,7 @@ while($Elem = $db_DirContent->NavNext(true, "f_"))
 
 		if($Elem["TYPE"] == "D")
 		{
-			$showFieldIcon = "<a href=\"javascript:".$sTableID.".GetAdminList('fileman_admin.php?".$addUrl_s."&site=".urlencode($site)."&path=".$fpathUrl."&show_perms_for=".IntVal($show_perms_for)."', GALCallBack);\" title=\"".htmlspecialcharsbx($fpath)."\"><span class='fileman_icon_folder'></span></a>";
+			$showFieldIcon = "<a href=\"javascript:".$sTableID.".GetAdminList('fileman_admin.php?".$addUrl_s."&site=".urlencode($site)."&path=".$fpathUrl."&show_perms_for=".IntVal($show_perms_for)."', GALCallBack);\" title=\"".htmlspecialcharsbx($fpath)."\"><span class='adm-submenu-item-link-icon fileman_icon_folder'></span></a>";
 			$showFieldText = "<a href=\"javascript:".$sTableID.".GetAdminList('fileman_admin.php?".$addUrl_s."&site=".urlencode($site)."&path=".$fpathUrl."&show_perms_for=".IntVal($show_perms_for)."', GALCallBack);\" title=\"".htmlspecialcharsbx($fpath)."\">".$f_LOGIC_NAME."</a>";
 		}
 		else
@@ -1100,7 +1104,7 @@ if($bSearch)
 	$aContext[] = Array(
 		"TEXT" => GetMessage("FILEMAN_GO_BACK"),
 		"LINK" => "fileman_admin.php?".$addUrl."&site=".$site."&path=".urlencode($path)."",
-		"ICON" => "btn_go_back"
+		"ICON" => "btn_list"
 	);
 }
 

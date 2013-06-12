@@ -155,7 +155,7 @@ class CFileMan
 		// Edit page
 		if ($page_permission>="W")
 		{
-			$href = "/bitrix/admin/fileman_".$editor_type."_edit.php?lang=".LANGUAGE_ID."&site=".SITE_ID."&templateID=".urlencode(SITE_TEMPLATE_ID).$full_src."&path=".UrlEncode($_SERVER["REAL_FILE_PATH"]<>""? $_SERVER["REAL_FILE_PATH"] : $cur_page)."&back_url=".UrlEncode($REQUEST_URI);
+			$href = "/bitrix/admin/fileman_".$editor_type."_edit.php?lang=".LANGUAGE_ID."&site=".SITE_ID."&templateID=".urlencode(SITE_TEMPLATE_ID).$full_src."&path=".UrlEncode(isset($_SERVER["REAL_FILE_PATH"]) && $_SERVER["REAL_FILE_PATH"]<>""? $_SERVER["REAL_FILE_PATH"] : $cur_page)."&back_url=".UrlEncode($REQUEST_URI);
 			$APPLICATION->AddPanelButtonMenu('edit', array("SEPARATOR"=>true, "SORT"=>99));
 			$APPLICATION->AddPanelButtonMenu('edit', array(
 				"TEXT" => GetMessage("fileman_panel_admin"),
@@ -1041,7 +1041,7 @@ class CFileMan
 		if ($textType == 'html')
 		{
 			$curType = CUserOptions::GetOption('fileman', "type_selector_".$name.$key, false);
-			if ($curType && in_array($curType, array('text', 'html', 'editor')))
+			if ($curType && in_array($curType, array('html', 'editor')))
 				$textType = $curType;
 		}
 
@@ -1351,11 +1351,15 @@ class CFileMan
 					limit_php_access = <?= $arParams["limit_php_access"] ? 'true' : 'false'?>,
 					lca = <?= $lca == 'Y' ? 'true' : 'false'?>,
 					lightMode = <?= $arParams["light_mode"] ? 'true' : 'false'?>,
-					rtlMode = <?= $direction_rtl ? 'true' : 'false'?>,
 					spellcheck_js_v = "<?=@filemtime($_SERVER['DOCUMENT_ROOT'].'/bitrix/admin/htmleditor2/spellcheck.js')?>",
 					BX_PERSONAL_ROOT = "<?=BX_PERSONAL_ROOT?>";
 
-				window.bxsessid = "<?=bitrix_sessid()?>";
+                window.limit_php_access = top.limit_php_access = limit_php_access;
+                window.lightMode = top.lightMode = lightMode;
+                window.lca = top.lca = lca;
+                window.BXLang = top.BXLang = BXLang;
+                window.BXSite = top.BXSite = BXSite;
+                window.BX_PERSONAL_ROOT = top.BX_PERSONAL_ROOT = BX_PERSONAL_ROOT;
 			</script>
 			<?
 
@@ -1404,7 +1408,7 @@ class CFileMan
 		$db_events = GetModuleEvents("fileman", "OnIncludeHTMLEditorScript");
 		while($arEvent = $db_events->Fetch())
 			ExecuteModuleEventEx($arEvent);
-			$bFirstUsed = true;
+		$bFirstUsed = true;
 		}
 		?>
 			<div class="bxedmain-cont" id="<?= $name.'_object';?>"><table id="<?= $name?>_pFrame" class="bxedmainframe dim100x100" style="display:none;">
@@ -1563,20 +1567,19 @@ class CFileMan
 					for ($j = 0; $j < count($matches[0]); $j++)
 					{
 						$str = $matches[0][$j];
-						$url = trim($matches[1][$j], ' "\';');
+						$url = trim(trim($matches[1][$j]), '"\';');
 						$css = "";
 						if (substr($url, -5) != 'print')
 						{
-							$url = trim($url, ' "\';');
+							$url = trim(trim($url), ' "\';');
 							if (substr($url, 0, 4) == 'url(' && substr($url, -1) == ')')
 								$url = trim(substr($url, 4, -1), ' "\'');
-
+							$url = trim(trim($url), '\'";');
 							if (substr($url, 0, 1) != '/' && file_exists($_SERVER["DOCUMENT_ROOT"].BX_PERSONAL_ROOT."/templates/".$ar_templ["ID"]."/".$url))
 								$css = "\n".$APPLICATION->GetFileContent($_SERVER["DOCUMENT_ROOT"].BX_PERSONAL_ROOT."/templates/".$ar_templ["ID"]."/".$url)."\n";
 							else if(file_exists($_SERVER["DOCUMENT_ROOT"].$url))
 								$css = "\n".$APPLICATION->GetFileContent($_SERVER["DOCUMENT_ROOT"].$url)."\n";
 						}
-
 						$ar_templ["STYLES"] = str_replace($matches[0][$j], $css, $ar_templ["STYLES"]);
 					}
 				}
@@ -1628,6 +1631,9 @@ class CFileMan
 			$arResult["STYLES"] .= "\r\n".$APPLICATION->GetFileContent($_SERVER["DOCUMENT_ROOT"].BX_PERSONAL_ROOT."/php_interface/".(strlen($site)<=0?LANGUAGE_ID:$site)."/editor.css");
 		elseif(file_exists($_SERVER["DOCUMENT_ROOT"].BX_PERSONAL_ROOT."/php_interface/editor.css"))
 			$arResult["STYLES"] .= "\r\n".$APPLICATION->GetFileContent($_SERVER["DOCUMENT_ROOT"].BX_PERSONAL_ROOT."/php_interface/editor.css");
+
+		$arResult["STYLES"] = preg_replace("/\r\n/", " ", $arResult["STYLES"]);
+		$arResult["STYLES"] = preg_replace("/\n/", " ", $arResult["STYLES"]);
 
 		return $arResult;
 	}

@@ -5,15 +5,15 @@ class CUserCounter extends CAllUserCounter
 {
 	public static function Set($user_id, $code, $value, $site_id = SITE_ID, $tag = '')
 	{
-		global $DB;
-		
+		global $DB, $CACHE_MANAGER;
+
 		$value = intval($value);
 		$user_id = intval($user_id);
 		if ($user_id <= 0 || strlen($code) <= 0)
 			return false;
 
 		$rs = $DB->Query("
-			SELECT CNT FROM b_user_counter 
+			SELECT CNT FROM b_user_counter
 			WHERE USER_ID = ".$user_id."
 			AND SITE_ID = '".$DB->ForSQL($site_id)."'
 			AND CODE = '".$DB->ForSQL($code)."'
@@ -43,140 +43,178 @@ class CUserCounter extends CAllUserCounter
 			", true);
 		}
 
-		if (is_array(self::$counters) && !empty(self::$counters))
+		if (self::$counters && self::$counters[$user_id])
 		{
 			if ($site_id == '**')
 			{
-				foreach(self::$counters as $key => $tmp)
-					self::$counters[$key][$user_id][$code] = $value;
-			}			
+				foreach(self::$counters[$user_id] as $key => $tmp)
+				{
+					self::$counters[$user_id][$key][$code] = $value;
+				}
+			}
 			else
 			{
-				self::$counters[$site_id][$user_id][$code] = $value;
+				if (!isset(self::$counters[$user_id][$site_id]))
+					self::$counters[$user_id][$site_id] = array();
+
+				self::$counters[$user_id][$site_id][$code] = $value;
 			}
 		}
+
+		$CACHE_MANAGER->Clean("user_counter".$user_id, "user_counter");
 
 		return true;
 	}
 
 	public static function Increment($user_id, $code, $site_id = SITE_ID)
 	{
-		global $DB;
+		global $DB, $CACHE_MANAGER;
 
 		$user_id = intval($user_id);
 		if ($user_id <= 0 || strlen($code) <= 0)
 			return false;
 
 		$strSQL = "
-			INSERT INTO b_user_counter (USER_ID, CNT, SITE_ID, CODE) 
-			VALUES (".$user_id.", 1, '".$DB->ForSQL($site_id)."', '".$DB->ForSQL($code)."') 
+			INSERT INTO b_user_counter (USER_ID, CNT, SITE_ID, CODE)
+			VALUES (".$user_id.", 1, '".$DB->ForSQL($site_id)."', '".$DB->ForSQL($code)."')
 			ON DUPLICATE KEY UPDATE CNT = CNT + 1";
 		$DB->Query($strSQL, false, "FILE: ".__FILE__."<br> LINE: ".__LINE__);
 
-		if (is_array(self::$counters) && !empty(self::$counters))
+		if (self::$counters && self::$counters[$user_id])
 		{
 			if ($site_id == '**')
 			{
-				foreach(self::$counters as $key => $tmp)
+				foreach(self::$counters[$user_id] as $key => $tmp)
 				{
-					if (isset(self::$counters[$key][$user_id][$code]))
-						self::$counters[$key][$user_id][$code]++;
+					if (isset(self::$counters[$user_id][$key][$code]))
+						self::$counters[$user_id][$key][$code]++;
 					else
-						self::$counters[$key][$user_id][$code] = 1;
+						self::$counters[$user_id][$key][$code] = 1;
 				}
-			}			
+			}
 			else
 			{
-				if (isset(self::$counters[$site_id][$user_id][$code]))
-					self::$counters[$site_id][$user_id][$code]++;
+				if (!isset(self::$counters[$user_id][$site_id]))
+					self::$counters[$user_id][$site_id] = array();
+
+				if (isset(self::$counters[$user_id][$site_id][$code]))
+					self::$counters[$user_id][$site_id][$code]++;
 				else
-					self::$counters[$site_id][$user_id][$code] = 1;
+					self::$counters[$user_id][$site_id][$code] = 1;
 			}
 		}
+
+		$CACHE_MANAGER->Clean("user_counter".$user_id, "user_counter");
 
 		return true;
 	}
 
 	public static function Decrement($user_id, $code, $site_id = SITE_ID)
 	{
-		global $DB;
+		global $DB, $CACHE_MANAGER;
 
 		$user_id = intval($user_id);
 		if ($user_id <= 0 || strlen($code) <= 0)
 			return false;
 
 		$strSQL = "
-			INSERT INTO b_user_counter (USER_ID, CNT, SITE_ID, CODE) 
-			VALUES (".$user_id.", -1, '".$DB->ForSQL($site_id)."', '".$DB->ForSQL($code)."') 
+			INSERT INTO b_user_counter (USER_ID, CNT, SITE_ID, CODE)
+			VALUES (".$user_id.", -1, '".$DB->ForSQL($site_id)."', '".$DB->ForSQL($code)."')
 			ON DUPLICATE KEY UPDATE CNT = CNT - 1";
 		$DB->Query($strSQL, false, "FILE: ".__FILE__."<br> LINE: ".__LINE__);
 
-		if (is_array(self::$counters) && !empty(self::$counters))
+		if (self::$counters && self::$counters[$user_id])
 		{
 			if ($site_id == '**')
 			{
-				foreach(self::$counters as $key => $tmp)
+				foreach(self::$counters[$user_id] as $key => $tmp)
 				{
-					if (isset(self::$counters[$key][$user_id][$code]))
-						self::$counters[$key][$user_id][$code]--;
+					if (isset(self::$counters[$user_id][$key][$code]))
+						self::$counters[$user_id][$key][$code]--;
 					else
-						self::$counters[$key][$user_id][$code] = -1;
+						self::$counters[$user_id][$key][$code] = -1;
 				}
-			}			
+			}
 			else
 			{
-				if (isset(self::$counters[$site_id][$user_id][$code]))
-					self::$counters[$site_id][$user_id][$code]--;
+				if (!isset(self::$counters[$user_id][$site_id]))
+					self::$counters[$user_id][$site_id] = array();
+
+				if (isset(self::$counters[$user_id][$site_id][$code]))
+					self::$counters[$user_id][$site_id][$code]--;
 				else
-					self::$counters[$site_id][$user_id][$code] = -1;
+					self::$counters[$user_id][$site_id][$code] = -1;
 			}
 		}
+
+		$CACHE_MANAGER->Clean("user_counter".$user_id, "user_counter");
+
 		return true;
 	}
 
-	protected static function IncrementWithSelect($sub_select)
+	public static function IncrementWithSelect($sub_select)
 	{
-		global $DB;
+		global $DB, $CACHE_MANAGER;
 
 		if (strlen($sub_select) > 0)
 		{
-			unset(self::$counters);
-			
 			$strSQL = "
-				INSERT INTO b_user_counter (USER_ID, CNT, SITE_ID, CODE) (".$sub_select.") 
+				INSERT INTO b_user_counter (USER_ID, CNT, SITE_ID, CODE) (".$sub_select.")
 				ON DUPLICATE KEY UPDATE CNT = CNT + 1
 			";
 			$DB->Query($strSQL, false, "FILE: ".__FILE__."<br> LINE: ".__LINE__);
+
+			self::$counters = false;
+			$CACHE_MANAGER->CleanDir("user_counter");
 		}
 	}
 
 	public static function Clear($user_id, $code, $site_id = SITE_ID)
 	{
-		global $DB;
+		global $DB, $CACHE_MANAGER;
 
 		$user_id = intval($user_id);
 		if ($user_id <= 0 || strlen($code) <= 0)
 			return false;
 
+		if (!is_array($site_id))
+			$site_id = array($site_id);
+
 		$strSQL = "
-			INSERT INTO b_user_counter (USER_ID, SITE_ID, CODE, CNT, LAST_DATE)
-			VALUES (".$user_id.", '".$DB->ForSQL($site_id)."', '".$DB->ForSQL($code)."', 0, ".$DB->CurrentTimeFunction().")
-			ON DUPLICATE KEY UPDATE CNT = 0, LAST_DATE = ".$DB->CurrentTimeFunction()."
-		";
+			INSERT INTO b_user_counter (USER_ID, SITE_ID, CODE, CNT, LAST_DATE) VALUES ";
+
+		foreach ($site_id as $i => $site_id_tmp)
+		{
+			if ($i > 0)
+				$strSQL .= ",";
+			$strSQL .= " (".$user_id.", '".$DB->ForSQL($site_id_tmp)."', '".$DB->ForSQL($code)."', 0, ".$DB->CurrentTimeFunction().") ";
+		}
+
+		$strSQL .= " ON DUPLICATE KEY UPDATE CNT = 0, LAST_DATE = ".$DB->CurrentTimeFunction();
+
 		$res = $DB->Query($strSQL, false, "FILE: ".__FILE__."<br> LINE: ".__LINE__);
 
-		if (is_array(self::$counters) && !empty(self::$counters))
+		if (self::$counters && self::$counters[$user_id])
 		{
-			if ($site_id == '**')
+			foreach ($site_id as $site_id_tmp)
 			{
-				foreach(self::$counters as $key => $tmp)
-					self::$counters[$key][$user_id][$code] = 0;
-			}			
-			else
-			{
-				self::$counters[$site_id][$user_id][$code] = 0;
+				if ($site_id_tmp == '**')
+				{
+					foreach(self::$counters[$user_id] as $key => $tmp)
+						self::$counters[$user_id][$key][$code] = 0;
+					break;
+				}
+				else
+				{
+					if (!isset(self::$counters[$user_id][$site_id_tmp]))
+						self::$counters[$user_id][$site_id_tmp] = array();
+
+					self::$counters[$user_id][$site_id_tmp][$code] = 0;
+				}
 			}
 		}
+
+		$CACHE_MANAGER->Clean("user_counter".$user_id, "user_counter");
 
 		return true;
 	}

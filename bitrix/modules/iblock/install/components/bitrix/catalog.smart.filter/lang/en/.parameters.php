@@ -7,4 +7,5 @@ $MESS["CP_BCSF_FILTER_NAME"] = "Name of result filter array";
 $MESS["CP_BCSF_SAVE_IN_SESSION"] = "Store filter settings in user session";
 $MESS["CP_BCSF_CACHE_GROUPS"] = "Respect Access Permissions";
 $MESS["CP_BCSF_SECTION_ID"] = "Information block section ID";
+$MESS["CP_BCSF_INSTANT_RELOAD"] = "Instant filter using AJAX";
 ?>

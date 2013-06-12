@@ -6,18 +6,14 @@ if(!isset($USER))		{global $USER;}
 if(!isset($APPLICATION)){global $APPLICATION;}
 if(!isset($DB))			{global $DB;}
 
-$db_events = GetModuleEvents("main", "OnEpilog");
-while($arEvent = $db_events->Fetch())
+foreach(GetModuleEvents("main", "OnEpilog", true) as $arEvent)
 	ExecuteModuleEventEx($arEvent);
 
 $r = $APPLICATION->EndBufferContentMan();
 $main_exec_time = round((getmicrotime()-START_EXEC_TIME), 4);
 echo $r;
 
-$arAllEvents = Array();
-$db_events = GetModuleEvents("main", "OnAfterEpilog");
-while($arEvent = $db_events->Fetch())
-	$arAllEvents[] = $arEvent;
+$arAllEvents = GetModuleEvents("main", "OnAfterEpilog", true);
 
 define("START_EXEC_EVENTS_1", microtime());
 $GLOBALS["BX_STATE"] = "EV";
@@ -25,8 +21,8 @@ CMain::EpilogActions();
 define("START_EXEC_EVENTS_2", microtime());
 $GLOBALS["BX_STATE"] = "EA";
 
-for($i=0; $i<count($arAllEvents); $i++)
-	ExecuteModuleEventEx($arAllEvents[$i]);
+foreach($arAllEvents as $arEvent)
+	ExecuteModuleEventEx($arEvent);
 
 if(!IsModuleInstalled("compression") && !defined("ADMIN_AJAX_MODE") && ($_REQUEST["mode"] != 'excel'))
 {

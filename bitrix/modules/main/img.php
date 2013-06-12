@@ -322,9 +322,30 @@ function DrawCoordinatGrid($arrayX, $arrayY, $width, $height, $ImageHandle, $bgC
 	$arResult = array();
 
 	$max_len=0;
-	foreach($arrayY as $value)
-		$max_len=max($max_len, strlen($value));
-	$dlataX = $max_len*ImageFontWidth($FontWidth);
+
+	$bUseTTFY = is_array($arrTTF_FONT["Y"]) && function_exists("ImageTTFText");
+	$bUseTTFX = is_array($arrTTF_FONT["X"]) && function_exists("ImageTTFText");
+
+	if ($bUseTTFY)
+	{
+		$ttf_font_y = $_SERVER["DOCUMENT_ROOT"].$arrTTF_FONT["Y"]["FONT_PATH"];
+		$ttf_size_y = $arrTTF_FONT["Y"]["FONT_SIZE"];
+		$ttf_shift_y = $arrTTF_FONT["Y"]["FONT_SHIFT"];
+		$ttf_base_y = 0;
+		if (isset($arrTTF_FONT["Y"]["FONT_BASE"])) $ttf_base_y = $arrTTF_FONT["Y"]["FONT_BASE"];
+		$dlataX = 0;
+		foreach($arrayY as $value)
+		{
+			$bbox = imagettfbbox($ttf_size_y, 0, $ttf_font_y, $value);
+			$dlataX = max($dlataX, abs($bbox[2] - $bbox[0]) + 1);
+		}
+	}
+	else
+	{
+		foreach($arrayY as $value)
+			$max_len=max($max_len, strlen($value));
+		$dlataX = $max_len*ImageFontWidth($FontWidth);
+	}
 
 	$arr_bgColor = ReColor($bgColor);
 	$colorFFFFFF = ImageColorAllocate($ImageHandle,$arr_bgColor[0],$arr_bgColor[1],$arr_bgColor[2]);
@@ -356,7 +377,16 @@ function DrawCoordinatGrid($arrayX, $arrayY, $width, $height, $ImageHandle, $bgC
 
 	// координаты точки A
 	$xA = $dD+$dlataX;
-	$yA = $height-$dD-ImageFontHeight($FontWidth)/2;
+	if ($bUseTTFX)
+	{
+		$ttf_font_x = $_SERVER["DOCUMENT_ROOT"].$arrTTF_FONT["X"]["FONT_PATH"];
+		$ttf_size_x = $arrTTF_FONT["X"]["FONT_SIZE"];
+		$ttf_shift_x = $arrTTF_FONT["X"]["FONT_SHIFT"];
+		$ttf_base_x = 0;
+		if (isset($arrTTF_FONT["X"]["FONT_BASE"])) $ttf_base_x = $arrTTF_FONT["X"]["FONT_BASE"];
+		$yA = $height-$dD-$ttf_shift_x;
+	}
+	else  $yA = $height-$dD-ImageFontHeight($FontWidth)/2;
 
 	// координаты точки C
 	$xC = $xA;
@@ -406,19 +436,20 @@ function DrawCoordinatGrid($arrayX, $arrayY, $width, $height, $ImageHandle, $bgC
 		ImageLine($ImageHandle, ceil($xP0), ceil($yP0), ceil($xP0), ceil($yP1),  IMG_COLOR_STYLED);
 
 		if($bForBarDiagram)
-			$arResult["XBUCKETS"][$arrayX[$i]] = array(ceil($xP0)+1, ceil($xP0+$dX)-1);
+			$arResult["XBUCKETS"][$i] = array(ceil($xP0)+1, ceil($xP0+$dX)-1);
 
 		$captionX = $arrayX[$i]; // подписи по оси X
 		$xCaption = $xP0 - strlen($captionX)*$k[$FontWidth] + ($dX*$bForBarDiagram/2); // координата X для подписи
 		$yCaption = $yP0; // координата Y для подписи
 
-		if (is_array($arrTTF_FONT["X"]) && function_exists("ImageTTFText"))
+		if ($bUseTTFX)
 		{
-			$ttf_font = $_SERVER["DOCUMENT_ROOT"].$arrTTF_FONT["X"]["FONT_PATH"];
-			$ttf_size = $arrTTF_FONT["X"]["FONT_SIZE"];
-			$ttf_shift = $arrTTF_FONT["X"]["FONT_SHIFT"];
+			$bbox = imagettfbbox($ttf_size_x, 0, $ttf_font_x, $captionX);
+			$ttf_width_x = abs($bbox[2] - $bbox[0]) + 1;
+			$xCaption = $xP0 - $ttf_width_x/2 + ($dX*$bForBarDiagram/2);
+			$yCaption = $yP0 + $dD + $ttf_shift_x - $ttf_base_x;
 			$captionX = $APPLICATION->ConvertCharset($captionX, LANG_CHARSET, "UTF-8");
-			ImageTTFText($ImageHandle, $ttf_size, 0, $xCaption, $yCaption+$ttf_shift*1.5, $color000000, $ttf_font, $captionX);
+			ImageTTFText($ImageHandle, $ttf_size_x, 0, $xCaption, $yCaption, $color000000, $ttf_font_x, $captionX);
 		}
 		else ImageString($ImageHandle, $FontWidth, $xCaption, $yCaption+ImageFontHeight($FontWidth)/2, $captionX, $color000000);
 
@@ -463,13 +494,12 @@ function DrawCoordinatGrid($arrayX, $arrayY, $width, $height, $ImageHandle, $bgC
 			$xCaption = $dlataX; // координата X для подписи
 			$yCaption = $yM1-$k[$FontWidth]*3; // координата Y для подписи
 
-			if (is_array($arrTTF_FONT["Y"]) && function_exists("ImageTTFText"))
+			if ($bUseTTFY)
 			{
-				$ttf_font = $_SERVER["DOCUMENT_ROOT"].$arrTTF_FONT["Y"]["FONT_PATH"];
-				$ttf_size = $arrTTF_FONT["Y"]["FONT_SIZE"];
-				$ttf_shift = $arrTTF_FONT["Y"]["FONT_SHIFT"];
 				$captionY = $APPLICATION->ConvertCharset($captionY, LANG_CHARSET, "UTF-8");
-				ImageTTFText($ImageHandle, $ttf_size, 0, $xCaption, $yCaption+$ttf_shift, $color000000, $ttf_font, $captionY);
+				$bbox = imagettfbbox($ttf_size_y, 0, $ttf_font_y, $captionY);
+				$yCaption = $yM1+($ttf_shift_y-$ttf_base_y)/2;
+				ImageTTFText($ImageHandle, $ttf_size_y, 0, $xCaption-abs($bbox[2]-$bbox[0])-1, $yCaption, $color000000, $ttf_font_y, $captionY);
 			}
 			else ImageString($ImageHandle, $FontWidth, $xCaption-strlen($captionY)*ImageFontWidth($FontWidth), $yCaption, $captionY, $color000000);
 		}
@@ -492,13 +522,8 @@ function DrawCoordinatGrid($arrayX, $arrayY, $width, $height, $ImageHandle, $bgC
 
 function Bar_Diagram($ImageHandle, $arData, $MinY, $MaxY, $gridInfo)
 {
-	if(sizeof($arrayX) != sizeof($arrayY))
-		return;
-
-	$color000000 = ImageColorAllocate($ImageHandle,0,0,0);
-
 	$max_y = 0;
-	foreach($arData as $key => $arRecs)
+	foreach($arData as $arRecs)
 	{
 		$y = max($arRecs["DATA"]);
 		if($y > $max_y)
@@ -506,12 +531,12 @@ function Bar_Diagram($ImageHandle, $arData, $MinY, $MaxY, $gridInfo)
 	}
 	$scale = ($gridInfo["VIEWPORT"][1] - $gridInfo["VIEWPORT"][3]) / ($MaxY - $MinY);
 
-	foreach($arData as $key => $arRecs)
+	$xIndex = 0;
+	foreach($arData as $arRecs)
 	{
-		if(array_key_exists($key, $gridInfo["XBUCKETS"]))
+		$arPair = $gridInfo["XBUCKETS"][$xIndex];
+		if (is_array($arPair))
 		{
-			$arPair = $gridInfo["XBUCKETS"][$key];
-
 			$bar_count = count($arRecs["DATA"]);
 			$bar_width = ceil(($arPair[1] - $arPair[0] - 1) * 0.7 / $bar_count);
 			$ws_width = round((($arPair[1] - $arPair[0] - 1) - ($bar_width * $bar_count)) / ($bar_count + 1));
@@ -535,6 +560,7 @@ function Bar_Diagram($ImageHandle, $arData, $MinY, $MaxY, $gridInfo)
 				}
 			}
 		}
+		$xIndex++;
 	}
 }
 

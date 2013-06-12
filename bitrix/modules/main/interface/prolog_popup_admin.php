@@ -15,8 +15,8 @@ CJSCore::Init(array('admin_interface'));
 
 $APPLICATION->AddBufferContent(array($adminPage, "ShowCSS"));
 echo $adminPage->ShowScript();
-$APPLICATION->ShowHeadScripts();
 $APPLICATION->ShowHeadStrings();
+$APPLICATION->ShowHeadScripts();
 ?>
 <script type="text/javascript">
 function PopupOnKeyPress(e)

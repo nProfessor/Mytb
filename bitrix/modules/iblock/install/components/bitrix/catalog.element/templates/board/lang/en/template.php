@@ -17,5 +17,4 @@ $MESS["CATALOG_VAT_INCLUDED"] = "Tax rate included in price";
 $MESS["CATALOG_VAT_NOT_INCLUDED"] = "Tax rate not included in price";
 $MESS["PUB_DATE"] = "Publish date:";
 $MESS["CT_BCE_QUANTITY"] = "Quantity";
-$MESS["CATALOG_SUBSCRIBE"] = "Subscribe";
 ?>

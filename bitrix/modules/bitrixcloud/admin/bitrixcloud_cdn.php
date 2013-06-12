@@ -1,16 +1,44 @@
 <?
+/*.require_module 'standard';.*/
+/*.require_module 'pcre';.*/
+/*.require_module 'bitrix_main_include_prolog_admin_before';.*/
+
 define("ADMIN_MODULE_NAME", "bitrixcloud");
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
 IncludeModuleLangFile(__FILE__);
-if (!$USER->IsAdmin() || !CModule::IncludeModule("bitrixcloud"))
+/** @global CMain $APPLICATION */
+/** @global CUser $USER */
+if (!$USER->IsAdmin())
 	$APPLICATION->AuthForm(GetMessage("ACCESS_DENIED"));
+
+$strError = "";
+if (!CModule::IncludeModule("bitrixcloud"))
+	$strError = GetMessage("MODULE_INCLUDE_ERROR");
+elseif (IsModuleInstalled('intranet'))
+	$strError = GetMessage("MODULE_INTRANET_ERROR");
+
+if ($strError != "")
+{
+	require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_after.php");
+	echo CAdminMessage::ShowMessage(array(
+		"DETAILS" => $strError,
+	));
+	require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");
+	die();
+}
 
 $aTabs = array(
 	array(
 		"DIV" => "main",
-		"TAB" => GetMessage("BCL_MAIN_TAB"),
+		"TAB" => GetMessage("BCL_MAIN_TAB1"),
 		"ICON" => "main_user_edit",
 		"TITLE" => GetMessage("BCL_MAIN_TAB_TITLE"),
+	),
+	array(
+		"DIV" => "dirs",
+		"TAB" => GetMessage("BCL_FOLDERS_TAB"),
+		"ICON" => "main_user_edit",
+		"TITLE" => GetMessage("BCL_FOLDERS_TAB_TITLE"),
 	),
 	array(
 		"DIV" => "sites",
@@ -28,9 +56,17 @@ $aTabs = array(
 $tabControl = new CAdminTabControl("tabControl", $aTabs, true, true);
 $bVarsFromForm = false;
 $message = /*.(CAdminMessage).*/ null;
-if ($REQUEST_METHOD == "POST" && ($save != "" || $apply != "" || $bitrixcloud_siteb != "") && check_bitrix_sessid())
+if (
+	$_SERVER["REQUEST_METHOD"] == "POST"
+	&& (
+		isset($_POST["save"])
+		|| isset($_POST["apply"])
+		|| isset($_POST["bitrixcloud_siteb"])
+	)
+	&& check_bitrix_sessid()
+)
 {
-	if ($save != "" || $apply != "")
+	if (isset($_POST["save"]) || isset($_POST["apply"]))
 	{
 		CAdminNotify::DeleteByTag("bitrixcloud_off");
 
@@ -51,7 +87,12 @@ if ($REQUEST_METHOD == "POST" && ($save != "" || $apply != "" || $bitrixcloud_si
 
 			$cdn_config->setSites(array_keys($_POST["site"]));
 			$cdn_config->setDomain($server_name);
+			$cdn_config->setKernelRewrite($_POST["kernel_folder"]!=="n");
+			$cdn_config->setContentRewrite($_POST["content_folders"]==="y");
+
 			$cdn_config->saveToOptions();
+
+			CBitrixCloudCDNConfig::getInstance()->setDebug($_POST["debug"] === "y");
 			if (!CBitrixCloudCDN::SetActive($_POST["cdn_active"] === "Y"))
 			{
 				$e = $APPLICATION->GetException();
@@ -71,10 +112,10 @@ if ($REQUEST_METHOD == "POST" && ($save != "" || $apply != "" || $bitrixcloud_si
 	}
 	else
 	{
-		if ($save != "" && $_GET["return_url"] != "")
+		if (isset($_POST["save"]) && $_GET["return_url"] != "")
 			LocalRedirect($_GET["return_url"]);
 
-		LocalRedirect("/bitrix/admin/bitrixcloud_cdn.php?lang=".LANGUAGE_ID.($return_url ? "&return_url=".urlencode($_GET["return_url"]) : "")."&".$tabControl->ActiveTabParam());
+		LocalRedirect("/bitrix/admin/bitrixcloud_cdn.php?lang=".LANGUAGE_ID.($_GET["return_url"] ? "&return_url=".urlencode($_GET["return_url"]) : "")."&".$tabControl->ActiveTabParam());
 	}
 }
 $cdn_config = CBitrixCloudCDNConfig::getInstance()->loadFromOptions();
@@ -143,6 +184,39 @@ $tabControl->BeginNextTab();
 $tabControl->BeginNextTab();
 if ($bVarsFromForm)
 {
+	$kernel_folder = $_POST["bitrix_folder"]!=="n";
+	$content_folders = $_POST["content_folders"]==="y";
+}
+else
+{
+	$kernel_folder = $cdn_config->isKernelRewriteEnabled();
+	$content_folders = $cdn_config->isContentRewriteEnabled();
+}
+?>
+	<tr>
+		<td width="40%">
+			<label for="kernel_folder"><?echo GetMessage("BCL_KERNEL"); ?>:</label>
+		</td>
+		<td width="60%">
+			<input type="hidden" name="kernel_folder" value="n">
+			<input type="checkbox" id="kernel_folder" name="kernel_folder" value="y" <?echo ($kernel_folder ? 'checked="checked"' : '' )?>>
+			<?echo GetMessage("BCL_KERNEL_NOTE")?>
+		</td>
+	</tr>
+	<tr>
+		<td width="40%">
+			<label for="content_folders"><?echo GetMessage("BCL_UPLOAD"); ?>:</label>
+		</td>
+		<td width="60%">
+			<input type="hidden" name="content_folders" value="n">
+			<input type="checkbox" id="content_folders" name="content_folders" value="y" <?echo ($content_folders ? 'checked="checked"' : '' )?>>
+			<?echo GetMessage("BCL_CONTENT_NOTE")?>
+		</td>
+	</tr>
+<?
+$tabControl->BeginNextTab();
+if ($bVarsFromForm)
+{
 	if (is_array($_POST["site"]))
 		$sites = $_POST["site"];
 	else
@@ -182,10 +256,10 @@ $tabControl->BeginNextTab();
 ?>
 	<tr class="adm-detail-required-field">
 		<td width="40%">
-			<?echo GetMessage("BCL_SERVER_URL");?>:
+			<label  for="server_name"><?echo GetMessage("BCL_SERVER_URL");?>:</label>
 		</td>
 		<td width="60%">
-			<input type="text" name="server_name" value="<?echo htmlspecialcharsbx($server_name); ?>">
+			<input type="text" id="server_name" name="server_name" value="<?echo htmlspecialcharsbx($server_name); ?>">
 		</td>
 	</tr>
 <?
@@ -194,6 +268,7 @@ $tabControl->Buttons(array(
 ));
 ?>
 <?echo bitrix_sessid_post(); ?>
+<input type="hidden" name="debug" value="<?echo htmlspecialcharsbx($_REQUEST["debug"]) ?>">
 <input type="hidden" name="lang" value="<?echo LANGUAGE_ID ?>">
 <?
 $tabControl->End();

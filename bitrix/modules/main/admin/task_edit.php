@@ -1,10 +1,16 @@
 <?
-##############################################
-# Bitrix Site Manager                        #
-# Copyright (c) 2002-2007 Bitrix             #
-# http://www.bitrixsoft.com                  #
-# mailto:admin@bitrixsoft.com                #
-##############################################
+/**
+ * Bitrix Framework
+ * @package bitrix
+ * @subpackage main
+ * @copyright 2001-2013 Bitrix
+ */
+
+/**
+ * Bitrix vars
+ * @global CUser $USER
+ * @global CMain $APPLICATION
+ */
 
 require_once(dirname(__FILE__)."/../include/prolog_admin_before.php");
 require_once($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/prolog_user.php");
@@ -42,7 +48,7 @@ $aTabs = array(
 );
 $tabControl = new CAdminTabControl("tabControl", $aTabs);
 
-if($REQUEST_METHOD=="POST" && (strlen($save)>0 || strlen($apply)>0) && $USER->CanDoOperation('edit_tasks') && check_bitrix_sessid())
+if($_SERVER["REQUEST_METHOD"]=="POST" && ($_POST["save"] <> '' || $_POST["apply"] <> '') && $USER->CanDoOperation('edit_tasks') && check_bitrix_sessid())
 {
 	$aMsg = Array();
 	$LETTER = strtoupper($LETTER);
@@ -82,9 +88,9 @@ if($REQUEST_METHOD=="POST" && (strlen($save)>0 || strlen($apply)>0) && $USER->Ca
 			CTask::SetOperations($ID, $arOperationIds);
 		}
 		
-		if(strlen($save)>0)
+		if($_POST["save"] <> '')
 			LocalRedirect("task_admin.php?lang=".LANGUAGE_ID);
-		elseif(strlen($apply)>0)
+		elseif($_POST["apply"] <> '')
 			LocalRedirect($APPLICATION->GetCurPage()."?lang=".LANGUAGE_ID."&ID=".$ID."&".$tabControl->ActiveTabParam());
 	}
 	else
@@ -99,7 +105,6 @@ if(!$z->ExtractFields("str_") || $ID == 0)
 	$ID=0;
 	$str_SYS = 'N';
 	$str_BINDING = 'module';
-	$str_LETTER = 'D';
 	$str_MODULE_ID = 'main';
 }
 else
@@ -300,7 +305,7 @@ ksort($arOperations);
 				?>
 				<tr id="operation_row_<?=$ind?>" 
 				<?echo (($arOperation["MODULE_ID"] != $str_MODULE_ID) || ($arOperation["BINDING"] != $str_BINDING)) ? 'style="display: none"' : ''?>>
-					<td align="right" style="padding: 0px 10px 0px 10px">
+					<td align="right" style="padding: 0 10px 0 10px">
 						<input type="checkbox" name="OPERATION_ID[]" id="OPERATION_ID_<?=$ind ?>" value="<?=$arOperation["ID"]?>" <? echo (in_array($arOperation["ID"], $arTaskOperations)) ? " checked" : ''?>>
 						<script>
 						arOperations['<?=$ind?>'] = {
@@ -330,12 +335,11 @@ ksort($arOperations);
 		var __module_id_select = document.getElementById('__module_id_select');
 		var __binding_select = document.getElementById('__binding_select');
 		var _noneopermess = document.getElementById('__noneopermess');
-		var noOperMess = "<?=addslashes(GetMessage('TASK_NONE_OPERATIONS'));?>";
+		var noOperMess = "<?=GetMessageJS('TASK_NONE_OPERATIONS');?>";
 		
 		__module_id_select.onchange = function(e)
 		{
 			var arB = arBingings[this.value];
-			var arOpt = [], opt;
 			if (arB)
 			{
 				__binding_select.options.length = 0;
@@ -368,7 +372,7 @@ ksort($arOperations);
 				}
 			}
 			showNoneOperMess(bShowNoneOperMess);
-		}
+		};
 		
 		__binding_select.onchange = function(e)
 		{
@@ -397,7 +401,7 @@ ksort($arOperations);
 				}
 			}
 			showNoneOperMess(bShowNoneOperMess);
-		}
+		};
 		
 		var showNoneOperMess = function(bShow)
 		{
@@ -412,8 +416,8 @@ ksort($arOperations);
 						m_title = __module_id_select.options[i].innerHTML;
 				}
 				var b_id = __binding_select.value;
-				var l = __binding_select.options.length;
-				for (var i = 0; i < l; i++)
+				l = __binding_select.options.length;
+				for (i = 0; i < l; i++)
 				{
 					if (b_id == __binding_select.options[i].value)
 						bind_title = __binding_select.options[i].innerHTML;
@@ -424,7 +428,7 @@ ksort($arOperations);
 			}
 			else
 				_noneopermess.style.display = 'none';
-		}
+		};
 		</script>
 		</td>
 	</tr>

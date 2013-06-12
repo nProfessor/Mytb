@@ -55,6 +55,12 @@ if($lAdmin->EditAction())
 		if(!$lAdmin->IsUpdated($ID))
 			continue;
 
+		$arFields["USER_TYPE"] = "";
+		if (strpos($arFields["PROPERTY_TYPE"], ":"))
+		{
+			list($arFields["PROPERTY_TYPE"], $arFields["USER_TYPE"]) = explode(':', $arFields["PROPERTY_TYPE"], 2);
+		}
+
 		$ibp = new CIBlockProperty;
 		if(!$ibp->Update($ID, $arFields))
 		{
@@ -226,7 +232,7 @@ while($dbrs = $rsIBlockProps->NavNext(true, "f_"))
 		array(
 			"ICON"=>"delete",
 			"TEXT"=>GetMessage("MAIN_ADMIN_MENU_DELETE"),
-			"ACTION"=>"if(confirm('".GetMessage("IBP_ADM_CONFIRM_DEL_MESSAGE")."')) ".$lAdmin->ActionDoGroup($f_ID, "delete", "&IBLOCK_ID=".urlencode($arIBlock["ID"])."&lang=".LANGUAGE_ID),
+			"ACTION"=>"if(confirm('".GetMessageJS("IBP_ADM_CONFIRM_DEL_MESSAGE")."')) ".$lAdmin->ActionDoGroup($f_ID, "delete", "&IBLOCK_ID=".urlencode($arIBlock["ID"])."&lang=".LANGUAGE_ID),
 		),
 	);
 	$row->AddActions($arActions);

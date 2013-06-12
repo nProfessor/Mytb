@@ -183,7 +183,6 @@ class CIBlockProperty extends CAllIBlockProperty
 	{
 		global $DB;
 		$ID = IntVal($ID);
-		$err_mess = "FILE: ".__FILE__."<br>LINE: ";
 
 		if($arFields["MULTIPLE"]=="Y")
 			$strType = "longtext";

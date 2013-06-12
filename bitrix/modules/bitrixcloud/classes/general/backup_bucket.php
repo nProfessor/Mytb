@@ -3,7 +3,16 @@ class CBitrixCloudBackupBucket extends CCloudStorageBucket
 {
 	private $file_name = "";
 	private $check_word = "";
-
+	/**
+	 *
+	 * @param string $bucket_name
+	 * @param string $prefix
+	 * @param string $access_key
+	 * @param string $secret_key
+	 * @param string $session_token
+	 * @param string $check_word
+	 * @param string $file_name
+	 */
 	function __construct($bucket_name, $prefix, $access_key, $secret_key, $session_token, $check_word, $file_name)
 	{
 		$this->_ID = 0;
@@ -37,7 +46,11 @@ class CBitrixCloudBackupBucket extends CCloudStorageBucket
 		$this->file_name = $file_name;
 		$this->check_word = $check_word;
 	}
-
+	/**
+	 *
+	 * @return string
+	 *
+	 */
 	function getFileName()
 	{
 		return $this->GetFileSRC($this->file_name);

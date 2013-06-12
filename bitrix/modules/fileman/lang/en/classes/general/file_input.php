@@ -20,4 +20,5 @@ $MESS["ADM_FILE_INFO_LINK"] = "Link";
 $MESS["ADM_FILE_DELETED_TITLE"] = "Image<br>will be<br>deleted";
 $MESS["ADM_FILE_CANCEL_DEL"] = "Undo deletion";
 $MESS["ADM_FILE_INSERT_PATH"] = "Insert file path";
+$MESS["ADM_FILE_NOT_FOUND"] = "File was not found";
 ?>

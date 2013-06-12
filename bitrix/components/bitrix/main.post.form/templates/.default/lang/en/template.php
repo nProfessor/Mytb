@@ -21,4 +21,6 @@ $MESS["MPF_TAG_TITLE"] = "Add tag";
 $MESS["MPF_ADD_TAG1"] = "Add";
 $MESS["MPF_MENTION_TITLE"] = "Add mention";
 $MESS["MPF_IMAGE_TITLE"] = "Insert image";
+$MESS["MPF_FILE_INSERT_IN_TEXT"] = "Insert<br /> in text";
+$MESS["MPF_FILE_IN_TEXT"] = "In text";
 ?>

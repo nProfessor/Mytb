@@ -290,6 +290,9 @@ elseif(!$bReload && $_SERVER["REQUEST_METHOD"] == "POST" && (isset($_POST["save"
 		"ROW_COUNT" => $_POST["PROPERTY_ROW_COUNT"],
 		"COL_COUNT" => $_POST["PROPERTY_COL_COUNT"],
 		"DEFAULT_VALUE" => $_POST["PROPERTY_DEFAULT_VALUE"],
+		"LIST_TYPE" => $_POST["PROPERTY_LIST_TYPE"],
+		"USER_TYPE_SETTINGS" => $_POST["PROPERTY_USER_TYPE_SETTINGS"],
+		"FILE_TYPE" => $_POST["PROPERTY_FILE_TYPE"],
 	);
 
 	if(isset($_POST["PROPERTY_SMART_FILTER"]))
@@ -315,9 +318,12 @@ elseif(!$bReload && $_SERVER["REQUEST_METHOD"] == "POST" && (isset($_POST["save"
 	if(!empty($arListValues))
 		$arFields["VALUES"] = $arListValues;
 
+	if (COption::GetOptionString("iblock", "show_xml_id", "N")=="Y")
+		$arFields["XML_ID"] = $_POST["PROPERTY_XML_ID"];
+
 	if(CIBlock::GetArrayByID($arFields["IBLOCK_ID"], "SECTION_PROPERTY") === "N")
 	{
-		if($arFields["SECTION_PROPERTY"] === "N")
+		if($arFields["SECTION_PROPERTY"] === "N" || $arFields["SMART_FILTER"] === "Y")
 		{
 			$ib = new CIBlock;
 			$ib->Update($arFields["IBLOCK_ID"], array("SECTION_PROPERTY" => "Y"));
@@ -538,6 +544,7 @@ else
 			"ROW_COUNT" => $_POST["PROPERTY_ROW_COUNT"],
 			"COL_COUNT" => $_POST["PROPERTY_COL_COUNT"],
 			"DEFAULT_VALUE" => $_POST["PROPERTY_DEFAULT_VALUE"],
+			"FILE_TYPE" => $_POST["PROPERTY_FILE_TYPE"],
 		);
 
 		if (isset($_POST["PROPERTY_PROPERTY_TYPE"]))
@@ -686,6 +693,7 @@ else
 	</script>
 	<form method="POST" name="frm_prop" id="frm_prop" action="<?echo $APPLICATION->GetCurPageParam(); ?>" enctype="multipart/form-data">
 	<div id="form_content">
+	<input type="hidden" name="PROPERTY_FILE_TYPE" value="<?echo htmlspecialcharsbx($arProperty['FILE_TYPE']); ?>">
 	<?echo bitrix_sessid_post();?>
 	<?if($bSectionPopup):?>
 		<input type="hidden" name="bxpublic" value="Y">
@@ -843,7 +851,7 @@ else
 
 	if ($bShow)
 	{?><tr>
-		<td width="40%"><label id="PROPERTY_SEARCHABLE_Y"><?echo GetMessage("BT_ADM_IEP_PROP_SEARCHABLE")?></label></td>
+		<td width="40%"><label for="PROPERTY_SEARCHABLE_Y"><?echo GetMessage("BT_ADM_IEP_PROP_SEARCHABLE")?></label></td>
 		<td>
 			<input type="hidden" id="PROPERTY_SEARCHABLE_N" name="PROPERTY_SEARCHABLE" value="N">
 			<input type="checkbox" id="PROPERTY_SEARCHABLE_Y" name="PROPERTY_SEARCHABLE" value="Y" <?if('Y' == $arProperty['SEARCHABLE'])echo ' checked="checked"';?>>
@@ -1098,12 +1106,14 @@ else
 		<td width="40%"><?echo GetMessage("BT_ADM_IEP_PROP_LINK_IBLOCK")?></td>
 		<td>
 		<?
-		$b_f = ($arProperty['PROPERTY_TYPE']=="G" ? array("!ID"=>$intIBlockID) : array());
+		$b_f = ($arProperty['PROPERTY_TYPE']=="G" || ($arProperty['PROPERTY_TYPE'] == 'E' && $arProperty['USER_TYPE'] == BT_UT_SKU_CODE) ? array("!ID"=>$intIBlockID) : array());
 		echo GetIBlockDropDownList(
 			$arProperty['LINK_IBLOCK_ID'],
 			"PROPERTY_LINK_IBLOCK_TYPE_ID",
 			"PROPERTY_LINK_IBLOCK_ID",
-			$b_f
+			$b_f,
+			'class="adm-detail-iblock-types"',
+			'class="adm-detail-iblock-list"'
 		);
 		?>
 		</td>
@@ -1249,14 +1259,27 @@ setTimeout(function(){
 }, 10);
 <?
 }
-if(!$bFullForm)
-{
 ?>
-	top.BX.WindowManager.Get().adjustSizeEx();
-<?
-}
-?>
+(function(){
+
+	var tbl = BX.findChild(BX("frm_prop"), {tag: 'table', className: 'edit-table'}, true, false);
+	if (!tbl)
+		return;
+
+	var n = tbl.tBodies[0].rows.length;
+	for(var i=0; i<n; i++)
+	{
+		if(tbl.tBodies[0].rows[i].cells.length > 1)
+		{
+			BX.addClass(tbl.rows[i].cells[0], 'adm-detail-content-cell-l');
+			BX.addClass(tbl.rows[i].cells[1], 'adm-detail-content-cell-r');
+		}
+	}
+
 	BX.adminFormTools.modifyFormElements('frm_prop');
+
+})();
+
 </script><?
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");
 ?>

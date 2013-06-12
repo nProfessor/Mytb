@@ -331,7 +331,7 @@ $tabControl->BeginNextTab();
 	<tr>
 		<td><?echo GetMessage("IBLOCK_CML2_IBLOCK_ID")?>:</td>
 		<td>
-			<?echo GetIBlockDropDownList($IBLOCK_ID, 'IBLOCK_TYPE_ID', 'IBLOCK_ID');?>
+			<?echo GetIBlockDropDownList($IBLOCK_ID, 'IBLOCK_TYPE_ID', 'IBLOCK_ID', false, 'class="adm-detail-iblock-types"', 'class="adm-detail-iblock-list"');?>
 		</td>
 	</tr>
 	<tr>
@@ -343,7 +343,7 @@ $tabControl->BeginNextTab();
 	<tr>
 		<td><?echo GetMessage("IBLOCK_CML2_SECTIONS_FILTER")?>:</td>
 		<td>
-			<select id="SECTIONS_FILTER" name="SECTIONS_FILTER" size="1">
+			<select id="SECTIONS_FILTER" name="SECTIONS_FILTER">
 				<option value="active"><?echo GetMessage("IBLOCK_CML2_FILTER_ACTIVE")?></option>
 				<option value="all"><?echo GetMessage("IBLOCK_CML2_FILTER_ALL")?></option>
 				<option value="none"><?echo GetMessage("IBLOCK_CML2_FILTER_NONE")?></option>
@@ -353,7 +353,7 @@ $tabControl->BeginNextTab();
 	<tr>
 		<td><?echo GetMessage("IBLOCK_CML2_ELEMENTS_FILTER")?>:</td>
 		<td>
-			<select id="ELEMENTS_FILTER" name="ELEMENTS_FILTER" size="1">
+			<select id="ELEMENTS_FILTER" name="ELEMENTS_FILTER">
 				<option value="active"><?echo GetMessage("IBLOCK_CML2_FILTER_ACTIVE")?></option>
 				<option value="all"><?echo GetMessage("IBLOCK_CML2_FILTER_ALL")?></option>
 				<option value="none"><?echo GetMessage("IBLOCK_CML2_FILTER_NONE")?></option>

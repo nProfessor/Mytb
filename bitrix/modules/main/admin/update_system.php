@@ -4,7 +4,7 @@
 //**    MODIFICATION OF THIS FILE WILL ENTAIL SITE FAILURE            **/
 //**********************************************************************/
 if (!defined("UPDATE_SYSTEM_VERSION"))
-	define("UPDATE_SYSTEM_VERSION", "12.0.4");
+	define("UPDATE_SYSTEM_VERSION", "12.5.1");
 
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
 define("HELP_FILE", "updates/update_system.php");
@@ -437,7 +437,7 @@ $tabControl->BeginNextTab();
 					&& isset($arUpdateList["ERROR"])
 					&& count($arUpdateList["ERROR"]) > 0)
 				{
-					for ($i = 0; $i < count($arUpdateList["ERROR"]); $i++)
+					for ($i = 0, $cntTmp = count($arUpdateList["ERROR"]); $i < $cntTmp; $i++)
 					{
 						if ($arUpdateList["ERROR"][$i]["@"]["TYPE"] == "LICENSE_NOT_FOUND")
 						{
@@ -2494,7 +2494,7 @@ $tabControl->BeginNextTab();
 													<?= GetMessage("SUP_SUAC_HINT") ?>
 													<br><br>
 													<?= GetMessage("SUP_SUAC_PROMT") ?>:<br>
-													 <INPUT TYPE="text" ID="id_coupon" NAME="COUPON" value="" size="35">
+													<INPUT TYPE="text" ID="id_coupon" NAME="COUPON" value="" size="35">
 													<input TYPE="button" ID="id_coupon_btn" NAME="coupon_btn" value="<?= GetMessage("SUP_SUAC_BUTTON") ?>" onclick="ActivateCoupon()">
 												</td>
 											</tr>

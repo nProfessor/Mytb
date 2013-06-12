@@ -89,6 +89,3 @@ if(!empty($arResult["AUTH_SERVICES"]))
 	<?
 }
 ?>
-<?if($arResult['CURRENTURL'] <> ''):?>
-<input type="hidden" name="backurl" value="<?=$arResult['CURRENTURL']?>" />
-<?endif?>

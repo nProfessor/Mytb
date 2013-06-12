@@ -216,32 +216,7 @@ class CSelectTemplateWizardStep extends CWizardStep
 			}
 		}
 
-		$this->content = 
-'<script type="text/javascript">
-function SelectTemplate(element, solutionId)
-{
-	var container = document.getElementById("solutions-container");
-	var anchors = container.getElementsByTagName("A");
-	for (var i = 0; i < anchors.length; i++)
-	{
-		if (anchors[i].parentNode != container)
-			continue;
-		anchors[i].className = "solution-item";
-	}
-	element.className = "solution-item solution-item-selected";
-	var hidden = document.getElementById("templateID");
-	if (!hidden) 
-	{
-		hidden = document.createElement("INPUT");
-		hidden.type = "hidden"
-		hidden.id = "templateID";
-		hidden.name = "'.$wizard->GetRealName("templateID").'";
-		container.appendChild(hidden);
-	}
-	hidden.value = solutionId;
-}
-</script>';
-		$this->content .= '<div id="solutions-container">';
+		$this->content .= '<div id="solutions-container" class="inst-template-list-block">';
 		foreach ($arTemplates as $templateID => $arTemplate)
 		{
 			if ($defaultTemplateID == "")
@@ -250,17 +225,18 @@ function SelectTemplate(element, solutionId)
 				$wizard->SetDefaultVar("templateID", $defaultTemplateID);
 			}
 
-			$this->content .= "<a href=\"javascript:void(0);\" ondblclick=\"SubmitForm('next'); return false;\" onclick=\"SelectTemplate(this, '".$templateID."'); return false;\" ";
-				$this->content .= 'class="solution-item'.($defaultTemplateID == $templateID ? " solution-item-selected" : "").'">'; 
-				$this->content .= '<b class="r3"></b><b class="r1"></b><b class="r1"></b>'; 
-				$this->content .= '<div class="solution-inner-item">'; 
-					$this->content .= CFile::ShowImage($arTemplate["PREVIEW"], 100, 100, ' border="0" class="solution-image" '); 
-					$this->content .= '<h4>'.$arTemplate["NAME"].'</h4><p>'.$arTemplate["DESCRIPTION"].'</p>'; 
-				$this->content .= '</div>'; 
-				$this->content .= '<b class="r1"></b><b class="r1"></b><b class="r3"></b>'; 
-			$this->content .= '</a>'; 
+			$this->content .= '<div class="inst-template-description">';
+			$this->content .= $this->ShowRadioField("templateID", $templateID, Array("id" => $templateID, "class" => "inst-template-list-inp"));
+			if ($arTemplate["SCREENSHOT"] && $arTemplate["PREVIEW"])
+				$this->content .= CFile::Show2Images($arTemplate["PREVIEW"], $arTemplate["SCREENSHOT"], 150, 150, ' class="inst-template-list-img"');
+			else
+				$this->content .= CFile::ShowImage($arTemplate["SCREENSHOT"], 150, 150, ' class="inst-template-list-img"', "", true);
+
+			$this->content .= '<label for="'.$templateID.'" class="inst-template-list-label">'.$arTemplate["NAME"].'<p>'.$arTemplate["DESCRIPTION"].'</p></label>';
+			$this->content .= "</div>";
+
 		}
-		$this->content .= $this->ShowHiddenField("templateID", $defaultTemplateID, array("id" => "templateID")); 
+		
 		$this->content .= '</div>'; 
 	}
 }
@@ -331,14 +307,13 @@ class CSelectThemeWizardStep extends CWizardStep
 function SelectTheme(element, solutionId, imageUrl)
 {
 	var container = document.getElementById("solutions-container");
-	var anchors = container.getElementsByTagName("A");
+	var anchors = container.getElementsByTagName("SPAN");
 	for (var i = 0; i < anchors.length; i++)
 	{
-		if (anchors[i].parentNode.parentNode != container)
-			continue;
-		anchors[i].className = "solution-item solution-picture-item";
+		if (anchors[i].parentNode == container)
+			anchors[i].className = "inst-template-color";
 	}
-	element.className = "solution-item  solution-picture-item solution-item-selected";
+	element.className = "inst-template-color inst-template-color-selected";
 	var hidden = document.getElementById("selected-solution");
 	if (!hidden) 
 	{
@@ -361,7 +336,7 @@ function SelectTheme(element, solutionId, imageUrl)
 }
 </script>'.
 '<div id="html_container">'.
-	'<div style="overflow: hidden;" id="solutions-container">';
+'<div class="inst-template-color-block" id="solutions-container">';
 		$ii = 0;
 		$arDefaultTheme = array(); 
 		foreach ($arThemes as $themeID => $arTheme)
@@ -375,18 +350,11 @@ function SelectTheme(element, solutionId, imageUrl)
 				$arDefaultTheme = $arTheme;
 			$ii++;
 
-			$this->content .= 
-				'<div class="solution-item-wrapper">'.
-					'<a ondblclick="SubmitForm(\'next\'); return false;" onclick="SelectTheme(this, \''.$themeID.'\', \''.$arTheme["SCREENSHOT"].'\'); return false;" '.
-						'href="javascript:void(0);" class="solution-item solution-picture-item'.($defaultThemeID == $themeID ? " solution-item-selected" : "").'">'.
-						'<b class="r3"></b><b class="r1"></b><b class="r1"></b>'.
-						'<div class="solution-inner-item">'.
-							CFile::ShowImage($arTheme["PREVIEW"], 70, 70, ' border="0" class="solution-image"').
-						'</div>'.
-						'<b class="r1"></b><b class="r1"></b><b class="r3"></b>'. 
-						'<div class="solution-description">'.$ii.'. '.$arTheme["NAME"].'</div>'. 
-					'</a>'.
-				'</div>';
+			$this->content .= '
+					<span class="inst-template-color'.($defaultThemeID == $themeID ? " inst-template-color-selected" : "").'" ondblclick="SubmitForm(\'next\');"  onclick="SelectTheme(this, \''.$themeID.'\', \''.$arTheme["SCREENSHOT"].'\');">
+						<span class="inst-templ-color-img">'.CFile::ShowImage($arTheme["PREVIEW"], 70, 70, ' border="0" class="solution-image"').'</span>
+						<span class="inst-templ-color-name">'.$ii.'. '.$arTheme["NAME"].'</span>
+					</span>';
 		}
 		
 		$this->content .= $this->ShowHiddenField($themeVarName, $defaultThemeID, array("id" => "selected-solution"));  
@@ -501,33 +469,29 @@ class CDataInstallWizardStep extends CWizardStep
 		list($firstService, $stage, $status) = $this->GetFirstStep($arServices);
 
 		$this->content .= '
-			<table border="0" cellspacing="0" cellpadding="2" width="100%">
-				<tr>
-					<td colspan="2"><div id="status"></div></td>
-				</tr>
-				<tr>
-					<td width="90%" height="10">
-						<div style="border:1px solid #B9CBDF; width:100%;"><div id="indicator" style="height:10px; width:0%; background-color:#B9CBDF"></div></div>
-					</td>
-					<td width="10%">&nbsp;<span id="percent">0%</span></td>
-				</tr>
-			</table>
-			<div id="wait" align=center>
-			<br />
-			<table width=200 cellspacing=0 cellpadding=0 border=0 style="border:1px solid #EFCB69" bgcolor="#FFF7D7">
-				<tr>
-					<td height=50 width="50" valign="middle" align=center><img src="/bitrix/images/main/wizard_sol/wait.gif"></td>
-					<td height=50 width=150>'.GetMessage("WIZARD_WAIT_WINDOW_TEXT").'</td>
-				</tr>
-			</table>
-		</div><br />
-			<br />
+			<div class="instal-load-block" id="result">
+				<div class="instal-load-label" id="status"></div>
+				<div class="instal-progress-bar-outer" style="width: 670px;">
+					<div class="instal-progress-bar-alignment">
+						<div class="instal-progress-bar-inner" id="indicator">
+							<div class="instal-progress-bar-inner-text" style="width: 670px;" id="percent"></div>
+						</div>
+						<span id="percent2">0%</span>
+					</div>
+				</div>
+			</div>
+
 			<div id="error_container" style="display:none">
-				<div id="error_notice"><span style="color:red;">'.GetMessage("INST_ERROR_OCCURED").'<br />'.GetMessage("INST_TEXT_ERROR").':</span></div>
-				<div id="error_text"></div>
-				<div><span style="color:red;">'.GetMessage("INST_ERROR_NOTICE").'</span></div>
+				<div id="error_notice">
+					<div class="inst-note-block inst-note-block-red">
+						<div class="inst-note-block-icon"></div>
+						<div class="inst-note-block-label">'.GetMessage("INST_ERROR_OCCURED").'</div><br />
+						<div class="inst-note-block-text">'.GetMessage("INST_ERROR_NOTICE").'<div id="error_text"></div></div>
+					</div>
+				</div>
+
 				<div id="error_buttons" align="center">
-				<br /><input type="button" value="'.GetMessage("INST_RETRY_BUTTON").'" id="error_retry_button" onclick="" />&nbsp;<input type="button" id="error_skip_button" value="'.GetMessage("INST_SKIP_BUTTON").'" onclick="" />&nbsp;</div>
+				<br /><input type="button" value="'.GetMessage("INST_RETRY_BUTTON").'" id="error_retry_button" onclick="" class="instal-btn instal-btn-inp" />&nbsp;<input type="button" id="error_skip_button" value="'.GetMessage("INST_SKIP_BUTTON").'" onclick="" class="instal-btn instal-btn-inp" />&nbsp;</div>
 			</div>
 		'.$this->ShowHiddenField("nextStep", $firstService).'
 		'.$this->ShowHiddenField("nextStepStage", $stage).'
@@ -584,7 +548,7 @@ class CDataInstallWizardStep extends CWizardStep
 					"NAME"				=> $defSiteName,
 					"DIR"				=> $wizard->GetVar("siteFolder"),
 					"FORMAT_DATE"		=> (LANGUAGE_ID=="en"?"MM/DD/YYYY":"DD.MM.YYYY"),
-					"FORMAT_DATETIME"	=> (LANGUAGE_ID=="en"?"MM/DD/YYYY HH:MI:SS":"DD.MM.YYYY HH:MI:SS"),
+					"FORMAT_DATETIME"	=> (LANGUAGE_ID=="en"?"MM/DD/YYYY H:MI T":"DD.MM.YYYY HH:MI:SS"),
 					"FORMAT_NAME"		=> CSite::GetDefaultNameFormat(),
 					"CHARSET"			=> (defined("BX_UTF") ? "UTF-8" : (LANGUAGE_ID=="ru"?"windows-1251":"ISO-8859-1")),
 					"SITE_NAME"			=> $defSiteName,

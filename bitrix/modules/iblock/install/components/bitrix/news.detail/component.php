@@ -1,5 +1,14 @@
 <?
 if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true) die();
+/** @var CBitrixComponent $this */
+/** @var array $arParams */
+/** @var array $arResult */
+/** @global CUser $USER */
+global $USER;
+/** @global CMain $APPLICATION */
+global $APPLICATION;
+/** @global CDatabase $DB */
+global $DB;
 
 CPageOption::SetOptionString("main", "nav_page_in_session", "N");
 
@@ -80,7 +89,7 @@ if(!is_array($arParams["GROUP_PERMISSIONS"]))
 $bUSER_HAVE_ACCESS = !$arParams["USE_PERMISSIONS"];
 if($arParams["USE_PERMISSIONS"] && isset($GLOBALS["USER"]) && is_object($GLOBALS["USER"]))
 {
-	$arUserGroupArray = $GLOBALS["USER"]->GetUserGroupArray();
+	$arUserGroupArray = $USER->GetUserGroupArray();
 	foreach($arParams["GROUP_PERMISSIONS"] as $PERM)
 	{
 		if(in_array($PERM, $arUserGroupArray))
@@ -112,7 +121,7 @@ if($arParams["SHOW_WORKFLOW"] || $this->StartResultCache(false, array(($arParams
 		"ACTIVE" => "Y",
 		"CHECK_PERMISSIONS" => "Y",
 		"IBLOCK_TYPE" => $arParams["IBLOCK_TYPE"],
-		"SHOW_HISTORY" => $WF_SHOW_HISTORY,
+		"SHOW_HISTORY" => $arParams["SHOW_WORKFLOW"]? "Y": "N",
 	);
 	if($arParams["CHECK_DATES"])
 		$arFilter["ACTIVE_DATE"] = "Y";
@@ -232,9 +241,9 @@ if($arParams["SHOW_WORKFLOW"] || $this->StartResultCache(false, array(($arParams
 
 		$arResult["SECTION"] = array("PATH" => array());
 		$arResult["SECTION_URL"] = "";
-		if($arParams["ADD_SECTIONS_CHAIN"] && $arResult["IBLOCK_SECTION_ID"]>0)
+		if($arParams["ADD_SECTIONS_CHAIN"] && $arResult["IBLOCK_SECTION_ID"] > 0)
 		{
-			$rsPath = GetIBlockSectionPath($arResult["IBLOCK_ID"], $arResult["IBLOCK_SECTION_ID"]);
+			$rsPath = CIBlockSection::GetNavChain($arResult["IBLOCK_ID"], $arResult["IBLOCK_SECTION_ID"]);
 			$rsPath->SetUrlTemplates("", $arParams["SECTION_URL"]);
 			while($arPath=$rsPath->GetNext())
 			{

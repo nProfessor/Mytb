@@ -7,6 +7,10 @@ if(!$USER->CanDoOperation('view_other_settings'))
 
 IncludeModuleLangFile(__FILE__);
 
+$back_url = $_REQUEST["back_url"];
+if(substr($back_url, 0, 1) <> '/')
+	$back_url = '';
+
 $sTableID = "tbl_user_type";
 $oSort = new CAdminSorting($sTableID, "ID", "desc");
 $lAdmin = new CAdminList($sTableID, $oSort);
@@ -229,13 +233,13 @@ $lAdmin->AddGroupActionTable(Array(
 $aContext = array();
 
 // backurl button
-if (!empty($back_url))
+if ($back_url <> '')
 {
 	//$aContext[] = array("SEPARATOR" => true);
 	$aContext[] = array(
-		"TEXT"=>"Return",
+		"TEXT"=>GetMessage('USERTYPE_BACK_URL_BUTTON'),
 		"LINK"=>$back_url,
-		"TITLE"=>"Return",
+		"TITLE"=>GetMessage('USERTYPE_BACK_URL_BUTTON'),
 		"ICON"=>"btn_list"
 	);
 }
@@ -247,7 +251,7 @@ if ($find_type === 'ENTITY_ID' && !empty($find))
 {
 	$add_url .= '&ENTITY_ID='.urlencode($find);
 
-	if (!empty($back_url))
+	if ($back_url <> '')
 	{
 		$add_url .= '&back_url='.urlencode($APPLICATION->GetCurPageParam()).'&list_url='.urlencode($APPLICATION->GetCurPageParam());
 	}

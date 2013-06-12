@@ -1,34 +1,48 @@
-<?
+<?php
+/**
+ * Bitrix Framework
+ * @package bitrix
+ * @subpackage main
+ * @copyright 2001-2013 Bitrix
+ */
+
 if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true) die();
 
 include_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/components/bitrix/main.share/util.php");
-$arHandlers = __bx_share_get_handlers($templateName);
+
+/**
+ * Come from GetTemplateProps()
+ * @param string $templateName
+ * @param string $siteTemplate
+ * @param array $arCurrentValues
+ */
+$arHandlers = __bx_share_get_handlers($templateName, $siteTemplate);
 
 $arTemplateParameters = array(
-		"HIDE" => array(
-			"NAME" => GetMessage("BOOKMARK_HIDE"),
-			"TYPE" => "CHECKBOX",
-			"VALUE" => "Y",
-			"DEFAULT" => "N",
-		),
-		"HANDLERS" => array(
-			"NAME" => GetMessage("BOOKMARK_SYSTEM"),
-			"TYPE" => "LIST",
-			"MULTIPLE" => "Y",
-			"VALUES" => $arHandlers["HANDLERS"],
-			"DEFAULT" => $arHandlers["HANDLERS_DEFAULT"],			
-			"REFRESH"=> "Y",
-		),
-		"PAGE_URL" => array(
-			"NAME" => GetMessage("BOOKMARK_URL"),
-			"TYPE" => "STRING",
-			"DEFAULT" => "",	
-		),
-		"PAGE_TITLE" => array(
-			"NAME" => GetMessage("BOOKMARK_TITLE"),
-			"TYPE" => "STRING",
-			"DEFAULT" => "",	
-		),
+	"HIDE" => array(
+		"NAME" => GetMessage("BOOKMARK_HIDE"),
+		"TYPE" => "CHECKBOX",
+		"VALUE" => "Y",
+		"DEFAULT" => "N",
+	),
+	"HANDLERS" => array(
+		"NAME" => GetMessage("BOOKMARK_SYSTEM"),
+		"TYPE" => "LIST",
+		"MULTIPLE" => "Y",
+		"VALUES" => $arHandlers["HANDLERS"],
+		"DEFAULT" => $arHandlers["HANDLERS_DEFAULT"],
+		"REFRESH"=> "Y",
+	),
+	"PAGE_URL" => array(
+		"NAME" => GetMessage("BOOKMARK_URL"),
+		"TYPE" => "STRING",
+		"DEFAULT" => "",
+	),
+	"PAGE_TITLE" => array(
+		"NAME" => GetMessage("BOOKMARK_TITLE"),
+		"TYPE" => "STRING",
+		"DEFAULT" => "",
+	),
 );
 
 if(is_array($arCurrentValues["HANDLERS"]) && in_array("twitter", $arCurrentValues["HANDLERS"]) > 0)
@@ -45,5 +59,3 @@ if(is_array($arCurrentValues["HANDLERS"]) && in_array("twitter", $arCurrentValue
 		"DEFAULT" => "",
 	);
 }
-
-?>

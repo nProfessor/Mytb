@@ -12,8 +12,8 @@ if(!$USER->CanDoOperation('edit_other_settings') && !$USER->CanDoOperation('view
 
 $isAdmin = $USER->CanDoOperation('edit_other_settings');
 
-use \Bitrix\Main\Localization\Culture;
-use \Bitrix\Main\Localization\Loc;
+use Bitrix\Main\Localization\CultureTable;
+use Bitrix\Main\Localization\Loc;
 
 Loc::loadMessages(__FILE__);
 
@@ -28,15 +28,10 @@ if($adminList->EditAction() && $isAdmin)
 		if(!$adminList->IsUpdated($ID))
 			continue;
 
-		$errors = Culture::checkFields($arFields, 'update');
-
-		if(empty($errors))
+		$result = CultureTable::update($ID, $arFields);
+		if(!$result->isSuccess())
 		{
-			Culture::update($arFields, $ID);
-		}
-		else
-		{
-			$adminList->AddUpdateError(Loc::getMessage("SAVE_ERROR")." ".$ID.": ".implode("<br>", $errors['all']), $ID);
+			$adminList->AddUpdateError("(ID=".$ID.") ".implode("<br>", $result->getErrorMessages()), $ID);
 		}
 	}
 }
@@ -46,7 +41,7 @@ if(($arID = $adminList->GroupAction()) && $isAdmin)
 	if($_REQUEST['action_target'] == 'selected')
 	{
 		$arID = array();
-		$data = Culture::getList();
+		$data = CultureTable::getList();
 		while($culture = $data->Fetch())
 			$arID[] = $culture['ID'];
 	}
@@ -59,9 +54,10 @@ if(($arID = $adminList->GroupAction()) && $isAdmin)
 		switch($_REQUEST['action'])
 		{
 			case "delete":
-				if(!Culture::delete($ID))
+				$result = CultureTable::delete($ID);
+				if(!$result->isSuccess())
 				{
-					$adminList->AddGroupError(Loc::getMessage("DELETE_ERROR"), $ID);
+					$adminList->AddGroupError("(ID=".$ID.") ".implode("<br>", $result->getErrorMessages()), $ID);
 				}
 				break;
 		}
@@ -74,7 +70,7 @@ $APPLICATION->SetTitle(Loc::getMessage("TITLE"));
  * @global $by
  * @global $order
  */
-$cultureList = Culture::getList(array(
+$cultureList = CultureTable::getList(array(
 	'order' => array($by => $order)
 ));
 $data = new CAdminResult($cultureList, $tableID);
@@ -110,7 +106,7 @@ while($culture = $data->Fetch())
 	$row->AddInputField("FORMAT_NAME");
 	$row->AddViewField("WEEK_START", $days[$culture["WEEK_START"]]);
 	$row->AddInputField("CHARSET");
-	$row->AddViewField("DIRECTION", ($culture["DIRECTION"] == Culture::LEFT_TO_RIGHT? Loc::getMessage("culture_left_to_right") : Loc::getMessage("culture_right_to_left")));
+	$row->AddViewField("DIRECTION", ($culture["DIRECTION"] == CultureTable::LEFT_TO_RIGHT? Loc::getMessage("culture_left_to_right") : Loc::getMessage("culture_right_to_left")));
 
 	$arActions = array();
 	$arActions[] = array("ICON"=>"edit", "TEXT"=>Loc::getMessage("CHANGE"), "ACTION"=>$adminList->ActionRedirect("culture_edit.php?ID=".$f_ID));

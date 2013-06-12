@@ -162,8 +162,8 @@ $tabControl->BeginNextTab();
 		<td colspan="2"><?echo GetMessage("user_sett_personal")?></td>
 	</tr>
 	<tr>
-		<td><?echo GetMessage("user_sett_context")?></td>
-		<td><input type="checkbox" name="context_menu" value="Y"<?if($aUserOpt["context_menu"] == "Y") echo " checked"?> onclick="this.form.context_ctrl[0].disabled = this.form.context_ctrl[1].disabled = !this.checked"></td>
+		<td width="40%"><?echo GetMessage("user_sett_context")?></td>
+		<td width="60%"><input type="checkbox" name="context_menu" value="Y"<?if($aUserOpt["context_menu"] == "Y") echo " checked"?> onclick="this.form.context_ctrl[0].disabled = this.form.context_ctrl[1].disabled = !this.checked"></td>
 	</tr>
 	<tr>
 		<td class="adm-detail-valign-top"><?echo GetMessage("user_sett_context_ctrl")?></td>
@@ -243,13 +243,24 @@ CAdminFileDialog::ShowScript(
 	<tr>
 		<td class="adm-detail-valign-top"><?echo GetMessage("user_sett_mess")?></td>
 		<td>
-			<input type="checkbox" name="messages_support" value="Y" id="messages_support"<?if($aUserOpt['messages']['support'] == 'Y') echo " checked"?>><label for="messages_support"><?echo GetMessage("user_sett_mess_support")?></label>
-<?if(file_exists($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/security/install/index.php")):?>
-			<br><input type="checkbox" name="messages_security" value="Y" id="messages_security"<?if($aUserOpt['messages']['security'] == 'Y') echo " checked"?>><label for="messages_security"><?echo GetMessage("user_sett_mess_security")?></label>
-<?endif;?>
-<?if(file_exists($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/perfmon/install/index.php")):?>
-			<br><input type="checkbox" name="messages_perfmon" value="Y" id="messages_perfmon"<?if($aUserOpt['messages']['perfmon'] == 'Y') echo " checked"?>><label for="messages_perfmon"><?echo GetMessage("user_sett_mess_perfmon")?></label>
-<?endif;?>
+			<div class="adm-list">
+				<div class="adm-list-item">
+					<div class="adm-list-control"><input type="checkbox" name="messages_support" value="Y" id="messages_support"<?if($aUserOpt['messages']['support'] == 'Y') echo " checked"?>></div>
+					<div class="adm-list-label"><label for="messages_support"><?echo GetMessage("user_sett_mess_support")?></label></div>
+				</div>
+				<?if(file_exists($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/security/install/index.php")):?>
+				<div class="adm-list-item">
+					<div class="adm-list-control"><input type="checkbox" name="messages_security" value="Y" id="messages_security"<?if($aUserOpt['messages']['security'] == 'Y') echo " checked"?>></div>
+					<div class="adm-list-label"><label for="messages_security"><?echo GetMessage("user_sett_mess_security")?></label></div>
+				</div>
+				<?endif;?>
+				<?if(file_exists($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/perfmon/install/index.php")):?>
+				<div class="adm-list-item">
+					<div class="adm-list-control"><input type="checkbox" name="messages_perfmon" value="Y" id="messages_perfmon"<?if($aUserOpt['messages']['perfmon'] == 'Y') echo " checked"?>></div>
+					<div class="adm-list-label"><label for="messages_perfmon"><?echo GetMessage("user_sett_mess_perfmon")?></label></div>
+				</div>
+				<?endif;?>
+			</div>
 		</td>
 	</tr>
 <?if($USER->CanDoOperation('edit_other_settings')):?>

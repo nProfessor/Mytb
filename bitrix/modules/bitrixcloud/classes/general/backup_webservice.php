@@ -32,7 +32,7 @@ class CBitrixCloudBackupWebService extends CBitrixCloudWebService
 	 *
 	 * @param string $action
 	 * @return CDataXML
-	 *
+	 * @throws CBitrixCloudException
 	 */
 	protected function backup_action($action) /*. throws CBitrixCloudException .*/
 	{
@@ -41,7 +41,7 @@ class CBitrixCloudBackupWebService extends CBitrixCloudWebService
 		if (is_object($node))
 		{
 			$spd = $node->getAttribute("crc_code");
-			if(strlen($spd))
+			if(strlen($spd) > 0)
 				CUpdateClient::setSpd($spd);
 		}
 		else

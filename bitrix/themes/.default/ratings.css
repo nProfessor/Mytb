@@ -2,7 +2,7 @@ table.edit-table tr td.rating-component-descr { font-weight:normal; font-size:1.
 table.edit-table tr td.rating-component-descr p.formula { font-weight:normal; font-size:1.1em; font-family: Sans, Times; font-style:italic; padding:2px; margin:0px; border: solid 1px #D7D7D7; background-color:#FAFAFA; }
 table.edit-table tr td.rating-component-gap { margin:0; padding:0; height:2px; line-height:2px; }
 table.edit-table tr td.rating-component-td { margin:0; padding:0; }
-table.edit-table tr.heading-left td { text-align:left; background-color: #E0E8EA; color: #4B6267; font-size: 14px; font-weight: bold; padding: 8px 4px 10px !important; line-height: 11px;}
+table.edit-table tr.heading-left td { text-shadow: 0 1px #FFFFFF; text-align:left; background-color: #E0E8EA; color: #4B6267; font-size: 14px; font-weight: bold; padding: 8px 4px 10px !important; line-height: 11px;}
 div.rating-component-exception {padding:5px 10px; border: 2px solid #FF0000; font-size: 70%; display:inline-block; margin-bottom: 2px;}
 table.edit-table tr td.rating-component-td { margin:0; padding:0; }
 table.edit-table tr td.rating_settings  div { padding-top: 10px; width: 740px; text-align: left; }

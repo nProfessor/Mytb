@@ -1,5 +1,13 @@
 <?
 if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true) die();
+/** @var CBitrixComponent $this */
+/** @var array $arParams */
+/** @var array $arResult */
+/** @global CUser $USER */
+global $USER;
+/** @global CMain $APPLICATION */
+global $APPLICATION;
+
 CUtil::InitJSCore(array('popup'));
 
 /*************************************************************************
@@ -68,12 +76,19 @@ $arParams["SHOW_PRICE_COUNT"] = intval($arParams["SHOW_PRICE_COUNT"]);
 if($arParams["SHOW_PRICE_COUNT"]<=0)
 	$arParams["SHOW_PRICE_COUNT"]=1;
 $arParams["USE_PRODUCT_QUANTITY"] = $arParams["USE_PRODUCT_QUANTITY"]==="Y";
+$arParams['QUANTITY_FLOAT'] = (isset($arParams['QUANTITY_FLOAT']) && 'Y' == $arParams['QUANTITY_FLOAT'] ? 'Y' : 'N');
 
 if(!is_array($arParams["PRODUCT_PROPERTIES"]))
 	$arParams["PRODUCT_PROPERTIES"] = array();
 foreach($arParams["PRODUCT_PROPERTIES"] as $k=>$v)
 	if($v==="")
 		unset($arParams["PRODUCT_PROPERTIES"][$k]);
+
+if (!is_array($arParams["OFFERS_CART_PROPERTIES"]))
+	$arParams["OFFERS_CART_PROPERTIES"] = array();
+foreach($arParams["OFFERS_CART_PROPERTIES"] as $i => $pid)
+	if ($pid === "")
+		unset($arParams["OFFERS_CART_PROPERTIES"][$i]);
 
 $arParams["LINK_IBLOCK_TYPE"] = trim($arParams["LINK_IBLOCK_TYPE"]);
 $arParams["LINK_IBLOCK_ID"] = intval($arParams["LINK_IBLOCK_ID"]);
@@ -125,50 +140,72 @@ if (array_key_exists($arParams["ACTION_VARIABLE"], $_REQUEST) && array_key_exist
 	{
 		if (CModule::IncludeModule("sale") && CModule::IncludeModule("catalog") && CModule::IncludeModule('iblock'))
 		{
+			$QUANTITY = 0;
 			if($arParams["USE_PRODUCT_QUANTITY"])
-				$QUANTITY = intval($_REQUEST[$arParams["PRODUCT_QUANTITY_VARIABLE"]]);
-			if($QUANTITY <= 1)
-				$QUANTITY = 1;
-
-			$product_properties = array();
-			if(count($arParams["PRODUCT_PROPERTIES"]))
 			{
-				if(is_array($_REQUEST[$arParams["PRODUCT_PROPS_VARIABLE"]]))
+				if ('Y' == $arParams['QUANTITY_FLOAT'])
 				{
-					$product_properties = CIBlockPriceTools::CheckProductProperties(
-						$arParams["IBLOCK_ID"],
-						$productID,
-						$arParams["PRODUCT_PROPERTIES"],
-						$_REQUEST[$arParams["PRODUCT_PROPS_VARIABLE"]]
-					);
-					if(!is_array($product_properties))
-						$strError = GetMessage("CATALOG_ERROR2BASKET").".";
+					$QUANTITY = doubleval($_REQUEST[$arParams["PRODUCT_QUANTITY_VARIABLE"]]);
+					if ($QUANTITY <= 0)
+						$QUANTITY = 1;
 				}
 				else
 				{
-					$strError = GetMessage("CATALOG_ERROR2BASKET").".";
+					$QUANTITY = intval($_REQUEST[$arParams["PRODUCT_QUANTITY_VARIABLE"]]);
+					if($QUANTITY <= 1)
+						$QUANTITY = 1;
 				}
 			}
 
-			if(is_array($arParams["OFFERS_CART_PROPERTIES"]))
+			$product_properties = array();
+			$rsItems = CIBlockElement::GetList(array(), array('ID' => $productID), false, false, array('ID', 'IBLOCK_ID'));
+			if ($arItem = $rsItems->Fetch())
 			{
-				foreach($arParams["OFFERS_CART_PROPERTIES"] as $i => $pid)
-					if($pid === "")
-						unset($arParams["OFFERS_CART_PROPERTIES"][$i]);
-
-				if(!empty($arParams["OFFERS_CART_PROPERTIES"]))
+				$arItem['IBLOCK_ID'] = intval($arItem['IBLOCK_ID']);
+				if ($arItem['IBLOCK_ID'] == $arParams["IBLOCK_ID"])
 				{
-					$product_properties = CIBlockPriceTools::GetOfferProperties(
-						$productID,
-						$arParams["IBLOCK_ID"],
-						$arParams["OFFERS_CART_PROPERTIES"]
-					);
+					if (!empty($arParams["PRODUCT_PROPERTIES"]))
+					{
+						if (
+							array_key_exists($arParams["PRODUCT_PROPS_VARIABLE"], $_REQUEST)
+							&& is_array($_REQUEST[$arParams["PRODUCT_PROPS_VARIABLE"]])
+						)
+						{
+							$product_properties = CIBlockPriceTools::CheckProductProperties(
+								$arParams["IBLOCK_ID"],
+								$productID,
+								$arParams["PRODUCT_PROPERTIES"],
+								$_REQUEST[$arParams["PRODUCT_PROPS_VARIABLE"]]
+							);
+							if (!is_array($product_properties))
+								$strError = GetMessage("CATALOG_ERROR2BASKET").".";
+						}
+						else
+						{
+							$strError = GetMessage("CATALOG_ERROR2BASKET").".";
+						}
+					}
+				}
+				else
+				{
+					if (!empty($arParams["OFFERS_CART_PROPERTIES"]))
+					{
+						$product_properties = CIBlockPriceTools::GetOfferProperties(
+							$productID,
+							$arParams["IBLOCK_ID"],
+							$arParams["OFFERS_CART_PROPERTIES"]
+						);
+					}
 				}
 			}
-			
+			else
+			{
+				$strError = GetMessage('CATALOG_ELEMENT_NOT_FOUND').".";
+			}
+
 			$notifyOption = COption::GetOptionString("sale", "subscribe_prod", "");
 			$arNotify = unserialize($notifyOption);
-
+			$arRewriteFields = array();
 			if ($action == "SUBSCRIBE_PRODUCT" && $arNotify[SITE_ID]['use'] == 'Y')
 			{
 				$arRewriteFields["SUBSCRIBE"] = "Y";
@@ -184,7 +221,7 @@ if (array_key_exists($arParams["ACTION_VARIABLE"], $_REQUEST) && array_key_exist
 			}
 			else
 			{
-				if ($ex = $GLOBALS["APPLICATION"]->GetException())
+				if ($ex = $APPLICATION->GetException())
 					$strError = $ex->GetString();
 				else
 					$strError = GetMessage("CATALOG_ERROR2BASKET").".";
@@ -277,23 +314,28 @@ if($this->StartResultCache(false, ($arParams["CACHE_GROUPS"]==="N"? false: $USER
 		//SELECT
 		$arSelect = array(
 			"ID",
-			"NAME",
+			"IBLOCK_ID",
 			"CODE",
-			"ACTIVE_FROM",
-			"ACTIVE_TO",
+			"XML_ID",
+			"NAME",
+			"ACTIVE",
+			"DATE_ACTIVE_FROM",
+			"DATE_ACTIVE_TO",
+			"SORT",
+			"PREVIEW_TEXT",
+			"PREVIEW_TEXT_TYPE",
+			"DETAIL_TEXT",
+			"DETAIL_TEXT_TYPE",
 			"DATE_CREATE",
 			"CREATED_BY",
-			"IBLOCK_ID",
+			"TIMESTAMP_X",
+			"MODIFIED_BY",
+			"TAGS",
 			"IBLOCK_SECTION_ID",
 			"DETAIL_PAGE_URL",
 			"LIST_PAGE_URL",
-			"DETAIL_TEXT",
-			"DETAIL_TEXT_TYPE",
 			"DETAIL_PICTURE",
-			"PREVIEW_TEXT",
-			"PREVIEW_TEXT_TYPE",
 			"PREVIEW_PICTURE",
-			"TAGS",
 			"PROPERTY_*",
 		);
 		//WHERE
@@ -343,7 +385,7 @@ if($this->StartResultCache(false, ($arParams["CACHE_GROUPS"]==="N"? false: $USER
 			if($arParams["SECTION_ID"] > 0)
 				$arSectionFilter["ID"]=$arParams["SECTION_ID"];
 			else
-				$arSectionFilter["CODE"]=$arParams["SECTION_CODE"];
+				$arSectionFilter["=CODE"]=$arParams["SECTION_CODE"];
 
 			$rsSection = CIBlockSection::GetList(array(), $arSectionFilter);
 			$rsSection->SetUrlTemplates("", $arParams["SECTION_URL"]);
@@ -355,7 +397,10 @@ if($this->StartResultCache(false, ($arParams["CACHE_GROUPS"]==="N"? false: $USER
 		$rsElement->SetSectionContext($arSection);
 		if($obElement = $rsElement->GetNextElement())
 		{
-			$arResult=$obElement->GetFields();
+			$arResult = $obElement->GetFields();
+
+			$arResult['ACTIVE_FROM'] = $arResult['DATE_ACTIVE_FROM'];
+			$arResult['ACTIVE_TO'] = $arResult['DATE_ACTIVE_TO'];
 
 			$arResult['CONVERT_CURRENCY'] = $arConvertParams;
 
@@ -432,7 +477,7 @@ if($this->StartResultCache(false, ($arParams["CACHE_GROUPS"]==="N"? false: $USER
 			if($arSection)
 			{
 				$arSection["PATH"] = array();
-				$rsPath = GetIBlockSectionPath($arResult["IBLOCK_ID"], $arSection["ID"]);
+				$rsPath = CIBlockSection::GetNavChain($arResult["IBLOCK_ID"], $arSection["ID"]);
 				$rsPath->SetUrlTemplates("", $arParams["SECTION_URL"]);
 				while($arPath=$rsPath->GetNext())
 				{

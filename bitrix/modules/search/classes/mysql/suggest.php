@@ -105,9 +105,11 @@ class CSearchSuggest
 		}
 	}
 
-	function GetList($nTopCount)
+	function GetList($nTopCount, $site_id = null)
 	{
 		$DB = CDatabase::GetModuleConnection('search');
+		if (!isset($site_id))
+			$site_id = SITE_ID;
 
 		if(strlen($this->_phrase))
 		{
@@ -116,31 +118,30 @@ class CSearchSuggest
 				$nTopCount = 10;
 
 			$phrase = $DB->ForSQL($this->_phrase);
+			$site_id = $DB->ForSQL($site_id);
 
 			if(strlen($this->_filter_md5))
 			{
 				$filter_md5 = $DB->ForSQL($this->_filter_md5, 32);
-				return $DB->Query("
+				return $DB->Query($DB->TopSql("
 					SELECT PHRASE, RESULT_COUNT CNT, RATE
 					FROM b_search_suggest
-					WHERE SITE_ID = '".SITE_ID."'
+					WHERE SITE_ID = '".$site_id."'
 					AND FILTER_MD5 = '".$filter_md5."'
 					AND PHRASE LIKE '".$phrase."%'
 					ORDER BY RATE DESC, PHRASE ASC
-					LIMIT 0, ".$nTopCount."
-				");
+				", $nTopCount));
 			}
 			else
 			{
-				return $DB->Query("
+				return $DB->Query($DB->TopSql("
 					SELECT PHRASE, max(RESULT_COUNT) CNT, max(RATE) RATE
 					FROM b_search_suggest
-					WHERE SITE_ID = '".SITE_ID."'
+					WHERE SITE_ID = '".$site_id."'
 					AND PHRASE LIKE '".$phrase."%'
 					GROUP BY PHRASE
 					ORDER BY RATE DESC, PHRASE ASC
-					LIMIT 0, ".$nTopCount."
-				");
+				", $nTopCount));
 			}
 		}
 		else

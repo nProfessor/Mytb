@@ -36,6 +36,7 @@ $MESS["IB_E_PROP_APPEARANCE_CHECKBOX"] = "Checkboxes";
 $MESS["IB_E_PROP_ROW_CNT"] = "Number of rows (for &quot;list&quot;):";
 $MESS["IB_E_PROP_SEARCHABLE"] = "Property values to be used in search:";
 $MESS["IB_E_PROP_FILTRABLE"] = "Use property in a filter on an element list page:";
+$MESS["IB_E_PROP_SECTION_PROPERTY"] = "Display on element editing page:";
 $MESS["IB_E_PROP_LIST_VALUES"] = "List values:";
 $MESS["IB_E_PROP_LIST_VALUE"] = "Value";
 $MESS["IB_E_PROP_LIST_SORT"] = "Sort";
@@ -247,5 +248,5 @@ $MESS["IB_E_OF_ERR_SUBSCRIPTION"] = "Error saving the commercial catalog paramet
 $MESS["IB_E_OF_ERR_YANDEX_EXPORT"] = "Error saving the commercial catalog parameters: an information block must be explicitly marked as exporting to Yandex.market or not.";
 $MESS["IB_E_OF_ERR_VAT_ID"] = "Error saving the commercial catalog parameters: the tax rate is not specified.";
 $MESS["IB_E_OF_ERR_USED_SKU"] = "Error saving the commercial catalog parameters: an information block must be explicitly marked as having SKU's or not.";
-$MESS["IB_E_PROP_SECTION_PROPERTY"] = "Element edit page shows:";
+$MESS["IB_E_CAT_SUBSCRIPTION"] = "The content selling feature is not included in your edition. This option will be deactivated once the module settings have been saved.";
 ?>

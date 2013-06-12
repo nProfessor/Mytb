@@ -14,6 +14,7 @@ if(!CModule::IncludeModule('clouds'))
 
 IncludeModuleLangFile(__FILE__);
 
+$io = CBXVirtualIo::GetInstance();
 $sTableID = "tbl_clouds_storage_list";
 $oSort = new CAdminSorting($sTableID, "ID", "ASC");
 $lAdmin = new CAdminList($sTableID, $oSort);
@@ -85,6 +86,7 @@ if(is_array($arID))
 					$arFile = CFile::GetFileArray($ar["ID"]);
 					$filePath = preg_replace("#[\\\\\\/]+#", "/", "/".$arFile["SUBDIR"]."/".$arFile["FILE_NAME"]);
 					$absPath = preg_replace("#[\\\\\\/]+#", "/", $_SERVER["DOCUMENT_ROOT"]."/".COption::GetOptionString("main", "upload_dir", "upload").$filePath);
+					$absPath = $io->GetPhysicalName($absPath);
 					$absTempPath = $absPath."~";
 
 					if(!file_exists($absPath))

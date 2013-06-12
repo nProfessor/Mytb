@@ -13,12 +13,12 @@ IncludeModuleLangFile(__FILE__);
 * @param string $mixedValue - for example 128M
 * @return int 134217728
 */
-function GetSize($mixedVal) 
+function GetSize($mixedVal)
 {
 	$retVal = trim($mixedVal);
 	$last = strtolower($retVal[strlen($retVal)-1]);
-	switch($last) 
-	{        
+	switch($last)
+	{
 		case 't':
 			$retVal *= 1024;
 		case 'g':
@@ -35,64 +35,62 @@ function GetSize($mixedVal)
 
 $strWarning = "";
 $site = CFileMan::__CheckSite($site);
-$DOC_ROOT = CSite::GetSiteDocRoot($site);
-
 $io = CBXVirtualIo::GetInstance();
-
+$arFile = CFile::MakeFileArray($path);
+$arFile["tmp_name"] = CBXVirtualIoFileSystem::ConvertCharset($arFile["tmp_name"], CBXVirtualIoFileSystem::directionDecode);
 $path = $io->CombinePath("/", $path);
+$path = $GLOBALS["APPLICATION"]->ConvertCharset($path, "UTF-8", LANG_CHARSET);
 $arPath = Array($site, $path);
-$arParsedPath = CFileMan::ParsePath(Array($site, htmlspecialcharsex($path)));
-$abs_path = $DOC_ROOT.$path;
-$absPathConverted = CBXVirtualIoFileSystem::ConvertCharset($abs_path);
 
 if(!$USER->CanDoFileOperation('fm_download_file', $arPath))
 	$strWarning = GetMessage("ACCESS_DENIED");
-else if(!$io->FileExists($abs_path))
+else if(!$io->FileExists($arFile["tmp_name"]))
 	$strWarning = GetMessage("FILEMAN_FILENOT_FOUND")." ";
 elseif(!$USER->CanDoOperation('edit_php') && (HasScriptExtension($path) || substr(CFileman::GetFileName($path), 0, 1) == "."))
 	$strWarning .= GetMessage("FILEMAN_FILE_DOWNLOAD_PHPERROR")."\n";
 
 if(strlen($strWarning) <= 0)
 {
-	$flTmp = $io->GetFile($abs_path);
+
+	$flTmp = $io->GetFile($arFile["tmp_name"]);
 	$fsize = $flTmp->GetFileSize();
-	$memoryLimit = (GetSize(ini_get("memory_limit"))-memory_get_usage())/10; //http://jabber.bx/view.php?id=16063	
+	$memoryLimit = (GetSize(ini_get("memory_limit"))-memory_get_usage())/10; //http://jabber.bx/view.php?id=16063
 
 	if($fsize<=($memoryLimit))
 		$bufSize = $fsize;
 	else
 		$bufSize = $memoryLimit;
 
-	session_write_close();    
+	session_write_close();
 	set_time_limit(0);
 
-	header("Content-Type: application/force-download; name=\"".$io->GetPhysicalName($arParsedPath["LAST"])."\"");
+	header("Content-Type: application/force-download; name=\"".$arFile["name"]."\"");
 	header("Content-Transfer-Encoding: binary");
 	header("Content-Length: ".$fsize);
-	header("Content-Disposition: attachment; filename=\"".$io->GetPhysicalName($arParsedPath["LAST"])."\"");
+	header("Content-Disposition: attachment; filename=\"".$arFile["name"]."\"");
 	header("Expires: 0");
 	header("Cache-Control: no-cache, must-revalidate");
 	header("Pragma: no-cache");
 	header('Connection: close');
 
-	$f=fopen($absPathConverted, 'rb'); 
+	$f=fopen($arFile["tmp_name"], 'rb');
 
-	while(!feof($f))     	
-	{   	    	
-		echo fread($f, $bufSize);        
+	while(!feof($f))
+	{
+		echo fread($f, $bufSize);
 		ob_flush();
-		flush();   
+		flush();
 		ob_end_clean ();
-	}    
+	}
 
 	fclose($f);
 	die();
 }
 
-$APPLICATION->SetTitle(GetMessage("FILEMAN_FILEDOWNLOAD")." \"".$arParsedPath["LAST"]."\"");
+$APPLICATION->SetTitle(GetMessage("FILEMAN_FILEDOWNLOAD")." \"".$arFile["name"]."\"");
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_after.php");
 ?>
-<font class="text"><?=$arParsedPath["HTML"]?></font><br><br>
+<font class="text"><?=$arFile["name"]?></font><br><br>
 <?
 ShowError($strWarning);
 

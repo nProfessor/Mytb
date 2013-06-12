@@ -124,15 +124,27 @@ class CFileInput
 		self::$curFileIds = is_array($strFileId) ? $strFileId : array($strFileId);
 		self::$curFiles = array();
 		self::$bFileExists = false;
+
 		foreach(self::$curFileIds as $fileId)
 		{
-			$bFileExists = false;
+			if (strlen($fileId) <= 1 && intVal($fileId) === 0)
+				continue;
+
+			self::$bFileExists = true;
 			if($arFile = self::GetFile($fileId))
 			{
-				$bFileExists = true;
-				self::$bFileExists = true;
+				$arFile['FILE_NOT_FOUND'] = false;
+				if (self::$bShowDescInput && isset($inputs['description']['VALUE']))
+					$arFile['DESCRIPTION'] = $inputs['description']['VALUE'];
 			}
-			self::$curFiles[] = $bFileExists ? $arFile : false;
+			else
+			{
+				$arFile = array(
+					'FILE_NOT_FOUND' => true,
+					'DEL_NAME' => self::$delInputName
+				);
+			}
+			self::$curFiles[] = $arFile;
 		}
 
 		self::$bViewMode = self::IsViewMode();
@@ -180,13 +192,15 @@ class CFileInput
 		self::Init($showInfo, $inputNameTemplate, $maxCount);
 		self::$bMultiple = true;
 
+		$arDescInput = (is_array($inputs['description']) && isset($inputs['description']['VALUES']) && isset($inputs['description']['NAME_TEMPLATE'])) ? $inputs['description'] : false;
+
 		$inputs = array(
 			'upload' => $inputs['upload'] === true,
 			'medialib' => $inputs['medialib'] === true && COption::GetOptionString('fileman', "use_medialib", "Y") != "N",
 			'file_dialog' => $inputs['file_dialog'] === true,
 			'cloud' => $inputs['cloud'] === true && $USER->CanDoOperation("clouds_browse") && CModule::IncludeModule("clouds") && CCloudStorage::HasActiveBuckets(),
 			'del' => $inputs['del'] !== false,
-			'description' => $inputs['description'] === true
+			'description' => $inputs['description'] === true || $arDescInput
 		);
 
 		self::$bUseUpload = $inputs['upload'];
@@ -204,28 +218,54 @@ class CFileInput
 		if (self::$bShowDelInput)
 			self::$delInputName = self::GetInputName($inputNameTemplate, "_del");
 
-		if (self::$bShowDelInput)
-			self::$descInputName = self::GetInputName($inputNameTemplate, "_descr");
+		if (self::$bShowDescInput)
+		{
+			self::$descInputName = '';
+			if ($arDescInput)
+				self::$descInputName = $arDescInput['NAME_TEMPLATE'];
+
+			if (empty(self::$descInputName))
+				self::$descInputName = self::GetInputName($inputNameTemplate, "_descr");
+		}
 
 		// $arFile - Array with current file or false if it's empty
 		self::$curFiles = array();
 		self::$bFileExists = false;
+
 		foreach($values as $inputName => $fileId)
 		{
-			$bFileExists = false;
+			if (strlen($fileId) <= 1 && intVal($fileId) === 0)
+				continue;
+
+			self::$bFileExists = true;
 			if($arFile = self::GetFile($fileId))
 			{
-				$bFileExists = true;
-				self::$bFileExists = true;
-
+				$arFile['FILE_NOT_FOUND'] = false;
 				$arFile['INPUT_NAME'] = $inputName;
 				$arFile['DEL_NAME'] = self::GetInputName($inputName, '_del');
 				$arFile['DESC_NAME'] = self::GetInputName($inputName, '_descr');
+
+				if ($arDescInput)
+				{
+					list($descName, $descVal) = each($arDescInput['VALUES']);
+					$arFile['DESC_NAME'] = $descName;
+					$arFile['DESCRIPTION'] = $descVal;
+				}
 			}
-			self::$curFiles[] = $bFileExists ? $arFile : false;
+			else
+			{
+				$arFile = array(
+					'FILE_NOT_FOUND' => true,
+					'INPUT_NAME' => $inputName,
+					'DEL_NAME' => self::GetInputName($inputName, '_del'),
+					'DESC_NAME' => self::GetInputName($inputName, '_descr')
+				);
+			}
+
+			self::$curFiles[] = $arFile;
 		}
 
-		if (!self::$bViewMode || self::$bFileExists)
+		if (!self::$bViewMode)
 			self::DisplayControl($inputs);
 
 		$result = ob_get_contents();
@@ -356,7 +396,10 @@ class CFileInput
 					self::DisplayFile($arFile, $ind);
 		?>
 		<script type="text/javascript">new top.BX.file_input(<?= CUtil::PHPToJSObject($arConfig)?>);</script>
-		</div><?
+		</div>
+		<?/* Used to refresh form content - workaround for IE bug (mantis:37969) */?>
+	<div id="<?= self::$jsId.'_ie_bogus_container'?>"><input type="hidden" value="" /></div>
+	<?
 	}
 
 	private static function DisplayDialogs()
@@ -392,26 +435,39 @@ class CFileInput
 	private static function DisplayFile($arFile = array(), $ind = 0)
 	{
 		$hintId = self::$jsId.'_file_disp_'.$ind;
-		$sImagePath = isset($arFile["PATH"]) ? $arFile["PATH"] : $arFile["SRC"];
-		$descName = isset($arFile['DESC_NAME']) ? $arFile['DESC_NAME'] : self::$descInputName;
+		$bNotFound = $arFile['FILE_NOT_FOUND'];
 
 		// Hint
 		$hint = '';
-		if ($arFile['FORMATED_SIZE'] != '')
-			$hint .= '<span class="adm-input-file-hint-row">'.GetMessage('ADM_FILE_INFO_SIZE').':&nbsp;&nbsp;'.$arFile['FORMATED_SIZE'].'</span>';
 
-		if ($arFile['IS_IMAGE'])
-			$hint .= '<span class="adm-input-file-hint-row">'.GetMessage('ADM_FILE_INFO_DIM').':&nbsp;&nbsp;'.$arFile['WIDTH'].'x'.$arFile['HEIGHT'].'</span>';
-		if ($sImagePath != '')
-			$hint .= '<span class="adm-input-file-hint-row">'.GetMessage('ADM_FILE_INFO_LINK').':&nbsp;&nbsp;<a href="'.$sImagePath.'">'.$sImagePath.'</a></span>';
+		if (!$bNotFound)
+		{
+			$sImagePath = isset($arFile["PATH"]) ? $arFile["PATH"] : $arFile["SRC"];
+			$descName = isset($arFile['DESC_NAME']) ? $arFile['DESC_NAME'] : self::$descInputName;
 
-		if (!self::$bShowDescInput && $arFile['DESCRIPTION'] != "")
-			$hint .= '<span class="adm-input-file-hint-row">'.GetMessage('ADM_FILE_DESCRIPTION').':&nbsp;&nbsp;'.htmlspecialcharsbx($arFile['DESCRIPTION']).'</span>';
+			if ($arFile['FORMATED_SIZE'] != '')
+				$hint .= '<span class="adm-input-file-hint-row">'.GetMessage('ADM_FILE_INFO_SIZE').':&nbsp;&nbsp;'.$arFile['FORMATED_SIZE'].'</span>';
 
+			if ($arFile['IS_IMAGE'])
+				$hint .= '<span class="adm-input-file-hint-row">'.GetMessage('ADM_FILE_INFO_DIM').':&nbsp;&nbsp;'.$arFile['WIDTH'].'x'.$arFile['HEIGHT'].'</span>';
+			if ($sImagePath != '')
+				$hint .= '<span class="adm-input-file-hint-row">'.GetMessage('ADM_FILE_INFO_LINK').':&nbsp;&nbsp;<a href="'.$sImagePath.'">'.$sImagePath.'</a></span>';
+
+			if (!self::$bShowDescInput && $arFile['DESCRIPTION'] != "")
+				$hint .= '<span class="adm-input-file-hint-row">'.GetMessage('ADM_FILE_DESCRIPTION').':&nbsp;&nbsp;'.htmlspecialcharsbx($arFile['DESCRIPTION']).'</span>';
+		}
 		?><span class="adm-input-file-exist-cont" id="<?= self::$jsId?>_file_cont_<?= $ind?>">
 		<div class="adm-input-file-ex-wrap<?if(self::$bMultiple){echo ' adm-input-cont-bordered';}?>">
 		<?
-		if ($arFile['IS_IMAGE'])
+		if ($bNotFound)
+		{
+			?>
+			<span id="<?= self::$jsId.'_file_404_'.$ind?>" class="adm-input-file-not-found">
+			<?= GetMessage('ADM_FILE_NOT_FOUND')?>
+			</span>
+			<?
+		}
+		elseif ($arFile['IS_IMAGE'])
 		{
 			$file = CFile::ResizeImageGet($arFile['ID'], array('width' => self::$maxPreviewWidth, 'height' => self::$maxPreviewHeight), BX_RESIZE_IMAGE_PROPORTIONAL, true);
 			?>
@@ -446,17 +502,18 @@ class CFileInput
 		</script>
 			<?
 		}
-			if (!self::$bViewMode)
-				self::ShowOpenerMenuHtml(self::$jsId.'_menu_'.$ind, $ind);
 
-			if (self::$bShowDescInput)
-			{
-				?>
-				<div id="<?= self::$jsId.'_file_desc_'.$ind?>" class="adm-input-file-desc-inp-cont" <?if($arFile['DESCRIPTION'] == ""){echo 'style="display: none;"';}?>>
-					<input name="<?= $descName?>" class="adm-input" type="text" value="<?= htmlspecialcharsbx($arFile['DESCRIPTION'])?>" size="<?= self::$inputSize?>" placeholder="<?= GetMessage("ADM_FILE_DESC")?>" <?if(self::$bViewMode){echo ' disabled="disabled"';}?>>
-				</div>
-				<?
-			}
+		if (!self::$bViewMode)
+			self::ShowOpenerMenuHtml(self::$jsId.'_menu_'.$ind, $ind);
+
+		if (!$bNotFound && self::$bShowDescInput)
+		{
+			?>
+			<div id="<?= self::$jsId.'_file_desc_'.$ind?>" class="adm-input-file-desc-inp-cont" <?if($arFile['DESCRIPTION'] == ""){echo 'style="display: none;"';}?>>
+				<input name="<?= $descName?>" class="adm-input" type="text" value="<?= htmlspecialcharsbx($arFile['DESCRIPTION'])?>" size="<?= self::$inputSize?>" placeholder="<?= GetMessage("ADM_FILE_DESC")?>" <?if(self::$bViewMode){echo ' disabled="disabled"';}?>>
+			</div>
+			<?
+		}
 		?>
 		</div>
 		</span>

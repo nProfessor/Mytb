@@ -102,7 +102,7 @@ class CIBlockRights
 		return $arRights;
 	}
 
-	static function LetterToTask($letter = '')
+	private static function initTaskLetters()
 	{
 		if(!isset(self::$arLetterToTask))
 		{
@@ -118,6 +118,11 @@ class CIBlockRights
 			while($ar = $rs->Fetch())
 				self::$arLetterToTask[$ar["LETTER"]] = $ar["ID"];
 		}
+	}
+
+	static function LetterToTask($letter = '')
+	{
+		self::initTaskLetters();
 
 		if($letter == '')
 			return self::$arLetterToTask;
@@ -125,6 +130,16 @@ class CIBlockRights
 			return self::$arLetterToTask[$letter];
 		else
 			return 0;
+	}
+
+	static function TaskToLetter($task = 0)
+	{
+		self::initTaskLetters();
+
+		if($task == 0)
+			return array_flip(self::$arLetterToTask);
+		else
+			return array_search($task, self::$arLetterToTask);
 	}
 
 	static function LetterToOperations($letter = '')

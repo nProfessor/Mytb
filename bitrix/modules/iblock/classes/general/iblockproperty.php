@@ -5,7 +5,9 @@ IncludeModuleLangFile(__FILE__);
 
 class CAllIBlockProperty
 {
-	function GetList($arOrder=Array(), $arFilter=Array())
+	public $LAST_ERROR = "";
+
+	public static function GetList($arOrder=Array(), $arFilter=Array())
 	{
 		global $DB;
 
@@ -28,7 +30,6 @@ class CAllIBlockProperty
 			case "FILTRABLE":
 			case "IS_REQUIRED":
 			case "MULTIPLE":
-			case "FILTRABLE":
 				if($val=="Y" || $val=="N")
 					$arSqlSearch[] = "BP.".$key." = '".$val."'";
 				break;
@@ -124,14 +125,15 @@ class CAllIBlockProperty
 	///////////////////////////////////////////////////////////////////
 	// Delete by property ID
 	///////////////////////////////////////////////////////////////////
-	function Delete($ID)
+	public static function Delete($ID)
 	{
+		/** @var CMain $APPLICATION */
 		global $DB, $APPLICATION;
 		$ID = IntVal($ID);
 
 		$APPLICATION->ResetException();
-		$db_events = GetModuleEvents("iblock", "OnBeforeIBlockPropertyDelete");
-		while($arEvent = $db_events->Fetch())
+		foreach (GetModuleEvents("iblock", "OnBeforeIBlockPropertyDelete", true) as $arEvent)
+		{
 			if(ExecuteModuleEventEx($arEvent, array($ID))===false)
 			{
 				$err = GetMessage("MAIN_BEFORE_DEL_ERR").' '.$arEvent['TO_NAME'];
@@ -140,9 +142,9 @@ class CAllIBlockProperty
 				$APPLICATION->throwException($err);
 				return false;
 			}
+		}
 
-		$events = GetModuleEvents("iblock", "OnIBlockPropertyDelete");
-		while($arEvent = $events->Fetch())
+		foreach (GetModuleEvents("iblock", "OnIBlockPropertyDelete", true) as $arEvent)
 			ExecuteModuleEventEx($arEvent, array($ID));
 
 		if(!CIBlockPropertyEnum::DeleteByPropertyID($ID, true))
@@ -298,8 +300,7 @@ class CAllIBlockProperty
 
 		$arFields["RESULT"] = &$Result;
 
-		$events = GetModuleEvents("iblock", "OnAfterIBlockPropertyAdd");
-		while ($arEvent = $events->Fetch())
+		foreach (GetModuleEvents("iblock", "OnAfterIBlockPropertyAdd", true) as $arEvent)
 			ExecuteModuleEventEx($arEvent, array(&$arFields));
 
 		return $Result;
@@ -309,10 +310,14 @@ class CAllIBlockProperty
 	///////////////////////////////////////////////////////////////////
 	function CheckFields(&$arFields, $ID=false, $bFormValidate=false)
 	{
-		global $DB, $APPLICATION;
+		/** @var CMain $APPLICATION */
+		global $APPLICATION;
 		$this->LAST_ERROR = "";
-		if($ID===false && strlen($arFields["NAME"])<=0)
-			$this->LAST_ERROR .= GetMessage("IBLOCK_PROPERTY_BAD_NAME")."<br>";
+		if ($ID===false || array_key_exists("NAME", $arFields))
+		{
+			if (strlen($arFields["NAME"]) <= 0)
+				$this->LAST_ERROR .= GetMessage("IBLOCK_PROPERTY_BAD_NAME")."<br>";
+		}
 
 		if(array_key_exists("CODE", $arFields) && strlen($arFields["CODE"]))
 		{
@@ -353,15 +358,15 @@ class CAllIBlockProperty
 			$APPLICATION->ResetException();
 			if($ID===false)
 			{
-				$db_events = GetModuleEvents("iblock", "OnBeforeIBlockPropertyAdd");
+				$db_events = GetModuleEvents("iblock", "OnBeforeIBlockPropertyAdd", true);
 			}
 			else
 			{
 				$arFields["ID"] = $ID;
-				$db_events = GetModuleEvents("iblock", "OnBeforeIBlockPropertyUpdate");
+				$db_events = GetModuleEvents("iblock", "OnBeforeIBlockPropertyUpdate", true);
 			}
 
-			while($arEvent = $db_events->Fetch())
+			foreach($db_events as $arEvent)
 			{
 				$bEventRes = ExecuteModuleEventEx($arEvent, array(&$arFields));
 				if($bEventRes===false)
@@ -479,8 +484,7 @@ class CAllIBlockProperty
 		$arFields["ID"] = $ID;
 		$arFields["RESULT"] = &$Result;
 
-		$events = GetModuleEvents("iblock", "OnAfterIBlockPropertyUpdate");
-		while ($arEvent = $events->Fetch())
+		foreach (GetModuleEvents("iblock", "OnAfterIBlockPropertyUpdate", true) as $arEvent)
 			ExecuteModuleEventEx($arEvent, array(&$arFields));
 
 		return $Result;
@@ -490,7 +494,7 @@ class CAllIBlockProperty
 	///////////////////////////////////////////////////////////////////
 	// Get property information by ID
 	///////////////////////////////////////////////////////////////////
-	function GetByID($ID, $IBLOCK_ID=false, $IBLOCK_CODE=false)
+	public static function GetByID($ID, $IBLOCK_ID=false, $IBLOCK_CODE=false)
 	{
 		global $DB;
 		$cond = "";
@@ -519,7 +523,7 @@ class CAllIBlockProperty
 		return $res;
 	}
 
-	function GetPropertyArray($ID, $IBLOCK_ID, $bCached=true)
+	public static function GetPropertyArray($ID, $IBLOCK_ID, $bCached=true)
 	{
 		global $DB;
 
@@ -617,7 +621,7 @@ class CAllIBlockProperty
 		return $arr;
 	}
 
-	function GetPropertyEnum($PROP_ID, $arOrder = array("SORT"=>"asc"), $arFilter = array())
+	public static function GetPropertyEnum($PROP_ID, $arOrder = array("SORT"=>"asc"), $arFilter = array())
 	{
 		global $DB;
 
@@ -859,9 +863,14 @@ class CAllIBlockProperty
 
 		if(CACHED_b_iblock_property_enum !== false)
 			$CACHE_MANAGER->CleanDir("b_iblock_property_enum");
+
+		if (defined("BX_COMP_MANAGED_CACHE"))
+			$CACHE_MANAGER->ClearByTag("iblock_property_enum_".$ID);
+
+		return true;
 	}
 
-	function GetUserType($USER_TYPE = false)
+	public static function GetUserType($USER_TYPE = false)
 	{
 		static $CACHE = null;
 
@@ -974,6 +983,7 @@ class CAllIBlockProperty
 			"GetPropertyFieldHtmlMulty" => array("CIBlockPropertyElementList","GetPropertyFieldHtmlMulty"),
 			"GetPublicEditHTML" => array("CIBlockPropertyElementList","GetPropertyFieldHtml"),
 			"GetPublicEditHTMLMulty" => array("CIBlockPropertyElementList","GetPropertyFieldHtmlMulty"),
+			"GetPublicViewHTML" => array("CIBlockPropertyElementList", "GetPublicViewHTML"),
 			"GetAdminFilterHTML" => array("CIBlockPropertyElementList","GetAdminFilterHTML"),
 			"PrepareSettings" =>array("CIBlockPropertyElementList","PrepareSettings"),
 			"GetSettingsHTML" =>array("CIBlockPropertyElementList","GetSettingsHTML"),
@@ -1028,6 +1038,21 @@ class CAllIBlockProperty
 			"AddFilterFields" => array('CIBlockPropertySKU','AddFilterFields'),
 			//"GetOffersFieldHtml" => array('CIBlockPropertySKU','GetOffersFieldHtml'),
 		);
+	}
+
+	function _Update($ID, $arFields)
+	{
+		return false;
+	}
+
+	function DropColumnSQL($strTable, $arColumns)
+	{
+		return array();
+	}
+
+	function _Add($ID, $arFields)
+	{
+		return false;
 	}
 }
 ?>

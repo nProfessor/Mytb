@@ -20,7 +20,7 @@ _Create: function ()
 	if(this.OnCreate && this.OnCreate()==false)
 		return false;
 
-	var pElement, i, j, obj = this;
+	var obj = this;
 
 	if (this.id && this.iconkit)
 	{
@@ -313,6 +313,8 @@ _Create: function ()
 	if (BX.browser.IsIE() && !BX.browser.IsDoctype())
 		this.pWnd.style.height = "20px";
 
+	this.pWnd.appendChild(BX.create("IMG", {props: {src: one_gif_src, className: 'bx-list-over'}}));
+
 	var
 		pTable = this.pWnd.appendChild(BX.create("TABLE")),
 		r = pTable.insertRow(-1);
@@ -494,7 +496,7 @@ _Close: function ()
 OnKey: function (e)
 {
 	if(!e)
-		e = window.event
+		e = window.event;
 	if(e.keyCode == 27 && this.bOpened)
 		this.Close();
 },
@@ -521,6 +523,8 @@ SetValues: function (values)
 		item.onmouseout = function (e){BX.removeClass(this, "bx-list-item-over");};
 		item.onclick = function ()
 		{
+			if (oPrevRange)
+				BXSelectRange(oPrevRange, _this.pMainObj.pEditorDocument, _this.pMainObj.pEditorWindow);
 			_this.Close();
 			_this._OnChange(this.value);
 			_this.FireChangeEvent();
@@ -674,19 +678,21 @@ BXStyleList.prototype.FillList = function()
 	//"clear style" item
 	this.CreateListRow('', BX_MESS.DeleteStyleOpt, {value: '', name: BX_MESS.DeleteStyleOptTitle});
 
-	var style_title, counter = 0, arStyleTitle;
+	var
+		style_title, counter = 0,
+		arStyleTitle = this.pMainObj.arTemplateParams["STYLES_TITLE"];
+
 	// other styles
 	for(i = 0, l = this.filter.length; i < l;  i++)
 	{
 		arStyles = this.pMainObj.oStyles.GetStyles(this.filter[i]);
 		for(j = 0; j < arStyles.length; j++)
 		{
-			if(arStyles[j].className.length <= 0)
+			if(arStyles[j].className == '')
 				continue;
-			arStyleTitle = this.pMainObj.arTemplateParams["STYLES_TITLE"];
 
 			if(this.pMainObj.arTemplateParams && arStyleTitle && arStyleTitle[arStyles[j].className])
-				style_title = arStyleTitle[arStyles[j].className];
+				style_title = arStyleTitle[arStyles[j].className] ;
 			else if(!this.pMainObj.arConfig["bUseOnlyDefinedStyles"])
 			 	style_title = arStyles[j].className;
 			else
@@ -1153,7 +1159,6 @@ _Create: function ()
 {
 	this.pWnd = BX.create("TABLE", {props: {className: 'bx-ed-alignpicker'}});
 	var
-		pElement, i, j,
 		_this = this,
 		row = this.pWnd.insertRow(-1),
 		cell = row.insertCell(-1);
@@ -1541,7 +1546,7 @@ BXDialog.prototype = {
 			return ShowResult(potRes, true);
 
 		var
-			addUrl = (this.params.PHPGetParams ? this.params.PHPGetParams : '') + '&mode=public' + (window.bxsessid ? '&sessid=' + bxsessid : '') + (this.not_use_default ? '&not_use_default=Y' : ''),
+			addUrl = (this.params.PHPGetParams ? this.params.PHPGetParams : '') + '&mode=public' + '&sessid=' + BX.bitrix_sessid() + (this.not_use_default ? '&not_use_default=Y' : ''),
 			handler = this.handler ? '/bitrix/admin/' + this.handler : editor_dialog_path,
 			url = handler + '?lang=' + BXLang + '&bxpublic=Y&site=' + BXSite + '&name=' + this.name + addUrl;
 

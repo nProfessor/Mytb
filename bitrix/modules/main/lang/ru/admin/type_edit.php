@@ -28,4 +28,5 @@ $MESS ['RESET'] = "Сбросить";
 $MESS ['MAIN_ERROR_SAVING'] = "Ошибка сохранения";
 $MESS ['ERROR_LANG_EMPTY'] = "Не указан ни один языковой параметр";
 $MESS ['LANG_FIELDS'] = "Должно быть заполнено хотя бы одно языковое поле";
+$MESS["type_edit_add_message_template"] = "Добавить шаблон сообщения";
 ?>

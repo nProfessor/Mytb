@@ -76,14 +76,8 @@ class ExpressionField extends Field
 	{
 		parent::__construct($name, $dataType, $entity, $parameters);
 
-		$this->expression = $expression[0];
-
-		$this->buildFrom = array();
-
-		for ($i=1; $i<count($expression); $i++)
-		{
-			$this->buildFrom[] = $expression[$i];
-		}
+		$this->buildFrom = $expression;
+		$this->expression = array_shift($this->buildFrom);
 
 		unset($parameters['expression']);
 		$this->valueField = $this->entity->initializeField($name, $parameters);
@@ -99,9 +93,9 @@ class ExpressionField extends Field
 		return call_user_func_array(array($this->valueField, $name), $arguments);
 	}
 
-	public function validateValue($value)
+	public function validateValue($value, $row, Result $result)
 	{
-		return $this->valueField->validateValue($value);
+		return $this->valueField->validateValue($value, $row, $result);
 	}
 
 	public function getExpression()

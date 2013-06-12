@@ -22,16 +22,27 @@ $arClasses = array(
 	"CSocServLiveIDOAuth" => "classes/general/liveidoauth.php",
 	"CSocServOdnoklassniki" => "classes/general/odnoklassniki.php",
 	"COpenIDClient" => "classes/general/openidclient.php",
+	"CSocServMessage" => "classes/".$DBType."/authmanager.php",
+	//"CSocServDropbox" => "classes/general/dropbox.php",
 );
 
 CModule::AddAutoloadClasses("socialservices", $arClasses);
 
-CJSCore::RegisterExt('socserv_timeman', array(
+$arJSDescription = array(
 	'js' => '/bitrix/js/socialservices/ss_timeman.js',
 	'css' => '/bitrix/js/socialservices/css/ss.css',
 	'rel' => array('popup', 'ajax', 'fx', 'ls', 'date', 'json'),
-	'lang' => '/bitrix/modules/socialservices/lang/'.LANGUAGE_ID.'/js_socialservices.php',
-));
+	'lang' => '/bitrix/modules/socialservices/lang/'.LANGUAGE_ID.'/js_socialservices.php'
+	);
+
+if(IsModuleInstalled("timeman"))
+{
+	$userSocServEnable = CSocServAuthManager::GetCachedUserOption("user_socserv_enable");
+	if($userSocServEnable != '')
+		$arJSDescription['lang_additional'] = array('IS_ENABLED' => $userSocServEnable);
+}
+
+CJSCore::RegisterExt('socserv_timeman', $arJSDescription);
 
 class CSocServEventHandlers
 {
@@ -189,7 +200,12 @@ class CSocServEventHandlers
 
 			$arAllow = array("HTML" => "Y", "ANCHOR" => "Y", "BIU" => "Y", "IMG" => "Y", "QUOTE" => "Y", "CODE" => "Y", "FONT" => "Y", "LIST" => "Y", "SMILES" => "Y", "NL2BR" => "N", "MULTIPLE_BR" => "Y", "VIDEO" => "Y", "LOG_VIDEO" => "N");
 			$arResult["EVENT_FORMATTED"]["MESSAGE"] = htmlspecialcharsbx($parserLog->convert(htmlspecialcharsback($arResult["EVENT_FORMATTED"]["MESSAGE"]), array(), $arAllow));
-			$arResult["EVENT_FORMATTED"]["IS_MESSAGE_SHORT"] = CSocNetLogTools::FormatEvent_IsMessageShort($arResult["EVENT_FORMATTED"]["MESSAGE"], $arResult["EVENT_FORMATTED"]["SHORT_MESSAGE"]);
+
+			if (
+				$arParams["MOBILE"] != "Y" 
+				&& $arParams["NEW_TEMPLATE"] != "Y"
+			)
+				$arResult["EVENT_FORMATTED"]["IS_MESSAGE_SHORT"] = CSocNetLogTools::FormatEvent_IsMessageShort($arResult["EVENT_FORMATTED"]["MESSAGE"], $arResult["EVENT_FORMATTED"]["SHORT_MESSAGE"]);
 		}
 
 		return $arResult;
@@ -292,24 +308,29 @@ class CSocServEventHandlers
 				"VIDEO" => "Y", "LOG_VIDEO" => "N"
 			);
 
-			$arResult["EVENT_FORMATTED"]["SHORT_MESSAGE"] = $parserLog->html_cut(
-				$parserLog->convert(htmlspecialcharsback($arResult["EVENT_FORMATTED"]["MESSAGE"]), array(), $arAllow),
-				500
-			);
-
 			$arAllow = array("HTML" => "Y", "ANCHOR" => "Y", "BIU" => "Y", "IMG" => "Y", "QUOTE" => "Y", "CODE" => "Y", "FONT" => "Y", "LIST" => "Y", "SMILES" => "Y", "NL2BR" => "N", "VIDEO" => "Y", "LOG_VIDEO" => "N");
 			$arResult["EVENT_FORMATTED"]["MESSAGE"] = htmlspecialcharsbx($parserLog->convert(htmlspecialcharsback($arResult["EVENT_FORMATTED"]["MESSAGE"]), array(), $arAllow));
 
-			$arResult["EVENT_FORMATTED"]["IS_MESSAGE_SHORT"] = CSocNetLogTools::FormatEvent_IsMessageShort($arResult["EVENT_FORMATTED"]["MESSAGE"], $arResult["EVENT_FORMATTED"]["SHORT_MESSAGE"]);
+			if (
+				$arParams["MOBILE"] != "Y" 
+				&& $arParams["NEW_TEMPLATE"] != "Y"
+			)
+			{
+				$arResult["EVENT_FORMATTED"]["SHORT_MESSAGE"] = $parserLog->html_cut(
+					$parserLog->convert(htmlspecialcharsback($arResult["EVENT_FORMATTED"]["MESSAGE"]), array(), $arAllow),
+					500
+				);
+				$arResult["EVENT_FORMATTED"]["IS_MESSAGE_SHORT"] = CSocNetLogTools::FormatEvent_IsMessageShort($arResult["EVENT_FORMATTED"]["MESSAGE"], $arResult["EVENT_FORMATTED"]["SHORT_MESSAGE"]);
+			}
 		}
 
 		return $arResult;
 	}
 
-
 	function OnTimeManShow()
 	{
-		CJSCore::Init(array('socserv_timeman'));
+		if(COption::GetOptionString("socialservices", "allow_send_user_activity", "Y") == 'Y')
+			CJSCore::Init(array('socserv_timeman'));
 	}
 }
 ?>

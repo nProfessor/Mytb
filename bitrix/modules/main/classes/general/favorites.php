@@ -1,4 +1,11 @@
-<?
+<?php
+/**
+ * Bitrix Framework
+ * @package bitrix
+ * @subpackage main
+ * @copyright 2001-2013 Bitrix
+ */
+
 IncludeModuleLangFile(__FILE__);
 
 class CAllFavorites extends CDBResult
@@ -10,6 +17,8 @@ class CAllFavorites extends CDBResult
 
 	function GetIDByUrl($url)
 	{
+		global $USER;
+
 		if($url == "")
 			return 0;
 
@@ -17,10 +26,10 @@ class CAllFavorites extends CDBResult
 		$pathInfo = pathinfo($paresedUrl["path"]);
 
 		$dbFav = CFavorites::GetList(array(),array(
-											"URL" => "'%".$pathInfo["basename"]."%'",
-											"MENU_FOR_USER"=>$GLOBALS["USER"]->GetID(),
-											"LANGUAGE_ID"=>LANGUAGE_ID
-											));
+			"URL" => "'%".$pathInfo["basename"]."%'",
+			"MENU_FOR_USER" => $USER->GetID(),
+			"LANGUAGE_ID" => LANGUAGE_ID,
+		));
 		while($arFav = $dbFav->Fetch())
 			if(CBXFavUrls::Compare($paresedUrl, $arFav["URL"]))
 				return $arFav["ID"];
@@ -31,20 +40,25 @@ class CAllFavorites extends CDBResult
 	function GetByID($ID)
 	{
 		global $DB;
+
 		$ID = intval($ID);
-		if($ID<=0)
+		if($ID <= 0)
 			return false;
+
 		return ($DB->Query("
 			SELECT F.*,
 				".$DB->DateToCharFunction("F.TIMESTAMP_X")." as TIMESTAMP_X,
 				".$DB->DateToCharFunction("F.DATE_CREATE")." as	DATE_CREATE
 			FROM b_favorite F
 			WHERE ID=".$ID,
-			false, "File: ".__FILE__."<br>Line: ".__LINE__));
+			false, "File: ".__FILE__."<br>Line: ".__LINE__)
+		);
 	}
 
 	function CheckFields($arFields)
 	{
+		global $APPLICATION;
+
 		$aMsg = array();
 		if(is_set($arFields, "NAME") && trim($arFields["NAME"])=="")
 			$aMsg[] = array("id"=>"NAME", "text"=>GetMessage("fav_general_err_name"));
@@ -59,7 +73,9 @@ class CAllFavorites extends CDBResult
 					$aMsg[] = array("id"=>"USER_ID", "text"=>GetMessage("fav_general_err_user"));
 			}
 			elseif($arFields["COMMON"] == "N")
+			{
 				$aMsg[] = array("id"=>"USER_ID", "text"=>GetMessage("fav_general_err_user1"));
+			}
 		}
 		if(is_set($arFields, "LANGUAGE_ID"))
 		{
@@ -70,13 +86,15 @@ class CAllFavorites extends CDBResult
 					$aMsg[] = array("id"=>"LANGUAGE_ID", "text"=>GetMessage("fav_general_err_lang"));
 			}
 			else
+			{
 				$aMsg[] = array("id"=>"LANGUAGE_ID", "text"=>GetMessage("fav_general_err_lang1"));
+			}
 		}
 
 		if(!empty($aMsg))
 		{
 			$e = new CAdminException($aMsg);
-			$GLOBALS["APPLICATION"]->ThrowException($e);
+			$APPLICATION->ThrowException($e);
 			return false;
 		}
 		return true;
@@ -91,8 +109,7 @@ class CAllFavorites extends CDBResult
 
 		$uid = $USER->GetID();
 
-
-		$strSql ="SELECT MENU_ID, URL, ID FROM b_favorite  WHERE ( ";
+		$strSql = "SELECT MENU_ID, URL, ID FROM b_favorite  WHERE ( ";
 
 		if(isset($arFields["MENU_ID"]))
 			$strSql .= "MENU_ID = '".$DB->ForSql($arFields["MENU_ID"])."' AND ";
@@ -103,7 +120,7 @@ class CAllFavorites extends CDBResult
 		if(isset($arFields["NAME"]))
 			$strSql .= "NAME = '".$DB->ForSql($arFields["NAME"])."' AND ";
 
-			$strSql .="( USER_ID=".$uid." OR COMMON='Y' ))";
+		$strSql .="( USER_ID=".$uid." OR COMMON='Y' ))";
 
 		$dbFav = $DB->Query($strSql);
 
@@ -132,15 +149,15 @@ class CAllFavorites extends CDBResult
 
 		$codes = new CHotKeysCode;
 		$codeID=$codes->Add(array(
-									"CODE"=>"location.href='".$arFields["URL"]."';",
-									"NAME"=>$arFields["NAME"],
-									"COMMENTS"=>"FAVORITES",
-									));
+			"CODE"=>"location.href='".$arFields["URL"]."';",
+			"NAME"=>$arFields["NAME"],
+			"COMMENTS"=>"FAVORITES",
+		));
 
 		$codes->Update($codeID,array(
-									"CLASS_NAME"=>"FAV-".$codeID,
-									"TITLE_OBJ"=>"FAV-".$codeID,
-									));
+			"CLASS_NAME"=>"FAV-".$codeID,
+			"TITLE_OBJ"=>"FAV-".$codeID,
+		));
 
 		$arFields["CODE_ID"]=intval($codeID);
 
@@ -200,258 +217,9 @@ class CAllFavorites extends CDBResult
 	}
 }
 
-global $__USER_OPTIONS_CACHE;
-$__USER_OPTIONS_CACHE = array();
-class CUserOptions
-{
-	function GetList($arOrder = array("ID" => "ASC"), $arFilter = array())
-	{
-		global $DB;
-		$arSqlSearch = Array();
-
-		$filter_keys = Array_Keys($arFilter);
-		for ($i = 0; $i < Count($filter_keys); $i++)
-		{
-			$val = $arFilter[$filter_keys[$i]];
-			$key = StrToUpper($filter_keys[$i]);
-			switch ($key)
-			{
-				case "ID":
-					$arSqlSearch[] = "UO.ID = ".IntVal($val);
-					break;
-				case "USER_ID":
-					$arSqlSearch[] = "UO.USER_ID = ".IntVal($val);
-					break;
-				case "USER_ID_EXT":
-					$arSqlSearch[] = "(UO.USER_ID = ".IntVal($val)." OR UO.COMMON='Y')";
-					break;
-				case "CATEGORY":
-					$arSqlSearch[] = "UO.CATEGORY = '".$DB->ForSql($val)."'";
-					break;
-				case "NAME":
-					$arSqlSearch[] = "UO.NAME = '".$DB->ForSql($val)."'";
-					break;
-				case "NAME_MASK":
-					$arSqlSearch[] = GetFilterQuery("UO.NAME", $val);
-					break;
-				case "COMMON":
-					$arSqlSearch[] = "UO.COMMON = '".$DB->ForSql($val)."'";
-					break;
-			}
-		}
-
-		$strSqlSearch = "";
-		for ($i = 0; $i < Count($arSqlSearch); $i++)
-			if (StrLen($arSqlSearch[$i]) > 0)
-				$strSqlSearch .= " AND  (".$arSqlSearch[$i].") ";
-
-		$strSql =
-			"SELECT UO.ID, UO.USER_ID, UO.CATEGORY, UO.NAME, UO.COMMON, UO.VALUE ".
-			"FROM b_user_option UO ".
-			"WHERE 1 = 1 ".
-			$strSqlSearch;
-
-		$arSqlOrder = array();
-		if (Is_Array($arOrder))
-		{
-			foreach ($arOrder as $by => $order)
-			{
-				$by = StrToUpper($by);
-				$order = StrToUpper($order);
-				if ($order != "ASC")
-					$order = "DESC";
-
-				if ($by == "ID")
-					$arSqlOrder[$by] = " UO.ID ".$order." ";
-				elseif ($by == "USER_ID")
-					$arSqlOrder[$by] = " UO.USER_ID ".$order." ";
-				elseif ($by == "CATEGORY")
-					$arSqlOrder[$by] = " UO.CATEGORY ".$order." ";
-				elseif ($by == "NAME")
-					$arSqlOrder[$by] = " UO.NAME ".$order." ";
-				elseif ($by == "COMMON")
-					$arSqlOrder[$by] = " UO.COMMON ".$order." ";
-			}
-		}
-
-		if (count($arSqlOrder) > 0)
-			$strSqlOrder = " ORDER BY ".implode(",", $arSqlOrder);
-		else
-			$strSqlOrder = "";
-
-		$res = $DB->Query($strSql.$strSqlOrder, false, "FILE: ".__FILE__."<br> LINE: ".__LINE__);
-
-		return $res;
-	}
-
-	function GetOption($category, $name, $default_value=false, $user_id=false)
-	{
-		global $DB, $USER, $__USER_OPTIONS_CACHE;
-
-		if($user_id === false)
-			$user_id = $USER->GetID();
-		$user_id = intval($user_id);
-
-		$cache_key = $category.".".$name;
-
-		if(!isset($__USER_OPTIONS_CACHE[$user_id]) || ($user_id == 0 && !isset($__USER_OPTIONS_CACHE[$user_id][$cache_key])))
-		{
-			//user (or default) options
-			$strSql =
-				"SELECT CATEGORY, NAME, VALUE, COMMON FROM b_user_option ".
-				"WHERE (USER_ID=".$user_id." OR USER_ID IS NULL AND COMMON='Y') ";
-
-			if($user_id == 0)
-				$strSql .= " AND CATEGORY='".$DB->ForSql($category)."' AND NAME='".$DB->ForSql($name)."' ";
-
-			$res = $DB->Query($strSql);
-
-			while($res_array = $res->Fetch())
-			{
-				$row_cache_key = $res_array["CATEGORY"].".".$res_array["NAME"];
-				if(!isset($__USER_OPTIONS_CACHE[$user_id][$row_cache_key]) || $res_array["COMMON"] <> 'Y')
-					$__USER_OPTIONS_CACHE[$user_id][$row_cache_key] = unserialize($res_array["VALUE"]);
-			}
-		}
-
-		if(!isset($__USER_OPTIONS_CACHE[$user_id][$cache_key]))
-			return $default_value;
-
-		return $__USER_OPTIONS_CACHE[$user_id][$cache_key];
-	}
-
-	function SetOption($category, $name, $value, $bCommon=false, $user_id=false)
-	{
-		global $DB, $USER, $__USER_OPTIONS_CACHE;
-
-		if($user_id === false && $bCommon === false)
-			$user_id = $USER->GetID();
-		$user_id = intval($user_id);
-
-		$arFields = array(
-			"USER_ID"=>($bCommon? false:$user_id),
-			"CATEGORY"=>$category,
-			"NAME"=>$name,
-			"VALUE"=>serialize($value),
-			"COMMON"=>($bCommon? "Y":"N"),
-		);
-		$res = $DB->Query(
-			"SELECT ID FROM b_user_option ".
-			"WHERE ".
-			($bCommon? "USER_ID IS NULL AND COMMON='Y' ":"USER_ID=".$user_id).
-			"	AND CATEGORY='".$DB->ForSql($category, 50)."' ".
-			"	AND NAME='".$DB->ForSql($name, 255)."'");
-		if($res_array = $res->Fetch())
-		{
-			$strUpdate = $DB->PrepareUpdate("b_user_option", $arFields);
-			if($strUpdate!="")
-			{
-				$strSql = "UPDATE b_user_option SET ".$strUpdate." WHERE ID=".$res_array["ID"];
-				if(!$DB->QueryBind($strSql, array("VALUE"=>$arFields["VALUE"])))
-					return false;
-			}
-		}
-		else
-		{
-			if(!$DB->Add("b_user_option", $arFields, array("VALUE")))
-				return false;
-		}
-		$__USER_OPTIONS_CACHE = array();
-		return true;
-	}
-
-	function SetOptionsFromArray($aOptions)
-	{
-		foreach($aOptions as $opt)
-		{
-			if($opt["c"] <> "" && $opt["n"] <> "")
-			{
-				$val = $opt["v"];
-				if(is_array($opt["v"]))
-				{
-					$val = CUserOptions::GetOption($opt["c"], $opt["n"], array());
-					foreach($opt["v"] as $k=>$v)
-						$val[$k] = $v;
-				}
-				CUserOptions::SetOption($opt["c"], $opt["n"], $val);
-				if($opt["d"] == "Y" && $GLOBALS["USER"]->CanDoOperation('edit_other_settings'))
-					CUserOptions::SetOption($opt["c"], $opt["n"], $val, true);
-			}
-		}
-	}
-
-	function DeleteOption($category, $name, $bCommon=false, $user_id=false)
-	{
-		global $DB, $USER, $__USER_OPTIONS_CACHE;
-
-		if($user_id === false)
-			$user_id = $USER->GetID();
-		$user_id = intval($user_id);
-
-		$strSql =
-			"DELETE FROM b_user_option ".
-			"WHERE ".($bCommon? "USER_ID IS NULL AND COMMON='Y' ":"USER_ID=".$user_id).
-			"	AND CATEGORY='".$DB->ForSql($category, 50)."' ".
-			"	AND NAME='".$DB->ForSql($name, 255)."'";
-		if($DB->Query($strSql, false, "File: ".__FILE__."<br>Line: ".__LINE__))
-		{
-			$__USER_OPTIONS_CACHE = array();
-			return true;
-		}
-		return false;
-	}
-
-	function DeleteCommonOptions()
-	{
-		global $DB, $__USER_OPTIONS_CACHE;
-		if($DB->Query("DELETE FROM b_user_option WHERE COMMON='Y' AND NAME NOT LIKE '~%'", false, "File: ".__FILE__."<br>Line: ".__LINE__))
-		{
-			$__USER_OPTIONS_CACHE = array();
-			return true;
-		}
-		return false;
-	}
-
-	function DeleteUsersOptions($user_id=false)
-	{
-		global $DB, $__USER_OPTIONS_CACHE;
-		if($DB->Query("DELETE FROM b_user_option WHERE USER_ID IS NOT NULL AND NAME NOT LIKE '~%'  ".($user_id <> false? " AND USER_ID=".intval($user_id):""), false, "File: ".__FILE__."<br>Line: ".__LINE__))
-		{
-			$__USER_OPTIONS_CACHE = array();
-			return true;
-		}
-		return false;
-	}
-
-	function SetCookieOptions($cookieName)
-	{
-		//last user setting
-		$varCookie = array();
-		parse_str($_COOKIE[$cookieName], $varCookie);
-		setcookie($cookieName, false, false, "/");
-		if(is_array($varCookie["p"]) && $varCookie["sessid"] == bitrix_sessid())
-		{
-			$arOptions = $varCookie["p"];
-			CUtil::decodeURIComponent($arOptions);
-			CUserOptions::SetOptionsFromArray($arOptions);
-		}
-	}
-
-	//*****************************
-	// Events
-	//*****************************
-
-	//user deletion event
-	function OnUserDelete($user_id)
-	{
-		global $DB;
-		return ($DB->Query("DELETE FROM b_user_option WHERE USER_ID=". intval($user_id), false, "File: ".__FILE__."<br>Line: ".__LINE__));
-	}
-}
-
 class CBXFavAdmMenu
 {
-	private $arItems;
+	private $arItems = array();
 
 	public function __construct()
 	{
@@ -460,19 +228,25 @@ class CBXFavAdmMenu
 
 	private function Init()
 	{
-		global $USER,$adminPage,$adminMenu;
+		global $USER, $adminPage, $adminMenu;
 
 		//for ajax requests, and menu autoupdates
 		$adminPage->Init();
 		$adminMenu->Init($adminPage->aModules);
 
-		$dbFav = CFavorites::GetList(array("COMMON"=>"ASC", "SORT"=>"ASC", "NAME"=>"ASC"),array(
-								"MENU_FOR_USER"=>$GLOBALS["USER"]->GetID(),
-								"LANGUAGE_ID"=>LANGUAGE_ID
-					));
+		$dbFav = CFavorites::GetList(
+			array(
+				"COMMON" => "ASC",
+				"SORT" => "ASC",
+				"NAME" => "ASC",
+			), array(
+				"MENU_FOR_USER" => $USER->GetID(),
+				"LANGUAGE_ID" => LANGUAGE_ID,
+			)
+		);
 
 		while ($arFav = $dbFav->GetNext())
-				$this->arItems[] = $arFav;
+			$this->arItems[] = $arFav;
 
 		return true;
 	}
@@ -480,14 +254,16 @@ class CBXFavAdmMenu
 	public function GetMenuItem($itemsID, $arMenu)
 	{
 		if(!is_array($arMenu))
-			return;
+			return false;
 
 		foreach ($arMenu as $arItem)
 		{
 			if( isset($arItem["items_id"]) && $arItem["items_id"] == $itemsID)
+			{
 				return $arItem;
-
+			}
 			else
+			{
 				if(is_array($arItem) && !empty($arItem))
 				{
 					$arFindItem = $this->GetMenuItem($itemsID, $arItem);
@@ -495,6 +271,7 @@ class CBXFavAdmMenu
 					if(is_array($arFindItem) && !empty($arFindItem))
 						return $arFindItem;
 				}
+			}
 		}
 
 		return false;
@@ -502,54 +279,49 @@ class CBXFavAdmMenu
 
 	public function GenerateItems()
 	{
-		global $adminMenu,$APPLICATION;
+		global $adminMenu;
 
 		$favOptions = CUserOptions::GetOption('favorite', 'favorite_menu', array("stick" => "N"));
 
 		$aMenu = array();
 
-		if(!empty($this->arItems))
-			foreach ($this->arItems as $arItem)
+		foreach ($this->arItems as $arItem)
+		{
+			$tmpMenu = array();
+
+			if($arItem["MENU_ID"])
+				$tmpMenu = $this->GetMenuItem($arItem["MENU_ID"], $adminMenu->aGlobalMenu);
+
+			if(!$arItem["MENU_ID"] || !is_array($tmpMenu) || empty($tmpMenu))
 			{
-				$tmpMenu = array();
-
-				if($arItem["MENU_ID"])
-					$tmpMenu = $this->GetMenuItem($arItem["MENU_ID"], $adminMenu->aGlobalMenu);
-
-				if(!$arItem["MENU_ID"] || !is_array($tmpMenu) || empty($tmpMenu))
-				{
-					$tmpMenu =
-						array(
-							"text" => $arItem["NAME"],
-							"url" => $arItem["URL"],
-							"dynamic" => false,
-							"items_id" => "menu_favorite_".$arItem["ID"],
-							"title" => $arItem["NAME"],
-							"icon" => "fav_menu_icon",
-							"page_icon" => "fav_page_icon"
-						);
-				}
-
-				if(is_array($tmpMenu))
-				{
-					$tmpMenu["fav_id"] = $arItem["ID"];
-					$tmpMenu["parent_menu"] = "global_menu_desktop";
-
-					if (!isset($tmpMenu['icon']) || strlen($tmpMenu['icon']) <= 0)
-						$tmpMenu['icon'] = 'fav_menu_icon';
-
-					//if(isset($GLOBALS["BX_FAVORITE_MENU_ACTIVE_ID"]) && $tmpMenu["_active"] == true)
-					//	unset($tmpMenu["_active"]);
-
-					if($this->CheckItemActivity($tmpMenu))
-						$tmpMenu["_active"] = true;
-
-					if(($tmpMenu["_active"] || $this->CheckSubItemActivity($tmpMenu)) && $favOptions["stick"] == "Y")
-						$GLOBALS["BX_FAVORITE_MENU_ACTIVE_ID"] = true;
-
-					$aMenu[] = $tmpMenu;
-				}
+				$tmpMenu = array(
+					"text" => $arItem["NAME"],
+					"url" => $arItem["URL"],
+					"dynamic" => false,
+					"items_id" => "menu_favorite_".$arItem["ID"],
+					"title" => $arItem["NAME"],
+					"icon" => "fav_menu_icon",
+					"page_icon" => "fav_page_icon"
+				);
 			}
+
+			if(is_array($tmpMenu))
+			{
+				$tmpMenu["fav_id"] = $arItem["ID"];
+				$tmpMenu["parent_menu"] = "global_menu_desktop";
+
+				if (!isset($tmpMenu['icon']) || strlen($tmpMenu['icon']) <= 0)
+					$tmpMenu['icon'] = 'fav_menu_icon';
+
+				if($this->CheckItemActivity($tmpMenu))
+					$tmpMenu["_active"] = true;
+
+				if(($tmpMenu["_active"] || $this->CheckSubItemActivity($tmpMenu)) && $favOptions["stick"] == "Y")
+					$GLOBALS["BX_FAVORITE_MENU_ACTIVE_ID"] = true;
+
+				$aMenu[] = $tmpMenu;
+			}
+		}
 
 		return $aMenu;
 	}
@@ -573,9 +345,6 @@ class CBXFavAdmMenu
 
 	private function CheckItemActivity($arMenu)
 	{
-		//if(isset($GLOBALS["BX_FAVORITE_MENU_ACTIVE_ID"]))
-		//	return false;
-
 		if($arMenu["_active"] == true )
 			return true;
 
@@ -625,7 +394,9 @@ class CBXFavAdmMenu
 		$menuItems = $this->GenerateItems();
 
 		if(empty($menuItems))
-			$buff.= self::GetEmptyMenuHTML();
+		{
+			$buff .= self::GetEmptyMenuHTML();
+		}
 		else
 		{
 			ob_start();
@@ -717,7 +488,9 @@ class CBXFavUrls
 				&& $urlPath2["dirname"] != '.'
 				&& $urlPath1["dirname"] != $urlPath2["dirname"]
 			)
+			{
 				return false;
+			}
 
 			if(isset($urlPath1["basename"]) && isset($urlPath2["basename"]) && $urlPath1["basename"] != $urlPath2["basename"])
 				return false;
@@ -804,4 +577,3 @@ class CBXFavUrls
 		return false;
 	}
 }
-?>

@@ -1,14 +1,11 @@
-<?
-##############################################
-# Bitrix Site Manager                        #
-# Copyright (c) 2002-2007 Bitrix             #
-# http://www.bitrixsoft.com                  #
-# mailto:admin@bitrixsoft.com                #
-##############################################
+<?php
+/**
+ * Bitrix Framework
+ * @package bitrix
+ * @subpackage main
+ * @copyright 2001-2013 Bitrix
+ */
 
-/*****************************************************************
-*	Классы для работы с базой данных
-*****************************************************************/
 class CAllDatabase
 {
 	var $db_Conn;
@@ -26,6 +23,10 @@ class CAllDatabase
 	var $bModuleConnection;
 	var $bNodeConnection;
 	var $bMasterOnly = 0;
+	/** @var CDatabase */
+	var $obSlave = null;
+	var $cntQuery = 0;
+	var $timeQuery = 0;
 
 	function StartUsingMasterOnly()
 	{
@@ -135,10 +136,9 @@ class CAllDatabase
 		}
 	}
 
-	//Соединяется с базой данных
 	function Connect($DBHost, $DBName, $DBLogin, $DBPassword)
 	{
-		//переопределяется!
+		//is extended
 		return false;
 	}
 
@@ -154,17 +154,17 @@ class CAllDatabase
 
 	function DateToCharFunction($strFieldName, $strType="FULL")
 	{
-		//переопределяется!
+		//is extended
 	}
 
 	function CharToDateFunction($strValue, $strType="FULL")
 	{
-		//переопределяется!
+		//is extended
 	}
 
 	function Concat()
 	{
-		//переопределяется!
+		//is extended
 	}
 
 	function Substr($str, $from, $length = null)
@@ -182,12 +182,12 @@ class CAllDatabase
 
 	function IsNull($expression, $result)
 	{
-		//переопределяется!
+		//is extended
 	}
 
 	function Length($field)
 	{
-		//переопределяется!
+		//is extended
 	}
 
 	function ToChar($expr, $len=0)
@@ -195,28 +195,32 @@ class CAllDatabase
 		return "CAST(".$expr." AS CHAR".($len > 0? "(".$len.")":"").")";
 	}
 
-	// унифицированный формат в PHP формат
-	function DateFormatToPHP($f)
+	function DateFormatToPHP($format)
 	{
-		$f = str_replace("YYYY", "Y", $f);		// 1999
-		$f = str_replace("MMMM", "F", $f);		// January - December
-		$f = str_replace("MM", "m", $f);		// 01 - 12
-//		$f = str_replace("M", "M", $f);			// Jan - Dec
-		$old_f = $f = str_replace("DD", "d", $f);	// 01 - 31
-		$f = str_replace("HH", "H", $f);		// 00 - 24
-		if ($old_f === $f)
+		static $cache = array();
+		if (!isset($cache[$format]))
 		{
-			$f = str_replace("H", "h", $f);		// 01 - 12
+			$f = str_replace("YYYY", "Y", $format);		// 1999
+			$f = str_replace("MMMM", "F", $f);		// January - December
+			$f = str_replace("MM", "m", $f);		// 01 - 12
+	//		$f = str_replace("M", "M", $f);			// Jan - Dec
+			$old_f = $f = str_replace("DD", "d", $f);	// 01 - 31
+			$f = str_replace("HH", "H", $f);		// 00 - 24
+			if ($old_f === $f)
+			{
+				$f = str_replace("H", "h", $f);		// 01 - 12
+			}
+			$f = str_replace("TT", "A", $f);		// AM - PM
+			$old_f = $f = str_replace("T", "a", $f);	// am - pm
+			$f = str_replace("GG", "G", $f);		// 0 - 24
+			if ($old_f === $f)
+			{
+				$f = str_replace("G", "g", $f);		// 1 - 12
+			}
+			$f = str_replace("MI", "i", $f);		// 00 - 59
+			$cache[$format] = str_replace("SS", "s", $f);		// 00 - 59
 		}
-		$f = str_replace("TT", "A", $f);		// AM - PM
-		$old_f = $f = str_replace("T", "a", $f);	// am - pm
-		$f = str_replace("GG", "G", $f);		// 0 - 24
-		if ($old_f === $f)
-		{
-			$f = str_replace("G", "g", $f);		// 1 - 12
-		}
-		$f = str_replace("MI", "i", $f);		// 00 - 59
-		return str_replace("SS", "s", $f);		// 00 - 59
+		return $cache[$format];
 	}
 
 	function FormatDate($strDate, $format="DD.MM.YYYY HH:MI:SS", $new_format="DD.MM.YYYY HH:MI:SS")
@@ -225,7 +229,6 @@ class CAllDatabase
 
 		$new_format = str_replace("MI","I", strtoupper($new_format));
 		$new_format = preg_replace("/([DMYIHGST])\\1+/is", "\\1", $new_format);
-		$arFormat = preg_split('/[^0-9A-Za-z]/', strtoupper($format));
 		$arParsedDate = ParseDateTime($strDate, $format);
 
 		if (!$arParsedDate) return false;
@@ -235,7 +238,7 @@ class CAllDatabase
 			if(preg_match("/[^0-9]/", $v))
 				$arParsedDate[$k] = CDatabase::ForSql($v, 10);
 			else
-				$arParsedDate[$k] = IntVal($v);
+				$arParsedDate[$k] = intval($v);
 		}
 
 		/*time hacks*/
@@ -361,32 +364,37 @@ class CAllDatabase
 		return $strResult;
 	}
 
-	//Делает запрос к базе данных
 	function Query($strSql, $bIgnoreErrors=false)
 	{
-		//переопределяется!
+		//is extended
+		return null;
 	}
 
-	//запрос с записью CLOB
+	//query with CLOB
 	function QueryBind($strSql, $arBinds, $bIgnoreErrors=false)
 	{
-		//переопределяется, где надо
+		//is extended
 		return $this->Query($strSql, $bIgnoreErrors);
+	}
+
+	function QueryLong($strSql, $bIgnoreErrors = false)
+	{
+		return null;
 	}
 
 	function ForSql($strValue, $iMaxLength=0)
 	{
-		//переопределяется!
+		//is extended
 	}
 
 	function PrepareInsert($strTableName, $arFields)
 	{
-		//переопределяется!
+		//is extended
 	}
 
 	function PrepareUpdate($strTableName, $arFields)
 	{
-		//переопределяется!
+		//is extended
 	}
 
 	function ParseSqlBatch($strSql, $bIncremental = False)
@@ -505,32 +513,27 @@ class CAllDatabase
 	function RunSQLBatch($filepath, $bIncremental = False)
 	{
 		if(!file_exists($filepath) || !is_file($filepath))
-			return Array("File $filepath is not found.");
+			return array("File $filepath is not found.");
 
-		$arErr = Array();
-		$f = @fopen($filepath, "rb");
-		if($f)
+		$arErr = array();
+		$contents = file_get_contents($filepath);
+
+		$arSql = $this->ParseSqlBatch($contents, $bIncremental);
+		foreach($arSql as $strSql)
 		{
-			$contents = fread($f, filesize ($filepath));
-			fclose($f);
-
-			$arSql = $this->ParseSqlBatch($contents, $bIncremental);
-			//echo "<pre>"; print_r($arSql); echo "</pre>"; die();
-			for($i=0; $i<count($arSql); $i++)
+			if ($bIncremental)
 			{
-				if ($bIncremental)
-				{
-					$arErr[] = $arSql[$i];
-				}
-				else
-				{
-					$strSql = str_replace("\r\n", "\n", $arSql[$i]);
-					if(!$this->Query($strSql, true))
-						$arErr[] = "<hr><pre>Query:\n".$strSql."\n\nError:\n<font color=red>".$this->GetErrorMessage()."</font></pre>";
-				}
+				$arErr[] = $strSql;
+			}
+			else
+			{
+				$strSql = str_replace("\r\n", "\n", $strSql);
+				if(!$this->Query($strSql, true))
+					$arErr[] = "<hr><pre>Query:\n".$strSql."\n\nError:\n<font color=red>".$this->GetErrorMessage()."</font></pre>";
 			}
 		}
-		if(count($arErr)>0)
+
+		if(!empty($arErr))
 			return $arErr;
 
 		return false;
@@ -571,15 +574,56 @@ class CAllDatabase
 
 		return $res;
 	}
+
+	function addDebugQuery($strSql, $exec_time)
+	{
+		$this->cntQuery++;
+		$this->timeQuery += $exec_time;
+
+		if (defined("BX_NO_SQL_BACKTRACE"))
+		{
+			$trace = false;
+		}
+		else
+		{
+			$trace = array();
+			foreach(debug_backtrace() as $i => $tr)
+			{
+				if ($i > 0)
+				{
+					$trace[] = array(
+						"file" => $tr["file"],
+						"line" => $tr["line"],
+						"class" => $tr["class"],
+						"type" => $tr["type"],
+						"function" => $tr["function"],
+						"args" => $tr["args"],
+					);
+				}
+				if ($i > 4)
+					break;
+			}
+		}
+
+		$this->arQueryDebug[] = array(
+			"QUERY" => $strSql,
+			"TIME" => $exec_time,
+			"TRACE" => $trace,
+			"BX_STATE" => $GLOBALS["BX_STATE"],
+		);
+	}
+
+	function addDebugTime($index, $exec_time)
+	{
+		if (isset($this->arQueryDebug[$index]))
+			$this->arQueryDebug[$index]["TIME"] += $exec_time;
+	}
 }
 
-/////////////////////////////////////////////////////
-// Класс результата выполнения CDatabase::Query()
-/////////////////////////////////////////////////////
 class CAllDBResult
 {
-	var $result; //результат (первоначальный дескриптор)
-	var $arResult; //результат в виде массива после NavStart
+	var $result;
+	var $arResult;
 	var $arReplacedAliases; // replace tech. aliases in Fetch to human aliases
 	var $arResultAdd;
 	var $bNavStart = false;
@@ -587,6 +631,7 @@ class CAllDBResult
 	var $NavNum, $NavPageCount, $NavPageNomer, $NavPageSize, $NavShowAll, $NavRecordCount;
 	var $bFirstPrintNav = true;
 	var $PAGEN, $SIZEN;
+	var $SESS_SIZEN, $SESS_ALL, $SESS_PAGEN;
 	var $add_anchor = "";
 	var $bPostNavigation = false;
 	var $bFromArray = false;
@@ -596,9 +641,16 @@ class CAllDBResult
 	var $nSelectedCount = false;
 	var $arGetNextCache = false;
 	var $bDescPageNumbering = false;
+	/** @var array */
 	var $arUserMultyFields = false;
 	var $SqlTraceIndex = false;
+	/** @var CDatabase */
 	var $DB;
+	var $NavRecordCountChangeDisable = false;
+	var $is_filtered = false;
+	var $nStartPage = 0;
+	var $nEndPage = 0;
+
 
 	function CAllDBResult($res=NULL)
 	{
@@ -667,8 +719,6 @@ class CAllDBResult
 	}
 
 	/**
-	 * После запроса делает выборку значений полей в массив
-	 *
 	 * @return array
 	 */
 	function Fetch()
@@ -728,18 +778,16 @@ class CAllDBResult
 		$sAll = GetMessage("nav_all");
 		$sPaged = GetMessage("nav_paged");
 
-		// окно, которое двигаем по страницам
 		$nPageWindow = $this->nPageWindow;
 
 		if(!$show_allways)
 		{
 			if ($this->NavRecordCount == 0 || ($this->NavPageCount == 1 && $this->NavShowAll == false))
-				return;
+				return '';
 		}
 
 		$sUrlPath = GetPagePath();
 
-		//Строка для формирования ссылки на следующие страницы навигации
 		$arDel = array("PAGEN_".$this->NavNum, "SIZEN_".$this->NavNum, "SHOWALL_".$this->NavNum, "PHPSESSID");
 		if(is_array($arDeleteParam))
 			$arDel = array_merge($arDel, $arDeleteParam);
@@ -775,13 +823,11 @@ class CAllDBResult
 		}
 		else
 		{
-			// номер первой страницы в окне
 			if($this->NavPageNomer > floor($nPageWindow/2) + 1 && $this->NavPageCount > $nPageWindow)
 				$nStartPage = $this->NavPageNomer - floor($nPageWindow/2);
 			else
 				$nStartPage = 1;
 
-			// номер последней страницы в окне
 			if($this->NavPageNomer <= $this->NavPageCount - floor($nPageWindow/2) && $nStartPage + $nPageWindow-1 <= $this->NavPageCount)
 				$nEndPage = $nStartPage + $nPageWindow - 1;
 			else
@@ -798,21 +844,21 @@ class CAllDBResult
 		if($template_path!==false && file_exists($template_path))
 		{
 /*
-			$this->bFirstPrintNav - вызов в первый раз
-			$this->NavPageNomer - номер текущей страницы
-			$this->NavPageCount - всего страниц
-			$this->NavPageSize - размер страницы
-			$this->NavRecordCount - количество всего записей
-			$this->bShowAll - разрешено ли показывать "все"
-			$this->NavShowAll - сейчас показываются все, а не постранично
-			$this->NavNum - номер навигации на странице
-			$this->bDescPageNumbering - прямая или обратная постраничка
+			$this->bFirstPrintNav - is first tiem call
+			$this->NavPageNomer - number of current page
+			$this->NavPageCount - total page count
+			$this->NavPageSize - page size
+			$this->NavRecordCount - records count
+			$this->bShowAll - show "all" link
+			$this->NavShowAll - is all shown
+			$this->NavNum - number of navigation
+			$this->bDescPageNumbering - reverse paging
 
-			$this->nStartPage - первая страница в цепочке
-			$this->nEndPage - последняя страница в цепочке
+			$this->nStartPage - first page in chain
+			$this->nEndPage - last page in chain
 
-			$strNavQueryString - параметры страницы без параметров навигации
-			$sUrlPath - урл текущей страницы
+			$strNavQueryString - query string
+			$sUrlPath - current url
 
 			Url for link to the page #PAGE_NUMBER#:
 			$sUrlPath.'?PAGEN_'.$this->NavNum.'='.#PAGE_NUMBER#.$strNavQueryString.'#nav_start"'.$add_anchor
@@ -983,37 +1029,48 @@ class CAllDBResult
 
 	function GetNavParams($nPageSize=0, $bShowAll=true, $iNumPage=false)
 	{
-		global $NavNum;
+		/** @global CMain $APPLICATION */
+		global $NavNum, $APPLICATION;
+
+		$bDescPageNumbering = false; //it can be extracted from $nPageSize
 
 		if(is_array($nPageSize))
+		{
+			//$iNumPage
+			//$nPageSize
+			//$bDescPageNumbering
+			//$bShowAll
+			//$NavShowAll
+			//$sNavID
 			extract($nPageSize);
+		}
 
-		$nPageSize = IntVal($nPageSize);
-		$NavNum = IntVal($NavNum);
+		$nPageSize = intval($nPageSize);
+		$NavNum = intval($NavNum);
 
-		$PAGEN_NAME="PAGEN_".($NavNum+1);
-		$SHOWALL_NAME="SHOWALL_".($NavNum+1);
+		$PAGEN_NAME = "PAGEN_".($NavNum+1);
+		$SHOWALL_NAME = "SHOWALL_".($NavNum+1);
 
-		global $$PAGEN_NAME, $$SHOWALL_NAME, $APPLICATION;
+		global ${$PAGEN_NAME}, ${$SHOWALL_NAME};
 		$md5Path = md5(
 			(isset($sNavID)? $sNavID: $APPLICATION->GetCurPage())
 			.(is_object($this) && isset($this->sSessInitAdd)? $this->sSessInitAdd: "")
 		);
 
-		if($iNumPage===false)
-			$PAGEN = $$PAGEN_NAME;
+		if($iNumPage === false)
+			$PAGEN = ${$PAGEN_NAME};
 		else
 			$PAGEN = $iNumPage;
 
-		$SHOWALL = $$SHOWALL_NAME;
+		$SHOWALL = ${$SHOWALL_NAME};
 
 		$SESS_PAGEN = $md5Path."SESS_PAGEN_".($NavNum+1);
 		$SESS_ALL = $md5Path."SESS_ALL_".($NavNum+1);
-		if(IntVal($PAGEN) <= 0)
+		if(intval($PAGEN) <= 0)
 		{
-			if(CPageOption::GetOptionString("main", "nav_page_in_session", "Y")=="Y" && IntVal($_SESSION[$SESS_PAGEN])>0)
+			if(CPageOption::GetOptionString("main", "nav_page_in_session", "Y")=="Y" && intval($_SESSION[$SESS_PAGEN])>0)
 				$PAGEN = $_SESSION[$SESS_PAGEN];
-			elseif($bDescPageNumbering===true)
+			elseif($bDescPageNumbering === true)
 				$PAGEN = 0;
 			else
 				$PAGEN = 1;
@@ -1021,7 +1078,7 @@ class CAllDBResult
 
 		//Number of records on a page
 		$SIZEN = $nPageSize;
-		if(IntVal($SIZEN)<1)
+		if(intval($SIZEN) < 1)
 			$SIZEN = 10;
 
 		//Show all records
@@ -1038,8 +1095,8 @@ class CAllDBResult
 		{
 			$_SESSION[$SESS_PAGEN] = $PAGEN;
 			$_SESSION[$SESS_ALL] = $SHOW_ALL;
-			$res["SESS_PAGEN"]=$SESS_PAGEN;
-			$res["SESS_ALL"]=$SESS_ALL;
+			$res["SESS_PAGEN"] = $SESS_PAGEN;
+			$res["SESS_ALL"] = $SESS_ALL;
 		}
 
 		return $res;
@@ -1047,7 +1104,7 @@ class CAllDBResult
 
 	function InitNavStartVars($nPageSize=0, $bShowAll=true, $iNumPage=false)
 	{
-		if(is_array($nPageSize) && is_set($nPageSize, "bShowAll"))
+		if(is_array($nPageSize) && isset($nPageSize["bShowAll"]))
 			$this->bShowAll = $nPageSize["bShowAll"];
 		else
 			$this->bShowAll = $bShowAll;
@@ -1079,18 +1136,16 @@ class CAllDBResult
 
 	function NavStart($nPageSize=0, $bShowAll=true, $iNumPage=false)
 	{
-		global $NavNum;
 		if($this->bFromLimited)
 			return;
 
 		if(is_array($nPageSize))
 			$this->InitNavStartVars($nPageSize);
 		else
-			$this->InitNavStartVars(IntVal($nPageSize), $bShowAll, $iNumPage);
+			$this->InitNavStartVars(intval($nPageSize), $bShowAll, $iNumPage);
 
 		if($this->bFromArray)
 		{
-			//общее количество записей
 			$this->NavRecordCount = count($this->arResult);
 			if($this->NavRecordCount < 1)
 				return;
@@ -1098,12 +1153,10 @@ class CAllDBResult
 			if($this->NavShowAll)
 				$this->NavPageSize = $this->NavRecordCount;
 
-			//Определяю число страниц при указанном размере страниц. Счет начиная с 1
 			$this->NavPageCount = floor($this->NavRecordCount/$this->NavPageSize);
 			if($this->NavRecordCount % $this->NavPageSize > 0)
 				$this->NavPageCount++;
 
-			//Номер страницы для отображения. Отсчет начинается с 1
 			$this->NavPageNomer =
 				($this->PAGEN < 1 || $this->PAGEN > $this->NavPageCount
 				?
@@ -1119,14 +1172,19 @@ class CAllDBResult
 					$this->PAGEN
 				);
 
-			//Смещение от начала RecordSet
 			$NavFirstRecordShow = $this->NavPageSize*($this->NavPageNomer-1);
 			$NavLastRecordShow = $this->NavPageSize*$this->NavPageNomer;
 
 			$this->arResult = array_slice($this->arResult, $NavFirstRecordShow, $NavLastRecordShow - $NavFirstRecordShow);
 		}
 		else
+		{
 			$this->DBNavStart();
+		}
+	}
+
+	function DBNavStart()
+	{
 	}
 
 	function InitFromArray($arr)
@@ -1164,26 +1222,27 @@ class CAllDBResult
 		return $arr;
 	}
 
-	function GetPageNavString($navigationTitle, $templateName = "", $showAlways=false)
+	function GetPageNavString($navigationTitle, $templateName = "", $showAlways=false, $parentComponent=null)
 	{
-		return $this->GetPageNavStringEx($dummy, $navigationTitle, $templateName, $showAlways);
+		return $this->GetPageNavStringEx($dummy, $navigationTitle, $templateName, $showAlways, $parentComponent);
 	}
 
-	function GetPageNavStringEx(&$navComponentObject, $navigationTitle, $templateName = "", $showAlways=false)
+	function GetPageNavStringEx(&$navComponentObject, $navigationTitle, $templateName = "", $showAlways=false, $parentComponent=null)
 	{
-		$result = "";
+		/** @global CMain $APPLICATION */
+		global $APPLICATION;
 
 		ob_start();
 
-		$navComponentObject = $GLOBALS["APPLICATION"]->IncludeComponent(
+		$navComponentObject = $APPLICATION->IncludeComponent(
 			"bitrix:system.pagenavigation",
 			$templateName,
-			Array(
+			array(
 				"NAV_TITLE"=> $navigationTitle,
 				"NAV_RESULT" => $this,
 				"SHOW_ALWAYS" => $showAlways
 			),
-			null,
+			$parentComponent,
 			array(
 				"HIDE_ICONS" => "Y"
 			)
@@ -1207,4 +1266,3 @@ class CAllDBResult
 	}
 
 }
-?>

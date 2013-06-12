@@ -7,6 +7,8 @@ IncludeModuleLangFile(__FILE__);
 
 $arAllOptions = Array(
 	Array("use_htmledit", GetMessage("IBLOCK_USE_HTMLEDIT"), "N", Array("checkbox", "Y")),
+	Array("list_image_size", GetMessage("IBLOCK_LIST_IMAGE_SIZE"), "50", Array("text", 5)),
+	Array("detail_image_size", GetMessage("IBLOCK_DETAIL_IMAGE_SIZE"), "200", Array("text", 5)),
 	Array("show_xml_id", GetMessage("IBLOCK_SHOW_LOADING_CODE"), "N", Array("checkbox", "Y")),
 	Array("path2rss", GetMessage("IBLOCK_PATH2RSS"), "/upload/", Array("text", 30)),
 	Array("combined_list_mode", GetMessage("IBLOCK_COMBINED_LIST_MODE"), "N", Array("checkbox", "Y")),

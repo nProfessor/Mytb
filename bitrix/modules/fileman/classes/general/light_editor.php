@@ -5,10 +5,11 @@ class CLightHTMLEditor // LHE
 	var $ownerType;
 	function Init(&$arParams)
 	{
-		global $USER;
+		global $USER, $APPLICATION;
 		$basePath = '/bitrix/js/fileman/light_editor/';
 		$this->Id = (isset($arParams['id']) && strlen($arParams['id']) > 0) ? $arParams['id'] : 'bxlhe'.substr(uniqid(mt_rand(), true), 0, 4);
 		$this->cssPath = $this->GetActualPath($basePath.'light_editor.css');
+
 		$this->arJSPath = array(
 			$this->GetActualPath($basePath.'le_dialogs.js'),
 			$this->GetActualPath($basePath.'le_controls.js'),
@@ -16,11 +17,18 @@ class CLightHTMLEditor // LHE
 			$this->GetActualPath($basePath.'le_core.js')
 		);
 
+		if($APPLICATION->IsJSOptimized())
+		{
+			$APPLICATION->AddHeadScript($basePath.'le_dialogs.js');
+			$APPLICATION->AddHeadScript($basePath.'le_controls.js');
+			//$APPLICATION->AddHeadScript($basePath.'le_toolbarbuttons.js');
+			$APPLICATION->AddHeadScript($basePath.'le_core.js');
+		}
+
 		$this->bBBCode = $arParams['BBCode'] === true;
 		$arJS = Array();
 		$arCSS = Array();
-		$events = GetModuleEvents("fileman", "OnBeforeLightEditorScriptsGet");
-		while($arEvent = $events->Fetch())
+		foreach(GetModuleEvents("fileman", "OnBeforeLightEditorScriptsGet", true) as $arEvent)
 		{
 			$tmp = ExecuteModuleEventEx($arEvent, array($this->Id, $arParams));
 			if (!is_array($tmp))
@@ -41,6 +49,7 @@ class CLightHTMLEditor // LHE
 		$this->bUseMedialib = $arParams['bUseMedialib'] !== false && COption::GetOptionString('fileman', "use_medialib", "Y") == "Y" && CMedialib::CanDoOperation('medialib_view_collection', 0);
 
 		$this->bResizable = $arParams['bResizable'] === true;
+		$this->bManualResize = $this->bResizable && $arParams['bManualResize'] !== false;
 		$this->bAutoResize = $arParams['bAutoResize'] !== false;
 		$this->bInitByJS = $arParams['bInitByJS'] === true;
 		$this->bSaveOnBlur = $arParams['bSaveOnBlur'] !== false;
@@ -93,6 +102,7 @@ class CLightHTMLEditor // LHE
 			'bSaveOnBlur' => $this->bSaveOnBlur,
 			'bResizable' => $this->bResizable,
 			'autoResizeSaveSize' => $arParams['autoResizeSaveSize'] !== false,
+			'bManualResize' => $this->bManualResize,
 			'bAutoResize' => $this->bAutoResize,
 			'bReplaceTabToNbsp' => true,
 			'bSetDefaultCodeView' => isset($arParams['bSetDefaultCodeView']) && $arParams['bSetDefaultCodeView'],
@@ -186,17 +196,13 @@ class CLightHTMLEditor // LHE
 	function InitScripts()
 	{
 		ob_start();
-		$db_events = GetModuleEvents("fileman", "OnIncludeLightEditorScript");
-		while($arEvent = $db_events->Fetch())
+		foreach(GetModuleEvents("fileman", "OnIncludeLightEditorScript", true) as $arEvent)
 			ExecuteModuleEventEx($arEvent, array($this->Id));
-
 		$scripts = trim(ob_get_contents());
 		ob_end_clean();
 
 		$scripts = str_replace("<script>", "", $scripts);
 		$scripts = str_replace("</script>", "", $scripts);
-
-		//$GLOBALS["APPLICATION"]->SetAdditionalCSS($this->cssPath); /**/
 
 		?>
 		<script>
@@ -209,28 +215,25 @@ class CLightHTMLEditor // LHE
 				window.BXLHEStyles = true;
 			}
 
-			var arScripts = [<?for ($i = 0, $l = count($this->arJSPath); $i < $l; $i++){echo '\''.$this->arJSPath[$i].'\''.($i == $l - 1 ? '' : ',');}?>];
-			BX.loadScript(arScripts, function()
+			function _lheScriptloaded()
 			{
-				// Place to add user script
-				try
-				{
-					<?= $scripts?>
-				}
-				catch(e)
-				{
-					alert('Errors in customization scripts! ' + e);
-				}
+				<?if (!empty($scripts)):?>
+				// User's customization scripts here
+				try{<?= $scripts?>}
+				catch(e){alert('Errors in customization scripts! ' + e);}
+				<?endif;?>
 
-				if(typeof(JCLightHTMLEditor.items['<?= $this->Id?>']) === 'undefined')
+				if(JCLightHTMLEditor.items['<?= $this->Id?>'] == undefined)
 				{
 					top.<?=$this->jsObjName?> = window.<?=$this->jsObjName?> = new window.JCLightHTMLEditor(<?=CUtil::PhpToJSObject($this->JSConfig)?>);
 				}
-			});
+			}
+
+			BX.loadScript(['<?= implode('\',\'', $this->arJSPath)?>'], _lheScriptloaded);
 		}
 
 		<?if(!$this->bInitByJS):?>
-		BX.ready(function()	{ LoadLHE_<?=$this->Id?>();});
+			BX.ready(function(){LoadLHE_<?=$this->Id?>();});
 		<?endif;?>
 
 		</script><?
@@ -238,13 +241,24 @@ class CLightHTMLEditor // LHE
 
 	function InitLangMess()
 	{
-		$langPath = $_SERVER['DOCUMENT_ROOT'].'/bitrix/modules/fileman/lang/'.LANGUAGE_ID.'/classes/general/light_editor_js.php';
-		if(file_exists($langPath))
-			include($langPath);
-		else
-			$langPath = $_SERVER['DOCUMENT_ROOT'].'/bitrix/modules/fileman/lang/en/classes/general/light_editor_js.php';
+		global $APPLICATION;
 
-		?><script>LHE_MESS = window.LHE_MESS = <?=CUtil::PhpToJSObject($MESS)?>;</script><?
+		$langPath = $_SERVER['DOCUMENT_ROOT'].'/bitrix/modules/fileman/lang/'.LANGUAGE_ID.'/classes/general/light_editor_js.php';
+		if(!file_exists($langPath))
+			$langPath = $_SERVER['DOCUMENT_ROOT'].'/bitrix/modules/fileman/lang/en/classes/general/light_editor_js.php';
+		$mess_lang = __IncludeLang($langPath, true, true);
+
+		if (!empty($mess_lang))
+		{
+			$mess_old = array('Image' => $mess_lang['Image'], 'Video' => $mess_lang['Video'],'ImageSizing' => $mess_lang['ImageSizing']);
+
+			//if($APPLICATION->IsJSOptimized())
+			//	$APPLICATION->AddLangJS('<script type="text/javascript">LHE_MESS = window.LHE_MESS = '.CUtil::PhpToJSObject($mess_old).'; BX.message('.CUtil::PhpToJSObject($mess_lang, false).');</script>');
+			//else
+			//	$APPLICATION->AddHeadString('<script type="text/javascript">LHE_MESS = window.LHE_MESS = '.CUtil::PhpToJSObject($mess_old).'; BX.message('.CUtil::PhpToJSObject($mess_lang, false).');</script>');
+		}
+
+		?><script>LHE_MESS = window.LHE_MESS = <?= CUtil::PhpToJSObject($mess_old);?>; BX.message(<?=CUtil::PhpToJSObject($mess_lang, false);?>);</script><?
 	}
 
 	function InitFileDialogs()

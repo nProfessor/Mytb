@@ -103,6 +103,8 @@ BXFileDialog.prototype =
 				if (window.oBXDialogTree)
 					oBXDialogTree.SetPath(oConfig.path || UserConfig.path || '');
 			});
+
+			BX.onCustomEvent(window, 'onAfterFileDialogShow');
 		};
 		ShowWaitWindow();
 

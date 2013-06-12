@@ -76,16 +76,17 @@ $arFilter = Array(
 	"SECTION_ID"	=> $find_section_section,
 	"ID"		=> $find_section_id,
 	">=TIMESTAMP_X"	=> $find_section_timestamp_1,
-	"<=TIMESTAMP_X"	=> $find_section_timestamp_2,
 	"MODIFIED_BY"	=> $find_section_modified_user_id? $find_section_modified_user_id: $find_section_modified_by,
 	">=DATE_CREATE"	=> $find_section_date_create_1,
-	"<=DATE_CREATE"	=> $find_section_date_create_2,
 	"CREATED_BY"	=> $find_section_created_user_id? $find_section_created_user_id: $find_section_created_by,
 	"ACTIVE"	=> $find_section_active,
 	"CODE"		=> $find_section_code,
 	"EXTERNAL_ID"	=> $find_section_external_id,
 );
-
+if(!empty($find_section_timestamp_2))
+	$arFilter["<=TIMESTAMP_X"] = CIBlock::isShortDate($find_section_timestamp_2)? ConvertTimeStamp(AddTime(MakeTimeStamp($find_section_timestamp_2), 1, "D"), "FULL"): $find_section_timestamp_2;
+if(!empty($find_section_date_create_2))
+	$arFilter["<=DATE_CREATE"] = CIBlock::isShortDate($find_section_date_create_2)? ConvertTimeStamp(AddTime(MakeTimeStamp($find_section_date_create_2), 1, "D"), "FULL"): $find_section_date_create_2;
 
 $USER_FIELD_MANAGER->AdminListAddFilter($entity_id, $arFilter);
 
@@ -290,6 +291,7 @@ $arVisibleColumns = $lAdmin->GetVisibleHeaderColumns();
 $arVisibleColumns[] = "IBLOCK_ID";
 $arVisibleColumns[] = "ID";
 $arVisibleColumns[] = "SECTION_PAGE_URL";
+$arVisibleColumns[] = "DEPTH_LEVEL";
 
 $arVisibleColumnsMap = array();
 foreach($arVisibleColumns as $value)
@@ -348,7 +350,7 @@ while ($arRes = $rsData->NavNext(true, "f_"))
 	$USER_FIELD_MANAGER->AddUserFields($entity_id, $arRes, $row);
 
 	$row->AddViewField("ID", '<a href="'.$edit_url.'" title="'.GetMessage("IBSEC_A_EDIT").'">'.$f_ID.'</a>');
-	$row->AddViewField("NAME", '<table '.($_GET["tree"] == "Y" ? 'style="margin-left:'.(($f_DEPTH_LEVEL - $parentDepth - 1) * 16).'px"' : '').' cellpadding="0" cellspacing="0" border="0"><tr><td align="left"><a href="'.$sec_list_url.'"><span id="fileman_menu_icon_sections" class="adm-submenu-item-link-icon"></span></a></td><td align="left">&nbsp;<a href="'.$sec_list_url.'" title="'.GetMessage("IBSEC_A_LIST").'">'.$f_NAME.'</a></td></tr></table>');
+	$row->AddViewField("NAME", '<a href="'.$sec_list_url.'" '.($_GET["tree"] == "Y" ? 'style="padding-left:'.(($f_DEPTH_LEVEL - 1) * 22).'px"' : '').' class="adm-list-table-icon-link" title="'.GetMessage("IBSEC_A_LIST").'"><span class="adm-submenu-item-link-icon adm-list-table-icon iblock-section-icon"></span><span class="adm-list-table-link">'.$f_NAME.'</span></a>');
 	if (array_key_exists("ELEMENT_CNT", $arVisibleColumnsMap))
 		$row->AddViewField("ELEMENT_CNT", '<a href="'.$el_list_url.'&find_el_subsections=N" title="'.GetMessage("IBSEC_A_ELLIST").'">'.$f_ELEMENT_CNT.'</a>('.'<a href="'.$el_list_url.'&find_el_subsections=Y" title="'.GetMessage("IBSEC_A_ELLIST_TITLE").'">'.IntVal(CIBlockSection::GetSectionElementsCount($f_ID, array(
 			"CNT_ALL" => "Y",
@@ -442,7 +444,7 @@ foreach ($arRows as $id => $row)
 		$arActions[] = array(
 			"ICON" => "delete",
 			"TEXT" => GetMessage("IBSEC_A_DELETE"),
-			"ACTION" => "if(confirm('".GetMessage("IBSEC_A_CONFIRM_DEL_MESSAGE")."')) ".$lAdmin->ActionDoGroup($id, "delete", $sThisSectionUrl),
+			"ACTION" => "if(confirm('".GetMessageJS("IBSEC_A_CONFIRM_DEL_MESSAGE")."')) ".$lAdmin->ActionDoGroup($id, "delete", $sThisSectionUrl),
 		);
 
 	$row->AddActions($arActions);
@@ -480,19 +482,6 @@ foreach ($arSectionOps as $id => $arOps)
 $lAdmin->AddGroupActionTable($arGroupActions);
 
 $aContext = array();
-if (CIBlockSectionRights::UserHasRightTo($IBLOCK_ID, $find_section_id, "section_section_bind"))
-{
-	$aContext[] = array(
-		"TEXT" => htmlspecialcharsbx($arIBlock["SECTION_ADD"]),
-		"ICON" => "btn_new",
-		"LINK" => CIBlock::GetAdminSectionEditLink($IBLOCK_ID, 0, array(
-			'IBLOCK_SECTION_ID' => $find_section_section,
-			'from' => 'iblock_section_admin',
-			'find_section_section' => $find_section_section,
-		)),
-		"TITLE" => GetMessage("IBSEC_A_SECTADD_PRESS"),
-	);
-}
 
 if (CIBlockSectionRights::UserHasRightTo($IBLOCK_ID, $find_section_id, "section_element_bind"))
 {
@@ -507,16 +496,23 @@ if (CIBlockSectionRights::UserHasRightTo($IBLOCK_ID, $find_section_id, "section_
 		"TITLE" => GetMessage("IBSEC_A_ADDEL_TITLE"),
 	);
 }
-if(count($aContext) == 2)
+
+if (CIBlockSectionRights::UserHasRightTo($IBLOCK_ID, $find_section_id, "section_section_bind"))
 {
-	$aContext = array(
-		array(
-			"TEXT" => GetMessage("IBSEC_A_ADD"),
-			"ICON" => "btn_new",
-			"MENU" => $aContext,
-		),
+	$aContext[] = array(
+		"TEXT" => htmlspecialcharsbx($arIBlock["SECTION_ADD"]),
+		"ICON" => "btn_new",
+		"LINK" => CIBlock::GetAdminSectionEditLink($IBLOCK_ID, 0, array(
+			'IBLOCK_SECTION_ID' => $find_section_section,
+			'from' => 'iblock_section_admin',
+			'find_section_section' => $find_section_section,
+		)),
+		"TITLE" => GetMessage("IBSEC_A_SECTADD_PRESS"),
 	);
 }
+
+if(count($aContext) == 2)
+	unset($aContext[1]["ICON"]);
 
 if (defined("CATALOG_PRODUCT"))
 {
@@ -582,6 +578,26 @@ if(!defined("CATALOG_PRODUCT"))
 		while($ar_nav = $nav->GetNext())
 		{
 			$sSectionUrl = CIBlock::GetAdminSectionListLink($IBLOCK_ID, array('find_section_section'=>$ar_nav["ID"]));
+			if($_GET["tree"]=="Y")
+				$sSectionUrl .= '&tree=Y';
+			$chain->AddItem(array(
+				"TEXT" => $ar_nav["NAME"],
+				"LINK" => htmlspecialcharsbx($sSectionUrl),
+				"ONCLICK" => $lAdmin->ActionAjaxReload($sSectionUrl).';return false;',
+			));
+		}
+	}
+	$lAdmin->ShowChain($chain);
+}
+else
+{
+	$chain = $lAdmin->CreateChain();
+	if($find_section_section > 0)
+	{
+		$nav = CIBlockSection::GetNavChain($IBLOCK_ID, $find_section_section);
+		while($ar_nav = $nav->GetNext())
+		{
+			$sSectionUrl = CIBlock::GetAdminSectionListLink($IBLOCK_ID, array('find_section_section'=>$ar_nav["ID"], 'catalog' => null));
 			if($_GET["tree"]=="Y")
 				$sSectionUrl .= '&tree=Y';
 			$chain->AddItem(array(
@@ -659,14 +675,14 @@ $oFilter->Begin();
 	</tr>
 	<tr>
 		<td><?echo GetMessage("IBSEC_A_TIMESTAMP").":"?></td>
-		<td><?echo CalendarPeriod("find_section_timestamp_1", htmlspecialcharsbx($find_section_timestamp_1), "find_section_timestamp_2", htmlspecialcharsbx($find_section_timestamp_2), "find_section_form","Y")?></td>
+		<td><?echo CalendarPeriod("find_section_timestamp_1", htmlspecialcharsbx($find_section_timestamp_1), "find_section_timestamp_2", htmlspecialcharsbx($find_section_timestamp_2), "find_section_form", "Y")?></td>
 	</tr>
 	<tr>
 		<td><?echo GetMessage("IBSEC_A_MODIFIED_BY")?>:</td>
 		<td>
 			<?echo FindUserID(
-				/*$tag_name=*/"find_section_modified_user_id",
-				/*$tag_value=*/($find_section_modified_by > 0? $find_section_modified_by: ""),
+				/*$tag_name=*/"find_section_modified_by",
+				/*$tag_value=*/($find_section_modified_user_id? $find_section_modified_user_id: $find_section_modified_by),
 				/*$user_name=*/"",
 				/*$form_name=*/"find_section_form",
 				/*$tag_size=*/"5",
@@ -679,14 +695,14 @@ $oFilter->Begin();
 	</tr>
 	<tr>
 		<td><?echo GetMessage("IBSEC_A_DATE_CREATE").":"?></td>
-		<td><?echo CalendarPeriod("find_section_date_create_1", htmlspecialcharsex($find_section_date_create_1), "find_section_date_create_2", htmlspecialcharsex($find_section_date_create_2), "find_section_form")?></td>
+		<td><?echo CalendarPeriod("find_section_date_create_1", htmlspecialcharsex($find_section_date_create_1), "find_section_date_create_2", htmlspecialcharsex($find_section_date_create_2), "find_section_form", "Y")?></td>
 	</tr>
 	<tr>
 		<td><?echo GetMessage("IBSEC_A_CREATED_BY")?>:</td>
 		<td>
 			<?echo FindUserID(
-				/*$tag_name=*/"find_section_created_user_id",
-				/*$tag_value=*/($find_section_created_by > 0? $find_section_created_by: ""),
+				/*$tag_name=*/"find_section_created_by",
+				/*$tag_value=*/($find_section_created_user_id? $find_section_created_user_id: $find_section_created_by),
 				/*$user_name=*/"",
 				/*$form_name=*/"find_section_form",
 				/*$tag_size=*/"5",

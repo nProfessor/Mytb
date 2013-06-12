@@ -107,7 +107,7 @@ class CCloudStorageService_RackSpaceCloudFiles extends CCloudStorageService_Open
 			$verb,
 			$Host,
 			$Port,
-			$Urn.CCloudUtil::URLEncode("/".$bucket.$file_name.$params, LANG_CHARSET),
+			$Urn.CCloudUtil::URLEncode("/".$bucket.$file_name.$params, "UTF-8"),
 			$content,
 			$Proto
 		);
@@ -196,7 +196,7 @@ class CCloudStorageService_RackSpaceCloudFiles extends CCloudStorageService_Open
 				$URI = $arBucket["PREFIX"]."/".$URI;
 		}
 
-		return $host."/".CCloudUtil::URLEncode($URI, LANG_CHARSET);
+		return $host."/".CCloudUtil::URLEncode($URI, "UTF-8");
 	}
 }
 ?>

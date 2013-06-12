@@ -271,6 +271,7 @@ if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true) die();
 									case "multiselect":
 									?>
 							<select name="PROPERTY[<?=$propertyID?>]<?=$type=="multiselect" ? "[]\" size=\"".$arResult["PROPERTY_LIST_FULL"][$propertyID]["ROW_COUNT"]."\" multiple=\"multiple" : ""?>">
+								<option value=""><?echo GetMessage("CT_BIEAF_PROPERTY_VALUE_NA")?></option>
 									<?
 										if (intval($propertyID) > 0) $sKey = "ELEMENT_PROPERTIES";
 										else $sKey = "ELEMENT";

@@ -1,19 +1,29 @@
 <?php
-
+/**
+ * Bitrix Framework
+ * @package bitrix
+ * @subpackage main
+ * @copyright 2001-2012 Bitrix
+ */
 namespace Bitrix\Main;
 
 use Bitrix\Main\Entity;
 
-class UserGroupEntity extends Entity\Base
+class UserGroupTable extends Entity\DataManager
 {
-	protected function __construct() {}
-
-	public function initialize()
+	public static function getFilePath()
 	{
-		$this->className = __CLASS__;
-		$this->filePath = __FILE__;
+		return __FILE__;
+	}
 
-		$this->fieldsMap = array(
+	public static function getTableName()
+	{
+		return 'b_user_group';
+	}
+
+	public static function getMap()
+	{
+		return array(
 			'USER_ID' => array(
 				'data_type' => 'integer',
 				'primary' => true
@@ -29,9 +39,13 @@ class UserGroupEntity extends Entity\Base
 			'GROUP' => array(
 				'data_type' => 'Group',
 				'reference' => array('=this.GROUP_ID' => 'ref.ID')
-			)
+			),
+			'DATE_ACTIVE_FROM' => array(
+				'data_type' => 'datetime',
+			),
+			'DATE_ACTIVE_TO' => array(
+				'data_type' => 'datetime',
+			),
 		);
 	}
-
-
 }

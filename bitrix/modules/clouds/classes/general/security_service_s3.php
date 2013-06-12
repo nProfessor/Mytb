@@ -205,7 +205,7 @@ class CCloudSecurityService_AmazonS3
 					}
 				}
 				//XML parse error
-				$APPLICATION->ThrowException(GetMessage('CLO_STORAGE_S3_XML_PARSE_ERROR', array('#errno#'=>1)));
+				$APPLICATION->ThrowException(GetMessage('CLO_SECSERV_S3_XML_PARSE_ERROR', array('#errno#'=>1)));
 				return false;
 			}
 			else
@@ -218,15 +218,15 @@ class CCloudSecurityService_AmazonS3
 		{
 			if($obRequest->result)
 			{
-				$APPLICATION->ThrowException(GetMessage('CLO_STORAGE_S3_XML_ERROR', array('#errmsg#'=>$obRequest->result)));
+				$APPLICATION->ThrowException(GetMessage('CLO_SECSERV_S3_XML_ERROR', array('#errmsg#'=>$obRequest->result)));
 				return false;
 			}
-			$APPLICATION->ThrowException(GetMessage('CLO_STORAGE_S3_XML_PARSE_ERROR', array('#errno#'=>2)));
+			$APPLICATION->ThrowException(GetMessage('CLO_SECSERV_S3_XML_PARSE_ERROR', array('#errno#'=>2)));
 			return false;
 		}
 		else
 		{
-			$APPLICATION->ThrowException(GetMessage('CLO_STORAGE_S3_XML_PARSE_ERROR', array('#errno#'=>3)));
+			$APPLICATION->ThrowException(GetMessage('CLO_SECSERV_S3_XML_PARSE_ERROR', array('#errno#'=>3)));
 			return false;
 		}
 	}

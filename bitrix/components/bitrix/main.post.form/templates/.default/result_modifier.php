@@ -64,13 +64,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_REQUEST['mfi_mode']) && ($_R
 				Input params
  ********************************************************************/
 /***************** BASE ********************************************/
-$arParams["IS_BLOG"] = ($arParams["IS_BLOG"] === true);
-
 $arParams["FORM_ID"] = (!empty($arParams["FORM_ID"]) ? $arParams["FORM_ID"] : "POST_FORM");
 $arParams["JS_OBJECT_NAME"] = "PlEditor".$arParams["FORM_ID"];
-$arParams["LHE"] = (is_array($arParams['LHE']) ? $arParams['LHE'] : array());
+$arParams["LHE"] = (is_array($arParams['~LHE']) ? $arParams['~LHE'] : array());
 $arParams["LHE"]["id"] = (empty($arParams["LHE"]["id"]) ? "idLHE_".$arParams["FORM_ID"] : $arParams["LHE"]["id"]);
 $arParams["LHE"]["jsObjName"] = (empty($arParams["LHE"]["jsObjName"]) ? "oLHE".$arParams["FORM_ID"] : $arParams["LHE"]["jsObjName"]);
+$arParams["LHE"]["bInitByJS"] = (empty($arParams["TEXT"]["VALUE"]) && $arParams["LHE"]["bInitByJS"] === true ? true : false);
 
 $arParams["PARSER"] = array_unique(is_array($arParams["PARSER"]) ? $arParams["PARSER"] : array());
 $arParams["BUTTONS"] = is_array($arParams["BUTTONS"]) ? $arParams["BUTTONS"] : array();
@@ -83,6 +82,10 @@ $arParams["TEXT"] = (is_array($arParams["~TEXT"]) ? $arParams["~TEXT"] : array()
 $arParams["TEXT"]["ID"] = (!empty($arParams["TEXT"]["ID"]) ? $arParams["TEXT"]["ID"] : "POST_MESSAGE");
 $arParams["TEXT"]["NAME"] = (!empty($arParams["TEXT"]["NAME"]) ? $arParams["TEXT"]["NAME"] : "POST_MESSAGE");
 $arParams["TEXT"]["TABINDEX"] = intval($arParams["TEXT"]["TABINDEX"] <= 0 ? 10 : $arParams["TEXT"]["TABINDEX"]);
+
+$userOption = CUserOptions::GetOption("main.post.form", "postEdit");
+if(isset($userOption["showBBCode"]) && $userOption["showBBCode"] == "Y")
+	$arParams["TEXT"]["SHOW"] = "Y";
 
 $arParams["ADDITIONAL"] = (is_array($arParams["~ADDITIONAL"]) ? $arParams["~ADDITIONAL"] : array());
 $arParams["ADDITIONAL"][] =
@@ -157,13 +160,13 @@ while ($arFile)
 	}
 
 	$arParams["FILES"]["VALUE_JS"][strVal($arFile["ID"])] = array(
-		"id" => $arFile["ID"],
-		"name" => $arFile["ORIGINAL_NAME"],
-		"size" => $arFile["FILE_SIZE"],
-		"url" => $arFile["URL"],
-		"type" => $arFile["CONTENT_TYPE"],
-		"src" => $arFile["SRC"],
-		"thumbnail" => $arFile["THUMBNAIL"],
+		"element_id" => $arFile["ID"],
+		"element_name" => $arFile["ORIGINAL_NAME"],
+		"element_size" => $arFile["FILE_SIZE"],
+		"element_url" => $arFile["URL"],
+		"element_content_type" => $arFile["CONTENT_TYPE"],
+		"element_thumbnail" => $arFile["SRC"],
+		"element_image" => $arFile["THUMBNAIL"],
 		"isImage" => (substr($arFile["CONTENT_TYPE"], 0, 6) == "image/")
 	);
 

@@ -32,7 +32,7 @@ if($USER->IsAuthorized() && check_bitrix_sessid())
 	}
 	elseif($_REQUEST["action"] == "filterrows")
 	{
-		$gridOptions->SetFilterRows($_REQUEST["rows"]);
+		$gridOptions->SetFilterRows($_REQUEST["rows"], $_REQUEST['filter_id']);
 	}
 	elseif($_REQUEST["action"] == "savefilter")
 	{
@@ -51,4 +51,3 @@ if($USER->IsAuthorized() && check_bitrix_sessid())
 	$gridOptions->Save();
 }
 echo "OK";
-?>

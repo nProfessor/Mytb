@@ -1,70 +1,149 @@
 ;(function(window){
 if (window.LHEPostForm) return;
-window.LHEPostForm = function(formID, params)
+window.LHEPostForm = function(formID, params, parsers)
 {
 	this.Inited = this.Init(formID, params);
+	this.objName = 'PlEditor' + formID;
+	window[this.objName] = this;
 
 	this.formID = formID;
-	this.classID = 'PlEditor' + formID;
-	this.eID = (params['eID'] ? params['eID'] : 'oPostFormLHE_' + formID);
-	this.pLEditor = window[this.eID];
+	this.oEditor = window[params['LHEJsObjName']];
+	this.WDController = null;
+	this.FController = null;
+	this.arSize = params['arSize'];
+	this.arSize = (typeof this.arSize == "object" && !!this.arSize && this.arSize.width && this.arSize.height ? this.arSize : false);
 
-	this.IsBlog = !!params["IsBlog"];
-	this.IsWebdavInstalled = !!params["IsWebdavInstalled"];
-	this.arFiles = (typeof params["arFiles"] == "object" && params["arFiles"] != null ? params["arFiles"] : {});
 	this.sNewFilePostfix = (params["sNewFilePostfix"] ? params["sNewFilePostfix"] : '');
-	this.arActions = (typeof params["arActions"] == "object" && params["arActions"] != null ? params["arActions"] : {});
 
-	this.Image = {
-		'thumb_width' : 800,
-		'code' : '[IMG ID=#FILE_ID##ADDITIONAL#]',
-		'html' : '<img id="#FILE_ID#" src="#SRC#" title=""#ADDITIONAL# />'
-	};
-	this.File = {
-		'code' : '[FILE ID=#FILE_ID##ADDITIONAL#]',
-		'html' : '<span style="color: #2067B0; border-bottom: 1px dashed #2067B0;" id="#FILE_ID#"#ADDITIONAL#>#FILE_NAME#</span>'
-	};
+	parsers = (!!parsers ? parsers : []);
+	this.parser = {
+		postimage : {
+			'exist' : (BX.util.in_array('postimage', parsers) ? true : null),
+			'tag' : 'postimage',
+			'thumb_width' : 800,
+			'regexp' : /\[IMG ID=((?:\s|\S)*?)(?:\s*?WIDTH=(\d+)\s*?HEIGHT=(\d+))?\]/ig,
+			'code' : '[IMG ID=#ID##ADDITIONAL#]',
+			'html' : '<img id="#ID#" src="#SRC#" lowsrc="#LOWSRC#" title=""#ADDITIONAL# />'
+		},
+		postfile : {
+			'exist' : (BX.util.in_array('postfile', parsers) ? true : null),
+			'tag' : 'postfile',
+			'thumb_width' : 800,
+			'regexp' : /\[FILE ID=((?:\s|\S)*?)(?:\s*?WIDTH=(\d+)\s*?HEIGHT=(\d+))?\]/ig,
+			'code' : '[FILE ID=#ID##ADDITIONAL#]',
+			'html' : '<span style="color: #2067B0; border-bottom: 1px dashed #2067B0;" id="#ID#"#ADDITIONAL#>#NAME#</span>'
+		},
+		postdocument : {
+			'exist' : (BX.util.in_array('postfile', parsers) ? true : null),
+			'tag' : "postdocument", // and parser LHE
+			'thumb_width' : 800,
+			'regexp' : /\[DOCUMENT ID=((?:\s|\S)*?)(?:\s*?WIDTH=(\d+)\s*?HEIGHT=(\d+))?\]/ig,
+			'code' : '[DOCUMENT ID=#ID##ADDITIONAL#]',
+			'html' : '<span style="color: #2067B0; border-bottom: 1px dashed #2067B0;" id="#ID#"#ADDITIONAL#>#NAME#</span>'
+		}
+	}
+	this.arFiles = {};
+	if (typeof params["arFiles"] == "object" && params["arFiles"] != null)
+	{
+		for (var ii in params["arFiles"]) {
+			var res = this.checkFile(ii, params["arFiles"][ii]);
+		}
+	}
 }
 
 window.LHEPostForm.prototype = {
 	Init : function(formID, params)
 	{
-		var eID = this.eID;
+		if (!!params["WDLoadFormController"])
+		{
+			this.WDControllerInit = BX.delegate(
+				function(status) {
+					var node = BX.findParent(BX.findChild(BX(formID), {'className': 'wduf-selectdialog'}, true, false));
+					BX.onCustomEvent(node, "WDLoadFormController", [status]);
+				}, this);
 
-		params['LoadFormController'] = (params['WDLoadFormController'] === true ? "WDLoadFormController" : "BFileDLoadFormController");
-		BX.ready(
-			function()
-			{
-				BX.bind(
-					BX.findChild(BX(formID), {'attr': {id: 'bx-b-uploadimage'}}, true, false),
-					'click',
-					function(){
-						BX.onCustomEvent(
-							BX.findParent(BX.findChild(BX(formID), {'className': 'file-selectdialog'}, true, false)),
-							'BFileDLoadFormController'
-						);
+			BX.addCustomEvent('WDSelectFileDialogLoaded', function(wdFD) {
+				window['PlEditor' + formID].OnWDSelectFileDialogLoaded(wdFD);
+			});
+
+			BX.addCustomEvent(
+				BX.findParent(BX.findChild(BX(formID), {'className': 'wduf-selectdialog'}, true, false)),
+				'WDLoadFormControllerInit',
+				function(obj){
+					if (obj.dialogName == 'AttachFileDialog') {
+						window['PlEditor' + formID]['WDController'] = obj;
 					}
-				);
-				BX.bind(
-					BX.findChild(BX(formID), {'attr': {id: 'bx-b-uploadfile'}}, true, false),
-					'click',
-					function(){
-						BX.onCustomEvent(
-							BX.findParent(BX.findChild(BX(formID), {'className': 'file-selectdialog'}, true, false)),
-							params['LoadFormController']);}
-				);
-			}
-		);
+				}
+			);
+			BX.addCustomEvent(
+				BX.findParent(BX.findChild(BX(formID), {'className': 'wduf-selectdialog'}, true, false)),
+				'OnFileUploadSuccess',
+				function(result, obj){
+					if (obj.dialogName == 'AttachFileDialog') {
+						__mpf_wd_getinfofromnode(result, obj);
+						window['PlEditor' + formID]['OnFileUploadSuccess'](result, obj);
+					}
+				}
+			);
+			BX.addCustomEvent(
+				BX.findParent(BX.findChild(BX(formID), {'className': 'wduf-selectdialog'}, true, false)),
+				'OnFileUploadRemove',
+				function(result, obj){
+					if (obj && obj.dialogName == 'AttachFileDialog') {
+						window['PlEditor' + formID]['OnFileUploadRemove'](result, obj, 'webdav');
+					}
+				}
+			);
+		}
 
-		BX.addCustomEvent(
-			BX.findParent(BX.findChild(BX(formID), {'className': 'file-selectdialog'}, true, false)),
-			'OnFileUploadSuccess',
-			function(result, obj){window['PlEditor' + formID]['OnFileUploadSuccess'](result, obj);}
-		);
-		BX.addCustomEvent(
-			BX.findParent(BX.findChild(BX(formID), {'className': 'file-selectdialog'}, true, false)),
-			'OnFileUploadRemove',
-			function(result, obj){window['PlEditor' + formID]['OnFileUploadRemove'](result, obj);}
+		if (!!params["BFileDLoadFormController"]) {
+			this.BFileControllerInit = function(){
+				BX.onCustomEvent(
+					BX.findParent(BX.findChild(BX(formID), {'className': 'file-selectdialog'}, true, false)),
+					'BFileDLoadFormController'
+				);
+			};
+			BX.addCustomEvent(
+				BX.findParent(BX.findChild(BX(formID), {'className': 'file-selectdialog'}, true, false)),
+				'OnFileUploadSuccess',
+				function(result, obj){
+					if (obj.dialogName == 'AttachmentsDialog') {
+						window['PlEditor' + formID]['OnFileUploadSuccess'](result, obj);
+					}
+				}
+			);
+			BX.addCustomEvent(
+				BX.findParent(BX.findChild(BX(formID), {'className': 'file-selectdialog'}, true, false)),
+				'OnFileUploadRemove',
+				function(result, obj){
+					if (obj && obj.dialogName == 'AttachmentsDialog') {
+						window['PlEditor' + formID]['OnFileUploadRemove'](result, obj, 'bfile');
+					}
+				}
+			);
+		}
+
+		BX.ready(
+			BX.delegate(
+				function()
+				{
+					var uploadfile = BX.findChild(BX(formID), {'attr': {id: 'bx-b-uploadfile'}}, true, false);
+					if (!!uploadfile && !!params["WDLoadFormController"])
+					{
+						BX.bind(uploadfile, 'click', this.WDControllerInit);
+						uploadfile = null;
+					}
+					if (!!params["BFileDLoadFormController"])
+					{
+						var node = !!uploadfile ? uploadfile :  BX.findChild(BX(formID), {'attr': {id: 'bx-b-uploadimage'}}, true, false);
+						while (!!node) {
+							BX.bind(node, 'click', this.BFileControllerInit);
+							node = (node == uploadfile ? BX.findChild(BX(formID), {'attr': {id: 'bx-b-uploadimage'}}, true, false) : false);
+						}
+					}
+				},
+				this
+			)
 		);
 
 		return true;
@@ -72,61 +151,91 @@ window.LHEPostForm.prototype = {
 
 	OnFileUploadSuccess : function(result, obj)
 	{
-		window[this.eID].SaveContent();
-		window[this.eID]['arFiles'].push(result.element_id);
+		this.oEditor.SaveContent();
+		if (BX.findChild(BX(this.formID), {'attr': {id: 'upload-cid'}}, true, false))
+			BX.findChild(BX(this.formID), {'attr': {id: 'upload-cid'}}, true, false).value = obj.CID;
+		this.oEditor['arFiles'].push(result.element_id);
+		this.parser['postimage']['exist'] = (this.parser['postimage']['exist'] === null ?
+			!!this.oEditor['oSpecialParsers']['postimage'] : this.parser['postimage']['exist']);
+		this.parser['postfile']['exist'] = (this.parser['postfile']['exist'] === null ?
+			!!this.oEditor['oSpecialParsers']['postfile'] : this.parser['postfile']['exist']);
+		this.parser['postdocument']['exist'] = (this.parser['postdocument']['exist'] === null ?
+			!!this.oEditor['oSpecialParsers']['postdocument'] : this.parser['postdocument']['exist']);
 
-		if (this.IsBlog && this.IsWebdavInstalled && result.storage == 'bfile' && (!result.element_content_type ||result.element_content_type.substr(0,6) != 'image/'))
-		{
-			obj.agent.StopUpload(BX('wd-doc'+result.element_id));
-		}
-		else if (!window[this.eID]['oSpecialParsers']['postfile'] && !window[this.eID]['oSpecialParsers']['postimage'])
-		{
-			return ;
-		}
-		else if (result.storage == 'bfile')
-		{
-			if(BX.findChild(BX(this.formID), {'attr': {id: 'upload-cid'}}, true, false))
-				BX.findChild(BX(this.formID), {'attr': {id: 'upload-cid'}}, true, false).value = obj.CID;
+		result["isImage"] = (result.element_content_type && result.element_content_type.substr(0,6) == 'image/');
+		if (result.storage == 'bfile' && !(this.parser['postimage']['exist'] && result.isImage || this.parser['postfile']['exist']))
+			return false;
+		else if (result.storage == 'webdav' && !this.parser['postdocument']['exist'])
+			return false;
 
-			if(result.element_content_type && result.element_content_type.substr(0,6) == 'image/')
-			{
-
-				var
-					img = BX.findChild(BX('wd-doc'+result.element_id), {'tagName': 'img'}, true, false),
-					img_wrap = BX.findChild(BX('wd-doc'+result.element_id), {'className': 'feed-add-img-wrap'}, true, false),
-					img_title = BX.findChild(BX('wd-doc'+result.element_id), {'className': 'feed-add-img-title'}, true, false);
-
-				BX.bind(img_wrap, "click", new Function("window['" + this.classID + "'].insertFile('" +
-					result.element_id + this.sNewFilePostfix + "');"));
-				BX.bind(img_title, "click", new Function("window['" + this.classID + "'].insertFile('" +
-					result.element_id + this.sNewFilePostfix + "');"));
-
-				img_wrap.style.cursor = img_title.style.cursor = "pointer";
-				img_wrap.title = img_title.title = BX.message('MPF_IMAGE');
-
-				this.checkFile(result.element_id, result);
-				this.insertFile((result.element_id + this.sNewFilePostfix));
-			}
-			else if (window[this.eID]['oSpecialParsers']['postfile'])
-			{
-				var
-					name_wrap = BX.findChild(BX('wd-doc'+result.element_id), {'className': 'f-wrap'}, true, false);
-				BX.bind(name_wrap, "click", new Function("window['" + this.classID + "'].insertFile('" + result.element_id + this.sNewFilePostfix + "');"));
-
-				name_wrap.style.cursor = "pointer";
-				name_wrap.title = BX.message('MPF_FILE');
-
-				this.checkFile(result.element_id, result);
-				this.insertFile((result.element_id + this.sNewFilePostfix));
-			}
+		var id = this.checkFile(result.element_id, result, true);
+		if (!!id){
+			var f = this.bindToFile(id);
+			this.checkFileInText(this.checkFile(id));
 		}
 	},
 
-	OnFileUploadRemove : function(result)
+	OnFileUploadRemove : function(result, obj, storage)
 	{
-		if(BX.findChild(BX(this.formID), {'attr': {id: 'wd-doc'+result}}, true, false))
+		if (BX.findChild(BX(this.formID), {'attr': {id: 'wd-doc'+result}}, true, false))
+			this.deleteFile(result, null, null, storage);
+	},
+
+	OnWDSelectFileDialogLoaded : function(wdFD)
+	{
+ 		if (!(typeof wdFD == "object" && !!wdFD && !!wdFD.values && !!wdFD.urlGet))
+			return false;
+		var needToReparse = false, id = 0, data = {}, node = null, arID = {}, preview = null, did = null;
+
+		for (var ii = 0; ii < wdFD.values.length; ii++)
 		{
-			window[this.classID].deleteFile(result + this.sNewFilePostfix);
+			id = parseInt(wdFD.values[ii].getAttribute("id").replace("wd-doc", ""));
+			if (!!arID['id' + id] )
+				continue;
+			arID['id' + id] = "Y";
+			if (id > 0)
+			{
+				node = BX.findChild(wdFD.values[ii], {'className': 'f-wrap'}, true, false);
+				if(!node)
+					continue;
+				data = {
+					'element_id' : id,
+					'element_name' : node.innerHTML,
+					'parser' : 'postdocument',
+					'storage' : 'webdav'};
+				__mpf_wd_getinfofromnode(data, wdFD);
+				did = this.checkFile(id, data);
+				if (did){
+					this.bindToFile(did);
+					needToReparse = (needToReparse === false ? [] : needToReparse);
+					needToReparse.push(id);
+					wdFD.values[ii].setAttribute("mpfId", did);
+					BX.addCustomEvent(
+						wdFD.values[ii],
+						'OnMkClose',
+						BX.delegate(
+							function(){
+								this.checkFileInText(
+									this.checkFile(BX.proxy_context.getAttribute("mpfId")),
+									null,
+									arguments[0]
+								);
+							},
+							this
+						)
+					);
+				}
+			}
+		}
+		if (needToReparse !== false && this.oEditor && this.parser.postdocument.exist)
+		{
+			this.oEditor.SaveContent();
+			var content = this.oEditor.GetContent();
+			content = content.replace(new RegExp('\\&\\#91\\;DOCUMENT ID=(' + needToReparse.join("|") + ')([WIDTHHEIGHT=0-9 ]*)\\&\\#93\\;','gim'), '[DOCUMENT ID=$1$2]');
+			this.oEditor.SetContent(content);
+			this.oEditor.SetEditorContent(this.oEditor.content);
+			this.oEditor.SetFocus();
+			this.oEditor.AutoResize();
 		}
 	},
 
@@ -134,104 +243,327 @@ window.LHEPostForm.prototype = {
 	{
 		formHeaders = BX.findChild(BX(this.formID), {'className': /bxlhe-editor-buttons/ }, true, true);
 		var p = ((formHeaders && formHeaders.length >= 1) ? formHeaders[formHeaders.length-1].parentNode : null);
-		pEditor = (typeof pEditor == "object" && pEditor != null ? pEditor : window[this.eID]);
-
+		pEditor = (typeof pEditor == "object" && pEditor != null ? pEditor : this.oEditor);
 		if(show || (p && p.style.display == "none"))
 		{
-			if(p) { p.style.display = "table-row"; }
+			if(p) 
+				p.style.display = "table-row"; 
 			pEditor.buttonsHeight = 34;
 			pEditor.ResizeFrame();
+
+			BX.userOptions.save('main.post.form', 'postEdit', 'showBBCode', 'Y');
 		}
 		else
 		{
-			if(p) { BX.hide(p); }
+			if(p) 
+				BX.hide(p); 
 			pEditor.buttonsHeight = 0;
 			pEditor.ResizeFrame();
 		}
 	},
 
-	checkFile : function(id, result)
+	bindToFile : function(id)
 	{
+		var f = this.checkFile(id);
+		if (!!f)
+		{
+			var intId = (typeof f.id == "string" ? parseInt(f.id.replace(this.sNewFilePostfix, "")) : f.id);
+			if (f.isImage && f.storage == 'bfile')
+			{
+
+				var
+					img = BX.findChild(BX('wd-doc'+intId), {'tagName': 'img'}, true, false),
+					img_wrap = BX.findChild(BX('wd-doc'+intId), {'className': 'feed-add-img-wrap'}, true, false),
+					img_title = BX.findChild(BX('wd-doc'+intId), {'className': 'feed-add-img-title'}, true, false);
+
+				BX.bind(img_wrap, "click", BX.delegate(function(){this.insertFile(id);}, this));
+				BX.bind(img_title, "click", BX.delegate(function(){this.insertFile(id);}, this));
+
+				img_wrap.style.cursor = img_title.style.cursor = "pointer";
+				img_wrap.title = img_title.title = BX.message('MPF_IMAGE');
+			}
+			else
+			{
+				var
+					name_wrap = BX.findChild(BX('wd-doc'+intId), {'className': 'f-wrap'}, true, false),
+					img_wrap = BX.findChild(BX('wd-doc'+intId), {'className': 'files-preview'}, true, false);
+				if(!name_wrap)
+					return false;
+				BX.bind(name_wrap, "click", BX.delegate(function(){this.insertFile(id);}, this));
+
+				name_wrap.style.cursor = "pointer";
+				name_wrap.title = BX.message('MPF_FILE');
+				if (!!img_wrap)
+					BX.bind(img_wrap, "click", BX.delegate(function(){this.insertFile(id);}, this));
+			}
+		}
+		return f;
+	},
+
+	startMonitoring : function(start)
+	{
+		start = (start === false ? false : start === true ? true : "Y");
+		if (start)
+		{
+			if (start === true || !this.startMonitoringStatus)
+			{
+				if (this.startMonitoringStatus)
+					clearTimeout(this.startMonitoringStatus);
+				this.startMonitoringStatus = setTimeout(BX.delegate(function() {this.checkFilesInText();}, this), 1000);
+			}
+		}
+		else if (this.startMonitoringStatus)
+		{
+			clearTimeout(this.startMonitoringStatus);
+			this.startMonitoringStatus = null;
+		}
+	},
+
+	checkFilesInText: function()
+	{
+		var result = false;
+		for (var id in this.arFiles)
+		{
+			if (this.checkFileInText(this.arFiles[id]))
+				result = true;
+		}
+		this.startMonitoring(result);
+	},
+
+	checkFileInText : function(file, reallyInText, parent)
+	{
+		if (!file)
+			return null;
+		parent = BX.findChild((!!parent ? parent : BX('wd-doc'+file["id"])), {'className': 'files-info'}, true, false);
+
+		if (reallyInText !== true)
+		{
+			if (this.oEditor.sEditorMode == "code")
+			{
+				var
+					text = this.oEditor.GetCodeEditorContent(),
+					text1 = text.replace(
+						this.parser[file["parser"]]["regexp"],
+						function(str, id, width, height)
+						{
+							if (file["id"] == id)
+							{
+								str = str.replace(id, "__" + id + "__");
+							}
+							return str;
+						}
+					);
+				reallyInText = (text != text1);
+			}
+			else if (this.oEditor.bxTags)
+			{
+				for (var ii in this.oEditor.bxTags)
+				{
+					if (!!this.oEditor.bxTags[ii] &&
+						this.oEditor.bxTags[ii]["tag"] == file["parser"] &&
+						this.oEditor.bxTags[ii]["params"]["value"] == file["id"])
+					{
+						if (this.oEditor.pEditorDocument.getElementById(this.oEditor.bxTags[ii]["id"]))
+						{
+							reallyInText = true;
+							break;
+						}
+						else
+						{
+							this.oEditor.bxTags[ii] = null;
+						}
+					}
+				}
+			}
+		}
+		reallyInText = (reallyInText === true || reallyInText === false ? reallyInText : false);
+		if (BX.type.isDomNode(parent))
+		{
+			var insertBtn = BX.findChild(parent, {'className': 'insert-btn'}, true, false),
+				insertText = BX.findChild(parent, {'className': 'insert-text'}, true, false);
+			if (reallyInText)
+			{
+				parent.setAttribute("tagInText", true);
+				if (!insertText)
+				{
+					parent.appendChild(
+						BX.create('SPAN', {
+								'props' : {
+									'className' : 'insert-text'
+								},
+								'html' : BX.message("MPF_FILE_IN_TEXT")
+							}
+						)
+					);
+				}
+				if (!!insertBtn)
+					insertBtn.parentNode.removeChild(insertBtn);
+			}
+			else
+			{
+				parent.setAttribute("tagInText", false);
+				if (!insertBtn)
+				{
+					parent.appendChild(
+						BX.create('SPAN', {
+								'props' : {
+									'className' : 'insert-btn'
+								},
+								'html' : BX.message("MPF_FILE_INSERT_IN_TEXT"),
+								'events' : {
+									'click' : BX.delegate(function(){this.insertFile(file["~id"]);}, this)
+								}
+							}
+						)
+					);
+				}
+				if (!!insertText)
+					insertText.parentNode.removeChild(insertText);
+			}
+		}
+		if (reallyInText)
+			this.startMonitoring();
+		return reallyInText;
+	},
+
+	checkFile : function(id, result, isNew)
+	{
+		isNew = (!!isNew);
 		if (typeof result == "object" && result != null)
 		{
+			bNew = true;
 			id = parseInt(id);
-			id = id + this.sNewFilePostfix;
 
-			this.arFiles[id] = {
+			if (!result.element_content_type && !!result.element_name)
+				result.element_content_type = (/(\.png|\.jpg|\.jpeg|\.gif|\.bmp)$/i.test(result.element_name) ? 'image/xyz' : 'isnotimage/xyz');
+
+			if (isNew == true && (result.storage == 'bfile' || !result.storage))
+				id = id + this.sNewFilePostfix;
+			result.isImage = (!!result.isImage ? result.isImage : (result.element_content_type ? (result.element_content_type.indexOf('image') == 0) : false));
+			if (result.isImage && result.storage == 'webdav' && !!this.arSize && !!result.element_url)
+			{
+				result.element_thumbnail = result.element_url + (result.element_url.indexOf("?") < 0 ? "?" : "&") +
+					"width=" + this.arSize.width + "&height=" + this.arSize.height;
+			}
+			if (!result.element_thumbnail && !result.element_url && !!result.src)
+				result.element_thumbnail = result.src;
+			if (!result.element_image && !!result.thumbnail)
+				result.element_image = result.thumbnail;
+
+			res = {
 				id : id,
-				name : result.element_name,
+				name : (!!result.element_name ? result.element_name : 'noname'),
 				size: result.element_size,
 				url: result.element_url,
+				parser: (!!result['parser'] ? result['parser'] : false),
 				type: result.element_content_type,
-				src: result.element_thumbnail,
+				src: (!!result.element_thumbnail ? result.element_thumbnail : result.element_url),
+				lowsrc: (!!result.lowsrc ? result.lowsrc : ''),
 				thumbnail: result.element_image,
-				isImage: (result.element_content_type && result.element_content_type.substr(0,6) == 'image/')};
+				isImage: result.isImage,
+				storage: result.storage
+			};
+			if (res.isImage && parseInt(result.width) > 0 && parseInt(result.height) > 0)
+			{
+				res.width = parseInt(result.width);
+				res.height = parseInt(result.height);
+				if (!!this.arSize) {
+					var width = res.width, height = res.height,
+						ResizeCoeff = {
+							width : (this.arSize["width"] > 0 ? this.arSize["width"] / width : 1),
+							height : (this.arSize["height"] > 0 ? this.arSize["height"] / height : 1)},
+						iResizeCoeff = Math.min(ResizeCoeff["width"], ResizeCoeff["height"]);
+					iResizeCoeff = ((0 < iResizeCoeff) && (iResizeCoeff < 1) ? iResizeCoeff : 1);
+					res.width = Math.max(1, parseInt(iResizeCoeff * res.width));
+					res.height = Math.max(1, parseInt(iResizeCoeff * res.height));
+				}
+			}
+
+			if ((!res['isImage'] && !res['url']) || (res['isImage'] && !res['src']))
+				res = false;
+			else if (!res['parser'])
+			{
+				if (res.storage == 'webdav' && this.parser['postdocument']['exist']) {
+					res['parser'] = 'postdocument';
+				} else {
+					res['storage'] == 'bfile';
+					res['parser'] = (res['isImage'] && this.parser['postimage']['exist'] ?
+						'postimage' : (this.parser['postfile']['exist'] ? 'postfile' : false));
+				}
+			}
+
+			if (!!res && !!res["parser"]) {
+				if (res.storage == 'bfile') {
+					this.arFiles['' + id] = res;
+					this.arFiles['' + id]["~id"] = '' + id;
+				}
+				this.arFiles[res['parser'] + id] = res;
+				this.arFiles[res['parser'] + id]["~id"] = res['parser'] + id;
+				return (res['parser'] + id);
+			}
 		}
-		return (typeof this.arFiles[id] == "object" && this.arFiles[id] != null);
+		return (typeof this.arFiles[id] == "object" && this.arFiles[id] != null ? this.arFiles[id] : false);
 	},
 
 	insertFile : function (id, width)
 	{
-		if (
-			!window[this.eID] ||
-				!this.checkFile(id) ||
-				(!window[this.eID]['oSpecialParsers']['postfile'] && !window[this.eID]['oSpecialParsers']['postimage']) ||
-				(!window[this.eID]['oSpecialParsers']['postfile'] && !this.arFiles[id]['isImage']))
-		{
+		var file = this.checkFile(id);
+		if (!this.oEditor || !file)
 			return false;
-		}
 
-		var fileID = this.arFiles[id]['id'],
+		var fileID = file['id'],
 			params = '',
-			res = (
-				window[this.eID].sEditorMode == 'html'
-					?
-					( this.arFiles[id]['isImage'] ? this.Image.html : this.File.html )
-					:
-					( window[this.eID]['oSpecialParsers']['postimage'] && this.arFiles[id]['isImage'] ? this.Image.code : this.File.code )
-				);
+			pattern = this.parser[file['parser']][this.oEditor.sEditorMode == 'html' ? "html" : "code"];
 
-		if (this.arFiles[id]['isImage'] && width > 0)
-		{
-			var widthC = ((window[this.eID].arConfig.width && window[this.eID].arConfig.width.indexOf('%') <= 0) ?
-				parseInt(window[this.eID].arConfig.width)*0.8 : this.config.thumb_width);
-			params = (width > widthC ? ' width="80%"' : '');
+		if (file['isImage'])
+ 		{
+			pattern = (this.oEditor.sEditorMode == "html" ? this.parser["postimage"]["html"] : pattern);
+			if (file.width > 0 && file.height > 0 && this.oEditor.sEditorMode == "html" )
+				params = ' style="width:' + file.width + 'px;height:' + file.height + 'px;" onload="this.style=\' \'"';
 		}
 
-		if (window[this.eID].sEditorMode == 'code' && window[this.eID].bBBCode) // BB Codes
-			window[this.eID].WrapWith("", "", res.
-				replace("\#FILE_ID\#", fileID).
-				replace("\#ADDITIONAL\#", ""));
-		else if(window[this.eID].sEditorMode == 'html') // WYSIWYG
+		if (this.oEditor.sEditorMode == 'code' && this.oEditor.bBBCode) // BB Codes
+			this.oEditor.WrapWith("", "", pattern.replace("\#ID\#", fileID).replace("\#ADDITIONAL\#", ""));
+		else if(this.oEditor.sEditorMode == 'html') // WYSIWYG
 		{
-			window[this.eID].InsertHTML(res.
-				replace("\#FILE_ID\#", window[this.eID].SetBxTag(false,
-				{'tag': (window[this.eID]['oSpecialParsers']['postimage'] && this.arFiles[id]['isImage'] ? "postimage" : "postfile"), params: {'value' : fileID}})).
-				replace("\#SRC\#", this.arFiles[id].src).
-				replace("\#URL\#", this.arFiles[id].url).
-				replace("\#FILE_NAME\#", this.arFiles[id].name).
-				replace("\#ADDITIONAL\#", params)
+			this.oEditor.InsertHTML(pattern.
+				replace("\#ID\#", this.oEditor.SetBxTag(false, {'tag': file.parser, params: {'value' : fileID}})).
+				replace("\#SRC\#", file.src).replace("\#URL\#", file.url).
+				replace("\#LOWSRC\#", (!!file.lowsrc ? file.lowsrc : '')).
+				replace("\#NAME\#", file.name).replace("\#ADDITIONAL\#", params)
 			);
-			setTimeout(new Function('window["' + this.eID + '"].AutoResize();'), 500);
+			setTimeout(BX.delegate(this.oEditor.AutoResize, this.oEditor), 500);
 		}
+		this.checkFileInText(file, true);
 	},
 
-	deleteFile: function(id, url, el)
+	deleteFile: function(id, url, el, storage)
 	{
+		id  = id + '';
+		storage = (storage != 'webdav' && storage != 'bfile' ? 'bfile' : storage);
 		if (typeof url == "string")
 		{
 			BX.remove(el.parentNode);
 			BX.ajax.get(url, function(data){});
 		}
-		window[this.eID].SaveContent();
-		var content = window[this.eID].GetContent();
-		content = content.
-			replace(new RegExp('\\[IMG ID='+ id +'\\]','g'), '').
-			replace(new RegExp('\\[FILE ID='+ id +'\\]','g'), '');
-		window[this.eID].SetContent(content);
-		window[this.eID].SetEditorContent(window[this.eID].content);
-		window[this.eID].SetFocus();
-		window[this.eID].AutoResize();
+		this.oEditor.SaveContent();
+		var
+			content = this.oEditor.GetContent();
+
+		if (storage == 'bfile') {
+			content = content.
+				replace(new RegExp('\\[IMG ID='+ id +'\\]','g'), '').
+				replace(new RegExp('\\[FILE ID='+ id +'\\]','g'), '').
+				replace(new RegExp('\\[IMG ID='+ id + this.sNewFilePostfix +'\\]','g'), '').
+				replace(new RegExp('\\[FILE ID='+ id + this.sNewFilePostfix +'\\]','g'), '');
+		} else {
+			content = content.replace(new RegExp('\\[DOCUMENT ID='+ id +'\\]','g'), '');
+		}
+
+		this.oEditor.SetContent(content);
+		this.oEditor.SetEditorContent(this.oEditor.content);
+		this.oEditor.SetFocus();
+		this.oEditor.AutoResize();
 		this.arFiles[id] = false;
 	},
 
@@ -247,6 +579,71 @@ window.LHEPostForm.prototype = {
 		el.onmouseout = '';
 		el.onmouseover = '';
 		el.className = '';
+	},
+
+	Parse : function(sName, sContent, pLEditor, parser)
+	{
+		this.parser[parser]['exist'] = true;
+		var
+			arParser = this.parser[parser],
+			obj = this;
+		if (!!arParser)
+		{
+			sContent = sContent.replace(
+				arParser['regexp'],
+				function(str, id, width, height)
+				{
+					var res = "", strAdditional = "",
+						file = obj.checkFile(arParser["tag"] + id),
+						template = (file.isImage ? obj['parser']['postimage']['html'] : arParser.html);
+					if (!!file)
+					{
+						if (file.isImage)
+						{
+							width = parseInt(width); height = parseInt(height);
+							strAdditional = ((width && height && pLEditor.bBBParseImageSize) ?
+								(" width=\"" + width + "\" height=\"" + height + "\"") : "");
+							if (strAdditional == "" && file["width"] > 0 && file["height"] > 0)
+								strAdditional = ' style="width:' + file["width"] + 'px;height:' + file["height"] + 'px;" onload="this.style=\' \'"';
+						}
+
+						return template.
+							replace("\#ID\#", pLEditor.SetBxTag(false, {tag: arParser["tag"], params: {value : id}})).
+							replace("\#NAME\#", file['name']).
+							replace("\#SRC\#", file['src']).
+							replace("\#ADDITIONAL\#", strAdditional).
+							replace("\#WIDTH\#", parseInt(width)).
+							replace("\#HEIGHT\#", parseInt(height));
+					}
+					return str;
+				}
+			)
+		}
+		return sContent;
+	},
+
+	Unparse: function(bxTag, pNode, pLEditor, parser)
+	{
+		this.parser[parser]['exist'] = true;
+		if (bxTag.tag == parser)
+		{
+			var
+
+				res = "",
+				width = parseInt(pNode.arAttributes['width']),
+				height = parseInt(pNode.arAttributes['height']),
+				strSize = "";
+
+			if (width && height  && pLEditor.bBBParseImageSize)
+				strSize = ' WIDTH=' + width + ' HEIGHT=' + height;
+
+			res = this.parser[parser]["code"].
+				replace("\#ID\#", bxTag.params.value).
+				replace("\#ADDITIONAL\#", strSize).
+				replace("\#WIDTH\#", width).
+				replace("\#HEIGHT\#", height);
+		}
+		return res;
 	}
 }
 window["mentionText"] = '';
@@ -656,7 +1053,7 @@ window.BXfpdSearchBefore = function(event)
 }
 window.BXfpdSearch = function(event)
 {
-	if(event.keyCode == 16 || event.keyCode == 17 || event.keyCode == 18)
+	if (event.keyCode == 16 || event.keyCode == 17 || event.keyCode == 18 || event.keyCode == 20 || event.keyCode == 244 || event.keyCode == 224 || event.keyCode == 91)
 		return false;
 
 	if (event.keyCode == 13)
@@ -706,48 +1103,11 @@ window.__LHE_OnBeforeParsersInit = function(pEditor)
 				obj: {
 					Parse: function(sName, sContent, pLEditor)
 					{
-						sContent = sContent.replace(
-							/\[IMG ID=((?:\s|\S)*?)(?:\s*?WIDTH=(\d+)\s*?HEIGHT=(\d+))?\]/ig,
-							function(str, id, width, height)
-							{
-								var classID = 'PlEditor' + pLEditor.formID;
-								var res = "";
-								if (window[classID]['checkFile'](id))
-								{
-									width = parseInt(width); height = parseInt(height);
-									var strSize = ((width && height && pLEditor.bBBParseImageSize) ?
-										(" width=\"" + width + "\" height=\"" + height + "\"") : "");
-									return window[classID].Image.html.
-										replace("\#FILE_ID\#", pLEditor.SetBxTag(false, {tag: "postimage", params: {value : id}})).
-										replace("\#SRC\#",  window[classID].arFiles[id]['src']).
-										replace("\#ADDITIONAL\#", strSize);
-								}
-								return str;
-							}
-						);
-						return sContent;
+						return window['PlEditor' + pLEditor.formID].Parse(sName, sContent, pLEditor, "postimage");
 					},
 					UnParse: function(bxTag, pNode, pLEditor)
 					{
-						var
-							classID = 'PlEditor' + pLEditor.formID,
-							res = "";
-						if (bxTag.tag == 'postimage')
-						{
-							var
-								width = parseInt(pNode.arAttributes['width']),
-								height = parseInt(pNode.arAttributes['height']),
-								strSize = "";
-
-							if (width && height  && pLEditor.bBBParseImageSize)
-								strSize = ' WIDTH=' + width + ' HEIGHT=' + height;
-
-							res = window[classID].Image.code.
-								replace("\#FILE_ID\#", bxTag.params.value).
-								replace("\#ADDITIONAL\#", strSize);
-
-						}
-						return res;
+						return window['PlEditor' + pLEditor.formID].Unparse(bxTag, pNode, pLEditor, "postimage");
 					}
 				}
 			}
@@ -761,57 +1121,33 @@ window.__LHE_OnBeforeParsersInit = function(pEditor)
 				obj: {
 					Parse: function(sName, sContent, pLEditor)
 					{
-						sContent = sContent.replace(
-							/\[FILE ID=((?:\s|\S)*?)(?:\s*?WIDTH=(\d+)\s*?HEIGHT=(\d+))?\]/ig,
-							function(str, id, width, height)
-							{
-								var
-									edId = 'PlEditor' + pLEditor.formID,
-									res = "",
-									strAdditional = "",
-									template = window[edId].File.html;
-
-								if (window[edId].checkFile(id))
-								{
-									if (window[edId].arFiles[id]['isImage'])
-									{
-										width = parseInt(width); height = parseInt(height);
-										strAdditional = ((width && height && pLEditor.bBBParseImageSize) ?
-											(" width=\"" + width + "\" height=\"" + height + "\"") : "");
-										template = window[edId].Image.html;
-									}
-
-									return template.
-										replace("\#FILE_ID\#", pLEditor.SetBxTag(false, {tag: "postfile", params: {value : id}})).
-										replace("\#FILE_NAME\#", window[edId].arFiles[id]['name']).
-										replace("\#SRC\#",  window[edId].arFiles[id]['src']).
-										replace("\#ADDITIONAL\#", strAdditional);
-								}
-								return str;
-							}
-						);
-						return sContent;
+						var edId = 'PlEditor' + pLEditor.formID;
+						return window[edId].Parse(sName, sContent, pLEditor, "postfile");
 					},
 					UnParse: function(bxTag, pNode, pLEditor)
 					{
-						var
-							edId = 'PlEditor' + pLEditor.formID,
-							res = "";
-						if (bxTag.tag == 'postfile')
-						{
-							var
-								width = parseInt(pNode.arAttributes['width']),
-								height = parseInt(pNode.arAttributes['height']),
-								strSize = "";
-
-							if (width && height  && pLEditor.bBBParseImageSize)
-								strSize = ' WIDTH=' + width + ' HEIGHT=' + height;
-
-							res = window[edId].File.code.
-								replace("\#FILE_ID\#", bxTag.params.value).
-								replace("\#ADDITIONAL\#", strSize);
-						}
-						return res;
+						var edId = 'PlEditor' + pLEditor.formID;
+						return window[edId].Unparse(bxTag, pNode, pLEditor, "postfile");
+					}
+				}
+			}
+		);
+	}
+//	if (BX.util.in_array('postdocument', parsers))
+	{
+		pEditor.AddParser(
+			{
+				name: 'postdocument',
+				obj: {
+					Parse: function(sName, sContent, pLEditor)
+					{
+						var edId = 'PlEditor' + pLEditor.formID;
+						return window[edId].Parse(sName, sContent, pLEditor, "postdocument");
+					},
+					UnParse: function(bxTag, pNode, pLEditor)
+					{
+						var edId = 'PlEditor' + pLEditor.formID;
+						return window[edId].Unparse(bxTag, pNode, pLEditor, "postdocument");
 					}
 				}
 			}
@@ -859,7 +1195,7 @@ window.__LHE_OnInit = function(pEditor)
 	if (!window[pEditor.id + 'Settings'])
 		return false;
 	pEditor.arFiles = window[pEditor.id + 'Settings']['arFiles'];
-	pEditor.arFiles = (typeof pEditor.arFiles == "object" && pEditor.arFiles != null ? pEditor.arFiles : []);
+	pEditor.arFiles = (!!pEditor.arFiles && pEditor.arFiles.length > 0 ? pEditor.arFiles : []);
 
 	var
 		formID = window[pEditor.id + 'Settings']['formID'],
@@ -1067,7 +1403,7 @@ window.CustomizeLightEditor = function(editorId, params)
 							src = BX.util.trim(src);
 
 						return '<img id="' + pLEditor.SetBxTag(false, {tag: "postvideo", params: {value : src}}) +
-							'" src="/bitrix/images/1.gif" class="bxed-video" width=' + w + ' height=' + h + ' title="' + LHE_MESS.Video + ": " + src + '" />';
+							'" src="/bitrix/images/1.gif" class="bxed-video" width=' + w + ' height=' + h + ' title="' + BX.message.Video + ": " + src + '" />';
 					});
 					return sContent;
 				},
@@ -1130,7 +1466,7 @@ window.CustomizeLightEditor = function(editorId, params)
 				}
 				else if(pObj.pLEditor.sEditorMode == 'html') // WYSIWYG
 				{
-					pObj.pLEditor.InsertHTML('<img id="' + pObj.pLEditor.SetBxTag(false, {tag: "postvideo", params: {value : src}}) + '" src="/bitrix/images/1.gif" class="bxed-video" width=' + w + ' height=' + h + ' title="' + LHE_MESS.Video + ": " + src + '" />');
+					pObj.pLEditor.InsertHTML('<img id="' + pObj.pLEditor.SetBxTag(false, {tag: "postvideo", params: {value : src}}) + '" src="/bitrix/images/1.gif" class="bxed-video" width=' + w + ' height=' + h + ' title="' + BX.message.Video + ": " + src + '" />');
 					pObj.pLEditor.AutoResize();
 				}
 			}
@@ -1146,27 +1482,30 @@ window.CustomizeLightEditor = function(editorId, params)
 		el = el || this;
 
 		if (BX.type.isElementNode(el)
-			
+
 			)
 		{
-			BX.defer(function(){el.disabled = true})();
-
-			var 
-				waiter_parent = BX.findParent(el, BX.is_relative),
-				pos = BX.pos(el, !!waiter_parent);
-
-			el.bxwaiter = (waiter_parent || document.body).appendChild(BX.create('DIV', {
-				props: {className: 'mpf-load-img'},
-				style: {
-					top: parseInt((pos.bottom + pos.top)/2 - 9) + 'px',
-					left: parseInt((pos.right + pos.left)/2 - 9) + 'px'
-				}
-			}));
-	
-
 			BX.addClass(el, 'mpf-load');
 			BX.hide(el.nextSibling);
 			BX.hide(el.previousSibling);
+
+			// BX.addClass(el.parentNode, 'feed-add-button-press');
+			BX.defer(function(){el.disabled = true})();
+
+			var
+				waiter_parent = BX.findParent(el, BX.is_relative),
+				pos = BX.pos(el, !!waiter_parent);
+
+			setTimeout(function(){
+				el.bxwaiter = (waiter_parent || document.body).appendChild(BX.create('DIV', {
+					props: {
+						className: 'mpf-load-img'},
+					style: {
+						top: parseInt((pos.bottom + pos.top)/2 - 9) + 'px',
+						left: parseInt((pos.right + pos.left)/2 - 9) + 'px'
+					}
+				}));
+			}, 300);
 
 			lastWaitElement = el;
 
@@ -1182,6 +1521,7 @@ window.CustomizeLightEditor = function(editorId, params)
 
 		if (BX.type.isElementNode(el))
 		{
+			BX.removeClass(el.parentNode, 'feed-add-button-press');
 			if (el.bxwaiter && el.bxwaiter.parentNode)
 			{
 				el.bxwaiter.parentNode.removeChild(el.bxwaiter);
@@ -1195,6 +1535,107 @@ window.CustomizeLightEditor = function(editorId, params)
 
 			if (lastWaitElement == el)
 				lastWaitElement = null;
+		}
+	}
+
+	window.__mpf_wd_getinfofromnode = function(result, obj)
+	{
+		preview = BX.findChild(BX('wd-doc' + result.element_id), {'className': 'files-preview', 'tagName' : 'IMG'}, true, false);
+		if (!!preview) {
+			result.lowsrc = preview.src;
+			result.element_url = preview.src.replace(/\Wwidth\=(\d+)/, '').replace(/\Wheight\=(\d+)/, '');
+			result.width = parseInt(preview.getAttribute("data-bx-full-width"));
+			result.height = parseInt(preview.getAttribute("data-bx-full-height"));
+		} else if (!!obj.urlGet) {
+			result.element_url = obj.urlGet.
+				replace("#element_id#", result.element_id).
+				replace("#ELEMENT_ID#", result.element_id).
+				replace("#element_name#", result.element_name).
+				replace("#ELEMENT_NAME#", result.element_name);
+		}
+	}
+	window.showLHEEditor = function(lheName, lheId, show)
+	{
+		if (!lheName)
+			return false;
+		show = (show === false ? false : (show === 'hide' ? 'hide' : true));
+
+		if (!window[lheName])
+		{
+			if (lheId && window['LoadLHE_' + lheId])
+			{
+				window['LoadLHE_' + lheId]();
+				BX.addCustomEvent(
+					window,
+					'LHE_OnInit',
+					function(pEditor) {
+						if (pEditor.id == lheId){
+							pEditor.SetFocus();
+						}
+					}
+				);
+			}
+		}
+		else if (show)
+		{
+			window[lheName].SetFocus();
+		}
+
+		var micro = BX('micro'+lheName), div = BX('div'+lheName);
+
+		if (!!micro)
+		{
+			micro.style.display = (show === true ? "none" : "block");
+		}
+		if (!!div)
+		{
+			if (show == 'hide')
+			{
+				BX.onCustomEvent(div, 'OnBeforeHideLHE', [lheName, lheId, show]);
+				(new BX.easing({
+					duration : 200,
+					start : { opacity: 100, height : div.scrollHeight},
+					finish : { opacity : 0, height : 0},
+					transition : BX.easing.makeEaseOut(BX.easing.transitions.quart),
+					step : function(state){
+						div.style.height = state.height + "px";
+						div.style.opacity = state.opacity / 100;
+					},
+					complete : function(){
+						div.style.display = "none";
+						BX.onCustomEvent(div, 'OnAfterHideLHE', [lheName, lheId, show]);
+					}
+				})).animate();
+			}
+			else if (show)
+			{
+				BX.onCustomEvent(div, 'OnBeforeShowLHE', [lheName, lheId, show]);
+				if (div.style.display == "block") {
+					BX.onCustomEvent(div, 'OnAfterShowLHE', [lheName, lheId, show]);
+				} else {
+					BX.adjust(div, {style:{display:"block", overflow:"hidden", height:"33px", opacity:0.1}});
+					(new BX.easing({
+						duration : 200,
+						start : { opacity : 10, height : 33},
+						finish : { opacity: 100, height : div.scrollHeight},
+						transition : BX.easing.makeEaseOut(BX.easing.transitions.quart),
+						step : function(state){
+							div.style.height = state.height + "px";
+							div.style.opacity = state.opacity / 100;
+						},
+						complete : function(){
+							BX.onCustomEvent(div, 'OnAfterShowLHE', [lheName, lheId, show]);
+							div.style.height = 'auto';
+						}
+					})).animate();
+				}
+			}
+			else
+			{
+				BX.onCustomEvent(div, 'OnBeforeHideLHE', [lheName, lheId, show]);
+				div.style.display = "none";
+				BX.onCustomEvent(div, 'OnAfterHideLHE', [lheName, lheId, show]);
+			}
 		}
 	}
 })(window);

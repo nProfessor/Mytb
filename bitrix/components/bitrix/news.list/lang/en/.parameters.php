@@ -29,4 +29,5 @@ $MESS["T_IBLOCK_DESC_ADD_SECTIONS_CHAIN"] = "Add Section name to breadcrumb navi
 $MESS["T_IBLOCK_DESC_CHECK_DATES"] = "Show only currently active elements";
 $MESS["CP_BNL_SET_STATUS_404"] = "Set 404 status if no element or section was found";
 $MESS["CP_BNL_CACHE_GROUPS"] = "Respect Access Permissions";
+$MESS["CP_BNL_INCLUDE_SUBSECTIONS"] = "Show elements from subsections";
 ?>

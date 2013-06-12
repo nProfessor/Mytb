@@ -40,6 +40,13 @@ function BXDeleteFromSystem($absoluteFilePath, $path, $site)
 	//Delete from rewrite rule
 	CUrlRewriter::Delete(Array("SITE_ID" => $site, "PATH" => $path));
 
+	if (class_exists("\\Bitrix\\Main\\Application", false))
+	{
+		\Bitrix\Main\Component\ParametersTable::deleteByFilter(
+			array("SITE_ID" => $site, "REAL_PATH" => $path)
+		);
+	}
+
 	return true;
 }
 

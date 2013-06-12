@@ -90,8 +90,33 @@ if($USER->IsAuthorized())
 }
 */
 $sPreviewFile = $_SERVER["DOCUMENT_ROOT"].BX_PERSONAL_ROOT."/tmp/templates/__bx_preview/footer.php";
-if($_GET['bx_template_preview_mode'] == 'Y' && $USER->CanDoOperation('edit_other_settings') && file_exists($sPreviewFile))
+if(
+	isset($_GET['bx_template_preview_mode'])
+	&& $_GET['bx_template_preview_mode'] == 'Y'
+	&& $USER->CanDoOperation('edit_other_settings')
+	&& file_exists($sPreviewFile)
+)
 	include_once($sPreviewFile);
 else
+{
+	if($GLOBALS['APPLICATION']->IsCSSOptimized())
+	{
+		$arCSS = $APPLICATION->GetCSSArray();
+		$arCSSKeys = array_keys($arCSS);
+		$cntCSSKeys = count($arCSS);
+		$APPLICATION->SetWorkAreaLastCss($arCSSKeys[$cntCSSKeys-1]);
+		unset($arCSS, $arCSSKeys);
+	}
+
+	if($GLOBALS['APPLICATION']->IsJSOptimized())
+	{
+		$arScripts = array_unique($APPLICATION->arHeadScripts);
+		$arJsKeys = array_keys($arScripts);
+		$cntJsKeys = count($arScripts);
+		$APPLICATION->SetWorkAreaLastJs($arJsKeys[$cntJsKeys-1]);
+		unset($arCSS, $arCSSKeys);
+	}
+
 	include_once($_SERVER["DOCUMENT_ROOT"].BX_PERSONAL_ROOT."/templates/".SITE_TEMPLATE_ID."/footer.php");
+}
 ?>

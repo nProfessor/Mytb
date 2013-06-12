@@ -380,12 +380,30 @@ arButtons['Optimize'] = ['BXButton',
 			name : BX_MESS.Optimize,
 			handler : function ()
 			{
-				this.pMainObj.SaveContent();
-				this.pMainObj.OnEvent('ClearResourcesBeforeChangeView');
-				this.pMainObj.SetEditorContent(this.pMainObj.OptimizeHTML(this.pMainObj.GetContent()));
-				this.pMainObj.pEditorFrame.style.display = "none";
-				var _this = this.pMainObj;
-				setTimeout(function(){_this.pEditorFrame.style.display = "block";}, 50);
+				var pMainObj = this.pMainObj;
+				pMainObj.CollapseSelection();
+				pMainObj.insertHTML('<a href="#" id="' + pMainObj.SetBxTag(false, {tag: "cursor"}) + '">|</a>');
+				pMainObj.OnEvent('ClearResourcesBeforeChangeView');
+				pMainObj.SaveContent();
+
+				var content = pMainObj.GetContent();
+				content = pMainObj.OptimizeHTML(content); // optimize
+				content = pMainObj.pParser.SystemParse(content); // Parse
+				pMainObj.pEditorDocument.body.innerHTML = content;
+
+				setTimeout(function()
+				{
+					try{
+						var pCursor = pMainObj.pEditorDocument.getElementById(pMainObj.lastCursorId);
+						if (pCursor && pCursor.parentNode)
+						{
+							pMainObj.SelectElement(pCursor);
+							pCursor.parentNode.removeChild(pCursor);
+							pMainObj.SetFocus();
+							pMainObj.insertHTML('');
+						}
+					}catch(e){}
+				}, 100);
 			}
 		}
 	];
@@ -395,25 +413,25 @@ arButtons['insertcell_before'] = ['BXButton', {
 	id : 'insertcell_before',
 	iconkit : '_global_iconkit.gif',
 	name: BX_MESS.TBInsCellBefore,
-	handler: function () {this.pMainObj.TableOperation('cell', 'insert_before');}
+	handler: function () {this.pMainObj.TableOperation('cell', 'insert_before', arguments[0]);}
 }];
 arButtons['insertcell_after'] = ['BXButton', {
 	id : 'insertcell_after',
 	iconkit : '_global_iconkit.gif',
 	name: BX_MESS.TBInsCellAfter,
-	handler: function () {this.pMainObj.TableOperation('cell', 'insert_after');}
+	handler: function () {this.pMainObj.TableOperation('cell', 'insert_after', arguments[0]);}
 }];
 arButtons['deletecell'] = ['BXButton', {
 	id : 'deletecell',
 	iconkit : '_global_iconkit.gif',
 	name: BX_MESS.TBDellCell,
-	handler: function () {this.pMainObj.TableOperation('cell', 'delete');}
+	handler: function () {this.pMainObj.TableOperation('cell', 'delete', arguments[0]);}
 }];
 arButtons['mergecells'] = ['BXButton', {
 	id : 'mergecells',
 	iconkit : '_global_iconkit.gif',
 	name: BX_MESS.TBMergeCell,
-	handler: function () {this.pMainObj.TableOperation('cell', 'merge');},
+	handler: function () {this.pMainObj.TableOperation('cell', 'merge', arguments[0]);},
 	disablecheck: function (oTable, pMainObj)
 	{
 		var arCells = pMainObj.getSelectedCells();
@@ -426,7 +444,7 @@ arButtons['merge_right'] = ['BXButton', {
 	id : 'merge_right',
 	iconkit : '_global_iconkit.gif',
 	name: BX_MESS.TBMergeRight,
-	handler: function () {this.pMainObj.TableOperation('cell', 'mergeright');},
+	handler: function () {this.pMainObj.TableOperation('cell', 'mergeright', arguments[0]);},
 	disablecheck: function (oTable, pMainObj)
 	{
 		var arCells = pMainObj.getSelectedCells();
@@ -439,7 +457,7 @@ arButtons['merge_bottom'] = ['BXButton', {
 	id : 'merge_bottom',
 	iconkit : '_global_iconkit.gif',
 	name: BX_MESS.TBMergeBottom,
-	handler: function () {this.pMainObj.TableOperation('cell', 'mergebottom');},
+	handler: function () {this.pMainObj.TableOperation('cell', 'mergebottom', arguments[0]);},
 	disablecheck: function (oTable, pMainObj)
 	{
 		var arCells = pMainObj.getSelectedCells();
@@ -456,7 +474,7 @@ arButtons['split_hor'] = ['BXButton', {
 	id : 'split_hor',
 	iconkit : '_global_iconkit.gif',
 	name: BX_MESS.TBSplitCellHor,
-	handler: function () {this.pMainObj.TableOperation('cell', 'splithorizontally');},
+	handler: function () {this.pMainObj.TableOperation('cell', 'splithorizontally', arguments[0]);},
 	disablecheck: function (oTable, pMainObj)
 	{
 		var arCells = pMainObj.getSelectedCells();
@@ -469,7 +487,7 @@ arButtons['split_ver'] = ['BXButton', {
 	id : 'split_ver',
 	iconkit : '_global_iconkit.gif',
 	name: BX_MESS.TBSplitCellVer,
-	handler: function () {this.pMainObj.TableOperation('cell', 'splitvertically');},
+	handler: function () {this.pMainObj.TableOperation('cell', 'splitvertically', arguments[0]);},
 	disablecheck: function (oTable, pMainObj)
 	{
 		var arCells = pMainObj.getSelectedCells();
@@ -483,44 +501,45 @@ arButtons['insertrow_before'] = ['BXButton', {
 	id : 'insertrow_before',
 	iconkit : '_global_iconkit.gif',
 	name: BX_MESS.TBInsRowUpper,
-	handler: function () {this.pMainObj.TableOperation('row', 'insertbefore');}
+	handler: function () {this.pMainObj.TableOperation('row', 'insertbefore', arguments[0]);}
 }];
 arButtons['insertrow_after'] = ['BXButton', {
 	id : 'insertrow_after',
 	iconkit : '_global_iconkit.gif',
 	name: BX_MESS.TBInsRowLower,
-	handler: function () {this.pMainObj.TableOperation('row', 'insertafter');}
+	handler: function () {this.pMainObj.TableOperation('row', 'insertafter', arguments[0]);}
 }];
 arButtons['mergeallcellsinrow'] = ['BXButton', {
 	id : 'mergeallcellsinrow',
 	iconkit : '_global_iconkit.gif',
 	name: BX_MESS.TBMergeRowCells,
-	handler: function () {this.pMainObj.TableOperation('row', 'mergecells');}
+	handler: function () {this.pMainObj.TableOperation('row', 'mergecells', arguments[0]);}
 }];
 arButtons['deleterow'] = ['BXButton', {
 	id : 'deleterow',
 	iconkit : '_global_iconkit.gif',
 	name: BX_MESS.TBDelRow,
-	handler: function () {this.pMainObj.TableOperation('row', 'delete');}
+	handler: function () {
+		this.pMainObj.TableOperation('row', 'delete', arguments[0]);}
 }];
 // COLUMN
 arButtons['insertcolumn_before'] = ['BXButton', {
 	id : 'insertcolumn_before',
 	iconkit : '_global_iconkit.gif',
 	name: BX_MESS.TBInsColLeft,
-	handler: function () {this.pMainObj.TableOperation('column', 'insertleft');}
+	handler: function () {this.pMainObj.TableOperation('column', 'insertleft', arguments[0]);}
 }];
 arButtons['insertcolumn_after'] = ['BXButton', {
 	id : 'insertcolumn_after',
 	iconkit : '_global_iconkit.gif',
 	name: BX_MESS.TBInsColRight,
-	handler: function () {this.pMainObj.TableOperation('column', 'insertright');}
+	handler: function () {this.pMainObj.TableOperation('column', 'insertright', arguments[0]);}
 }];
 arButtons['mergeallcellsincolumn'] = ['BXButton', {
 	id : 'mergeallcellsincolumn',
 	iconkit : '_global_iconkit.gif',
 	name: BX_MESS.TBMergeColCells,
-	handler: function () {this.pMainObj.TableOperation('column', 'mergecells');},
+	handler: function () {this.pMainObj.TableOperation('column', 'mergecells', arguments[0]);},
 	disablecheck: function (oTable, pMainObj)
 	{
 		return false;
@@ -534,7 +553,7 @@ arButtons['deletecolumn'] = ['BXButton', {
 	id : 'deletecolumn',
 	iconkit : '_global_iconkit.gif',
 	name: BX_MESS.TBDelCol,
-	handler: function () {this.pMainObj.TableOperation('column', 'delete');}
+	handler: function () {this.pMainObj.TableOperation('column', 'delete', arguments[0]);}
 }];
 
 arButtons['deltable'] = ['BXButton',
@@ -869,7 +888,7 @@ arButtons['FontName'] =
 		}
 	];
 
-arButtons['FontSize']	=
+arButtons['FontSize'] =
 	['BXEdList',
 		{
 			id: 'FontSize',
@@ -2376,7 +2395,6 @@ if (window.lightMode || window._showAllButtons)
 		arButtons['table'], arButtons['anchor'], arButtons['CreateLink'], arButtons['deletelink'], arButtons['image'],
 		arButtons['SpecialChar'], /* arButtons['spellcheck'], */
 		arButtons['insert_flash'],
-
 		arButtons['InsertHorizontalRule'], 'separator',
 		arButtons['InsertOrderedList'], arButtons['InsertUnorderedList'], 'separator',
 		arButtons['Outdent'], arButtons['Indent'], 'separator',

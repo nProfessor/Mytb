@@ -551,15 +551,19 @@ $aTabs = array(
 		</td>
 	</tr>
 	<tr>
-		<td valign="middle"><label for="LOGS"><?=GetMessage("FILEMAN_EVENT_LOG")?>:</label></td>
-		<td valign="middle">
+		<td class="adm-detail-valign-top"><label for="LOGS"><?=GetMessage("FILEMAN_EVENT_LOG")?>:</label></td>
+		<td>
 			<?$val = COption::GetOptionString("forum", "LOGS", "Q");?>
-			<div>
-				<input type="checkbox" name="log_menu" id="log_menu" value="Y" <?if(COption::GetOptionString($module_id, "log_menu", "Y")=="Y")echo " checked"?>>
-				<label for="log_menu"><?=GetMessage("FILEMAN_EVENT_LOG_MENU")?></label>
+			<div class="adm-list">
+				<div class="adm-list-item">
+					<div class="adm-list-control"><input type="checkbox" name="log_menu" id="log_menu" value="Y" <?if(COption::GetOptionString($module_id, "log_menu", "Y")=="Y")echo " checked"?>></div>
+					<div class="adm-list-label"><label for="log_menu"><?=GetMessage("FILEMAN_EVENT_LOG_MENU")?></label></div>
+				</div>
+				<div class="adm-list-item">
+					<div class="adm-list-control"><input type="checkbox" name="log_page" ID="log_page" value="Y" <?if(COption::GetOptionString($module_id, "log_page", "Y")=="Y")echo " checked"?>></div>
+					<div class="adm-list-label"><label for="log_page"><?=GetMessage("FILEMAN_EVENT_LOG_PAGE")?></label></div>
+				</div>
 			</div>
-				<input type="checkbox" name="log_page" ID="log_page" value="Y" <?if(COption::GetOptionString($module_id, "log_page", "Y")=="Y")echo " checked"?>>
-				<label for="log_page"><?=GetMessage("FILEMAN_EVENT_LOG_PAGE")?></label>
 		</td>
 	</tr>
 
@@ -955,7 +959,7 @@ for ($i = 0, $l = count($arEdTypes); $i < $l; $i++)
 div.bxopt-cont{width: 350px; height: 300px; border: 1px solid #E0E4F1;overflow: auto;}
 table.bxopt-tbl{border-collapse: collapse;width: 100%;}
 table.bxopt-tbl td{padding: 0!important;}
-table.bxopt-tbl td.bxopt-toolbar-title{background-color: #E0E4F1; font-weight: bold; padding: 4px 0!important;}
+table.bxopt-tbl td.bxopt-toolbar-title{background-color: #E0E8EA; font-weight: bold; padding: 4px 0!important;}
 table.bxopt-tbl td.bxopt-toolbar-sep{height: 10px;}
 table.bxopt-tbl td.bxopt-toolbar-title label{margin-left:31px; cursor: default;}
 table.bxopt-tbl td.bxopt-check-sell{width: 20px; padding-left: 5px!important;}
@@ -989,7 +993,8 @@ $aMess = _GtFMess();
 $aMess = array_keys($aMess);
 
 IncludeModuleLangFile($_SERVER['DOCUMENT_ROOT'].'/bitrix/modules/fileman/admin/fileman_js.php');
-for($i=0; $i < count($aMess); $i++)
+$l = count($aMess);
+for($i = 0; $i < $l; $i++)
 	if(substr($aMess[$i], 0, strlen("FILEMAN_JS_"))=="FILEMAN_JS_")
 		$sMess .= "'".substr($aMess[$i], strlen("FILEMAN_JS_"))."': '".CUtil::addslashes(GetMessage($aMess[$i]))."',";
 
@@ -1459,10 +1464,10 @@ function _MLGetTypeHTML($type = array())
 <?endif;?>
 
 <div class="bx-ml-type-params">
-	<table border="0">
-		<tr<?if(!$type["system"]):?> class="adm-detail-required-field"<?endif;?>><td class="adm-detail-content-cell-l bx-ml-td-left">
+	<table border="0" width="100%">
+		<tr<?if(!$type["system"]):?> class="adm-detail-required-field"<?endif;?>><td class="adm-detail-content-cell-l bx-ml-td-left" width="40%">
 			<label for="type_name_inp_<?= $type["id"]?>"><?= GetMessage('FILEMAN_OPTION_PROPS_NAME')?>:</label>
-		</td><td class="adm-detail-content-cell-r">
+		</td><td class="adm-detail-content-cell-r" width="60%">
 			<? if($type["system"]):?>
 				<span class="bx-sys-value"><?= htmlspecialcharsex($type["name"])?></span>
 				<input type="hidden" id="type_name_inp_<?= $type["id"]?>" value="<?= $type["name"]?>" />
@@ -1472,10 +1477,10 @@ function _MLGetTypeHTML($type = array())
 			<?endif;?>
 		</td></tr>
 
-		<tr<?if(!$type["system"]):?> class="adm-detail-content-cell-l adm-detail-required-field"<?endif;?>><td class="bx-ml-td-left">
+		<tr<?if(!$type["system"]):?> class="adm-detail-content-cell-l adm-detail-required-field"<?endif;?>><td class="bx-ml-td-left" width="40%">
 			<input type="hidden" name="<?= $name."[CODE]"?>" value="<?= $type["code"]?>" />
 			<label for="type_code_inp_<?= $type["id"]?>"><?= GetMessage('FILEMAN_ML_ADD_TYPE_CODE')?><? if(!$type["system"]):?><span class="required"><sup>1</sup></span><?endif;?>:</label>
-		</td><td class="adm-detail-content-cell-r">
+		</td><td class="adm-detail-content-cell-r" width="60%">
 			<? if($type["system"]):?>
 				<span class="bx-sys-value"><?= htmlspecialcharsex($type["code"])?></span>
 				<input type="hidden" name="<?= $name."[CODE]"?>" value="<?= $type["code"]?>" />
@@ -1484,14 +1489,14 @@ function _MLGetTypeHTML($type = array())
 			<?endif;?>
 		</td></tr>
 
-		<tr class="adm-detail-required-field"><td class="adm-detail-content-cell-l bx-ml-td-left">
+		<tr class="adm-detail-required-field"><td class="adm-detail-content-cell-l bx-ml-td-left" width="40%">
 			<label for="type_ext_inp_<?= $type["id"]?>"><?= GetMessage('FILEMAN_ML_ADD_TYPE_EXT')?><span class="required"><sup>1</sup></span>:</label>
-		</td><td class="adm-detail-content-cell-r">
+		</td><td class="adm-detail-content-cell-r" width="60%">
 			<input type="text" name="<?= $name."[EXT]"?>" id="type_ext_inp_<?= $type["id"]?>" value="<?= $type["ext"]?>" size="40" />
 		</td></tr>
-		<tr><td class="adm-detail-content-cell-l bx-ml-td-left">
+		<tr><td class="adm-detail-content-cell-l bx-ml-td-left" width="40%">
 			<label for="type_desc_inp_<?= $type["id"]?>"><?= GetMessage('FILEMAN_ML_ADD_TYPE_DESC')?>:</label>
-		</td><td style="adm-detail-content-cell-r height: 50px;">
+		</td><td class="adm-detail-content-cell-r" style="height: 50px;" width="60%">
 			<? if($type["system"]):?>
 				<input name="<?= $name."[DESC]"?>" type="hidden" value="<?= htmlspecialcharsbx($type["desc"])?>" />
 				<span><?= $type["desc"]?></span>

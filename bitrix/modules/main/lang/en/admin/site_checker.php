@@ -66,6 +66,7 @@ $MESS["SC_T_LOG"] = "Creating the log file";
 $MESS["SC_T_SOCK"] = "Using sockets";
 $MESS["SC_T_UPLOAD"] = "File upload";
 $MESS["SC_T_UPLOAD_BIG"] = "Upload files over 4MB";
+$MESS["SC_T_UPLOAD_RAW"] = "Upload file using php://input";
 $MESS["SC_T_POST"] = "POST requests with many parameters";
 $MESS["SC_T_PRECISION"] = "\"precision\" parameter value (no less than 10)";
 $MESS["SC_T_MAIL"] = "E-mail sending";
@@ -89,6 +90,7 @@ $MESS["SC_T_TIME"] = "Database and web server times";
 $MESS["SC_T_SQL_MODE"] = "MySQL Mode";
 $MESS["SC_T_AUTOINC"] = "MySQL auto_increment value";
 $MESS["SC_T_CHARSET"] = "Database table charset";
+$MESS["SC_T_STRUCTURE"] = "Database structure";
 $MESS["SC_DB_CHARSET"] = "Database charset";
 $MESS["SC_MBSTRING_NA"] = "Verification failed due to UTF configuration errors";
 $MESS["SC_CONNECTION_CHARSET"] = "Connection charset";
@@ -109,6 +111,7 @@ $MESS["SC_UPDATE_ERR_RESP"] = "Invalid update server response.";
 $MESS["SC_FILE_EXISTS"] = "File exists:";
 $MESS["SC_WARN_SUHOSIN"] = "The suhosin module loaded, some Control Panel problems may arise (suhosin.simulation=#VAL#).";
 $MESS["SC_WARN_SECURITY"] = "The mod_security module loaded, some Control Panel problems may arise.";
+$MESS["SC_WARN_DAV"] = "WebDav is disabled because the module mod_dav/mod_dav_fs is loaded.";
 $MESS["SC_DELIMITER_ERR"] = "Current delimiter: &quot;#VAL#&quot;, &quot;.&quot; is required.";
 $MESS["SC_DB_MISC_CHARSET"] = "The table #TBL# charset (#T_CHAR#) does not match the database charset (#CHARSET#).";
 $MESS["SC_COLLATE_WARN"] = "The collation value for &quot;#TABLE#&quot; (#VAL0#) differs from the database value (#VAL1#).";
@@ -146,6 +149,7 @@ $MESS["SC_CONNECTION_CHARSET_WRONG"] = "The database connection charset must be 
 $MESS["SC_CONNECTION_CHARSET_WRONG_NOT_UTF"] = "The database connection charset must not be UTF-8, the current value is: #VAL#.";
 $MESS["SC_CONNECTION_COLLATION_WRONG_UTF"] = "The database connection collation must be utf8_unicode_ci, the current value is #VAL#.";
 $MESS["SC_TABLE_CHECK_NA"] = "Verification failed due to database charset error.";
+$MESS["SC_TABLE_COLLATION_NA"] = "Not checked due to table charset errors";
 $MESS["SC_FIX"] = "Fix";
 $MESS["SC_FIX_DATABASE"] = "Fix Database Errors";
 $MESS["SC_FIX_DATABASE_CONFIRM"] = "The system will now attempt to fix database errors. This action is potentially dangerous. Create the database backup copy before you proceed.\\n\\nContinue?";
@@ -157,6 +161,7 @@ $MESS["SC_HELP_NOTOPIC"] = "Sorry, no help on this topic.";
 $MESS["SC_HELP_OPENLOG"] = "This will create a text file with the unique name like site_checker_e45a34e4bf940ef3d78b2493cd56cc47.log in the /bitrix folder. Such names wil prevent the file from being downloaded by third parties. The system will save in this file the test results and extra debugging information.
 
 If no such file can be created, check the system permissions on the <b>Disk Access Check</b> tab. If you cannot add the necessary permissions, contact your hosting service techsupport or administrator. You cannot set the operating system defined permissions in Bitrix Control Panel.";
+$MESS["SC_HELP_CHECK_INSTALL_SCRIPTS"] = "Users may occasionally forget to delete the installation scripts (restore.php, bitrixsetup.php) after system recovery or installation. This may become a serious security threat and result in website hijacking. If you have ignored the autodelete warning, remember to remove these files manually.";
 $MESS["SC_HELP_CHECK_PHP_MODULES"] = "This will check for the PHP extensions required by the system. If there are missing extensions, shows the modules that cannot run without these extensions.
 
 To add missing PHP extensions, contact your hosting techsupport. If you run the system at a local machine, you will have to install them manually; refer to documentation available at php.net.";
@@ -203,6 +208,7 @@ Should the problem appear, contact your hosting provider. If you are running the
 $MESS["SC_HELP_CHECK_UPLOAD_BIG"] = "This will upload a large binary file (over 4MB). If this test fails while the previous one succeeds, the problem may be the limit in php.ini (<b>post_max_size</b> or <b>upload_max_filesize</b>). Use phpinfo to get the current values (Settings - Tools - PHP Settings).
 
 Insufficient disk space may cause this problem as well.";
+$MESS["SC_HELP_CHECK_UPLOAD_RAW"] = "Sends binary data in the body of a POST request. However, the data sometimes may become damaged on the server side in which case the Flash based image uploader won't work.";
 $MESS["SC_HELP_CHECK_POST"] = "This will send a POST request with a large number of parameters. Some server protector software like \"suhosin\" may block verbose requests. This may prevent information block elements from being saved which is definitely a problem.";
 $MESS["SC_HELP_CHECK_MAIL"] = "This will send an e-mail message to hosting_test@bitrixsoft.com using the standard PHP function \"mail\". A special mailbox exists to make the test conditions as real-life as possible.
 
@@ -326,6 +332,40 @@ $MESS["SC_HELP_CHECK_BACKTRACK_LIMIT"] = "PHP has a parameter to set the maximum
 
 Generally, you have to increase this value by calling <i>ini_set</i>. Otherwise, there may occur errors in the web antivirus and the visual editor.  Mail distributions and some other features may also become inoperable.
 ";
-$MESS["SC_T_UPLOAD_RAW"] = "Upload file using php://input";
-$MESS["SC_HELP_CHECK_UPLOAD_RAW"] = "Sends binary data in the body of a POST request. However, the data sometimes may become damaged on the server side in which case the Flash based image uploader won't work.";
+$MESS["SC_READ_MORE"] = "See details in <a href=\"?read_log=Y\" target=\"_blank\">website check log</a>.";
+$MESS["SC_CHARSET_CONN_VS_RES"] = "The connection charset (#CONN#) is different than the result charset (#RES#).";
+$MESS["SC_STRLEN_FAIL"] = "String functions return invalid results.";
+$MESS["SC_T_RECURSION"] = "Stack size; pcre.recursion_limit";
+$MESS["SC_PCRE_CLEAN"] = "Long text strings may be handled incorrectly due to system restrictions.";
+$MESS["SC_T_METHOD_EXISTS"] = "method_exists called on line";
+$MESS["SC_HELP_CHECK_METHOD_EXISTS"] = "The script fails when calling <i>method_exists</I> on some PHP versions. Please refer to this discussion for more information: <a href='http://bugs.php.net/bug.php?id=51425' target=_blank>http://bugs.php.net/bug.php?id=51425</a>
+Install a different PHP version to resolve the issue.";
+$MESS["SC_HELP_CHECK_MYSQL_TABLE_STRUCTURE"] = "The module installation packages always include information on the structure of database tables they use. When updating, the module installers may change the table structure and the module files (scripts).
+
+If the module scripts do not match the current table structure, it will definitely bring about runtime errors.
+
+There may be new database indexes that were added to the new distribution packages but not included in updates. It is because updating a system to include new indexes would take too long and fail in the end.
+
+Website check will diagnose the <b>installed</b> modules and create and/or update the missing indexes and fields to ensure data integrity. However, you will have to review the log manually if the field type has changed.";
+$MESS["ERR_MAX_INPUT_VARS"] = "The value of max_input_vars must be #MIN# or greater. The current value is: #CURRENT#";
+$MESS["SC_T_APACHE"] = "Web server modules";
+$MESS["SC_T_INSTALL_SCRIPTS"] = "Service scripts in the site root";
+$MESS["ERR_OLD_VM"] = "You are running an outdated version of Bitrix Environment. Please install the most recent version to prevent configuration issues.";
+$MESS["SC_ERR_NO_FIELD"] = "The field #FIELD# is missing from the table #TABLE#";
+$MESS["SC_ERR_FIELD_DIFFERS"] = "Table #TABLE#: the field #FIELD# \"#CUR#\" does not match the description \"#NEW#\"";
+$MESS["SC_ERR_NO_INDEX"] = "Index #INDEX# is missing from the table #TABLE#";
+$MESS["SC_ERR_NO_TABLE"] = "The table #TABLE# does not exist.";
+$MESS["SC_CHECK_TABLES_STRUCT_ERRORS"] = "There are errors in database structure (missing tables: #NO_TABLES#, missing fields: #NO_FIELDS#, different fields: #DIFF_FIELDS#, missing indexes: #NO_INDEXES#). Total issues: #VAL#. #VAL1# can be fixed right away.";
+$MESS["SC_CHECK_TABLES_STRUCT_ERRORS_FIX"] = "The issues have been fixed, but some fields (#VAL#) have different types. You will have to fix them manually by reviewing the website check log.";
+$MESS["SC_MEMORY_CHANGED"] = "The value of memory_limit was increased from #VAL0# to #VAL1# using ini_set while testing.";
+$MESS["SC_CRON_WARN"] = "The constant BX_CRONTAB_SUPPORT is defined in /bitrix/php_interface/dbconn.php, this requires running agents using cron.";
+$MESS["SC_CACHED_EVENT_WARN"] = "Found cached e-mail sending data which might be due to an error. Try to clear cache.";
+$MESS["SC_HELP_CHECK_PCRE_RECURSION"] = "The parameter <i>pcre.recursion_limit</i> is set to 100000 by default. If recursion eats more memory than the system stack size can provide (commonly 8 MB), PHP will error out on complex regular expressions showing a <i>Segmentation fault</i> error message.
+
+To disable stack size limit, edit the Apache startup script: <code>ulimit -s unlimited</code>
+On FreeBSD, you will have to rebuild PCRE using the option --disable-stack-for-recursion
+
+Alternatively, you can decrease the value of <i>pcre.recursion_limit</i> to 1000 or less. This solution also applies to Windows based installations.
+
+This will prevent PHP catastrophic failures but may lead to inconsistencies in the behavior of string functions: for example, the forums may begin to show empty posts.";
 ?>

@@ -10,13 +10,16 @@ $ar_IBLOCK_SITE_FILTER_CACHE = Array();
 
 class CAllIBlockElement
 {
+	public $LAST_ERROR = "";
 	protected $bWF_SetMove = true;
 
 	protected $strField;
 	protected $subQueryProp;
 	protected $arFilter;
+	protected $sFrom;
+	protected $sWhere;
 
-	function SubQuery($strField, $arFilter)
+	public static function SubQuery($strField, $arFilter)
 	{
 		if(substr($strField, 0, 9) == "PROPERTY_")
 		{
@@ -419,7 +422,7 @@ class CAllIBlockElement
 		}
 	}
 
-	function WF_GetSqlLimit($PS="BE.", $SHOW_NEW="N")
+	public static function WF_GetSqlLimit($PS="BE.", $SHOW_NEW="N")
 	{
 		if(CModule::IncludeModule("workflow"))
 		{
@@ -2835,11 +2838,12 @@ class CAllIBlockElement
 				{
 					$arAddSelectFields[] = $val;
 				}
-				elseif(substr($val, 0, 14) == "CATALOG_WEIGHT")
-				{
-					$arAddSelectFields[] = $val;
-				}
-				elseif(substr($val, 0, 16) == "CATALOG_QUANTITY")
+				elseif(
+					$val == "CATALOG_PURCHASING_PRICE"
+					|| $val == "CATALOG_PURCHASING_CURRENCY"
+					|| $val == "CATALOG_WEIGHT"
+					|| $val == "CATALOG_QUANTITY"
+				)
 				{
 					$arAddSelectFields[] = $val;
 				}
@@ -2937,9 +2941,9 @@ class CAllIBlockElement
 		$sSectionWhere = "";
 
 		$sWhere = "";
-		for($i=0; $i<count($arSqlSearch); $i++)
-			if(strlen(trim($arSqlSearch[$i], "\n\t")))
-				$sWhere .= "\n\t\t\tAND (".$arSqlSearch[$i].")";
+		foreach ($arSqlSearch as $condition)
+			if (strlen(trim($condition, "\n\t")) > 0)
+				$sWhere .= "\n\t\t\tAND (".$condition.")";
 	}
 
 	///////////////////////////////////////////////////////////////////
@@ -3029,12 +3033,17 @@ class CAllIBlockElement
 			{
 				if(
 					strlen($arFields["PREVIEW_PICTURE"]["tmp_name"]) > 0
-					&& $arFields["PREVIEW_PICTURE"]["tmp_name"] === $arFields["DETAIL_PICTURE"]["tmp_name"]
+					&& (
+						$arFields["PREVIEW_PICTURE"]["tmp_name"] === $arFields["DETAIL_PICTURE"]["tmp_name"]
+						|| ($arFields["PREVIEW_PICTURE"]["COPY_FILE"] == "Y" && !$arFields["PREVIEW_PICTURE"]["copy"])
+					)
 				)
 				{
-					$arFields["PREVIEW_PICTURE"]["tmp_name"] = CTempFile::GetFileName(basename($arFields["PREVIEW_PICTURE"]["tmp_name"]));
-					CheckDirPath($arFields["PREVIEW_PICTURE"]["tmp_name"]);
-					copy($arFields["DETAIL_PICTURE"]["tmp_name"], $arFields["PREVIEW_PICTURE"]["tmp_name"]);
+					$tmp_name = CTempFile::GetFileName(basename($arFields["PREVIEW_PICTURE"]["tmp_name"]));
+					CheckDirPath($tmp_name);
+					copy($arFields["PREVIEW_PICTURE"]["tmp_name"], $tmp_name);
+					$arFields["PREVIEW_PICTURE"]["copy"] = true;
+					$arFields["PREVIEW_PICTURE"]["tmp_name"] = $tmp_name;
 				}
 
 				CIBLock::FilterPicture($arFields["PREVIEW_PICTURE"]["tmp_name"], array(
@@ -3055,12 +3064,17 @@ class CAllIBlockElement
 			{
 				if(
 					strlen($arFields["PREVIEW_PICTURE"]["tmp_name"]) > 0
-					&& $arFields["PREVIEW_PICTURE"]["tmp_name"] === $arFields["DETAIL_PICTURE"]["tmp_name"]
+					&& (
+						$arFields["PREVIEW_PICTURE"]["tmp_name"] === $arFields["DETAIL_PICTURE"]["tmp_name"]
+						|| ($arFields["PREVIEW_PICTURE"]["COPY_FILE"] == "Y" && !$arFields["PREVIEW_PICTURE"]["copy"])
+					)
 				)
 				{
-					$arFields["PREVIEW_PICTURE"]["tmp_name"] = CTempFile::GetFileName(basename($arFields["PREVIEW_PICTURE"]["tmp_name"]));
-					CheckDirPath($arFields["PREVIEW_PICTURE"]["tmp_name"]);
-					copy($arFields["DETAIL_PICTURE"]["tmp_name"], $arFields["PREVIEW_PICTURE"]["tmp_name"]);
+					$tmp_name = CTempFile::GetFileName(basename($arFields["PREVIEW_PICTURE"]["tmp_name"]));
+					CheckDirPath($tmp_name);
+					copy($arFields["PREVIEW_PICTURE"]["tmp_name"], $tmp_name);
+					$arFields["PREVIEW_PICTURE"]["copy"] = true;
+					$arFields["PREVIEW_PICTURE"]["tmp_name"] = $tmp_name;
 				}
 
 				CIBLock::FilterPicture($arFields["PREVIEW_PICTURE"]["tmp_name"], array(
@@ -3103,12 +3117,17 @@ class CAllIBlockElement
 			{
 				if(
 					strlen($arFields["DETAIL_PICTURE"]["tmp_name"]) > 0
-					&& $arFields["DETAIL_PICTURE"]["tmp_name"] === $arFields["PREVIEW_PICTURE"]["tmp_name"]
+					&& (
+						$arFields["DETAIL_PICTURE"]["tmp_name"] === $arFields["PREVIEW_PICTURE"]["tmp_name"]
+						|| ($arFields["DETAIL_PICTURE"]["COPY_FILE"] == "Y" && !$arFields["DETAIL_PICTURE"]["copy"])
+					)
 				)
 				{
-					$arFields["DETAIL_PICTURE"]["tmp_name"] = CTempFile::GetFileName(basename($arFields["DETAIL_PICTURE"]["tmp_name"]));
-					CheckDirPath($arFields["DETAIL_PICTURE"]["tmp_name"]);
-					copy($arFields["PREVIEW_PICTURE"]["tmp_name"], $arFields["DETAIL_PICTURE"]["tmp_name"]);
+					$tmp_name = CTempFile::GetFileName(basename($arFields["DETAIL_PICTURE"]["tmp_name"]));
+					CheckDirPath($tmp_name);
+					copy($arFields["DETAIL_PICTURE"]["tmp_name"], $tmp_name);
+					$arFields["DETAIL_PICTURE"]["copy"] = true;
+					$arFields["DETAIL_PICTURE"]["tmp_name"] = $tmp_name;
 				}
 
 				CIBLock::FilterPicture($arFields["DETAIL_PICTURE"]["tmp_name"], array(
@@ -3129,12 +3148,17 @@ class CAllIBlockElement
 			{
 				if(
 					strlen($arFields["DETAIL_PICTURE"]["tmp_name"]) > 0
-					&& $arFields["DETAIL_PICTURE"]["tmp_name"] === $arFields["PREVIEW_PICTURE"]["tmp_name"]
+					&& (
+						$arFields["DETAIL_PICTURE"]["tmp_name"] === $arFields["PREVIEW_PICTURE"]["tmp_name"]
+						|| ($arFields["DETAIL_PICTURE"]["COPY_FILE"] == "Y" && !$arFields["DETAIL_PICTURE"]["copy"])
+					)
 				)
 				{
-					$arFields["DETAIL_PICTURE"]["tmp_name"] = CTempFile::GetFileName(basename($arFields["DETAIL_PICTURE"]["tmp_name"]));
-					CheckDirPath($arFields["DETAIL_PICTURE"]["tmp_name"]);
-					copy($arFields["PREVIEW_PICTURE"]["tmp_name"], $arFields["DETAIL_PICTURE"]["tmp_name"]);
+					$tmp_name = CTempFile::GetFileName(basename($arFields["DETAIL_PICTURE"]["tmp_name"]));
+					CheckDirPath($tmp_name);
+					copy($arFields["DETAIL_PICTURE"]["tmp_name"], $tmp_name);
+					$arFields["DETAIL_PICTURE"]["copy"] = true;
+					$arFields["DETAIL_PICTURE"]["tmp_name"] = $tmp_name;
 				}
 
 				CIBLock::FilterPicture($arFields["DETAIL_PICTURE"]["tmp_name"], array(
@@ -3262,10 +3286,16 @@ class CAllIBlockElement
 			$ID = $DB->Add("b_iblock_element", $arFields, array("DETAIL_TEXT", "SEARCHABLE_CONTENT"), "iblock");
 
 			if(array_key_exists("PREVIEW_PICTURE", $arFields))
+			{
+				$arFields["PREVIEW_PICTURE_ID"] = $arFields["PREVIEW_PICTURE"];
 				$arFields["PREVIEW_PICTURE"] = $SAVED_PREVIEW_PICTURE;
+			}
 
 			if(array_key_exists("DETAIL_PICTURE", $arFields))
+			{
+				$arFields["DETAIL_PICTURE_ID"] = $arFields["DETAIL_PICTURE"];
 				$arFields["DETAIL_PICTURE"] = $SAVED_DETAIL_PICTURE;
+			}
 
 			if(CIBlockElement::GetIBVersion($arFields["IBLOCK_ID"])==2)
 				$DB->Query("INSERT INTO b_iblock_element_prop_s".$arFields["IBLOCK_ID"]."(IBLOCK_ELEMENT_ID)VALUES(".$ID.")");
@@ -3300,11 +3330,10 @@ class CAllIBlockElement
 			)
 			{
 				$USER_ID = is_object($USER)? intval($USER->GetID()) : 0;
-				$db_events = GetModuleEvents("main", "OnBeforeEventLog");
-				$arEvent = $db_events->Fetch();
+				$arEvents = GetModuleEvents("main", "OnBeforeEventLog", true);
 				if(
-					!$arEvent
-					|| ExecuteModuleEventEx($arEvent, array($USER_ID))===false
+					empty($arEvents)
+					|| ExecuteModuleEventEx($arEvents[0], array($USER_ID))===false
 				)
 				{
 					$rsElement = CIBlockElement::GetList(array(), array("=ID"=>$ID), false, false, array("LIST_PAGE_URL", "NAME", "CODE"));
@@ -3400,8 +3429,7 @@ class CAllIBlockElement
 
 		$arFields["RESULT"] = &$Result;
 
-		$events = GetModuleEvents("iblock", "OnAfterIBlockElementAdd");
-		while ($arEvent = $events->Fetch())
+		foreach (GetModuleEvents("iblock", "OnAfterIBlockElementAdd", true) as $arEvent)
 			ExecuteModuleEventEx($arEvent, array(&$arFields));
 
 		if(defined("BX_COMP_MANAGED_CACHE"))
@@ -3594,15 +3622,14 @@ class CAllIBlockElement
 	///////////////////////////////////////////////////////////////////
 	// Removes element
 	///////////////////////////////////////////////////////////////////
-	function Delete($ID)
+	public static function Delete($ID)
 	{
 		global $DB, $APPLICATION, $USER;
 		$USER_ID = is_object($USER)? intval($USER->GetID()) : 0;
 		$ID = IntVal($ID);
 
 		$APPLICATION->ResetException();
-		$db_events = GetModuleEvents("iblock", "OnBeforeIBlockElementDelete");
-		while($arEvent = $db_events->Fetch())
+		foreach (GetModuleEvents("iblock", "OnBeforeIBlockElementDelete", true) as $arEvent)
 		{
 			if(ExecuteModuleEventEx($arEvent, array($ID))===false)
 			{
@@ -3618,8 +3645,11 @@ class CAllIBlockElement
 			}
 		}
 
-		$arSql = Array("ID='".$ID."'", "WF_PARENT_ELEMENT_ID='".$ID."'");
-		for($i=0; $i<count($arSql); $i++)
+		$arSql = array(
+			"ID='".$ID."'",
+			"WF_PARENT_ELEMENT_ID='".$ID."'",
+		);
+		foreach($arSql as $strWhere)
 		{
 			$strSql = "
 				SELECT
@@ -3633,7 +3663,7 @@ class CAllIBlockElement
 					,CODE
 					,NAME
 				FROM b_iblock_element
-				WHERE ".$arSql[$i]."
+				WHERE ".$strWhere."
 				ORDER BY ID DESC
 			";
 			$z = $DB->Query($strSql);
@@ -3648,10 +3678,9 @@ class CAllIBlockElement
 					&& $arIBlockFields["LOG_ELEMENT_DELETE"]["IS_REQUIRED"] == "Y"
 				)
 				{
-					$db_events = GetModuleEvents("main", "OnBeforeEventLog");
-					$arEvent = $db_events->Fetch();
+					$arEvents = GetModuleEvents("main", "OnBeforeEventLog", true);
 					global $USER;
-					if(!$arEvent || ExecuteModuleEventEx($arEvent, array($USER_ID))===false)
+					if(empty($arEvents) || ExecuteModuleEventEx($arEvents[0], array($USER_ID))===false)
 					{
 						$rsElement = CIBlockElement::GetList(array(), array("=ID"=>$ID), false, false, array("LIST_PAGE_URL", "NAME", "CODE"));
 						$arElement = $rsElement->GetNext();
@@ -3690,9 +3719,7 @@ class CAllIBlockElement
 						return false;
 				}
 
-				static $arDelCache;
-				if(!is_array($arDelCache))
-					$arDelCache = Array();
+				static $arDelCache = array();
 				if(!is_set($arDelCache, $zr["IBLOCK_ID"]))
 				{
 					$arDelCache[$zr["IBLOCK_ID"]] = false;
@@ -3761,8 +3788,7 @@ class CAllIBlockElement
 				$obIBlockElementRights = new CIBlockElementRights($zr["IBLOCK_ID"], $zr["ID"]);
 				$obIBlockElementRights->DeleteAllRights();
 
-				$events = GetModuleEvents("iblock", "OnIBlockElementDelete");
-				while($arEvent = $events->Fetch())
+				foreach (GetModuleEvents("iblock", "OnIBlockElementDelete", true) as $arEvent)
 					ExecuteModuleEventEx($arEvent, array(IntVal($zr["ID"])));
 
 				if(IntVal($zr["WF_PARENT_ELEMENT_ID"])<=0 && $zr["WF_STATUS_ID"]==1 && CModule::IncludeModule("search"))
@@ -3784,8 +3810,7 @@ class CAllIBlockElement
 				if(CModule::IncludeModule("bizproc"))
 					CBPDocument::OnDocumentDelete(array("iblock", "CIBlockDocument", $zr["ID"]), $arErrorsTmp);
 
-				$db_events = GetModuleEvents("iblock", "OnAfterIBlockElementDelete");
-				while($arEvent = $db_events->Fetch())
+				foreach (GetModuleEvents("iblock", "OnAfterIBlockElementDelete", true) as $arEvent)
 					ExecuteModuleEventEx($arEvent, array($zr));
 
 				if(defined("BX_COMP_MANAGED_CACHE"))
@@ -3815,15 +3840,15 @@ class CAllIBlockElement
 		$APPLICATION->ResetException();
 		if($ID===false)
 		{
-			$db_events = GetModuleEvents("iblock", "OnStartIBlockElementAdd");
+			$db_events = GetModuleEvents("iblock", "OnStartIBlockElementAdd", true);
 		}
 		else
 		{
 			$arFields["ID"] = $ID;
-			$db_events = GetModuleEvents("iblock", "OnStartIBlockElementUpdate");
+			$db_events = GetModuleEvents("iblock", "OnStartIBlockElementUpdate", true);
 		}
 
-		while($arEvent = $db_events->Fetch())
+		foreach ($db_events as $arEvent)
 		{
 			$bEventRes = ExecuteModuleEventEx($arEvent, array(&$arFields));
 			if($bEventRes===false)
@@ -3862,6 +3887,8 @@ class CAllIBlockElement
 				$error = CFile::CheckImageFile($arFields["PREVIEW_PICTURE"]);
 				if(strlen($error)>0)
 					$this->LAST_ERROR .= $error."<br>";
+				elseif(($error = CFile::checkForDb($arFields, "PREVIEW_PICTURE", "iblock")) !== "")
+					$this->LAST_ERROR .= GetMessage("IBLOCK_ERR_PREVIEW_PICTURE")."<br>".$error."<br>";
 			}
 			elseif(intval($arFields["PREVIEW_PICTURE"]) > 0)
 			{
@@ -3888,6 +3915,8 @@ class CAllIBlockElement
 				$error = CFile::CheckImageFile($arFields["DETAIL_PICTURE"]);
 				if(strlen($error)>0)
 					$this->LAST_ERROR .= $error."<br>";
+				elseif(($error = CFile::checkForDb($arFields, "DETAIL_PICTURE", "iblock")) !== "")
+					$this->LAST_ERROR .= GetMessage("IBLOCK_ERR_DETAIL_PICTURE")."<br>".$error."<br>";
 			}
 			elseif(intval($arFields["DETAIL_PICTURE"]) > 0)
 			{
@@ -4160,12 +4189,18 @@ class CAllIBlockElement
 							$arProperty["IBLOCK_ID"],
 							$ID,
 							"sort", "asc",
-							array("ID" => $arProperty["ORIG_ID"])
+							array(
+								"ID" => $arProperty["ORIG_ID"],
+								"EMPTY" => "N",
+							)
 						);
 
 						$bCount = 0;
-						while ($dbProperty->Fetch())
-							$bCount++;
+						while ($a=$dbProperty->Fetch())
+						{
+							if ($a["VALUE"] > 0)
+								$bCount++;
+						}
 
 						foreach($property_values as $key2 => $property_value)
 						{
@@ -4277,14 +4312,14 @@ class CAllIBlockElement
 
 		$APPLICATION->ResetException();
 		if($ID===false)
-			$db_events = GetModuleEvents("iblock", "OnBeforeIBlockElementAdd");
+			$db_events = GetModuleEvents("iblock", "OnBeforeIBlockElementAdd", true);
 		else
 		{
 			$arFields["ID"] = $ID;
-			$db_events = GetModuleEvents("iblock", "OnBeforeIBlockElementUpdate");
+			$db_events = GetModuleEvents("iblock", "OnBeforeIBlockElementUpdate", true);
 		}
 
-		while($arEvent = $db_events->Fetch())
+		foreach($db_events as $arEvent)
 		{
 			$bEventRes = ExecuteModuleEventEx($arEvent, array(&$arFields));
 			if($bEventRes===false)
@@ -4342,11 +4377,7 @@ class CAllIBlockElement
 		return false;
 	}
 
-
-	//////////////////////////////////////////////////////////////////////////
-	//
-	//////////////////////////////////////////////////////////////////////////
-	function GetElementGroups($ID, $bElementOnly = false)
+	public static function GetElementGroups($ID, $bElementOnly = false)
 	{
 		global $DB;
 
@@ -4545,7 +4576,7 @@ class CAllIBlockElement
 		}
 	}
 
-	function __GetFileContent($FILE_ID)
+	static function __GetFileContent($FILE_ID)
 	{
 		static $max_file_size = null;
 
@@ -4558,10 +4589,13 @@ class CAllIBlockElement
 			if($max_file_size > 0 && $arFile["size"] > $max_file_size)
 				return "";
 
+			$io = CBXVirtualIo::GetInstance();
+			$file_abs_path = $io->GetLogicalName($arFile["tmp_name"]);
+
 			$arrFile = false;
 			foreach(GetModuleEvents("search", "OnSearchGetFileContent", true) as $arEvent)
 			{
-				if($arrFile = ExecuteModuleEventEx($arEvent, array($arFile["tmp_name"])))
+				if($arrFile = ExecuteModuleEventEx($arEvent, array($file_abs_path)))
 					break;
 			}
 
@@ -4858,7 +4892,50 @@ class CAllIBlockElement
 		}
 	}
 
-	function GetProperty($IBLOCK_ID, $ELEMENT_ID, $by="sort", $order="asc", $arFilter = Array())
+	public static function GetPropertyValues($IBLOCK_ID, $arElementFilter)
+	{
+		global $DB;
+		$IBLOCK_ID = intval($IBLOCK_ID);
+		$VERSION = CIBlockElement::GetIBVersion($IBLOCK_ID);
+
+		$arElementFilter["IBLOCK_ID"] = $IBLOCK_ID;
+
+		$element = new CIBlockElement;
+		$element->strField = "ID";
+		$element->GetList(array(), $arElementFilter, false, false, array("ID"));
+
+		if ($VERSION == 2)
+			$strSql = "
+				SELECT
+					BEP.*
+				FROM
+					".$element->sFrom."
+					INNER JOIN b_iblock_element_prop_s".$IBLOCK_ID." BEP ON BEP.IBLOCK_ELEMENT_ID = BE.ID
+				WHERE 1=1 ".$element->sWhere."
+				ORDER BY
+					BEP.IBLOCK_ELEMENT_ID
+			";
+		else
+			$strSql = "
+				SELECT
+					BE.ID IBLOCK_ELEMENT_ID
+					,BEP.IBLOCK_PROPERTY_ID
+					,BEP.VALUE
+					,BEP.VALUE_NUM
+				FROM
+					".$element->sFrom."
+					LEFT JOIN b_iblock_element_property BEP ON BEP.IBLOCK_ELEMENT_ID = BE.ID
+				WHERE 1=1 ".$element->sWhere."
+				ORDER BY
+					BEP.IBLOCK_ELEMENT_ID
+			";
+		$rs = new CIBlockPropertyResult($DB->Query($strSql));
+		$rs->setIBlock($IBLOCK_ID);
+
+		return $rs;
+	}
+
+	public static function GetProperty($IBLOCK_ID, $ELEMENT_ID, $by="sort", $order="asc", $arFilter = Array())
 	{
 		global $DB;
 		if(is_array($by))
@@ -5077,7 +5154,7 @@ class CAllIBlockElement
 		$DB->Query($strSql, false, "", array("ignore_dml"=>true));
 	}
 
-	function GetIBVersion($iblock_id)
+	public static function GetIBVersion($iblock_id)
 	{
 		if(CIBlock::GetArrayByID($iblock_id, "VERSION") == 2)
 			return 2;
@@ -5246,7 +5323,7 @@ class CAllIBlockElement
 			else
 			{
 				$ar = array_keys($value);
-				if($ar[0]==="VALUE" && $ar[1]==="DESCRIPTION")
+				if(count($ar)===2 && $ar[0]==="VALUE" && $ar[1]==="DESCRIPTION")
 				{
 					$uni_value = array(array("VALUE"=>$value["VALUE"],"DESCRIPTION"=>$value["DESCRIPTION"]));
 				}

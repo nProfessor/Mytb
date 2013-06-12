@@ -2,18 +2,30 @@
 /*********** Bitrix JS Core library ver 0.9.0 beta ********************/
 /**********************************************************************/
 
-;(function(){
-if (window.BX) return;
+;(function(window){
 
-var BX = function(node, bCache)
+if (!!window.BX && !!window.BX.extend)
+	return;
+
+window.BXDEBUG = false;
+
+var _bxtmp;
+if (!!window.BX)
+{
+	_bxtmp = window.BX;
+}
+
+window.BX = function(node, bCache)
 {
 	if (BX.type.isNotEmptyString(node))
 	{
 		var ob;
 
-		if (!!bCache && null != NODECACHE[node]) ob = NODECACHE[node];
+		if (!!bCache && null != NODECACHE[node])
+			ob = NODECACHE[node];
 		ob = ob || document.getElementById(node);
-		if (!!bCache) NODECACHE[node] = ob;
+		if (!!bCache)
+			NODECACHE[node] = ob;
 
 		return ob;
 	}
@@ -23,7 +35,47 @@ var BX = function(node, bCache)
 		return BX.ready(node);
 
 	return null;
-},
+};
+
+// language utility
+BX.message = function(mess)
+{
+	if (BX.type.isString(mess))
+	{
+		if (typeof BX.message[mess] == 'undefined')
+			BX.debug('message undefined: ' + mess);
+		return BX.message[mess];
+	}
+	else
+	{
+		for (var i in mess)
+		{
+			BX.message[i]=mess[i];
+		}
+		return true;
+	}
+};
+
+if(!!_bxtmp)
+{
+	for(var i in _bxtmp)
+	{
+		if(!BX[i])
+		{
+			BX[i]=_bxtmp[i];
+		}
+		else if(i=='message')
+		{
+			for(var j in _bxtmp[i])
+			{
+				BX.message[j]=_bxtmp[i][j];
+			}
+		}
+		_bxtmp = null;
+	}
+}
+
+var
 
 /* ready */
 __readyHandler = null,
@@ -54,9 +106,12 @@ garbageCollectors = [],
 /* list of loaded CSS files */
 cssList = [],
 
+/* list of loaded JS kernel files */
+arKernelJS = [],
+
 /* browser detection */
-bOpera = navigator.userAgent.toLowerCase().indexOf('opera') != -1,
 bSafari = navigator.userAgent.toLowerCase().indexOf('webkit') != -1,
+bOpera = navigator.userAgent.toLowerCase().indexOf('opera') != -1,
 bFirefox = navigator.userAgent.toLowerCase().indexOf('firefox') != -1,
 bChrome = navigator.userAgent.toLowerCase().indexOf('chrome') != -1,
 bIE = document.attachEvent && !bOpera,
@@ -114,7 +169,7 @@ BX.debug = function()
 {
 	if (window.BXDEBUG)
 	{
-		if (console && console.log)
+		if (window.console && window.console.log)
 			console.log('BX.debug: ', arguments.length > 0 ? arguments : arguments[0]);
 	}
 }
@@ -129,25 +184,6 @@ BX.is_subclass_of = function(ob, parent_class)
 
 	return false;
 }
-
-// language utility
-BX.message = function(mess)
-{
-	if (BX.type.isString(mess))
-	{
-		if (typeof BX.message[mess] == 'undefined')
-			BX.debug('message undefined: ' + mess);
-		return BX.message[mess];
-	}
-	else
-	{
-		for (var i in mess)
-		{
-			BX.message[i] = mess[i];
-		}
-		return true;
-	}
-};
 
 BX.bitrix_sessid = function() {return BX.message.bitrix_sessid;}
 
@@ -190,6 +226,8 @@ BX.adjust = function(elem, data)
 		{
 			if (j == 'class' || j == 'className')
 				elem.className = data.attrs[j];
+			else if (j == 'for')
+				elem.htmlFor = data.attrs[j];
 			else if(data.attrs[j] == "")
 				elem.removeAttribute(j);
 			else
@@ -240,7 +278,7 @@ BX.adjust = function(elem, data)
 
 BX.remove = function(ob)
 {
-	if (null != ob.parentNode)
+	if (ob && null != ob.parentNode)
 		ob.parentNode.removeChild(ob);
 	ob = null;
 	return null;
@@ -307,7 +345,7 @@ BX.removeClass = function(ob, value)
 	ob = BX(ob);
 	if (ob)
 	{
-		if (ob.className)
+		if (ob.className && !!value)
 		{
 			if (BX.type.isString(value))
 			{
@@ -394,7 +432,7 @@ BX.hasClass = function(el, className)
 		return false;
 	}
 
-	if (!el.className)
+	if (!el.className || !className)
 	{
 		return false;
 	}
@@ -601,7 +639,7 @@ BX.findChild = function(obj, params, recursive, get_all)
 		}
 	}
 
-	if (get_all && result.length > 0)
+	if (get_all || result.length > 0)
 		return result;
 	else
 		return null;
@@ -1348,9 +1386,13 @@ BX.browser = {
 	},
 
 	addGlobalClass: function() {
- 		if(BX.browser.IsIOS())
+		if(BX.browser.IsIOS())
 		{
 			BX.addClass(document.documentElement, 'bx-ios');
+		}
+		else if(BX.browser.IsMac())
+		{
+			BX.addClass(document.documentElement, 'bx-mac');
 		}
 
 		if(/AppleWebKit/.test(navigator.userAgent))
@@ -1370,7 +1412,7 @@ BX.browser = {
 		else if(/MSIE 10/.test(navigator.userAgent))
 		{
 			// it seems IE10 doesn't have any specific bugs like others event in quirks mode
-			BX.addClass(document.documentElement, 'bx-ie10');
+			BX.addClass(document.documentElement, 'bx-ie bx-ie10');
 		}
 		else if(/Opera/.test(navigator.userAgent))
 		{
@@ -1384,16 +1426,59 @@ BX.browser = {
 		BX.browser.addGlobalClass = BX.DoNothing;
 	},
 
-	isPropertySupported: function(property, bReturnCSSName)
+	isPropertySupported: function(jsProperty, bReturnCSSName)
 	{
-		switch (property)
+		if (!BX.type.isNotEmptyString(jsProperty))
+			return false;
+
+		var property = jsProperty.indexOf("-") > -1 ? getJsName(jsProperty) : jsProperty;
+		bReturnCSSName = !!bReturnCSSName;
+
+		var ucProperty = property.charAt(0).toUpperCase() + property.slice(1);
+		var properties = (property + ' ' + ["Webkit", "Moz", "O", "ms"].join(ucProperty + " ") + ucProperty).split(" ");
+		var obj = document.body || document.documentElement;
+
+		for (var i = 0; i < properties.length; i++)
 		{
-			case 'transform':
-				return GetTransformProperty(bReturnCSSName);
-			case 'transition':
-				return GetTransitionProperty(bReturnCSSName);
+			var prop = properties[i];
+			if (obj.style[prop] !== undefined)
+			{
+				var prefix = prop == property
+							? ""
+							: "-" + prop.substr(0, prop.length - property.length).toLowerCase() + "-";
+				return bReturnCSSName ? prefix + getCssName(property) : prop;
+			}
 		}
 
+		function getCssName(propertyName)
+		{
+			return propertyName.replace(/([A-Z])/g, function() { return "-" + arguments[1].toLowerCase(); } )
+		}
+
+		function getJsName(cssName)
+		{
+			var reg = /(\-([a-z]){1})/g;
+			if (reg.test(cssName))
+				return cssName.replace(reg, function () {return arguments[2].toUpperCase();});
+			else
+				return cssName;
+		}
+
+		return false;
+	},
+
+	addGlobalFeatures : function(features, prefix)
+	{
+		if (!BX.type.isArray(features))
+			return;
+
+		var classNames = [];
+		for (var i = 0; i < features.length; i++)
+		{
+			var support = !!BX.browser.isPropertySupported(features[i]);
+			classNames.push( "bx-" + (support ? "" : "no-") + features[i].toLowerCase());
+		}
+		BX.addClass(document.documentElement, classNames.join(" "));
 	}
 }
 
@@ -1684,7 +1769,7 @@ BX.util = {
 			w = screen.width;
 			h = screen.height;
 		}
-		window.open(url, '', 'status=no,scrollbars=yes,resizable=yes,width='+width+',height='+height+',top='+Math.floor((h - height)/2-14)+',left='+Math.floor((w - width)/2-5));
+		return window.open(url, '', 'status=no,scrollbars=yes,resizable=yes,width='+width+',height='+height+',top='+Math.floor((h - height)/2-14)+',left='+Math.floor((w - width)/2-5));
 	},
 
 	// BX.util.objectSort(object, sortBy, sortDir) - Sort object by property
@@ -1764,6 +1849,11 @@ BX.util = {
 		}
 
 		return url;
+	},
+
+	even: function(digit)
+	{
+		return (parseInt(digit) % 2 == 0)? true: false;
 	}
 }
 
@@ -1881,7 +1971,7 @@ BX.processHTML = function(HTML, scriptsRunFirst)
 	while ((matchStyle = data.match(r.style)) !== null)
 	{
 		var matchHref;
-		if ((matchHref = matchStyle[0].match(r.style_href)) !== null)
+		if ((matchHref = matchStyle[0].match(r.style_href)) !== null && matchStyle[0].indexOf('media="') < 0)
 		{
 			styles.push(matchHref[1]);
 		}
@@ -2044,12 +2134,12 @@ BX.pos = function(el, bRelative)
 		var root = document.documentElement;
 		var body = document.body;
 
-		r.top = clientRect.top + root.scrollTop + body.scrollTop;
-		r.left = clientRect.left + root.scrollLeft + body.scrollLeft;
+		r.top = clientRect.top + (root.scrollTop || body.scrollTop);
+		r.left = clientRect.left + (root.scrollLeft || body.scrollLeft);
 		r.width = clientRect.right - clientRect.left;
 		r.height = clientRect.bottom - clientRect.top;
-		r.right = clientRect.right + root.scrollLeft + body.scrollLeft;
-		r.bottom = clientRect.bottom + root.scrollTop + body.scrollTop;
+		r.right = clientRect.right + (root.scrollLeft || body.scrollLeft);
+		r.bottom = clientRect.bottom + (root.scrollTop || body.scrollTop);
 	}
 	else
 	{
@@ -2166,7 +2256,15 @@ BX.showWait = function(node, msg)
 
 BX.closeWait = function(node, obMsg)
 {
-	obMsg = obMsg || node && (node.bxmsg || BX('wait_' + node.id)) || lastWait.pop();
+	if(node && !obMsg)
+		obMsg = node.bxmsg;
+	if(node && !obMsg && BX.hasClass(node, 'bx-core-waitwindow'))
+		obMsg = node;
+	if(node && !obMsg)
+		obMsg = BX('wait_' + node.id);
+	if(!obMsg)
+		obMsg = lastWait.pop();
+
 	if (obMsg && obMsg.parentNode)
 	{
 		for (var i=0,len=lastWait.length;i<len;i++)
@@ -2182,6 +2280,17 @@ BX.closeWait = function(node, obMsg)
 		if (node) node.bxmsg = null;
 		BX.cleanNode(obMsg, true);
 	}
+}
+
+BX.setKernelJS = function(scripts)
+{
+	if (BX.type.isArray(scripts))
+		arKernelJS = scripts;
+}
+
+BX.getKernelJS = function()
+{
+	return arKernelJS;
 }
 
 BX.loadScript = function(script, callback, doc)
@@ -2205,30 +2314,50 @@ BX.loadScript = function(script, callback, doc)
 	}
 	var load_js = function(ind)
 	{
-		if (ind >= script.length)
+		if(ind >= script.length)
 			return _callback();
 
-		var oHead = doc.getElementsByTagName("head")[0] || doc.documentElement;
-		var oScript = doc.createElement('script');
-		oScript.src = script[ind];
-
-		var bLoaded = false;
-		oScript.onload = oScript.onreadystatechange = function()
+		if(!!script[ind])
 		{
-			if (!bLoaded && (!oScript.readyState || oScript.readyState == "loaded" || oScript.readyState == "complete"))
-			{
-				bLoaded = true;
-				setTimeout(function (){load_js(++ind);}, 50);
+			var oHead = doc.getElementsByTagName("head")[0] || doc.documentElement;
+			var oScript = doc.createElement('script');
+			oScript.src = script[ind];
 
-				oScript.onload = oScript.onreadystatechange = null;
-				if (oHead && oScript.parentNode)
+			var verInd = script[ind].indexOf('.js?');
+			if(verInd>0)
+				fileSrc = script[ind].substr(0, verInd + 3);
+			else
+				fileSrc = script[ind];
+
+			if(_isScriptLoaded(fileSrc))
+			{
+				load_js(++ind);
+			}
+			else
+			{
+				var bLoaded = false;
+				oScript.onload = oScript.onreadystatechange = function()
 				{
-					oHead.removeChild(oScript);
+					if (!bLoaded && (!oScript.readyState || oScript.readyState == "loaded" || oScript.readyState == "complete"))
+					{
+						bLoaded = true;
+						setTimeout(function (){load_js(++ind);}, 50);
+
+						oScript.onload = oScript.onreadystatechange = null;
+						if (oHead && oScript.parentNode)
+						{
+							oHead.removeChild(oScript);
+						}
+					}
 				}
+
+				return oHead.insertBefore(oScript, oHead.firstChild);
 			}
 		}
-
-		return oHead.insertBefore(oScript, oHead.firstChild);
+		else
+		{
+			load_js(++ind);
+		}
 	}
 
 	load_js(0);
@@ -2276,7 +2405,10 @@ BX.loadCSS = function(arCSS, doc, win)
 
 	for (i = 0; i < l; i++)
 	{
-		var _check = arCSS[i].replace(/\.css(\?\d*)/, '.css');
+		var _check = arCSS[i]
+				.replace(/\.css(\?\d*)/, '.css')
+				.replace(/^(http[s]*:)*\/\/[^\/]+/i, '');
+
 		if (BX.util.in_array(_check, cssList))
 			continue;
 
@@ -2399,6 +2531,9 @@ BX.parseDate = function(str)
 			i, cnt,
 			aDateArgs=[], aFormatArgs=[],
 			aResult={};
+
+		if (!aDate)
+			return null;
 
 		if(aDate.length > aFormat.length)
 		{
@@ -3358,51 +3493,60 @@ function _checkNode(obj, params)
 
 function _checkCssList()
 {
-	var links = document.getElementsByTagName('LINK');
+	var linksCol = document.getElementsByTagName('LINK'), links = [];
+
+	if(!!linksCol && linksCol.length > 0)
+	{
+		for(var i=0;i<linksCol.length;i++)
+		{
+			links.push(linksCol[i]);
+		}
+	}
+
+	if(!!window.arKernelCSS && BX.type.isArray(arKernelCSS))
+	{
+		links = BX.util.array_merge(links, arKernelCSS);
+	}
+
 	for (var i = 0; i < links.length; i++)
 	{
-		var href = links[i].getAttribute('href');
-		if (!!href)
+		var href = BX.type.isDomNode(links[i]) ? links[i].getAttribute('href') : links[i];
+		if (!!href && href.replace)
 		{
-			cssList.push(href.replace(/\.css(\?\d*)/, '.css'));
+			cssList.push(href
+				.replace(/\.css(\?\d*)/, '.css')
+				.replace(/^(http[s]*:)*\/\/[^\/]+/i, '')
+			);
 		}
 	}
 	_checkCssList = BX.DoNothing;
 }
 
-/******** CSS properties handlers ************/
-function GetTransformProperty(bReturnCSSName)
+/********* Check for currently loaded core scripts ***********/
+function _isScriptLoaded(fileSrc)
 {
-	var obj = document.body || document.documentElement;
-
-	if(typeof(obj.style.transform) != 'undefined')
-		return 'transform';
-	if(typeof(obj.style.OTransform) != 'undefined')
-		return !!bReturnCSSName ? '-o-transform' : 'OTransform';
-	if(typeof(obj.style.msTransform) != 'undefined')
-		return !!bReturnCSSName ? '-ms-transform' : 'msTransform';
-	if(typeof(obj.style.MozTransform) != 'undefined')
-		return !!bReturnCSSName ? '-moz-transform' : 'MozTransform';
-	if(typeof(obj.style.WebkitTransform) != 'undefined')
-		return !!bReturnCSSName ? '-webkit-transform' : 'WebkitTransform';
-	return false;
-}
-
-function GetTransitionProperty(bReturnCSSName)
-{
-	var obj = document.body || document.documentElement;
-
-	if(typeof(obj.style.transition) != 'undefined')
-		return 'transition';
-	if(typeof(obj.style.OTransition) != 'undefined')
-		return !!bReturnCSSName ? '-o-transition' : 'OTransition';
-	if(typeof(obj.style.msTransition) != 'undefined')
-		return !!bReturnCSSName ? '-ms-transition' : 'msTransition';
-	if(typeof(obj.style.MozTransition) != 'undefined')
-		return !!bReturnCSSName ? '-moz-transition' : 'MozTransition';
-	if(typeof(obj.style.WebkitTransition) != 'undefined')
-		return !!bReturnCSSName ? '-webkit-transition' : 'WebkitTransition';
-	return false;
+	return (
+		BX.util.in_array(fileSrc, arKernelJS)
+		||fileSrc.indexOf('/core/core.js') > 0
+		||fileSrc.indexOf('/core_access.js') >= 0 && !!BX.Access
+		||fileSrc.indexOf('/core_admin.js') >= 0 && !!BX.admin
+		||fileSrc.indexOf('/core_admin_interface.js') >= 0 && !!BX.adminPanel
+		||fileSrc.indexOf('/core_admin_login.js') >= 0 && !!BX.adminLogin
+		||fileSrc.indexOf('/core_ajax.js') >= 0 && !!BX.ajax
+		||fileSrc.indexOf('/core_autosave.js') >= 0 && !!BX.CAutoSave
+		||fileSrc.indexOf('/core_date.js') >= 0 && !!BX.date
+		||fileSrc.indexOf('/core_finder.js') >= 0 && !!BX.Finder
+		||fileSrc.indexOf('/core_fx.js') >= 0 && !!BX.easing
+		||fileSrc.indexOf('/core_image.js') >= 0 && !!BX.CImageView
+		||fileSrc.indexOf('/core_ls.js') >= 0 && !!BX.localStorage
+		||fileSrc.indexOf('/core_popup.js') >= 0 && !!BX.PopupWindowManager
+		||fileSrc.indexOf('/core_tags.js') >= 0 && !!BX.TagsWindowArea
+		||fileSrc.indexOf('/core_timer.js') >= 0 && !!BX.timer
+		||fileSrc.indexOf('/core_tooltip.js') >= 0 && !!BX.tooltip
+		||fileSrc.indexOf('/core_translit.js') >= 0 && !!BX.translit
+		||fileSrc.indexOf('/core_window.js') >= 0 && !!BX.WindowManager
+		||fileSrc.indexOf('/jquery-') >= 0 && !!window.jQuery
+	);
 }
 
 /* garbage collector */
@@ -3442,4 +3586,6 @@ else
 // set empty ready handler
 BX(BX.DoNothing);
 window.BX = BX;
-})(window)
+BX.browser.addGlobalClass();
+BX.browser.addGlobalFeatures(["boxShadow", "borderRadius", "flexWrap", "boxDirection", "transition", "transform"])
+})(window);

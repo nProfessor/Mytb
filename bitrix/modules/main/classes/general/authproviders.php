@@ -1,4 +1,11 @@
-<?
+<?php
+/**
+ * Bitrix Framework
+ * @package bitrix
+ * @subpackage main
+ * @copyright 2001-2013 Bitrix
+ */
+
 IncludeModuleLangFile(__FILE__);
 
 class CAuthProvider
@@ -149,6 +156,10 @@ class CGroupAuthProvider extends CAuthProvider implements IProviderInterface
 	public function GetFormHtml($arParams=false)
 	{
 		global $USER;
+
+		if(is_array($arParams["groups"]) && $arParams["groups"]["disabled"] == "true")
+			return false;
+
 		if(!$USER->CanDoOperation('view_groups'))
 			return false;
 			
@@ -186,7 +197,7 @@ class CGroupAuthProvider extends CAuthProvider implements IProviderInterface
 			),
 			array(
 				"NAME" => GetMessage("authprov_search"),
-				"ELEMENTS" => CFinder::GetFinderItem(Array("TYPE" => "text"), Array("TEXT" => GetMessage("authprov_group_name"))),
+				"ELEMENTS" => CFinder::GetFinderItem(array("TYPE" => "text"), array("TEXT" => GetMessage("authprov_group_name"))),
 				"SEARCH" => "Y",
 			),
 		);
@@ -207,7 +218,9 @@ class CGroupAuthProvider extends CAuthProvider implements IProviderInterface
 			$arResult = array();
 			$res = CGroup::GetList(($by="id"), ($order=""), array("ANONYMOUS"=>"N", "ID"=>implode("|", $aID)));
 			while($arGroup = $res->Fetch())
+			{
 				$arResult["G".$arGroup["ID"]] = array("provider" => GetMessage("authprov_group_prov"), "name"=>$arGroup["NAME"]);
+			}
 				
 			return $arResult;
 		}
@@ -243,25 +256,24 @@ class CUserAuthProvider extends CAuthProvider implements IProviderInterface
 			
 		$search = urldecode($_REQUEST['search']);
 		$elements = "";
-		$arFinderParams = Array(
+		$arFinderParams = array(
 			"PROVIDER" => $this->id,
 			"TYPE" => 2,
 		);
-		
-		$strUserIDs = '';
-		$dbRes = CUser::SearchUserByName(explode(' ', $search), '', true);
-		if ($dbRes)
-			while ($arRes = $dbRes->Fetch())
-				$strUserIDs .= ($strUserIDs == '' ? '' : '|').$arRes['ID'];
 
-		$arFilter = array('ACTIVE' => 'Y', 'NAME_SEARCH' => $search, 'ID' => $strUserIDs);
-		$dbRes = CUser::GetList($by = 'last_name', $order = 'asc',	$arFilter);
-		$dbRes->NavStart(20);
+		$nameFormat = CSite::GetNameFormat(false);
+
+		//be careful with field list because of CUser::FormatName()
+		$dbRes = CUser::GetList(($by = 'last_name'), ($order = 'asc'),
+			array('ACTIVE' => 'Y', 'NAME_SEARCH' => $search),
+			array("FIELDS" => array('ID', 'NAME', 'LAST_NAME', 'SECOND_NAME', 'LOGIN', 'EMAIL')),
+			array('NAV_PARAMS' => array('nTopCount' => 20))
+		);
 		while ($arUser = $dbRes->NavNext(false))
 		{
-			$arItem = Array(
+			$arItem = array(
 				"ID" => "U".$arUser["ID"],
-				"NAME" => CUser::FormatName(CSite::GetNameFormat(false), $arUser, true, false),
+				"NAME" => CUser::FormatName($nameFormat, $arUser, true, false),
 			);
 			$elements .= CFinder::GetFinderItem($arFinderParams, $arItem);
 		}
@@ -275,7 +287,7 @@ class CUserAuthProvider extends CAuthProvider implements IProviderInterface
 			return false;
 
 		$elements = "";
-		$arFinderParams = Array(
+		$arFinderParams = array(
 			"PROVIDER" => $this->id,
 			"TYPE" => 2,
 		);
@@ -286,25 +298,31 @@ class CUserAuthProvider extends CAuthProvider implements IProviderInterface
 			foreach($arLRU as $i=>$val)
 				$arLRU[$i] = substr($val, 1);
 
-			$res = CUser::GetList(($by="LAST_NAME"), ($order="asc"), array("ID"=>implode("|", $arLRU)));
+			$nameFormat = CSite::GetNameFormat(false);
+
+			//be careful with field list because of CUser::FormatName()
+			$res = CUser::GetList(($by="LAST_NAME"), ($order="asc"),
+				array("ID" => implode("|", $arLRU)),
+				array("FIELDS" => array('ID', 'NAME', 'LAST_NAME', 'SECOND_NAME', 'LOGIN', 'EMAIL'))
+			);
 			while($arUser = $res->Fetch())
 			{
-				$arItem = Array(
+				$arItem = array(
 					"ID" => "U".$arUser["ID"],
-					"NAME" => CUser::FormatName(CSite::GetNameFormat(false), $arUser, true, false),
+					"NAME" => CUser::FormatName($nameFormat, $arUser, true, false),
 				);
 				$elements .= CFinder::GetFinderItem($arFinderParams, $arItem);
 			}
 		}
 		
-		$arPanels = Array(
-			Array(
+		$arPanels = array(
+			array(
 				"NAME" => GetMessage("authprov_last"),
 				"ELEMENTS" => $elements,
 			),
-			Array(
+			array(
 				"NAME" => GetMessage("authprov_search"),
-				"ELEMENTS" => CFinder::GetFinderItem(Array("TYPE" => "text"), Array("TEXT" => GetMessage("authprov_user"))),
+				"ELEMENTS" => CFinder::GetFinderItem(array("TYPE" => "text"), array("TEXT" => GetMessage("authprov_user"))),
 				"SEARCH" => "Y",
 			),
 		);
@@ -322,10 +340,18 @@ class CUserAuthProvider extends CAuthProvider implements IProviderInterface
 		
 		if(!empty($aID))
 		{
+			$nameFormat = CSite::GetNameFormat(false);
+
 			$arResult = array();
-			$res = CUser::GetList(($by="id"), ($order=""), array("ID"=>implode("|", $aID)));
+			//be careful with field list because of CUser::FormatName()
+			$res = CUser::GetList(($by="id"), ($order=""),
+				array("ID" => implode("|", $aID)),
+				array("FIELDS" => array('ID', 'NAME', 'LAST_NAME', 'SECOND_NAME', 'LOGIN', 'EMAIL'))
+			);
 			while($arUser = $res->Fetch())
-				$arResult["U".$arUser["ID"]] = array("provider"=>GetMessage("authprov_user1"), "name"=>CUser::FormatName(CSite::GetNameFormat(false), $arUser, true, false));
+			{
+				$arResult["U".$arUser["ID"]] = array("provider"=>GetMessage("authprov_user1"), "name"=>CUser::FormatName($nameFormat, $arUser, true, false));
+			}
 				
 			return $arResult;
 		}
@@ -343,20 +369,20 @@ class COtherAuthProvider implements IProviderInterface
 			return false;
 		
 		$elements = "";
-		$arFinderParams = Array(
+		$arFinderParams = array(
 			"PROVIDER" => "other",
 			"TYPE" => 3,
 		);
 
-		$arItem = Array(
+		$arItem = array(
 			"ID" => "U".$USER->GetID(),
 			"AVATAR" => "/bitrix/js/main/core/images/access/avatar-user-auth.png",
-			"NAME" => (($s = trim($USER->GetFormattedName(false))) <> ''? $s : $USER->GetLogin()),
+			"NAME" => (($s = trim($USER->GetFormattedName(false, false))) <> ''? $s : $USER->GetLogin()),
 			"DESC" => GetMessage("authprov_user_curr"),
 		);
 		$elements .= CFinder::GetFinderItem($arFinderParams, $arItem);
 		
-		$arItem = Array(
+		$arItem = array(
 			"ID" => "CR",
 			"AVATAR" => "/bitrix/js/main/core/images/access/avatar-user-author.png",
 			"NAME" => GetMessage("authprov_author"),
@@ -366,7 +392,7 @@ class COtherAuthProvider implements IProviderInterface
 		
 		if(!is_array($arParams["other"]) || $arParams["other"]["disabled_g2"] != "true")
 		{
-			$arItem = Array(
+			$arItem = array(
 				"ID" => "G2",
 				"AVATAR" => "/bitrix/js/main/core/images/access/avatar-user-everyone.png",
 				"NAME" => GetMessage("authprov_all"),
@@ -377,7 +403,7 @@ class COtherAuthProvider implements IProviderInterface
 		
 		if(!is_array($arParams["other"]) || $arParams["other"]["disabled_au"] != "true")
 		{
-			$arItem = Array(
+			$arItem = array(
 				"ID" => "AU",
 				"AVATAR" => "/bitrix/js/main/core/images/access/avatar-user-auth.png",
 				"NAME" => GetMessage("authprov_authorized"),
@@ -386,8 +412,8 @@ class COtherAuthProvider implements IProviderInterface
 			$elements .= CFinder::GetFinderItem($arFinderParams, $arItem);
 		}
 		
-		$arPanels = Array(
-			Array(
+		$arPanels = array(
+			array(
 				"NAME" => GetMessage("authprov_other"),
 				"ELEMENTS" => $elements,
 				"SELECTED" => "Y",
@@ -407,5 +433,3 @@ class COtherAuthProvider implements IProviderInterface
 		);
 	}
 }
-
-?>

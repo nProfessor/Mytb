@@ -32,10 +32,16 @@ if($arParams["SEF_MODE"] == "Y")
 {
 	$arVariables = array();
 
+	$engine = new CComponentEngine($this);
+	if (CModule::IncludeModule('iblock'))
+	{
+		$engine->addGreedyPart("#SECTION_CODE_PATH#");
+		$engine->setResolveCallback(array("CIBlockFindTools", "resolveComponentEngine"));
+	}
 	$arUrlTemplates = CComponentEngine::MakeComponentUrlTemplates($arDefaultUrlTemplates404, $arParams["SEF_URL_TEMPLATES"]);
 	$arVariableAliases = CComponentEngine::MakeComponentVariableAliases($arDefaultVariableAliases404, $arParams["VARIABLE_ALIASES"]);
 
-	$componentPage = CComponentEngine::ParseComponentPath(
+	$componentPage = $engine->guessComponentPath(
 		$arParams["SEF_FOLDER"],
 		$arUrlTemplates,
 		$arVariables

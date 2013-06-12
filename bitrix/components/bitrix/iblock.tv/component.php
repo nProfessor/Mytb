@@ -83,17 +83,6 @@ if(!isset($BX_TV_PREFIX))
 else
 	$BX_TV_PREFIX = intval($BX_TV_PREFIX)+1;
 
-if(!class_exists("__ciblocktv"))
-{
-	class __CIBlockTV
-	{
-		function Prepare($Value)
-		{
-			return str_replace(array("\r\n", "\r", "\n"), array("<br>", "<br>", "<br>"), CUtil::addslashes(htmlspecialcharsbx($Value)));
-		}
-	}
-}
-
 $arResult['FIRST_FLV_ITEM'] = false;
 $arResult['FIRST_WMV_ITEM'] = false;
 
@@ -298,7 +287,6 @@ if($this->StartResultCache(false, array(($arParams["CACHE_GROUPS"]==="N"? false:
 //include js
 $APPLICATION->AddHeadString('<script type="text/javascript" src="/bitrix/components/bitrix/player/wmvplayer/silverlight.js?v='.filemtime($_SERVER['DOCUMENT_ROOT'].'/bitrix/components/bitrix/player/wmvplayer/silverlight.js').'"></script>', true);
 $APPLICATION->AddHeadString('<script type="text/javascript" src="/bitrix/components/bitrix/player/wmvplayer/wmvplayer.js?v='.filemtime($_SERVER['DOCUMENT_ROOT'].'/bitrix/components/bitrix/player/wmvplayer/wmvplayer.js').'"></script>', true);
-
 $APPLICATION->AddHeadString('<script type="text/javascript" src="/bitrix/components/bitrix/player/mediaplayer/flvscript.js?v='.filemtime($_SERVER['DOCUMENT_ROOT'].'/bitrix/components/bitrix/player/mediaplayer/flvscript.js').'"></script>', true);
 CUtil::InitJSCore();
 

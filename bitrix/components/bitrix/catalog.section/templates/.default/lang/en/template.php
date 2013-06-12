@@ -9,5 +9,4 @@ $MESS["CATALOG_QUANTITY_FROM"] = "#FROM# and more";
 $MESS["CATALOG_QUANTITY_TO"] = "up to #TO#";
 $MESS["CT_BCS_QUANTITY"] = "Quantity";
 $MESS["CT_BCS_ELEMENT_DELETE_CONFIRM"] = "All the information linked to this record will be deleted. Continue anyway?";
-$MESS["CATALOG_SUBSCRIBE"] = "Subscribe";
 ?>

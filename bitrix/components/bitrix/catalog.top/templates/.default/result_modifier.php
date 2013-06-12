@@ -5,7 +5,9 @@ $arResult["nRowsPerItem"] = 1; //Image, Name and Properties
 $arResult["bDisplayPrices"] = false;
 foreach($arResult["ITEMS"] as $arItem)
 {
-	if(count($arItem["PRICES"])>0 || is_array($arItem["PRICE_MATRIX"]))
+	if (!empty($arItem["PRICES"]) || is_array($arItem["PRICE_MATRIX"]))
+		$arResult["bDisplayPrices"] = true;
+	elseif (!empty($arItem["OFFERS"]) && is_array($arItem["OFFERS"]))
 		$arResult["bDisplayPrices"] = true;
 	if($arResult["bDisplayPrices"])
 		break;

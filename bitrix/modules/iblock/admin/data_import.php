@@ -34,6 +34,8 @@ $line_num = 0;
 $correct_lines = 0;
 $error_lines = 0;
 $killed_lines = 0;
+$io = CBXVirtualIo::GetInstance();
+
 /////////////////////////////////////////////////////////////////////
 $arIBlockAvailProdFields = array(
 	"IE_XML_ID" => array(
@@ -149,6 +151,8 @@ $arIBlockAvailGroupFields = array(
 class CAssocData extends CCSVData
 {
 	var $__rows = array();
+	var $__pos = array();
+	var $__last_pos = 0;
 	var $NUM_FIELDS = 0;
 	var $IBLOCK_ID = 0;
 	var $tmpid = "";
@@ -161,17 +165,32 @@ class CAssocData extends CCSVData
 		$this->NUM_FIELDS = intval($NUM_FIELDS);
 	}
 
+	function GetPos()
+	{
+		if(empty($this->__pos))
+			return parent::GetPos();
+		else
+			return $this->__pos[count($this->__pos) - 1];
+	}
+
 	function Fetch()
 	{
 		if (empty($this->__rows))
+		{
+			$this->__last_pos = $this->GetPos();
 			return parent::Fetch();
+		}
 		else
+		{
+			$this->__last_pos = array_pop($this->__pos);
 			return array_pop($this->__rows);
+		}
 	}
 
 	function PutBack($row)
 	{
 		$this->__rows[] = $row;
+		$this->__pos[] = $this->__last_pos;
 	}
 
 	function AddPrimaryKey($field_name, $field_ind)
@@ -421,6 +440,8 @@ class CAssocData extends CCSVData
 	function MapFiles($value)
 	{
 		global $PATH2PROP_FILES;
+		$io = CBXVirtualIo::GetInstance();
+
 		if (!is_array($value))
 			$value = array(
 				$value,
@@ -435,7 +456,7 @@ class CAssocData extends CCSVData
 				if (preg_match("/^(http|https):\\/\\//", $file_name))
 					$arFile = CFile::MakeFileArray($file_name);
 				else
-					$arFile = CFile::MakeFileArray($_SERVER["DOCUMENT_ROOT"].$PATH2PROP_FILES."/".$file_name);
+					$arFile = CFile::MakeFileArray($io->GetPhysicalName($_SERVER["DOCUMENT_ROOT"].$PATH2PROP_FILES."/".$file_name));
 
 				if (isset($arFile["tmp_name"]))
 					$result["n".($j++)] = $arFile;
@@ -476,7 +497,12 @@ if (($REQUEST_METHOD == "POST" || $CUR_FILE_POS > 0) && $STEP > 1 && check_bitri
 				{
 					$URL_DATA_FILE = trim(str_replace("\\", "/", trim($URL_DATA_FILE)) , "/");
 					$FILE_NAME = rel2abs($_SERVER["DOCUMENT_ROOT"], "/".$URL_DATA_FILE);
-					if ((strlen($FILE_NAME) > 1) && ($FILE_NAME === "/".$URL_DATA_FILE) && file_exists($_SERVER["DOCUMENT_ROOT"].$FILE_NAME) && is_file($_SERVER["DOCUMENT_ROOT"].$FILE_NAME) && ($APPLICATION->GetFileAccessPermission($FILE_NAME) >= "W"))
+					if (
+						(strlen($FILE_NAME) > 1)
+						&& ($FILE_NAME === "/".$URL_DATA_FILE)
+						&& $io->FileExists($_SERVER["DOCUMENT_ROOT"].$FILE_NAME)
+						&& ($APPLICATION->GetFileAccessPermission($FILE_NAME) >= "W")
+					)
 					{
 						$DATA_FILE_NAME = $FILE_NAME;
 					}
@@ -508,7 +534,7 @@ if (($REQUEST_METHOD == "POST" || $CUR_FILE_POS > 0) && $STEP > 1 && check_bitri
 	{
 		//*****************************************************************//
 		$csvFile = new CAssocData;
-		$csvFile->LoadFile($_SERVER["DOCUMENT_ROOT"].$DATA_FILE_NAME);
+		$csvFile->LoadFile($io->GetPhysicalName($_SERVER["DOCUMENT_ROOT"].$DATA_FILE_NAME));
 		if ($fields_type != "F" && $fields_type != "R")
 			$strError.= GetMessage("IBLOCK_ADM_IMP_NO_FILE_FORMAT")."<br>";
 
@@ -561,14 +587,12 @@ if (($REQUEST_METHOD == "POST" || $CUR_FILE_POS > 0) && $STEP > 1 && check_bitri
 
 				if (strlen($strError) <= 0)
 				{
-					$arMetkiTmp = preg_split("/[\D]/i", $metki_f);
 					$arMetki = array();
-					for ($i = 0; $i < count($arMetkiTmp); $i++)
+					foreach (preg_split("/[\D]/i", $metki_f) as $metka)
 					{
-						if (IntVal($arMetkiTmp[$i]) > 0)
-						{
-							$arMetki[] = IntVal($arMetkiTmp[$i]);
-						}
+						$metka = intval($metka);
+						if ($metka > 0)
+							$arMetki[] = $metka;
 					}
 
 					if (!is_array($arMetki) || count($arMetki) < 1)
@@ -587,9 +611,9 @@ if (($REQUEST_METHOD == "POST" || $CUR_FILE_POS > 0) && $STEP > 1 && check_bitri
 				$csvFile->SetFirstHeader(false);
 				if ($arRes = $csvFile->Fetch())
 				{
-					for ($i = 0; $i < count($arRes); $i++)
+					foreach ($arRes as $i => $ar)
 					{
-						$arDataFileFields[$i] = $arRes[$i];
+						$arDataFileFields[$i] = $ar;
 					}
 				}
 				else
@@ -627,6 +651,7 @@ if (($REQUEST_METHOD == "POST" || $CUR_FILE_POS > 0) && $STEP > 1 && check_bitri
 			{
 				$arRes = $csvFile->Fetch();
 			}
+			$io = CBXVirtualIo::GetInstance();
 			$bs = new CIBlockSection;
 			$el = new CIBlockElement;
 			$el->CancelWFSetMove();
@@ -754,7 +779,7 @@ if (($REQUEST_METHOD == "POST" || $CUR_FILE_POS > 0) && $STEP > 1 && check_bitri
 							}
 							else
 							{
-								$arLoadProductArray["PREVIEW_PICTURE"] = CFile::MakeFileArray($_SERVER["DOCUMENT_ROOT"].$PATH2IMAGE_FILES."/".$arLoadProductArray["PREVIEW_PICTURE"]);
+								$arLoadProductArray["PREVIEW_PICTURE"] = CFile::MakeFileArray($io->GetPhysicalName($_SERVER["DOCUMENT_ROOT"].$PATH2IMAGE_FILES."/".$arLoadProductArray["PREVIEW_PICTURE"]));
 								if (is_array($arLoadProductArray["PREVIEW_PICTURE"]))
 									$arLoadProductArray["PREVIEW_PICTURE"]["COPY_FILE"] = "Y";
 							}
@@ -773,7 +798,7 @@ if (($REQUEST_METHOD == "POST" || $CUR_FILE_POS > 0) && $STEP > 1 && check_bitri
 							}
 							else
 							{
-								$arLoadProductArray["DETAIL_PICTURE"] = CFile::MakeFileArray($_SERVER["DOCUMENT_ROOT"].$PATH2IMAGE_FILES."/".$arLoadProductArray["DETAIL_PICTURE"]);
+								$arLoadProductArray["DETAIL_PICTURE"] = CFile::MakeFileArray($io->GetPhysicalName($_SERVER["DOCUMENT_ROOT"].$PATH2IMAGE_FILES."/".$arLoadProductArray["DETAIL_PICTURE"]));
 								if (is_array($arLoadProductArray["DETAIL_PICTURE"]))
 									$arLoadProductArray["DETAIL_PICTURE"]["COPY_FILE"] = "Y";
 							}
@@ -1125,7 +1150,7 @@ if ($STEP == 1)
 	<tr>
 		<td><?echo GetMessage("IBLOCK_ADM_IMP_INFOBLOCK"); ?></td>
 		<td>
-			<?echo GetIBlockDropDownList($IBLOCK_ID, 'IBLOCK_TYPE_ID', 'IBLOCK_ID'); ?>
+			<?echo GetIBlockDropDownList($IBLOCK_ID, 'IBLOCK_TYPE_ID', 'IBLOCK_ID', false, 'class="adm-detail-iblock-types"', 'class="adm-detail-iblock-list"'); ?>
 		</td>
 	</tr>
 	<?
@@ -1296,9 +1321,14 @@ if ($STEP == 2)
 	{
 		$DATA_FILE_NAME = trim(str_replace("\\", "/", trim($DATA_FILE_NAME)) , "/");
 		$FILE_NAME = rel2abs($_SERVER["DOCUMENT_ROOT"], "/".$DATA_FILE_NAME);
-		if ((strlen($FILE_NAME) > 1) && ($FILE_NAME == "/".$DATA_FILE_NAME) && $APPLICATION->GetFileAccessPermission($FILE_NAME) >= "W")
+		if (
+			(strlen($FILE_NAME) > 1)
+			&& ($FILE_NAME == "/".$DATA_FILE_NAME)
+			&& $APPLICATION->GetFileAccessPermission($FILE_NAME) >= "W"
+		)
 		{
-			$file_id = fopen($_SERVER["DOCUMENT_ROOT"].$FILE_NAME, "rb");
+			$f = $io->GetFile($_SERVER["DOCUMENT_ROOT"].$FILE_NAME);
+			$file_id = $f->open("rb");
 			$sContent = fread($file_id, 10000);
 			fclose($file_id);
 		}
@@ -1357,29 +1387,29 @@ if ($STEP == 3)
 		}
 	}
 
-	for ($i = 0; $i < count($arDataFileFields); $i++)
+	foreach ($arDataFileFields as $i => $field)
 	{
 ?>
 		<tr>
 			<td width="40%">
-				<b><?echo GetMessage("IBLOCK_ADM_IMP_FIELD"); ?> <?echo $i + 1 ?></b> (<?echo htmlspecialcharsbx($arDataFileFields[$i]); ?>):
+				<b><?echo GetMessage("IBLOCK_ADM_IMP_FIELD"); ?> <?echo $i + 1 ?></b> (<?echo htmlspecialcharsbx($field); ?>):
 			</td>
 			<td width="60%">
 				<select name="field_<?echo $i ?>">
 					<option value=""> - </option>
 					<?
-		for ($j = 0; $j < count($arAvailFields); $j++)
+		foreach ($arAvailFields as $ar)
 		{
-			$bSelected = ${"field_".$i} == $arAvailFields[$j]["value"];
+			$bSelected = ${"field_".$i} == $ar["value"];
 			if (!$bSelected && !isset(${"field_".$i}))
-				$bSelected = $arAvailFields[$j]["value"] == $arDataFileFields[$i];
+				$bSelected = $ar["value"] == $field;
 
 			if (!$bSelected && !isset(${"field_".$i}))
-				$bSelected = $arAvailFields[$j]["code"] == $arDataFileFields[$i];
+				$bSelected = $ar["code"] == $field;
 ?>
-						<option value="<?echo $arAvailFields[$j]["value"] ?>" <?
+						<option value="<?echo $ar["value"] ?>" <?
 			if ($bSelected)
-				echo "selected" ?>><?echo htmlspecialcharsbx($arAvailFields[$j]["name"]); ?></option>
+				echo "selected" ?>><?echo htmlspecialcharsbx($ar["name"]); ?></option>
 						<?
 		}
 ?>
@@ -1456,9 +1486,14 @@ if ($STEP == 3)
 	{
 		$DATA_FILE_NAME = trim(str_replace("\\", "/", trim($DATA_FILE_NAME)) , "/");
 		$FILE_NAME = rel2abs($_SERVER["DOCUMENT_ROOT"], "/".$DATA_FILE_NAME);
-		if ((strlen($FILE_NAME) > 1) && ($FILE_NAME == "/".$DATA_FILE_NAME) && $APPLICATION->GetFileAccessPermission($FILE_NAME) >= "W")
+		if (
+			(strlen($FILE_NAME) > 1)
+			&& ($FILE_NAME == "/".$DATA_FILE_NAME)
+			&& $APPLICATION->GetFileAccessPermission($FILE_NAME) >= "W"
+		)
 		{
-			$file_id = fopen($_SERVER["DOCUMENT_ROOT"].$FILE_NAME, "rb");
+			$f = $io->GetFile($_SERVER["DOCUMENT_ROOT"].$FILE_NAME);
+			$file_id = $f->open("rb");
 			$sContent = fread($file_id, 10000);
 			fclose($file_id);
 		}

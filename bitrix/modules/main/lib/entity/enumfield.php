@@ -25,7 +25,7 @@ class EnumField extends ScalarField
 		{
 			throw new \Exception(sprintf(
 				'Required parameter "values" for %s field in %s entity not found',
-				$this->name, $this->entity->getNamespace().'\\'.$this->entity->getName()
+				$this->name, $this->entity->getNamespace().$this->entity->getName()
 			));
 		}
 
@@ -33,15 +33,27 @@ class EnumField extends ScalarField
 		{
 			throw new \Exception(sprintf(
 				'Parameter "values" for %s field in %s entity should be an array',
-				$this->name, $this->entity->getNamespace().'\\'.$this->entity->getName()
+				$this->name, $this->entity->getNamespace().$this->entity->getName()
 			));
 		}
 
 		$this->values = $parameters['values'];
 	}
 
-	public function validateValue($value)
+	public function getValidators()
 	{
-		return in_array($value, $this->values, true);
+		$validators = parent::getValidators();
+
+		if ($this->validation === null)
+		{
+			$validators[] = new Validator\Enum;
+		}
+
+		return $validators;
+	}
+
+	public function getValues()
+	{
+		return $this->values;
 	}
 }

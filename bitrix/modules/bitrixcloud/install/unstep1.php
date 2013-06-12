@@ -1,3 +1,6 @@
+<?
+/** @global CMain $APPLICATION */
+?>
 <form action="<?echo $APPLICATION->GetCurPage();?>">
 	<?echo bitrix_sessid_post(); ?>
 	<input type="hidden" name="lang" value="<?echo LANGUAGE_ID ?>">

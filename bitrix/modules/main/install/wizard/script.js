@@ -92,6 +92,7 @@ function CAjaxForm(formName, target, hiddenField)
 		this.iframe.onload = function() {_this.AjaxHandler()};
 
 	this.percent = null;
+	this.percent2 = null;
 	this.indicator = null;
 	this.status = null;
 }
@@ -214,6 +215,8 @@ CAjaxForm.prototype.SetStatus = function(percent, status)
 {
 	if (!this.percent)
 		this.percent = document.getElementById("percent");
+	if (!this.percent2)
+		this.percent2 = document.getElementById("percent2");
 
 	if (!this.indicator)
 		this.indicator = document.getElementById("indicator");
@@ -222,7 +225,10 @@ CAjaxForm.prototype.SetStatus = function(percent, status)
 		this.status = document.getElementById("status");
 	this.status.innerHTML = status;
 
-	this.percent.innerHTML = percent + "%";
+	if (this.percent)
+		this.percent.innerHTML = percent + "%";
+	if (this.percent2)
+		this.percent2.innerHTML = percent + "%";
 	this.indicator.style.width = percent + "%";
 }
 

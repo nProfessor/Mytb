@@ -34,11 +34,12 @@ class CAllPerfomanceTable
 		{
 			if(array_key_exists($strColumn, $arFields))
 			{
-				if($arFields[$strColumn]=="datetime")
+				if($arFields[$strColumn]=="datetime" || $arFields[$strColumn]=="date")
 				{
 					$arQuerySelect["TMP_".$strColumn] = "t.".$strColumn." TMP_".$strColumn;
 					$arQuerySelect[$strColumn] = $DB->DateToCharFunction("t.".$strColumn, "SHORT")." ".$strColumn;
 					$arQuerySelect["FULL_".$strColumn] = $DB->DateToCharFunction("t.".$strColumn, "FULL")." FULL_".$strColumn;
+					$arQuerySelect["SHORT_".$strColumn] = $DB->DateToCharFunction("t.".$strColumn, "SHORT")." SHORT_".$strColumn;
 				}
 				else
 				{

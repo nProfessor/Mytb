@@ -1,8 +1,4 @@
 <?
-define("STOP_STATISTICS", true);
-define("NOT_CHECK_PERMISSIONS", true);
-
-require_once(dirname(__FILE__)."/../include/prolog_before.php");
 IncludeModuleLangFile(__FILE__);
 
 class CClock

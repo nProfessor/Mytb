@@ -38,12 +38,16 @@ foreach($arParams["BUTTONS"] as $val)
 			break;
 	}
 }
+
 ?>
-<div class="feed-add-post">
-<?=$arParams["~HTML_BEFORE_TEXTAREA"]?>
+<div class="feed-add-post-micro" id="micro<?=$arParams["LHE"]["jsObjName"]?>" <?
+	?>onclick="showLHEEditor('<?=$arParams["LHE"]["jsObjName"]?>', '<?=$arParams["LHE"]["id"]?>');" <?
+	?><?if(!$arParams["LHE"]["bInitByJS"]){?> style="display:none;"<?}?>><?=GetMessage("BLOG_LINK_SHOW_NEW")?></div><?
+?><div class="feed-add-post" id="div<?=$arParams["LHE"]["jsObjName"]?>" <?if($arParams["LHE"]["bInitByJS"]){?> style="display:none;"<?}?>>
 	<div class="feed-add-post-form feed-add-post-edit-form">
+		<?=$arParams["~HTML_BEFORE_TEXTAREA"]?>
 		<div class="feed-add-post-text">
-			<div class="feed-add-close-icon" onclick="window['PlEditor<?=$arParams["FORM_ID"]?>'].showPanelEditor(false);" id="bx-panel-close"></div>
+			<div class="feed-add-close-icon" onclick="window['<?=$arParams["JS_OBJECT_NAME"]?>'].showPanelEditor(false);BX.userOptions.save('main.post.form', 'postEdit', 'showBBCode', 'N');" id="bx-panel-close"></div>
 			<?
 
 if (IsModuleInstalled("fileman"))
@@ -56,6 +60,8 @@ if (IsModuleInstalled("fileman"))
 		'TAG_ADD': '<?=GetMessageJS("MPF_ADD_TAG1")?>',
 		'MPF_IMAGE': '<?=GetMessageJS("MPF_IMAGE_TITLE")?>',
 		'MPF_FILE': '<?=GetMessageJS("MPF_INSERT_FILE")?>',
+		'MPF_FILE_INSERT_IN_TEXT': '<?=GetMessageJS("MPF_FILE_INSERT_IN_TEXT")?>',
+		'MPF_FILE_IN_TEXT': '<?=GetMessageJS("MPF_FILE_IN_TEXT")?>',
 		'MPF_NAME_TEMPLATE' : '<?=urlencode($arParams['NAME_TEMPLATE'])?>'
 	});
 
@@ -63,18 +69,20 @@ if (IsModuleInstalled("fileman"))
 	{
 		BX.ready(function()
 		{
-			window['PlEditor<?=$arParams["FORM_ID"]?>'] = new LHEPostForm(
+			window['<?=$arParams["JS_OBJECT_NAME"]?>'] = new LHEPostForm(
 				'<?=$arParams["FORM_ID"]?>',
 			<?=CUtil::PhpToJSObject(
 				array(
-					"IsBlog" => ($arParams["IS_BLOG"] === true),
-					"IsWebdavInstalled" => IsModuleInstalled("webdav"),
 					"sNewFilePostfix" => $arParams["FILES"]["POSTFIX"],
-					"eID" => $arParams["LHE"]["jsObjName"],
+					"LHEJsObjName" => $arParams["LHE"]["jsObjName"],
+					"arSize" => $arParams["UPLOAD_FILE_PARAMS"],
 					"WDLoadFormController" => !empty($arParams["UPLOAD_WEBDAV_ELEMENT"]),
+					"BFileDLoadFormController" => !empty($arParams["UPLOAD_FILE"]),
 					"arFiles" => $arParams["FILES"]["VALUE_JS"],
 					"arActions" => $arParams["BUTTONS"]
-				));?>);
+				));?>,
+				window['<?=$arParams["LHE"]["id"]?>Settings']['parsers']
+			);
 		});
 	}
 </script>
@@ -84,17 +92,71 @@ if (IsModuleInstalled("fileman"))
 		<div class="feed-add-post-form-but-wrap" id="post-buttons-bottom"><?=implode("", $arButtonsHTML);
 	if(!empty($arParams["ADDITIONAL"]))
 	{
-		?><div class="feed-add-post-form-but-more" onclick="BX.PopupMenu.show('menu-more<?=$arParams["FORM_ID"]?>', this, [<?=implode(", ", $arParams["ADDITIONAL"])?>],
-			{offsetLeft: 12, offsetTop: 3, lightShadow: false, angle: top });"><?=GetMessage("MPF_MORE")?><div class="feed-add-post-form-but-arrow"></div></div><?
+		?><div class="feed-add-post-form-but-more" onclick="BX.PopupMenu.show('menu-more<?=$arParams["FORM_ID"]?>', this, [<?=implode(", ", $arParams["ADDITIONAL"])?>], {offsetLeft: 42, offsetTop: 3, lightShadow: false, angle: top, events : {onPopupClose : function(popupWindow) {BX.removeClass(this.bindElement, 'feed-add-post-form-but-more-act');}}}); BX.addClass(this, 'feed-add-post-form-but-more-act');"><?=GetMessage("MPF_MORE")?><div class="feed-add-post-form-but-arrow"></div></div><?
 	}
 	?></div>
 </div>
 <?=$arParams["~HTML_AFTER_TEXTAREA"]?><?
 
+if ($arParams["DESTINATION_SHOW"] == "Y" || in_array("MentionUser", $arParams["BUTTONS"]))
+{
+?>
+<script>
+	var lastUsers = <?=(empty($arParams["DESTINATION"]['LAST']['USERS'])? '{}': CUtil::PhpToJSObject($arParams["DESTINATION"]['LAST']['USERS']))?>;
+	var users = <?=(empty($arParams["DESTINATION"]['USERS'])? '{}': CUtil::PhpToJSObject($arParams["DESTINATION"]['USERS']))?>;
+	var department = <?=(empty($arParams["DESTINATION"]['DEPARTMENT'])? '{}': CUtil::PhpToJSObject($arParams["DESTINATION"]['DEPARTMENT']))?>;
+	<?if(empty($arParams["DESTINATION"]['DEPARTMENT_RELATION']))
+	{
+		?>
+		var relation = {};
+		for(var iid in department)
+		{
+			var p = department[iid]['parent'];
+			if (!relation[p])
+				relation[p] = [];
+			relation[p][relation[p].length] = iid;
+		}
+		function makeDepartmentTree(id, relation)
+		{
+			var arRelations = {};
+			if (relation[id])
+			{
+				for (var x in relation[id])
+				{
+					var relId = relation[id][x];
+					var arItems = [];
+					if (relation[relId] && relation[relId].length > 0)
+						arItems = makeDepartmentTree(relId, relation);
+
+					arRelations[relId] = {
+						id: relId,
+						type: 'category',
+						items: arItems
+					};
+				}
+			}
+
+			return arRelations;
+		}
+		var departmentRelation = makeDepartmentTree('DR0', relation);
+		<?
+	}
+	else
+	{
+		?>var departmentRelation = <?=CUtil::PhpToJSObject($arParams["DESTINATION"]['DEPARTMENT_RELATION'])?>;<?
+	}
+	?>
+</script>
+<?
+}
+if($arParams["DESTINATION_SHOW"] == "Y" || !empty($arParams["TAGS"]))
+{
+?><ol class="feed-add-post-strings-blocks"><?
+}
 if($arParams["DESTINATION_SHOW"] == "Y")
 {
-	?>
-<div class="feed-add-post-destination-block">
+?>
+<li class="feed-add-post-destination-block">
 	<div class="feed-add-post-destination-title"><?=GetMessage("MPF_DESTINATION")?></div>
 	<div class="feed-add-post-destination-wrap" id="feed-add-post-destination-container">
 		<span id="feed-add-post-destination-item"></span>
@@ -120,14 +182,14 @@ if($arParams["DESTINATION_SHOW"] == "Y")
 					'closeSearch' : BXfpdCloseSearchCallback
 				},
 				'items' : {
-					'users' : <?=(empty($arParams["DESTINATION"]['USERS'])? '{}': CUtil::PhpToJSObject($arParams["DESTINATION"]['USERS']))?>,
+					'users' : users,
 					'groups' : <?=($arParams["DESTINATION"]["EXTRANET_USER"] == 'Y'? '{}': "{'UA' : {'id':'UA','name': '".(!empty($arParams["DESTINATION"]['DEPARTMENT']) ? GetMessageJS("MPF_DESTINATION_3"): GetMessageJS("MPF_DESTINATION_4"))."'}}")?>,
 					'sonetgroups' : <?=(empty($arParams["DESTINATION"]['SONETGROUPS'])? '{}': CUtil::PhpToJSObject($arParams["DESTINATION"]['SONETGROUPS']))?>,
-					'department' : <?=(empty($arParams["DESTINATION"]['DEPARTMENT'])? '{}': CUtil::PhpToJSObject($arParams["DESTINATION"]['DEPARTMENT']))?>,
-					'departmentRelation' : <?=(empty($arParams["DESTINATION"]['DEPARTMENT_RELATION'])? '{}': CUtil::PhpToJSObject($arParams["DESTINATION"]['DEPARTMENT_RELATION']))?>
+					'department' : department,
+					'departmentRelation' : departmentRelation
 				},
 				'itemsLast' : {
-					'users' : <?=(empty($arParams["DESTINATION"]['LAST']['USERS'])? '{}': CUtil::PhpToJSObject($arParams["DESTINATION"]['LAST']['USERS']))?>,
+					'users' : lastUsers,
 					'sonetgroups' : <?=(empty($arParams["DESTINATION"]['LAST']['SONETGROUPS'])? '{}': CUtil::PhpToJSObject($arParams["DESTINATION"]['LAST']['SONETGROUPS']))?>,
 					'department' : <?=(empty($arParams["DESTINATION"]['LAST']['DEPARTMENT'])? '{}': CUtil::PhpToJSObject($arParams["DESTINATION"]['LAST']['DEPARTMENT']))?>,
 					'groups' : <?=($arParams["DESTINATION"]["EXTRANET_USER"] == 'Y'? '{}': "{'UA':true}")?>
@@ -140,164 +202,23 @@ if($arParams["DESTINATION_SHOW"] == "Y")
 			BX.bind(BX('feed-add-post-destination-container'), 'click', function(e){BX.SocNetLogDestination.openDialog(BXSocNetLogDestinationFormName); BX.PreventDefault(e); });
 		</script>
 	</div>
-</div>
-<?
-}
-if (in_array("MentionUser", $arParams["BUTTONS"]))
-{
-?>
-<script type="text/javascript">
-	window['bMentListen'] = false;
-	window['bPlus'] = false;
-	function BXfpdSelectCallbackMent<?=$arParams["FORM_ID"]?>(item, type, search)
-	{
-		BXfpdSelectCallbackMent(item, type, search, '<?=$arParams["FORM_ID"]?>', '<?=$arParams["LHE"]["jsObjName"]?>');
-	}
-
-	function BXfpdStopMent<?=$arParams["FORM_ID"]?>()
-	{
-		window['bMentListen'] = false;
-		clearTimeout(BX.SocNetLogDestination.searchTimeout);
-		BX.SocNetLogDestination.closeDialog();
-		BX.SocNetLogDestination.closeSearch();
-		if(window['<?=$arParams["LHE"]["jsObjName"]?>'])
-			window['<?=$arParams["LHE"]["jsObjName"]?>'].SetFocus();
-	}
-
-	BXSocNetLogDestinationFormNameMent<?=$arParams["FORM_ID"]?> = '<?=randString(6)?>';
-	BXSocNetLogDestinationDisableBackspace = null;
-	var bxBMent = BX.findChild(BX('<?=$arParams["FORM_ID"]?>'), {'attr': {id: 'bx-b-mention'}}, true, false);
-	BX.SocNetLogDestination.init({
-		'name' : BXSocNetLogDestinationFormNameMent<?=$arParams["FORM_ID"]?>,
-		'searchInput' : bxBMent,
-		'extranetUser' :  <?=($arParams["DESTINATION"]["EXTRANET_USER"] == 'Y'? 'true': 'false')?>,
-		'bindMainPopup' :  { 'node' : bxBMent, 'offsetTop' : '1px', 'offsetLeft': '12px'},
-		'bindSearchPopup' : { 'node' : bxBMent, 'offsetTop' : '1px', 'offsetLeft': '12px'},
-		'callback' : {'select' : BXfpdSelectCallbackMent<?=$arParams["FORM_ID"]?>},
-		'items' : {
-			'users' : <?=(empty($arParams["DESTINATION"]['USERS'])? '{}': CUtil::PhpToJSObject($arParams["DESTINATION"]['USERS']))?>,
-			'groups' : {},
-			'sonetgroups' : {},
-			'department' : <?=(empty($arParams["DESTINATION"]['DEPARTMENT'])? '{}': CUtil::PhpToJSObject($arParams["DESTINATION"]['DEPARTMENT']))?>,
-			'departmentRelation' : <?=(empty($arParams["DESTINATION"]['DEPARTMENT_RELATION'])? '{}': CUtil::PhpToJSObject($arParams["DESTINATION"]['DEPARTMENT_RELATION']))?>
-
-		},
-		'itemsLast' : {
-			'users' : <?=(empty($arParams["DESTINATION"]['LAST']['USERS'])? '{}': CUtil::PhpToJSObject($arParams["DESTINATION"]['LAST']['USERS']))?>,
-			'sonetgroups' : {},
-			'department' : {},
-			'groups' : {}
-		},
-		'itemsSelected' : <?=(empty($arParams["DESTINATION"]['SELECTED'])? '{}': CUtil::PhpToJSObject($arParams["DESTINATION"]['SELECTED']))?>,
-		'departmentSelectDisable' : true,
-		'obWindowClass' : 'bx-lm-mention',
-		'obWindowCloseIcon' : false
-	});
-
-	if(window.BX)
-	{
-		BX.ready(
-			function()
-			{
-				if(/MSIE 8/.test(navigator.userAgent))
-				{
-					var ment = BX.findChild(BX('<?=$arParams["FORM_ID"]?>'), {'attr': {id: 'bx-b-mention'}}, true, false);
-					ment.style.width = '1px';
-					ment.style.marginRight = '0';
-				}
-				else
-				{
-					BX.addCustomEvent(
-						BX.findChild(BX('<?=$arParams["FORM_ID"]?>'), {'attr': {id: 'bx-b-mention'}}, true, false),
-						'mentionClick',
-						function(e){
-						setTimeout(function()					
-						{
-							if(!BX.SocNetLogDestination.isOpenDialog())
-								BX.SocNetLogDestination.openDialog(BXSocNetLogDestinationFormNameMent<?=$arParams["FORM_ID"]?>);
-							bPlus = false;
-							window['bMentListen'] = true;
-							window["mentionText"] = '';
-							window['<?=$arParams["LHE"]["jsObjName"]?>'].SetFocus();
-
-							if(BX.browser.IsIE())
-							{
-								r = window['<?=$arParams["LHE"]["jsObjName"]?>'].GetSelectionRange();
-								win = window['<?=$arParams["LHE"]["jsObjName"]?>'].pEditorWindow;
-								if(win.document.selection) // IE8 and below
-								{
-									r = BXfixIERangeObject(r, win);
-									if (r.endContainer)
-									{
-										txt = r.endContainer.nodeValue;
-										if(window['rngEndOffset'] > txt.length)
-											window['rngEndOffset'] = txt.length;
-
-										var rng = window['<?=$arParams["LHE"]["jsObjName"]?>'].pEditorDocument.createRange();
-										rng.setStart(r.endContainer, window['rngEndOffset']);
-										rng.setEnd(r.endContainer, window['rngEndOffset']);
-										window['<?=$arParams["LHE"]["jsObjName"]?>'].SelectRange(rng);
-										window['<?=$arParams["LHE"]["jsObjName"]?>'].SetFocus();
-									}
-								}
-							}
-
-
-						}, 100);
-						}
-					);
-					
-					//mousedown for IE, that lost focus on button click
-					BX.bind(
-						BX.findChild(BX('<?=$arParams["FORM_ID"]?>'), {'attr': {id: 'bx-b-mention'}}, true, false),
-						"mousedown",
-						function(e)
-						{
-							if(window['bMentListen'] !== true)
-							{
-								if(window['<?=$arParams["LHE"]["jsObjName"]?>'].sEditorMode == 'html') // WYSIWYG
-								{
-									window['<?=$arParams["LHE"]["jsObjName"]?>'].InsertHTML('@');
-									window['bMentListen'] = true;
-									window["mentionText"] = '';
-									bPlus = false;
-
-									if(BX.browser.IsIE())
-									{
-										r = window['<?=$arParams["LHE"]["jsObjName"]?>'].GetSelectionRange();
-
-										win = window['<?=$arParams["LHE"]["jsObjName"]?>'].pEditorWindow;
-										if(win.document.selection) // IE8 and below
-										{
-											r = BXfixIERangeObject(r, win);
-											window['rngEndOffset'] = r.endOffset;
-										}
-									}
-								}
-			
-								BX.onCustomEvent(BX.findChild(BX('<?=$arParams["FORM_ID"]?>'), {'attr': {id: 'bx-b-mention'}}, true, false), 'mentionClick');
-							}
-						}
-					);
-				}
-			}
-		);
-	}
-</script>
+</li>
 <?
 }
 if (!empty($arParams["TAGS"]))
 {
 ?>
-<div class="feed-add-post-tags-block">
+<li class="feed-add-post-tags-block">
 	<div class="feed-add-post-tags-title"><?=GetMessage("MPF_TAGS")?></div>
 	<div class="feed-add-post-tags-wrap" id="post-tags-container">
 		<?
+		$bHasTags = false;
 		foreach($arParams["TAGS"]["VALUE"] as $val)
 		{
 			$val = trim($val);
 			if(strlen($val) > 0)
 			{
+				$bHasTags = true;
 				?><span class="feed-add-post-tags"><?
 				?><?=htmlspecialcharsbx($val)?><span class="feed-add-post-del-but" onclick="deleteTag('<?=CUtil::JSEscape($val)?>', this.parentNode)"></span><?
 				?></span><?
@@ -306,7 +227,6 @@ if (!empty($arParams["TAGS"]))
 		?><span class="feed-add-post-tags-add" id="bx-post-tag"><?=GetMessage("MPF_ADD_TAG")?></span>
 		<input type="hidden" name="<?=$arParams["TAGS"]["NAME"]?>" id="tags-hidden" value="<?=implode(",", $arParams["TAGS"]["VALUE"])?>,">
 	</div>
-</div>
 <div id="post-tags-input" style="display:none;">
 	<?if($arParams["TAGS"]["USE_SEARCH"] == "Y" && IsModuleInstalled("search"))
 {
@@ -321,7 +241,10 @@ if (!empty($arParams["TAGS"]))
 			"SORT_BY_CNT"	=>	"Y",
 			"TEXT" => 'size="30" tabindex="'.($arParams["TEXT"]["TABINDEX"]++).'"',
 			"ID" => "TAGS"
-		));
+		),
+		false,
+		array("HIDE_ICONS" => "Y")
+	);
 }
 else
 {
@@ -385,7 +308,7 @@ else
 			BX.bind(tagInput, "keydown", BX.proxy(__onKeyTags, this ));
 			BX.bind(tagInput, "keyup", BX.proxy(__onKeyTags, this ));
 			<?
-			if(!empty($arParams["TAGS"]["VALUE"]) && !empty($arParams["TAGS"]["VALUE"][0]))
+			if(!empty($arParams["TAGS"]) && $bHasTags)
 			{
 				?>
 				var el = BX.findChild(BX('<?=$arParams["FORM_ID"]?>'), {'className': /feed-add-post-tags-block/ }, true, false);
@@ -395,9 +318,156 @@ else
 		});
 	}
 </script>
+</li>
 <?
 }
+if($arParams["DESTINATION_SHOW"] == "Y" || !empty($arParams["TAGS"]))
+{
+?></ol><?
+}
+if (in_array("MentionUser", $arParams["BUTTONS"]))
+{
+?>
+<script type="text/javascript">
+	window['bMentListen'] = false;
+	window['bPlus'] = false;
+	function BXfpdSelectCallbackMent<?=$arParams["FORM_ID"]?>(item, type, search)
+	{
+		BXfpdSelectCallbackMent(item, type, search, '<?=$arParams["FORM_ID"]?>', '<?=$arParams["LHE"]["jsObjName"]?>');
+	}
 
+	function BXfpdStopMent<?=$arParams["FORM_ID"]?>()
+	{
+		window['bMentListen'] = false;
+		clearTimeout(BX.SocNetLogDestination.searchTimeout);
+		BX.SocNetLogDestination.closeDialog();
+		BX.SocNetLogDestination.closeSearch();
+		if(window['<?=$arParams["LHE"]["jsObjName"]?>'])
+			window['<?=$arParams["LHE"]["jsObjName"]?>'].SetFocus();
+	}
+
+	BXSocNetLogDestinationFormNameMent<?=$arParams["FORM_ID"]?> = '<?=randString(6)?>';
+	BXSocNetLogDestinationDisableBackspace = null;
+	var bxBMent = BX.findChild(BX('<?=$arParams["FORM_ID"]?>'), {'attr': {id: 'bx-b-mention'}}, true, false);
+	BX.SocNetLogDestination.init({
+		'name' : BXSocNetLogDestinationFormNameMent<?=$arParams["FORM_ID"]?>,
+		'searchInput' : bxBMent,
+		'extranetUser' :  <?=($arParams["DESTINATION"]["EXTRANET_USER"] == 'Y'? 'true': 'false')?>,
+		'bindMainPopup' :  { 'node' : bxBMent, 'offsetTop' : '1px', 'offsetLeft': '12px'},
+		'bindSearchPopup' : { 'node' : bxBMent, 'offsetTop' : '1px', 'offsetLeft': '12px'},
+		'callback' : {'select' : BXfpdSelectCallbackMent<?=$arParams["FORM_ID"]?>},
+		'items' : {
+			'users' : users,
+			'groups' : {},
+			'sonetgroups' : {},
+			'department' : department,
+			'departmentRelation' : departmentRelation
+
+		},
+		'itemsLast' : {
+			'users' : lastUsers,
+			'sonetgroups' : {},
+			'department' : {},
+			'groups' : {}
+		},
+		'itemsSelected' : <?=(empty($arParams["DESTINATION"]['SELECTED'])? '{}': CUtil::PhpToJSObject($arParams["DESTINATION"]['SELECTED']))?>,
+		'departmentSelectDisable' : true,
+		'obWindowClass' : 'bx-lm-mention',
+		'obWindowCloseIcon' : false
+	});
+
+	if(window.BX)
+	{
+		BX.ready(
+			function()
+			{
+				if(/MSIE 8/.test(navigator.userAgent))
+				{
+					var ment = BX.findChild(BX('<?=$arParams["FORM_ID"]?>'), {'attr': {id: 'bx-b-mention'}}, true, false);
+					ment.style.width = '1px';
+					ment.style.marginRight = '0';
+				}
+				else
+				{
+					BX.addCustomEvent(
+						BX.findChild(BX('<?=$arParams["FORM_ID"]?>'), {'attr': {id: 'bx-b-mention'}}, true, false),
+						'mentionClick',
+						function(e){
+						setTimeout(function()
+						{
+							if(!BX.SocNetLogDestination.isOpenDialog())
+								BX.SocNetLogDestination.openDialog(BXSocNetLogDestinationFormNameMent<?=$arParams["FORM_ID"]?>);
+							bPlus = false;
+							window['bMentListen'] = true;
+							window["mentionText"] = '';
+							window['<?=$arParams["LHE"]["jsObjName"]?>'].SetFocus();
+
+							if(BX.browser.IsIE())
+							{
+								r = window['<?=$arParams["LHE"]["jsObjName"]?>'].GetSelectionRange();
+								win = window['<?=$arParams["LHE"]["jsObjName"]?>'].pEditorWindow;
+								if(win.document.selection) // IE8 and below
+								{
+									r = BXfixIERangeObject(r, win);
+									if (r && r.endContainer)
+									{
+										txt = r.endContainer.nodeValue;
+										if(txt && window['rngEndOffset'] > txt.length)
+											window['rngEndOffset'] = txt.length;
+
+										var rng = window['<?=$arParams["LHE"]["jsObjName"]?>'].pEditorDocument.createRange();
+										rng.setStart(r.endContainer, window['rngEndOffset']);
+										rng.setEnd(r.endContainer, window['rngEndOffset']);
+										window['<?=$arParams["LHE"]["jsObjName"]?>'].SelectRange(rng);
+										window['<?=$arParams["LHE"]["jsObjName"]?>'].SetFocus();
+									}
+								}
+							}
+
+
+						}, 100);
+						}
+					);
+
+					//mousedown for IE, that lost focus on button click
+					BX.bind(
+						BX.findChild(BX('<?=$arParams["FORM_ID"]?>'), {'attr': {id: 'bx-b-mention'}}, true, false),
+						"mousedown",
+						function(e)
+						{
+							if(window['bMentListen'] !== true)
+							{
+								if(window['<?=$arParams["LHE"]["jsObjName"]?>'].sEditorMode == 'html') // WYSIWYG
+								{
+									window['<?=$arParams["LHE"]["jsObjName"]?>'].InsertHTML('@');
+									window['bMentListen'] = true;
+									window["mentionText"] = '';
+									bPlus = false;
+
+									if(BX.browser.IsIE())
+									{
+										r = window['<?=$arParams["LHE"]["jsObjName"]?>'].GetSelectionRange();
+
+										win = window['<?=$arParams["LHE"]["jsObjName"]?>'].pEditorWindow;
+										if(win.document.selection) // IE8 and below
+										{
+											r = BXfixIERangeObject(r, win);
+											window['rngEndOffset'] = r.endOffset;
+										}
+									}
+								}
+
+								BX.onCustomEvent(BX.findChild(BX('<?=$arParams["FORM_ID"]?>'), {'attr': {id: 'bx-b-mention'}}, true, false), 'mentionClick');
+							}
+						}
+					);
+				}
+			}
+		);
+	}
+</script>
+<?
+}
 /***************** Upload files ************************************/
 if (!empty($arParams["UPLOAD_FILE"]))
 {

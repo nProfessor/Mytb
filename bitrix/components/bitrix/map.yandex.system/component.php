@@ -27,7 +27,8 @@ if (!$arParams['LOCALE'])
 
 if (!defined('BX_YMAP_SCRIPT_LOADED'))
 {
-	$arResult['MAPS_SCRIPT_URL'] = 'http://api-maps.yandex.ru/'.$arParams['YANDEX_VERSION'].'/?load=package.full&mode=release&lang='.$arParams['LOCALE'].'&wizard=bitrix';
+	$scheme = (CMain::IsHTTPS() ? "https" : "http");
+	$arResult['MAPS_SCRIPT_URL'] = $scheme.'://api-maps.yandex.ru/'.$arParams['YANDEX_VERSION'].'/?load=package.full&mode=release&lang='.$arParams['LOCALE'].'&wizard=bitrix';
 	if ($arParams['DEV_MODE'] != 'Y')
 	{
 

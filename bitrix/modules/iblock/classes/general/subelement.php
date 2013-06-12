@@ -93,6 +93,8 @@ class CAdminSubList extends CAdminList
 
 	function CAdminSubList($table_id, $sort=false,$list_url,$arHideHeaders = false)
 	{
+		global $APPLICATION;
+
 		$this->bPublicMode = defined('BX_PUBLIC_MODE') && BX_PUBLIC_MODE == 1;
 		$arJSDescr = array(
 			'js' => '/bitrix/js/iblock/subelement.js',
@@ -110,11 +112,11 @@ class CAdminSubList extends CAdminList
 		$this->strListUrlParams = '';
 		$this->arListUrlParams = array();
 
-		if ((true == is_array($list_url)) && (true == isset($list_url['LINK'])))
+		if (is_array($list_url) && isset($list_url['LINK']))
 		{
 			$this->strListUrl = $list_url['LINK'];
 			$this->__ParseListUrl(true);
-			if (true == isset($list_url['PARAMS']))
+			if (isset($list_url['PARAMS']))
 				$this->__SetListUrlParams($list_url['PARAMS']);
 		}
 		else
@@ -124,7 +126,7 @@ class CAdminSubList extends CAdminList
 		}
 		if ('' == $this->strListUrl)
 		{
-			$this->strListUrl = $GLOBALS["APPLICATION"]->GetCurPageParam();
+			$this->strListUrl = $APPLICATION->GetCurPageParam();
 			$this->__ParseListUrl(true);
 		}
 		if ($this->bPublicMode)
@@ -143,7 +145,7 @@ class CAdminSubList extends CAdminList
 		$this->CAdminList($table_id,$sort);
 
 		$this->SetBaseFieldNames();
-		if ((true == is_array($arHideHeaders)) && (false == empty($arHideHeaders)))
+		if (is_array($arHideHeaders) && !empty($arHideHeaders))
 		{
 			$this->arHideHeaders = $arHideHeaders;
 		}
@@ -157,7 +159,7 @@ class CAdminSubList extends CAdminList
 	function __UpdateListUrlParams()
 	{
 		$this->strListUrlParams = '';
-		if (false == empty($this->arListUrlParams))
+		if (!empty($this->arListUrlParams))
 		{
 			foreach ($this->arListUrlParams as $key => $value)
 				$this->strListUrlParams .= $key.'='.$value.'&';
@@ -182,13 +184,13 @@ class CAdminSubList extends CAdminList
 
 	function __DeleteListUrlParams($mxKey)
 	{
-		if (true == is_array($mxKey))
+		if (is_array($mxKey))
 		{
 			foreach ($mxKey as $value)
-				if (('' != $value) && (true == array_key_exists($value,$this->arListUrlParams)))
+				if (('' != $value) && array_key_exists($value,$this->arListUrlParams))
 					unset($this->arListUrlParams[$value]);
 		}
-		elseif (('' != $mxKey) && (true == array_key_exists($mxKey,$this->arListUrlParams)))
+		elseif (('' != $mxKey) && array_key_exists($mxKey,$this->arListUrlParams))
 		{
 			unset($this->arListUrlParams[$mxKey]);
 		}
@@ -199,7 +201,7 @@ class CAdminSubList extends CAdminList
 	{
 		if (true == $boolClear)
 			$this->arListUrlParams = array();
-		if (false == is_array($mxParams))
+		if (!is_array($mxParams))
 		{
 			$arParams = array();
 			parse_str($mxParams,$arParams);
@@ -227,7 +229,7 @@ class CAdminSubList extends CAdminList
 		$strID = trim($strID);
 		if ('' != $strID)
 		{
-			if (false == in_array($strID,$this->arHideHeaders))
+			if (!in_array($strID, $this->arHideHeaders))
 				$this->arHideHeaders[] = $strID;
 		}
 	}
@@ -235,29 +237,38 @@ class CAdminSubList extends CAdminList
 	//id, name, content, sort, default
 	function AddHeaders($aParams)
 	{
-		if($_REQUEST['showallcol'])
-			$_SESSION['SHALL'] = ($_REQUEST['showallcol']=='Y');
+		if (isset($_REQUEST['showallcol']) && $_REQUEST['showallcol'])
+			$_SESSION['SHALL'] = ($_REQUEST['showallcol'] == 'Y');
 
 		$aOptions = CUserOptions::GetOption("list", $this->table_id, array());
 
 		$aColsTmp = explode(",", $aOptions["columns"]);
 		$aCols = array();
 		foreach($aColsTmp as $col)
-			if (('' != trim($col)) && (false == in_array($col,$this->arHideHeaders)))
-				$aCols[] = trim($col);
+		{
+			$col = trim($col);
+			if (('' != $col) && !in_array($col, $this->arHideHeaders))
+				$aCols[] = $col;
+		}
 
 		$bEmptyCols = empty($aCols);
-		foreach($aParams as $param)
+		foreach ($aParams as $param)
 		{
-			if (false == in_array($param["id"],$this->arHideHeaders))
+			$param["__sort"] = -1;
+			if (!in_array($param["id"], $this->arHideHeaders))
 			{
 				$this->aHeaders[$param["id"]] = $param;
-				if($_SESSION['SHALL'] || ($bEmptyCols && $param["default"]==true) || in_array($param["id"], $aCols))
+				if (
+					(isset($_SESSION['SHALL']) && $_SESSION['SHALL'])
+					|| ($bEmptyCols && $param["default"] == true) || in_array($param["id"], $aCols)
+				)
+				{
 					$this->arVisibleColumns[] = $param["id"];
+				}
 			}
 		}
 
-		if($_REQUEST["mode"] == "subsettings")
+		if (isset($_REQUEST["mode"]) && $_REQUEST["mode"] == "subsettings")
 		{
 			$aAllCols = array();
 			foreach($this->aHeaders as $i=>$header)
@@ -266,19 +277,19 @@ class CAdminSubList extends CAdminList
 
 		if(!$bEmptyCols)
 		{
-			foreach($aCols as $i=>$col)
-				if($this->aHeaders[$col] <> "")
+			foreach ($aCols as $i => $col)
+				if (isset($this->aHeaders[$col]))
 					$this->aHeaders[$col]["__sort"] = $i;
 			uasort($this->aHeaders, create_function('$a, $b', 'if($a["__sort"] == $b["__sort"]) return 0; return ($a["__sort"] < $b["__sort"])? -1 : 1;'));
 		}
 
-		if($_REQUEST["mode"] == "subsettings")
+		if (isset($_REQUEST["mode"]) && $_REQUEST["mode"] == "subsettings")
 			$this->ShowSettings($aAllCols, $aCols, $aOptions);
 	}
 
 	function AddVisibleHeaderColumn($id)
 	{
-		if (!in_array($id, $this->arVisibleColumns) && false == in_array($strID,$this->arHideHeaders))
+		if (!in_array($id, $this->arVisibleColumns) && !in_array($strID,$this->arHideHeaders))
 			$this->arVisibleColumns[] = $id;
 	}
 
@@ -404,13 +415,13 @@ class CAdminSubList extends CAdminList
 
 		$boolCloseMessage = true;
 		$errmsg = '';
-		for($i=0; $i<count($this->arFilterErrors); $i++)
-			$errmsg .= ($errmsg<>''?'<br>':'').$this->arFilterErrors[$i];
-		for($i=0; $i<count($this->arUpdateErrors); $i++)
-			$errmsg .= ($errmsg<>''?'<br>':'').$this->arUpdateErrors[$i][0];
-		for($i=0; $i<count($this->arGroupErrors); $i++)
-			$errmsg .= ($errmsg<>''?'<br>':'').$this->arGroupErrors[$i][0];
-		if (!empty($errmsg))
+		foreach ($this->arFilterErrors as $err)
+			$errmsg .= ($errmsg<>''? '<br>': '').$err;
+		foreach ($this->arUpdateErrors as $err)
+			$errmsg .= ($errmsg<>''? '<br>': '').$err[0];
+		foreach ($this->arGroupErrors as $err)
+			$errmsg .= ($errmsg<>''? '<br>': '').$err[0];
+		if($errmsg<>'')
 		{
 			CAdminSubMessage::ShowMessage(array("MESSAGE"=>GetMessage("admin_lib_error"), "DETAILS"=>$errmsg, "TYPE"=>"ERROR"));
 			$boolCloseMessage = false;
@@ -1265,7 +1276,7 @@ class CAdminSubForm extends CAdminForm
 		$this->__UpdateListPostParams();
 	}
 
-/*	function ShowTabButtons()
+	function ShowTabButtons()
 	{
 		$s = '';
 		if ($this->bShowSettings)
@@ -1304,21 +1315,23 @@ class CAdminSubForm extends CAdminForm
 					);
 				}
 			}
-
+			$s .= '<div class="adm-detail-subsettings-cont">';
 			if (count($aAdditionalMenu) > 1)
 			{
-				$sMenuUrl = "BX.adminShowMenu(this, ".htmlspecialcharsbx(CAdminPopup::PhpToJavaScript($aAdditionalMenu)).", {active_class: 'bx-settings-btn-active'});";
+				$sMenuUrl = "BX.adminShowMenu(this, ".htmlspecialcharsbx(CAdminPopupEx::PhpToJavaScript($aAdditionalMenu)).", {active_class: 'bx-settings-btn-active'});";
+				$bCustomFieldsOff = is_array($_SESSION["ADMIN_CUSTOM_FIELDS"]) && array_key_exists($this->name, $_SESSION["ADMIN_CUSTOM_FIELDS"]);
 
-				$s .= '<span id="'.$this->name.'_settings_btn" class="adm-detail-settings adm-detail-settings-arrow" onclick="'.$sMenuUrl.'"></span>';
+				$s .= '<span id="'.$this->name.'_settings_btn" class="adm-detail-subsettings adm-detail-subsettings-arrow'.($bCustomFieldsOff ? '' : ' adm-detail-subsettings-active').'" onclick="'.$sMenuUrl.'"></span>';
 			}
 			else
 			{
-				$s .= '<a class="adm-detail-settings" href="javascript:void(0)" onclick="'.$aAdditionalMenu[0]['ONCLICK'].'"></a>';
+				$s .= '<a class="adm-detail-subsettings" href="javascript:void(0)" onclick="'.$aAdditionalMenu[0]['ONCLICK'].';"></a>';
 			}
+			$s .= '</div>';
 		}
 
 		return $s.CAdminTabControl::ShowTabButtons();
-	} */
+	}
 
 	function End()
 	{
@@ -1362,10 +1375,8 @@ class CAdminSubForm extends CAdminForm
 			($tab["ONSELECT"] <> ""? ", 'ONSELECT': '".CUtil::JSEscape($tab["ONSELECT"])."'":"").
 			"}";
 		}
-/*		echo '
-if (!window.'.$this->name.' || !BX.is_subclass_of(window.'.$this->name.', BX.adminSubTabControl))
-	window.'.$this->name.' = new BX.adminSubTabControl("'.$this->name.'", "'.$this->unique_name.'", ['.$s.'], "'.$this->GetListUrl(true).'",'.$this->GetListPostParams(true,true).');'; */
-	echo 'var '.$this->name.' = new BX.adminSubTabControl("'.$this->name.'", "'.$this->unique_name.'", ['.$s.'], "'.$this->GetListUrl(true).'",'.$this->GetListPostParams(true,true).');';
+
+		echo 'var '.$this->name.' = new BX.adminSubTabControl("'.$this->name.'", "'.$this->unique_name.'", ['.$s.'], "'.$this->GetListUrl(true).'",'.$this->GetListPostParams(true,true).');';
 
 		if (!$this->bPublicMode)
 		{

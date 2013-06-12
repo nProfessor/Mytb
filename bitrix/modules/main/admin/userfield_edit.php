@@ -398,26 +398,26 @@ $tabControl->BeginNextTab();
 	</tr>
 	<tr>
 		<td colspan="2" align="center">
-			<table border="0" cellspacing="6">
+			<table border="0" cellspacing="10" cellpadding="2">
 				<tr>
-					<td align="center"><?echo GetMessage("USER_TYPE_LANG");?></td>
-					<td align="center"><?echo GetMessage("USER_TYPE_EDIT_FORM_LABEL");?></td>
-					<td align="center"><?echo GetMessage("USER_TYPE_LIST_COLUMN_LABEL");?></td>
-					<td align="center"><?echo GetMessage("USER_TYPE_LIST_FILTER_LABEL");?></td>
-					<td align="center"><?echo GetMessage("USER_TYPE_ERROR_MESSAGE");?></td>
-					<td align="center"><?echo GetMessage("USER_TYPE_HELP_MESSAGE");?></td>
+					<td align="right"><?echo GetMessage("USER_TYPE_LANG");?></td>
+					<td align="center" width="200"><?echo GetMessage("USER_TYPE_EDIT_FORM_LABEL");?></td>
+					<td align="center" width="200"><?echo GetMessage("USER_TYPE_LIST_COLUMN_LABEL");?></td>
+					<td align="center" width="200"><?echo GetMessage("USER_TYPE_LIST_FILTER_LABEL");?></td>
+					<td align="center" width="200"><?echo GetMessage("USER_TYPE_ERROR_MESSAGE");?></td>
+					<td align="center" width="200"><?echo GetMessage("USER_TYPE_HELP_MESSAGE");?></td>
 				</tr>
 				<?
 				$rsLanguage = CLanguage::GetList($by, $order, array());
 				while($arLanguage = $rsLanguage->Fetch()):
 				?>
 				<tr>
-					<td><?echo $arLanguage["NAME"]?>:</font></td>
-					<td><input type="text" name="EDIT_FORM_LABEL[<?echo $arLanguage["LID"]?>]" size="20" maxlength="255" value="<?echo htmlspecialcharsbx($bVarsFromForm? $EDIT_FORM_LABEL[$arLanguage["LID"]]: $arUserField["EDIT_FORM_LABEL"][$arLanguage["LID"]])?>"></td>
-					<td><input type="text" name="LIST_COLUMN_LABEL[<?echo $arLanguage["LID"]?>]" size="20" maxlength="255" value="<?echo htmlspecialcharsbx($bVarsFromForm? $LIST_COLUMN_LABEL[$arLanguage["LID"]]: $arUserField["LIST_COLUMN_LABEL"][$arLanguage["LID"]])?>"></td>
-					<td><input type="text" name="LIST_FILTER_LABEL[<?echo $arLanguage["LID"]?>]" size="20" maxlength="255" value="<?echo htmlspecialcharsbx($bVarsFromForm? $LIST_FILTER_LABEL[$arLanguage["LID"]]: $arUserField["LIST_FILTER_LABEL"][$arLanguage["LID"]])?>"></td>
-					<td><input type="text" name="ERROR_MESSAGE[<?echo $arLanguage["LID"]?>]" size="20" maxlength="255" value="<?echo htmlspecialcharsbx($bVarsFromForm? $ERROR_MESSAGE[$arLanguage["LID"]]: $arUserField["ERROR_MESSAGE"][$arLanguage["LID"]])?>"></td>
-					<td><input type="text" name="HELP_MESSAGE[<?echo $arLanguage["LID"]?>]" size="20" maxlength="255" value="<?echo htmlspecialcharsbx($bVarsFromForm? $HELP_MESSAGE[$arLanguage["LID"]]: $arUserField["HELP_MESSAGE"][$arLanguage["LID"]])?>"></td>
+					<td align="right"><?echo $arLanguage["NAME"]?>:</td>
+					<td align="center"><input type="text" name="EDIT_FORM_LABEL[<?echo $arLanguage["LID"]?>]" size="20" maxlength="255" value="<?echo htmlspecialcharsbx($bVarsFromForm? $EDIT_FORM_LABEL[$arLanguage["LID"]]: $arUserField["EDIT_FORM_LABEL"][$arLanguage["LID"]])?>"></td>
+					<td align="center"><input type="text" name="LIST_COLUMN_LABEL[<?echo $arLanguage["LID"]?>]" size="20" maxlength="255" value="<?echo htmlspecialcharsbx($bVarsFromForm? $LIST_COLUMN_LABEL[$arLanguage["LID"]]: $arUserField["LIST_COLUMN_LABEL"][$arLanguage["LID"]])?>"></td>
+					<td align="center"><input type="text" name="LIST_FILTER_LABEL[<?echo $arLanguage["LID"]?>]" size="20" maxlength="255" value="<?echo htmlspecialcharsbx($bVarsFromForm? $LIST_FILTER_LABEL[$arLanguage["LID"]]: $arUserField["LIST_FILTER_LABEL"][$arLanguage["LID"]])?>"></td>
+					<td align="center"><input type="text" name="ERROR_MESSAGE[<?echo $arLanguage["LID"]?>]" size="20" maxlength="255" value="<?echo htmlspecialcharsbx($bVarsFromForm? $ERROR_MESSAGE[$arLanguage["LID"]]: $arUserField["ERROR_MESSAGE"][$arLanguage["LID"]])?>"></td>
+					<td align="center"><input type="text" name="HELP_MESSAGE[<?echo $arLanguage["LID"]?>]" size="20" maxlength="255" value="<?echo htmlspecialcharsbx($bVarsFromForm? $HELP_MESSAGE[$arLanguage["LID"]]: $arUserField["HELP_MESSAGE"][$arLanguage["LID"]])?>"></td>
 				</tr>
 				<?endwhile?>
 			</table>

@@ -114,7 +114,7 @@ if($this->StartResultCache(false, array($arParams["CACHE_GROUPS"]==="N"? false: 
 		if($arParams["SECTION_ID"] > 0)
 			$arFilter["ID"] = $arParams["SECTION_ID"];
 		elseif(strlen($arParams["SECTION_CODE"]) > 0)
-			$arFilter["CODE"] = $arParams["SECTION_CODE"];
+			$arFilter["=CODE"] = $arParams["SECTION_CODE"];
 
 		$rsResult = CIBlockSection::GetList(array(), $arFilter);
 		$arResult["SECTION"] = $rsResult->Fetch();
@@ -320,6 +320,10 @@ if($this->StartResultCache(false, array($arParams["CACHE_GROUPS"]==="N"? false: 
 		elseif(strlen($arElement["ACTIVE_FROM"])>0)
 		{
 			$arItem["pubDate"] = date("r", MkDateTime($DB->FormatDate($arElement["ACTIVE_FROM"], Clang::GetDateFormat("FULL"), "DD.MM.YYYY H:I:S"), "d.m.Y H:i:s"));
+		}
+		elseif(strlen($arElement["DATE_CREATE"])>0)
+		{
+			$arItem["pubDate"] = date("r", MkDateTime($DB->FormatDate($arElement["DATE_CREATE"], Clang::GetDateFormat("FULL"), "DD.MM.YYYY H:I:S"), "d.m.Y H:i:s"));
 		}
 		else
 		{

@@ -25,4 +25,6 @@ $MESS["SEARCH_OPTIONS_TAB_TITLE_STATISTIC"] = "Statistics Parameters";
 $MESS["SEARCH_OPTIONS_USE_WORD_DISTANCE"] = "Respect word distance when ranking search results";
 $MESS["SEARCH_OPTIONS_REINSTALL_MODULE"] = "Enabling this option requires that you reinstall the module completely (deleting the database tables) and then perform full re-indexing.";
 $MESS["SEARCH_OPTIONS_USE_SOCIAL_RATING"] = "Respect rating when ranking search results";
+$MESS["SEARCH_OPTIONS_AGENT_STEMMING"] = "Relay stemming to agent:";
+$MESS["SEARCH_OPTIONS_AGENT_DURATION"] = "Maximum agent run time (sec):";
 ?>

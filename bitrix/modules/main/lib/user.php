@@ -1,26 +1,42 @@
 <?php
-
+/**
+ * Bitrix Framework
+ * @package bitrix
+ * @subpackage main
+ * @copyright 2001-2012 Bitrix
+ */
 namespace Bitrix\Main;
 
 use Bitrix\Main\Entity;
 
-class UserEntity extends Entity\Base
+class UserTable extends Entity\DataManager
 {
-	protected function __construct() {}
-
-	public function initialize()
+	public static function getFilePath()
 	{
-		$this->className = __CLASS__;
-		$this->filePath = __FILE__;
+		return __FILE__;
+	}
 
-		$this->uf_id = 'USER';
+	public static function getTableName()
+	{
+		return 'b_user';
+	}
 
+	public static function getUfId()
+	{
+		return 'USER';
+	}
+
+	public static function getMap()
+	{
+//		$connection = Application::getDbConnection();
+//		$helper = $connection->getSqlHelper();
 		global $DB;
 
-		$this->fieldsMap = array(
+		return array(
 			'ID' => array(
 				'data_type' => 'integer',
-				'primary' => true
+				'primary' => true,
+				'autocomplete' => true,
 			),
 			'LOGIN' => array(
 				'data_type' => 'string'
@@ -41,7 +57,8 @@ class UserEntity extends Entity\Base
 			'DATE_REG_SHORT' => array(
 				'data_type' => 'datetime',
 				'expression' => array(
-					$DB->DatetimeToDateFunction('%s'), 'DATE_REGISTER'
+//					$helper->getDatetimeToDateFunction('%s'), 'DATE_REGISTER'
+					$DB->datetimeToDateFunction('%s'), 'DATE_REGISTER'
 				)
 			),
 			'LAST_LOGIN' => array(
@@ -50,7 +67,8 @@ class UserEntity extends Entity\Base
 			'LAST_LOGIN_SHORT' => array(
 				'data_type' => 'datetime',
 				'expression' => array(
-					$DB->DatetimeToDateFunction('%s'), 'LAST_LOGIN'
+//					$helper->getDatetimeToDateFunction('%s'), 'LAST_LOGIN'
+					$DB->datetimeToDateFunction('%s'), 'LAST_LOGIN'
 				)
 			),
 			'NAME' => array(
@@ -83,7 +101,8 @@ class UserEntity extends Entity\Base
 			'SHORT_NAME' => array(
 				'data_type' => 'string',
 				'expression' => array(
-					$DB->Concat("%s","' '", "UPPER(".$DB->Substr("%s", 1, 1).")", "'.'"),
+//					$helper->getConcatFunction("%s","' '", "UPPER(".$helper->getSubstrFunction("%s", 1, 1).")", "'.'"),
+					$DB->concat("%s","' '", "UPPER(".$DB->substr("%s", 1, 1).")", "'.'"),
 					'LAST_NAME', 'NAME'
 				)
 			),
@@ -97,262 +116,32 @@ class UserEntity extends Entity\Base
 		);
 	}
 
-}
-
-class User extends Entity\DataManager
-{
-	public static function checkFieldsBeforeAdd($data)
+	public static function getActiveUsersCount()
 	{
-		$external_auth_id = null;
+		$sql = "SELECT COUNT(ID) ".
+			"FROM b_user ".
+			"WHERE ACTIVE = 'Y' ".
+			"   AND LAST_LOGIN IS NOT NULL";
 
-		if (!is_set($data, "EXTERNAL_AUTH_ID") || !strlen(trim($data["EXTERNAL_AUTH_ID"])))
+		if (ModuleManager::isModuleInstalled("intranet"))
 		{
-			if (!isset($data["LOGIN"]))
-			{
-				static::$errors[] = GetMessage("user_login_not_set");
-			}
-
-			if (!isset($data["PASSWORD"]))
-			{
-				static::$errors[] = GetMessage("user_pass_not_set");
-			}
-
-			if (!isset($data["EMAIL"]))
-			{
-				static::$errors[] = GetMessage("user_email_not_set");
-			}
-
-			static::checkInternalAuthFields($data);
-		}
-		else
-		{
-			$external_auth_id = $data["EXTERNAL_AUTH_ID"];
+			$sql = "SELECT COUNT(U.ID) ".
+				"FROM b_user U ".
+				"WHERE U.ACTIVE = 'Y' ".
+				"   AND U.LAST_LOGIN IS NOT NULL ".
+				"   AND EXISTS(".
+				"       SELECT 'x' ".
+				"       FROM b_utm_user UF, b_user_field F ".
+				"       WHERE F.ENTITY_ID = 'USER' ".
+				"           AND F.FIELD_NAME = 'UF_DEPARTMENT' ".
+				"           AND UF.FIELD_ID = F.ID ".
+				"           AND UF.VALUE_ID = U.ID ".
+				"           AND UF.VALUE_INT IS NOT NULL ".
+				"           AND UF.VALUE_INT <> 0".
+				"   )";
 		}
 
-		if (is_set($data, 'LOGIN'))
-		{
-			static::checkLoginExists($data["LOGIN"], null, $external_auth_id);
-		}
-	}
-
-	public static function checkFieldsBeforeUpdate($data, $primary)
-	{
-		$external_auth_id = null;
-
-		if (!is_set($data, "EXTERNAL_AUTH_ID"))
-		{
-			$user = static::getByPrimary($primary, array('select' => array('EXTERNAL_AUTH_ID')));
-
-			if (is_array($user) && !strlen($user['EXTERNAL_AUTH_ID']))
-			{
-				static::checkInternalAuthFields($data);
-			}
-			else
-			{
-				$external_auth_id = $user['EXTERNAL_AUTH_ID'];
-			}
-		}
-		else
-		{
-			$external_auth_id = $data['EXTERNAL_AUTH_ID'];
-		}
-
-		if (is_set($data, 'LOGIN'))
-		{
-			static::checkLoginExists($data["LOGIN"], $primary['ID'], $external_auth_id);
-		}
-	}
-
-	protected static function checkInternalAuthFields($data, $primary = null)
-	{
-		if (is_set($data, "LOGIN") && $data["LOGIN"] != trim($data["LOGIN"]))
-		{
-			static::$errors[] = GetMessage("LOGIN_WHITESPACE");
-		}
-
-		if (is_set($data, "LOGIN") && strlen($data["LOGIN"])<3)
-		{
-			static::$errors[] = GetMessage("MIN_LOGIN");
-		}
-
-		if (is_set($data, "PASSWORD"))
-		{
-			if (array_key_exists("GROUP_ID", $data))
-			{
-				$groups = array();
-
-				if (is_array($data["GROUP_ID"]))
-				{
-					foreach ($data["GROUP_ID"] as $group)
-					{
-						if (is_array($group))
-						{
-							$groups[] = $group["GROUP_ID"];
-						}
-						else
-						{
-							$groups[] = $group;
-						}
-					}
-				}
-
-				$policy = static::getGroupPolicy($groups);
-			}
-			elseif ($primary !== null)
-			{
-				$policy = static::getGroupPolicy($primary['ID']);
-			}
-			else
-			{
-				$policy = static::getGroupPolicy(array());
-			}
-
-			// вынести валидацию пароля в password entity field?  email аналогично
-			$password_min_length = intval($policy["PASSWORD_LENGTH"]);
-
-			if ($password_min_length <= 0)
-			{
-				$password_min_length = 6;
-			}
-
-			if (strlen($data["PASSWORD"]) < $password_min_length)
-			{
-				static::$errors[] = GetMessage("MAIN_FUNCTION_REGISTER_PASSWORD_LENGTH", array("#LENGTH#" => $policy["PASSWORD_LENGTH"]));
-			}
-
-			if (($policy["PASSWORD_UPPERCASE"] === "Y") && !preg_match("/[A-Z]/", $data["PASSWORD"]))
-			{
-				static::$errors[] = GetMessage("MAIN_FUNCTION_REGISTER_PASSWORD_UPPERCASE");
-			}
-
-			if (($policy["PASSWORD_LOWERCASE"] === "Y") && !preg_match("/[a-z]/", $data["PASSWORD"]))
-			{
-				static::$errors[] = GetMessage("MAIN_FUNCTION_REGISTER_PASSWORD_LOWERCASE");
-			}
-
-			if (($policy["PASSWORD_DIGITS"] === "Y") && !preg_match("/[0-9]/", $data["PASSWORD"]))
-			{
-				static::$errors[] = GetMessage("MAIN_FUNCTION_REGISTER_PASSWORD_DIGITS");
-			}
-
-			if (($policy["PASSWORD_PUNCTUATION"] === "Y") && !preg_match("/[,.<>\\/?;:'\"[\\]\{\}\\\\|`~!@#\$%^&*()_+=-]/", $data["PASSWORD"]))
-			{
-				static::$errors[] = GetMessage("MAIN_FUNCTION_REGISTER_PASSWORD_PUNCTUATION");
-			}
-		}
-
-		if (is_set($data, "EMAIL"))
-		{
-			if (strlen($data["EMAIL"])<3 || !check_email($data["EMAIL"], true))
-			{
-				static::$errors[] = GetMessage("WRONG_EMAIL");
-			}
-			elseif (($primary === null) && COption::GetOptionString("main", "new_user_email_uniq_check", "N") === "Y")
-			{
-				$user = static::getRow(array('filter' => array('=EMAIL' => $data['EMAIL'])));
-
-				if (is_array($user))
-				{
-					static::$errors[] = GetMessage("USER_WITH_EMAIL_EXIST", array("#EMAIL#" => htmlspecialchars($data["EMAIL"])));
-				}
-			}
-		}
-
-		if (is_set($data, "PASSWORD") && is_set($data, "CONFIRM_PASSWORD") && $data["PASSWORD"]!=$data["CONFIRM_PASSWORD"])
-		{
-			static::$errors[] = GetMessage("WRONG_CONFIRMATION");
-		}
-
-		if (is_array($data["GROUP_ID"]) && count($data["GROUP_ID"]) > 0)
-		{
-			if (is_array($data["GROUP_ID"][0]) && count($data["GROUP_ID"][0]) > 0)
-			{
-				foreach ($data["GROUP_ID"] as $group)
-				{
-					if (strlen($group["DATE_ACTIVE_FROM"])>0 && !CheckDateTime($group["DATE_ACTIVE_FROM"]))
-					{
-						$error = str_replace("#GROUP_ID#", $group["GROUP_ID"], GetMessage("WRONG_DATE_ACTIVE_FROM"));
-						static::$errors[] = $error;
-					}
-
-					if (strlen($group["DATE_ACTIVE_TO"])>0 && !CheckDateTime($group["DATE_ACTIVE_TO"]))
-					{
-						$error = str_replace("#GROUP_ID#", $group["GROUP_ID"], GetMessage("WRONG_DATE_ACTIVE_TO"));
-						static::$errors[] = $error;
-					}
-				}
-			}
-		}
-	}
-
-	protected static function checkLoginExists($login, $id = null, $external_auth_id = null)
-	{
-		global $DB;
-
-		$result = $DB->Query(
-			"SELECT 'x' ".
-				"FROM b_user ".
-				"WHERE LOGIN='".$DB->ForSql($login, 50)."' ".
-				" ".($id === false ? "" : " AND ID<>".intval($id)).
-				" ".($external_auth_id !== null ? "	AND EXTERNAL_AUTH_ID='".$DB->ForSql($external_auth_id)."' " : " AND (EXTERNAL_AUTH_ID IS NULL OR ".$DB->Length("EXTERNAL_AUTH_ID")."<=0)")
-		);
-
-		if($result->fetch())
-		{
-			static::$errors[] = str_replace("#LOGIN#", htmlspecialchars($login), GetMessage("USER_EXIST"));
-		}
-	}
-
-	public static function checkFields($data, $action = 'update', $throwException = false)
-	{
-		// 1. Способ накопления ошибок (массив?)
-		// 2. во внешней авторизации пропускаются проверки, которые должны быть стандартными
-		//    может передавать в checkFields параметр excludes? а может просто сделать копию data без этих полей
-
-		if (is_set($data, "PERSONAL_PHOTO"))
-		{
-			if ((strlen($data["PERSONAL_PHOTO"]["name"])<=0 && strlen($data["PERSONAL_PHOTO"]["del"])<=0))
-			{
-				unset($data["PERSONAL_PHOTO"]);
-			}
-			else
-			{
-				$result = CFile::CheckImageFile($data["PERSONAL_PHOTO"]);
-
-				if (strlen($result) > 0)
-				{
-					static::$errors[] = $result;
-				}
-			}
-		}
-
-//		if(is_set($data, "PERSONAL_BIRTHDAY") && strlen($data["PERSONAL_BIRTHDAY"])>0 && !CheckDateTime($data["PERSONAL_BIRTHDAY"]))
-//		{
-//			static::$errors[] = GetMessage("WRONG_PERSONAL_BIRTHDAY");
-//		}
-
-		if (is_set($data, "WORK_LOGO"))
-		{
-			if ((strlen($data["WORK_LOGO"]["name"])<=0 && strlen($data["WORK_LOGO"]["del"])<=0))
-			{
-				unset($data["WORK_LOGO"]);
-			}
-			else
-			{
-				$result = CFile::CheckImageFile($data["WORK_LOGO"]);
-
-				if (strlen($result) > 0)
-				{
-					static::$errors[] = $result;
-				}
-			}
-		}
-
-		parent::checkFields($data, $action, $throwException);
-	}
-
-	public static function getGroupPolicy($user_id)
-	{
-		return array();
+		$connection = Application::getDbConnection();
+		return $connection->queryScalar($sql);
 	}
 }

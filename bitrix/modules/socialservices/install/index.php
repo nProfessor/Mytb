@@ -41,10 +41,10 @@ class socialservices extends CModule
 		RegisterModule("socialservices");
 
 		RegisterModuleDependences("main", "OnUserDelete", "socialservices", "CSocServAuthDB", "OnUserDelete");
-		RegisterModuleDependences('socialnetwork', 'OnFillSocNetLogEvents', 'socialservices', 'CSocServEventHandlers', 'OnFillSocNetLogEvents');
 		RegisterModuleDependences('timeman', 'OnAfterTMReportDailyAdd', 'socialservices', 'CSocServAuthDB', 'OnAfterTMReportDailyAdd');
 		RegisterModuleDependences('timeman', 'OnAfterTMDayStart', 'socialservices', 'CSocServAuthDB', 'OnAfterTMDayStart');
 		RegisterModuleDependences('timeman', 'OnTimeManShow', 'socialservices', 'CSocServEventHandlers', 'OnTimeManShow');
+
 		return true;
 	}
 
@@ -73,6 +73,7 @@ class socialservices extends CModule
 			$siteId = $arSite['ID'];
 			CAgent::RemoveAgent("CSocServAuthManager::GetTwitMessages($siteId);", "socialservices");
 		}
+		CAgent::RemoveAgent("CSocServAuthManager::SendSocialservicesMessages();", "socialservices");
 
 		UnRegisterModule("socialservices");
 

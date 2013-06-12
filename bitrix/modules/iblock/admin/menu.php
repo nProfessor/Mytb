@@ -29,6 +29,7 @@ function _get_elements_menu($arType, $arIBlock, $SECTION_ID)
 				"iblock_element_edit.php?".$arIBlock["URL_PART"]."&find_section_section=-1",
 				"iblock_element_edit.php?".$arIBlock["URL_PART"]."&find_section_section=0",
 				"iblock_history_list.php?".$arIBlock["URL_PART"]."&find_section_section=-1",
+				"iblock_start_bizproc.php?document_type=iblock_".$arIBlock["ID"],
 			),
 			"title" => GetMessage("IBLOCK_MENU_ALL_EL"),
 			"page_icon" => "iblock_page_icon_elements",
@@ -55,6 +56,27 @@ function _get_elements_menu($arType, $arIBlock, $SECTION_ID)
 			"module_id" => "iblock",
 			"items" => array(),
 		);
+	}
+}
+
+function _get_other_elements_menu($arType, $arIBlock, $arSection, &$more_url)
+{
+	$urlElementAdminPage = CIBlock::GetAdminElementListLink($arIBlock["ID"], array("menu" => null));
+	$more_url[] = $urlElementAdminPage."&find_section_section=".intval($arSection["ID"]);
+
+	if (($arSection["RIGHT_MARGIN"] - $arSection["LEFT_MARGIN"]) > 1)
+	{
+		$rsSections = CIBlockSection::GetList(
+			Array("left_margin"=>"ASC"),
+			Array(
+				"IBLOCK_ID" => $arIBlock["ID"],
+				"SECTION_ID" => $arSection["ID"],
+			),
+			false,
+			array("ID", "IBLOCK_SECTION_ID", "NAME", "LEFT_MARGIN", "RIGHT_MARGIN")
+		);
+		while($arSubSection = $rsSections->Fetch())
+			_get_other_elements_menu($arType, $arIBlock, $arSubSection, $more_url);
 	}
 }
 
@@ -126,6 +148,8 @@ function _get_sections_menu($arType, $arIBlock, $DEPTH_LEVEL, $SECTION_ID, $arSe
 				"module_id" => "iblock",
 				"items" => Array()
 			);
+			_get_other_elements_menu($arType, $arIBlock, $arSection, $arSections[0]["more_url"]);
+
 			break;
 		}
 		$arSectionTmp = array(
@@ -162,6 +186,13 @@ function _get_sections_menu($arType, $arIBlock, $DEPTH_LEVEL, $SECTION_ID, $arSe
 
 		$arSections[] = $arSectionTmp;
 	}
+
+	while($arSection = $rsSections->Fetch())
+	{
+		$urlElementAdminPage = CIBlock::GetAdminElementListLink($arIBlock["ID"], array("menu" => null));
+		$arSections[0]["more_url"][] = $urlElementAdminPage."&find_section_section=".IntVal($arSection["ID"]);
+	}
+
 	return $arSections;
 }
 
@@ -209,7 +240,9 @@ function _get_iblocks_menu($arType)
 					"iblock_section_edit.php?IBLOCK_ID=".$arIBlock["ID"]."&type=".$arType["ID"]."&find_section_section=-1",
 					"iblock_section_edit.php?IBLOCK_ID=".$arIBlock["ID"]."&type=".$arType["ID"]."&find_section_section=0",
 					"iblock_element_edit.php?IBLOCK_ID=".$arIBlock["ID"]."&type=".$arType["ID"]."&find_section_section=-1",
+					"iblock_element_edit.php?IBLOCK_ID=".$arIBlock["ID"]."&type=".$arType["ID"]."&find_section_section=0",
 					"iblock_history_list.php?IBLOCK_ID=".$arIBlock["ID"]."&type=".$arType["ID"]."&find_section_section=-1",
+					"iblock_start_bizproc.php?document_type=iblock_".$arIBlock["ID"],
 				),
 				"title" => $arIBlock["NAME~"],
 				"icon" => "iblock_menu_icon_iblocks",
@@ -263,6 +296,7 @@ function _get_iblocks_admin_menu($arType)
 			"text" => $arIBlock["NAME~"],
 			"url" => "iblock_edit.php?type=".$arType["ID"]."&lang=".LANG."&ID=".$arIBlock["ID"]."&admin=Y",
 			"more_url" => Array(
+				"iblock_convert.php?lang=".LANG."&IBLOCK_ID=".$arIBlock["ID"],
 				"iblock_edit.php?type=".$arType["ID"]."&lang=".LANG."&ID=".$arIBlock["ID"]."&admin=Y",
 				"iblock_bizproc_workflow_edit.php?document_type=iblock_".$arIBlock["ID"]."&lang=".LANG,
 				"iblock_bizproc_workflow_admin.php?document_type=iblock_".$arIBlock["ID"]."&lang=".LANG,

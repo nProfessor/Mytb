@@ -1,10 +1,17 @@
 <?
-##############################################
-# Bitrix Site Manager                        #
-# Copyright (c) 2002-2007 Bitrix             #
-# http://www.bitrixsoft.com                  #
-# mailto:admin@bitrixsoft.com                #
-##############################################
+/**
+ * Bitrix Framework
+ * @package bitrix
+ * @subpackage main
+ * @copyright 2001-2013 Bitrix
+ */
+
+/**
+ * Bitrix vars
+ * @global CUser $USER
+ * @global CMain $APPLICATION
+ * @global CDatabase $DB
+ */
 
 require_once(dirname(__FILE__)."/../include/prolog_admin_before.php");
 require_once($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/prolog.php");
@@ -21,7 +28,7 @@ IncludeModuleLangFile(__FILE__);
 
 $strError="";
 $bVarsFromForm = false;
-$ID=IntVal($ID);
+$ID=intval($ID);
 $COPY_ID=intval($COPY_ID);
 $message=null;
 if($COPY_ID>0)
@@ -172,7 +179,7 @@ if($message)
 	echo $message->Show();
 
 if(strlen($strError)>0)
-	echo CAdminMessage::ShowMessage(Array("MESSAGE"=>$strError, "HTML"=>true, "TYPE"=>"ERROR"));
+	CAdminMessage::ShowMessage(Array("MESSAGE"=>$strError, "HTML"=>true, "TYPE"=>"ERROR"));
 
 $tabControl->Begin();
 
@@ -196,16 +203,13 @@ $tabControl->BeginNextTab();
 		<td><?echo GetMessage("EVENT_NAME")?></td>
 		<td><?
 			$event_type_ref = array();
-			$rsType = CEventType::GetListEx(array(), array(), array("LID"=>LANG, "type" => "type"));
+			$rsType = CEventType::GetList(array("LID"=>LANGUAGE_ID), array("name"=>"asc"));
 			while ($arType = $rsType->Fetch())
 			{
-				$arType["NAME"] = "[ ".$arType["EVENT_NAME"]." ]".(empty($arType["NAME"]) ? "" : " == ".$arType["NAME"]);
+				$arType["NAME"] = $arType["NAME"]." [".$arType["EVENT_NAME"]."]";
 				$event_type_ref[$arType["EVENT_NAME"]] = $arType;
 			}
 
-			?>
-
-			<?
 			if($ID>0 && $COPY_ID<=0)
 			{
 				$arType = $event_type_ref[$str_EVENT_NAME];
@@ -217,7 +221,7 @@ $tabControl->BeginNextTab();
 			{
 				$id_1st = false;
 				?>
-				<select name="EVENT_NAME" onChange="window.location='message_edit.php?lang=<?=LANGUAGE_ID?>&EVENT_NAME='+this[this.selectedIndex].value">
+				<select name="EVENT_NAME" style="width:370px" onChange="window.location='message_edit.php?lang=<?=LANGUAGE_ID?>&EVENT_NAME='+this[this.selectedIndex].value">
 				<?
 				foreach($event_type_ref as $ev_name=>$arType):
 					if($id_1st===false)
@@ -241,12 +245,12 @@ $tabControl->BeginNextTab();
 	</tr>
 	<tr class="adm-detail-required-field">
 		<td><? echo GetMessage('MSG_EMAIL_FROM')?></td>
-		<td><input type="text" name="EMAIL_FROM" size="30" maxlength="255" value="<?echo $str_EMAIL_FROM?>" onfocus="t=this">
+		<td><input type="text" name="EMAIL_FROM" size="50" maxlength="255" value="<?echo $str_EMAIL_FROM?>" onfocus="t=this">
 		</td>
 	</tr>
 	<tr class="adm-detail-required-field">
 		<td><?echo GetMessage('MSG_EMAIL_TO')?></td>
-		<td><input type="text" name="EMAIL_TO" size="30" maxlength="255" value="<?echo $str_EMAIL_TO?>" onfocus="t=this"></td>
+		<td><input type="text" name="EMAIL_TO" size="50" maxlength="255" value="<?echo $str_EMAIL_TO?>" onfocus="t=this"></td>
 	</tr>
 
 	<?
@@ -282,25 +286,25 @@ $tabControl->BeginNextTab();
 
 	<tr id="msg_ext1" <?=$str_show_ext?>>
 		<td><?echo GetMessage("MSG_CC")?></td>
-		<td><input type="text" name="CC" size="30" maxlength="255" value="<?echo $str_CC?>" onfocus="t=this">
+		<td><input type="text" name="CC" size="50" maxlength="255" value="<?echo $str_CC?>" onfocus="t=this">
 		</td>
 	</tr>
 
 	<tr id="msg_ext2" <?=$str_show_ext?>>
 		<td><?echo GetMessage("MSG_BCC")?></td>
-		<td><input type="text" name="BCC" size="30" maxlength="255" value="<?echo $str_BCC?>" onfocus="t=this">
+		<td><input type="text" name="BCC" size="50" value="<?echo $str_BCC?>" onfocus="t=this">
 		</td>
 	</tr>
 
 	<tr id="msg_ext3" <?=$str_show_ext?>>
 		<td><?echo GetMessage("MSG_REPLY_TO")?></td>
-		<td><input type="text" name="REPLY_TO" size="30" maxlength="255" value="<?echo $str_REPLY_TO?>" onfocus="t=this">
+		<td><input type="text" name="REPLY_TO" size="50" maxlength="255" value="<?echo $str_REPLY_TO?>" onfocus="t=this">
 		</td>
 	</tr>
 
 	<tr id="msg_ext4" <?=$str_show_ext?>>
 		<td><?echo GetMessage("MSG_IN_REPLY_TO")?></td>
-		<td><input type="text" name="IN_REPLY_TO" size="30" maxlength="255" value="<?echo $str_IN_REPLY_TO?>" onfocus="t=this">
+		<td><input type="text" name="IN_REPLY_TO" size="50" maxlength="255" value="<?echo $str_IN_REPLY_TO?>" onfocus="t=this">
 		</td>
 	</tr>
 
@@ -319,13 +323,13 @@ $tabControl->BeginNextTab();
 
 	<tr id="msg_ext6" <?=$str_show_ext?>>
 		<td><input type="text" name="FIELD1_NAME" size="20" maxlength="255" value="<?echo $str_FIELD1_NAME?>" onfocus="t=this">:</td>
-		<td><input type="text" name="FIELD1_VALUE" size="30" maxlength="255" value="<?echo $str_FIELD1_VALUE?>" onfocus="t=this">
+		<td><input type="text" name="FIELD1_VALUE" size="50" maxlength="255" value="<?echo $str_FIELD1_VALUE?>" onfocus="t=this">
 		</td>
 	</tr>
 
 	<tr id="msg_ext7" <?=$str_show_ext?>>
 		<td><input type="text" name="FIELD2_NAME" size="20" maxlength="255" value="<?echo $str_FIELD2_NAME?>" onfocus="t=this">:</td>
-		<td><input type="text" name="FIELD2_VALUE" size="30" maxlength="255" value="<?echo $str_FIELD2_VALUE?>" onfocus="t=this">
+		<td><input type="text" name="FIELD2_VALUE" size="50" maxlength="255" value="<?echo $str_FIELD2_VALUE?>" onfocus="t=this">
 		</td>
 	</tr>
 

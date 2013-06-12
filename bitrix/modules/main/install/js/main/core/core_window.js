@@ -1010,7 +1010,11 @@ BX.CDialog.prototype.closeWait = function(el)
 	{
 		if (el.bxwaiter)
 		{
-			el.bxwaiter.parentNode.removeChild(el.bxwaiter);
+			if(el.bxwaiter.parentNode)
+			{
+				el.bxwaiter.parentNode.removeChild(el.bxwaiter);
+			}
+
 			el.bxwaiter = null;
 		}
 
@@ -1475,6 +1479,9 @@ BX.CDialog.prototype.Notify = function(note, bError)
 					props: {className: 'adm-warning-text'}
 				}),
 				BX.create('SPAN', {
+					props: {className: 'adm-warning-icon'}
+				}),
+				BX.create('SPAN', {
 					props: {className: 'adm-warning-close'},
 					events: {click: BX.proxy(this.hideNotify, this)}
 				})
@@ -1488,6 +1495,7 @@ BX.CDialog.prototype.Notify = function(note, bError)
 		BX.removeClass(this.PARTS.NOTIFY, 'adm-warning-block-red');
 
 	this.PARTS.NOTIFY.firstChild.innerHTML = note || '&nbsp;';
+	this.PARTS.NOTIFY.firstChild.style.width = (this.PARAMS.width-50) + 'px';
 	BX.removeClass(this.PARTS.NOTIFY, 'adm-warning-animate');
 }
 
@@ -1702,8 +1710,6 @@ BX.CDialog.prototype.__onResizeFinished = function()
 
 BX.CDialog.prototype.Show = function(bNotRegister)
 {
-	BX.browser.addGlobalClass();
-
 	if ((!this.PARAMS.content) && this.PARAMS.content_url && BX.ajax && !bNotRegister)
 	{
 		var wait = BX.showWait();
@@ -1714,11 +1720,11 @@ BX.CDialog.prototype.Show = function(bNotRegister)
 		this.OVERLAY.style.display = 'block';
 		this.OVERLAY.className = 'bx-core-dialog-overlay';
 
-		var post_data = '', method = 'get';
+		var post_data = '', method = 'GET';
 		if (this.PARAMS.content_post)
 		{
 			post_data = this.PARAMS.content_post;
-			method = 'post';
+			method = 'POST';
 		}
 
 		var url = this.PARAMS.content_url
@@ -1730,12 +1736,19 @@ BX.CDialog.prototype.Show = function(bNotRegister)
 			this.Show();
 		}, this)
 
-		BX.ajax[method](url, post_data, BX.delegate(function(data) {
-			BX.closeWait(null, wait);
+		BX.ajax({
+			method: method,
+			dataType: 'html',
+			url: url,
+			data: post_data,
+			onsuccess: BX.delegate(function(data) {
+				BX.closeWait(null, wait);
 
-			this.SetContent(data || '&nbsp;');
-			this.Show();
-		}, this));
+				this.SetContent(data || '&nbsp;');
+				this.Show();
+			}, this),
+			processScriptsConsecutive: true
+		});
 	}
 	else
 	{
@@ -2427,7 +2440,6 @@ BX.COpener.prototype.isMenuVisible = function() {
 
 BX.CMenu = function(arParams)
 {
-	BX.browser.addGlobalClass();
 	BX.CMenu.superclass.constructor.apply(this);
 
 	this.DIV.style.width = 'auto';//this.DIV.firstChild.offsetWidth + 'px';
@@ -2856,6 +2868,7 @@ BX.CMenuOpener = function(arParams)
 	BX.CMenuOpener.superclass.constructor.apply(this);
 
 	this.PARAMS = arParams || {};
+	this.setParent(this.PARAMS.parent);
 	this.PARTS = {};
 
 	this.SETTINGS.drag_restrict = true;
@@ -3020,6 +3033,45 @@ BX.CMenuOpener = function(arParams)
 	}
 }
 BX.extend(BX.CMenuOpener, BX.CWindowFloat);
+
+BX.CMenuOpener.prototype.setParent = function(new_parent)
+{
+	new_parent = BX(new_parent);
+	if(new_parent.OPENER && new_parent.OPENER != this)
+	{
+		new_parent.OPENER.Close();
+		new_parent.OPENER.clearHoverHoutEvents();
+	}
+
+	if(this.PARAMS.parent && this.PARAMS.parent != new_parent)
+	{
+		this.clearHoverHoutEvents();
+		this.PARAMS.parent.OPENER = null;
+	}
+
+	this.PARAMS.parent = new_parent;
+	this.PARAMS.parent.OPENER = this;
+}
+
+BX.CMenuOpener.prototype.setHoverHoutEvents = function(hover, hout)
+{
+	if(!this.__opener_events_set)
+	{
+		BX.bind(this.Get(), 'mouseover', hover);
+		BX.bind(this.Get(), 'mouseout', hout);
+		this.__opener_events_set = true;
+	}
+}
+
+BX.CMenuOpener.prototype.clearHoverHoutEvents = function()
+{
+	if(this.Get())
+	{
+		BX.unbindAll(this.Get());
+		this.__opener_events_set = false;
+	}
+}
+
 
 BX.CMenuOpener.prototype.unclosable = true;
 

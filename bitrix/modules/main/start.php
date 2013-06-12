@@ -1,12 +1,11 @@
-<?
-/*
-##############################################
-# Bitrix Site Manager                        #
-# Copyright (c) 2002-2007 Bitrix             #
-# http://www.bitrixsoft.com                  #
-# mailto:admin@bitrixsoft.com                #
-##############################################
-*/
+<?php
+/**
+ * Bitrix Framework
+ * @package bitrix
+ * @subpackage main
+ * @copyright 2001-2013 Bitrix
+ */
+
 error_reporting(E_COMPILE_ERROR|E_ERROR|E_CORE_ERROR|E_PARSE);
 
 require_once(substr(__FILE__, 0, strlen(__FILE__) - strlen("/start.php"))."/bx_root.php");
@@ -58,6 +57,22 @@ if(!defined("CACHED_b_user_field_enum")) define("CACHED_b_user_field_enum", 3600
 if(!defined("CACHED_b_task")) define("CACHED_b_task", 3600);
 if(!defined("CACHED_b_task_operation")) define("CACHED_b_task_operation", 3600);
 if(!defined("CACHED_b_rating")) define("CACHED_b_rating", 3600);
+if(!defined("CACHED_b_rating_vote")) define("CACHED_b_rating_vote", 86400);
+if(!defined("CACHED_b_rating_bucket_size")) define("CACHED_b_rating_bucket_size", 100);
+if(!defined("CACHED_b_user_access_check")) define("CACHED_b_user_access_check", 3600);
+if(!defined("CACHED_b_user_counter")) define("CACHED_b_user_counter", 3600);
+if(!defined("CACHED_b_smile")) define("CACHED_b_smile", 31536000);
+
+/**
+ * Defined in dbconn.php
+ * @param string $DBType
+ * @param bool $DBDebug
+ * @param bool $DBDebugToFile
+ * @param string $DBHost
+ * @param string $DBName
+ * @param string $DBLogin
+ * @param string $DBPassword
+ */
 
 //connect to database, from here global variable $DB is available (CDatabase class)
 if(isset($DBSQLServerType) && $DBSQLServerType == "NATIVE")
@@ -83,7 +98,7 @@ elseif(array_key_exists("show_sql_stat", $_COOKIE))
 $GLOBALS["DB"]->ShowSqlStat = ($show_sql_stat == "Y");
 
 if(!defined("POST_FORM_ACTION_URI"))
-	define("POST_FORM_ACTION_URI", htmlspecialcharsbx($_SERVER["REQUEST_URI"]));
+	define("POST_FORM_ACTION_URI", htmlspecialcharsbx("/".ltrim($_SERVER["REQUEST_URI"], "/")));
 
 if(!($GLOBALS["DB"]->Connect($DBHost, $DBName, $DBLogin, $DBPassword)))
 {
@@ -110,4 +125,3 @@ if (file_exists(($fname = $_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/class
 	$US_HOST_PROCESS_MAIN = True;
 	include($fname);
 }
-?>

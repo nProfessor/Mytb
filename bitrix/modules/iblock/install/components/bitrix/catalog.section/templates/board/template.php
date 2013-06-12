@@ -170,7 +170,7 @@
 							"NOTIFY_URL" => htmlspecialcharsback($arElement["SUBSCRIBE_URL"]),
 							"NOTIFY_USE_CAPTHA" => "N"
 							),
-							false
+							$component
 						);?>
 			<?endif?>
 			&nbsp;

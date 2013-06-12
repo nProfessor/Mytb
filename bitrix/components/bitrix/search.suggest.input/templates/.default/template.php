@@ -1,9 +1,11 @@
-<?if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();?>
-<script src="/bitrix/js/main/cphttprequest.js"></script>
+<?if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
+$APPLICATION->AddHeadScript("/bitrix/js/main/cphttprequest.js");
+?>
 <script type="text/javascript">
-if (typeof oObject != "object")
+if (!window.oObject || typeof oObject != "object")
 	window.oObject = {};
-document.<?echo $arResult["ID"]?>_CheckThis = function(oObj)
+
+window.<?= $arResult["ID"]?>_CheckThis = document.<?= $arResult["ID"]?>_CheckThis = function(oObj)
 {
 	try
 	{

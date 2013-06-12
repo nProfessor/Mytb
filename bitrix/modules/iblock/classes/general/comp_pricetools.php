@@ -1,15 +1,14 @@
 <?
 class CIBlockPriceTools
 {
-	function GetCatalogPrices($IBLOCK_ID, $arPriceCode)
+	public static function GetCatalogPrices($IBLOCK_ID, $arPriceCode)
 	{
 		global $USER;
 		$arCatalogPrices = array();
 		if(CModule::IncludeModule("catalog"))
 		{
-			$bFromCatalog = true;
 			$arCatalogGroupCodesFilter = array();
-			foreach($arPriceCode as $key => $value)
+			foreach($arPriceCode as $value)
 			{
 				$t_value = trim($value);
 				if(strlen($t_value) > 0)
@@ -38,7 +37,6 @@ class CIBlockPriceTools
 		}
 		else
 		{
-			$bFromCatalog = false;
 			$arPriceGroups = array(
 				"view" => array(),
 			);
@@ -65,16 +63,23 @@ class CIBlockPriceTools
 		return $arCatalogPrices;
 	}
 
-	function GetItemPrices($IBLOCK_ID, $arCatalogPrices, $arItem, $bVATInclude = true, $arCurrencyParams = array(), $USER_ID = 0, $LID = SITE_ID)
+	public static function GetItemPrices($IBLOCK_ID, $arCatalogPrices, $arItem, $bVATInclude = true, $arCurrencyParams = array(), $USER_ID = 0, $LID = SITE_ID)
 	{
+		static $arCurUserGroups = array();
+
 		global $USER;
 		$arPrices = array();
 		if(CModule::IncludeModule("catalog"))
 		{
-			if (IntVal($USER_ID) > 0)
-				$arUserGroups = CUser::GetUserGroup($USER_ID);
-			else
-				$arUserGroups = $USER->GetUserGroupArray();
+			$USER_ID = intval($USER_ID);
+			$intUserID = $USER_ID;
+			if (0 >= $intUserID)
+				$intUserID = $USER->GetID();
+			if (!array_key_exists($intUserID, $arCurUserGroups))
+			{
+				$arCurUserGroups[$intUserID] = (0 < $USER_ID ? CUser::GetUserGroup($USER_ID) : $USER->GetUserGroupArray());
+			}
+			$arUserGroups = $arCurUserGroups[$intUserID];
 
 			$boolConvert = false;
 			$strCurrencyID = '';
@@ -127,7 +132,7 @@ class CIBlockPriceTools
 						$dblVatPrice = CCurrencyRates::ConvertCurrency($vat_price, $strOrigCurrencyID, $strCurrencyID);
 						$dblVatValue = CCurrencyRates::ConvertCurrency($vat_value, $strOrigCurrencyID, $strCurrencyID);
 						$dblDiscountValueNoVat = CCurrencyRates::ConvertCurrency($discountPrice, $strOrigCurrencyID, $strCurrencyID);
-						$dblVatDiscoutPrice = CCurrencyRates::ConvertCurrency($vat_discountPrice, $strOrigCurrencyID, $strCurrencyID);
+						$dblVatDiscountPrice = CCurrencyRates::ConvertCurrency($vat_discountPrice, $strOrigCurrencyID, $strCurrencyID);
 						$dblDiscountValueVat = CCurrencyRates::ConvertCurrency($vat_value_discount, $strOrigCurrencyID, $strCurrencyID);
 
 						$arPrices[$key] = array(
@@ -148,8 +153,8 @@ class CIBlockPriceTools
 							"PRINT_DISCOUNT_VALUE_NOVAT" => FormatCurrency($dblDiscountValueNoVat, $strCurrencyID),
 
 							"ORIG_DISCOUNT_VALUE_VAT" => $vat_discountPrice,
-							"DISCOUNT_VALUE_VAT" => $dblVatDiscoutPrice,
-							"PRINT_DISCOUNT_VALUE_VAT" => FormatCurrency($dblVatDiscoutPrice, $strCurrencyID),
+							"DISCOUNT_VALUE_VAT" => $dblVatDiscountPrice,
+							"PRINT_DISCOUNT_VALUE_VAT" => FormatCurrency($dblVatDiscountPrice, $strCurrencyID),
 
 							'ORIG_DISCOUNT_VATRATE_VALUE' => $vat_value_discount,
 							'DISCOUNT_VATRATE_VALUE' => $dblDiscountValueVat,
@@ -226,7 +231,7 @@ class CIBlockPriceTools
 		return $arPrices;
 	}
 
-	function CanBuy($IBLOCK_ID, $arCatalogPrices, $arItem)
+	public static function CanBuy($IBLOCK_ID, $arCatalogPrices, $arItem)
 	{
 		if(is_array($arItem["PRICE_MATRIX"]))
 		{
@@ -234,7 +239,7 @@ class CIBlockPriceTools
 		}
 		else
 		{
-			foreach($arCatalogPrices as $code=>$arPrice)
+			foreach($arCatalogPrices as $arPrice)
 			{
 				if($arPrice["CAN_BUY"] && strlen($arItem["CATALOG_PRICE_".$arPrice["ID"]]) > 0)
 				{
@@ -251,7 +256,7 @@ class CIBlockPriceTools
 		return false;
 	}
 
-	function GetProductProperties($IBLOCK_ID, $ELEMENT_ID, $arPropertiesList, $arPropertiesValues)
+	public static function GetProductProperties($IBLOCK_ID, $ELEMENT_ID, $arPropertiesList, $arPropertiesValues)
 	{
 		$arResult = array();
 		foreach($arPropertiesList as $pid)
@@ -359,7 +364,7 @@ class CIBlockPriceTools
 	returns array on success
 	or number on fail (may be used for debug)
 	*/
-	function CheckProductProperties($IBLOCK_ID, $ELEMENT_ID, $arPropertiesList, $arPropertiesValues)
+	public static function CheckProductProperties($IBLOCK_ID, $ELEMENT_ID, $arPropertiesList, $arPropertiesValues)
 	{
 		$SORT=1;
 		$arResult = array();
@@ -496,16 +501,16 @@ class CIBlockPriceTools
 		return $arResult;
 	}
 
-	function GetOffersIBlock($IBLOCK_ID)
+	public static function GetOffersIBlock($IBLOCK_ID)
 	{
 		$arResult = false;
 		$IBLOCK_ID = intval($IBLOCK_ID);
 		if (0 < $IBLOCK_ID)
 		{
-			if(CModule::IncludeModule("catalog"))
+			if (CModule::IncludeModule("catalog"))
 			{
-				$arCatalog = CCatalog::GetSkuInfoByProductID($IBLOCK_ID);
-				if (true == is_array($arCatalog))
+				$arCatalog = CCatalogSKU::GetInfoByProductIBlock($IBLOCK_ID);
+				if (is_array($arCatalog))
 				{
 					$arResult = array(
 						'OFFERS_IBLOCK_ID' => $arCatalog['IBLOCK_ID'],
@@ -517,7 +522,7 @@ class CIBlockPriceTools
 		return $arResult;
 	}
 
-	function GetOfferProperties($OFFER_ID, $IBLOCK_ID, $arPropertiesList)
+	public static function GetOfferProperties($OFFER_ID, $IBLOCK_ID, $arPropertiesList)
 	{
 		$arResult = array();
 
@@ -591,7 +596,7 @@ class CIBlockPriceTools
 		return $arResult;
 	}
 
-	function GetOffersArray($IBLOCK_ID, $arElementID, $arOrder, $arSelectFields, $arSelectProperties, $limit, $arPrices, $vat_include, $arCurrencyParams = array(), $USER_ID = 0, $LID = SITE_ID)
+	public static function GetOffersArray($IBLOCK_ID, $arElementID, $arOrder, $arSelectFields, $arSelectProperties, $limit, $arPrices, $vat_include, $arCurrencyParams = array(), $USER_ID = 0, $LID = SITE_ID)
 	{
 		$arResult = array();
 
@@ -619,16 +624,15 @@ class CIBlockPriceTools
 			);
 			//if(!$arParams["USE_PRICE_COUNT"])
 			{
-				foreach($arPrices as $key => $value)
+				foreach($arPrices as $value)
 				{
 					$arSelect[$value["SELECT"]] = 1;
 					//$arrFilter["CATALOG_SHOP_QUANTITY_".$value["ID"]] = $arParams["SHOW_PRICE_COUNT"];
 				}
 			}
 
-			foreach($arSelectFields as $i => $code)
-				if(!isset($arSelect[$code]))
-					$arSelect[$code] = 1; //mark to select
+			foreach($arSelectFields as $code)
+				$arSelect[$code] = 1; //mark to select
 
 			$arOffersPerElement = array();
 			$rsOffers = CIBlockElement::GetList($arOrder, $arFilter, false, false, array_keys($arSelect));

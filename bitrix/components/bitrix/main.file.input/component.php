@@ -1,6 +1,13 @@
 <?
 if(!defined("B_PROLOG_INCLUDED")||B_PROLOG_INCLUDED!==true)die();
 
+/**
+ * @global CMain $APPLICATION
+ * @param array $arParams
+ * @param array $arResult
+ * @param CBitrixComponent $this
+ */
+
 $arParams['MAX_FILE_SIZE'] = intval($arParams['MAX_FILE_SIZE']);
 $arParams['MODULE_ID'] = $arParams['MODULE_ID'] && IsModuleInstalled($arParams['MODULE_ID']) ? $arParams['MODULE_ID'] : false;
 // ALLOW_UPLOAD = 'A'll files | 'I'mages | 'F'iles with selected extensions
@@ -23,7 +30,7 @@ if ($_POST['mfi_mode'])
 	if (!$cid || !preg_match('/^[a-f01-9]{32}$/', $cid) || !check_bitrix_sessid())
 		die();
 
-	Header('Content-Type: text/html; charset='.LANG_CHARSET);
+	header('Content-Type: text/html; charset='.LANG_CHARSET);
 
 	if ($_POST["mfi_mode"] == "upload")
 	{
@@ -166,7 +173,7 @@ $arResult['CONTROL_UID'] = md5(randString(15));
 $_SESSION["MFI_UPLOADED_FILES_".$arResult['CONTROL_UID']] = array();
 $arResult['FILES'] = array();
 
-if (is_array($arParams['INPUT_VALUE']))
+if (is_array($arParams['INPUT_VALUE']) && strlen(implode(",", $arParams["INPUT_VALUE"])) > 0)
 {
 	$dbRes = CFile::GetList(array(), array("@ID" => implode(",", $arParams["INPUT_VALUE"])));
 	while ($arFile = $dbRes->GetNext())
@@ -183,4 +190,3 @@ CUtil::InitJSCore(array('ajax'));
 $this->IncludeComponentTemplate();
 
 return $arParams['CONTROL_ID'];
-?>

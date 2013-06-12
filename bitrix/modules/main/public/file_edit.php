@@ -153,16 +153,20 @@ if(strlen($strWarning) <= 0)
 	{
 		$arTemplates = CFileman::GetFileTemplates(LANGUAGE_ID, array($site_template));
 		if(strlen($template) > 0)
-			for ($i=0; $i < count($arTemplates); $i++)
+		{
+			foreach ($arTemplates as $arTemplate)
 			{
-				if($arTemplates[$i]["file"] == $template)
+				if($arTemplate["file"] == $template)
 				{
-					$filesrc_tmp = CFileman::GetTemplateContent($arTemplates[$i]["file"],LANGUAGE_ID, array($site_template));
+					$filesrc_tmp = CFileman::GetTemplateContent($arTemplate["file"],LANGUAGE_ID, array($site_template));
 					break;
 				}
 			}
+		}
 		else
+		{
 			$filesrc_tmp = CFileman::GetTemplateContent($arTemplates[0]["file"], LANGUAGE_ID, array($site_template));
+		}
 	}
 
 	if($_SERVER["REQUEST_METHOD"] == "POST" && $_REQUEST['save'] == 'Y')
@@ -540,12 +544,13 @@ function CheckEditorFinish()
 	var onWinResizeExt = function(Params)
 	{
 		var
+			topTlbrH = BX('filesrc_pub_toolBarSet0').offsetHeight || 51,
 			h = parseInt(Params.height) - 2,
 			w = parseInt(Params.width) - 3;
 
 		pMainObj.pWnd.style.height = h + "px";
 		pMainObj.pWnd.style.width = w + "px";
-		BX.findParent(pMainObj.cEditor, {tagName: "TABLE"}).style.height = (h - 86) + "px";
+		BX.findParent(pMainObj.cEditor, {tagName: "TABLE"}).style.height = (h - (topTlbrH + 35)) + "px";
 		pMainObj.arTaskbarSet[2]._SetTmpClass(true);
 		pMainObj.arTaskbarSet[2].Resize(false, false, false);
 		pMainObj.arTaskbarSet[3].Resize(false, false, false);

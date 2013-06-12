@@ -11,4 +11,5 @@ $MESS["TASK_NAME_IBLOCK_FULL_EDIT"] = "Edit";
 $MESS["TASK_DESC_IBLOCK_FULL_EDIT"] = "Edit elements; cannot modify access permissions";
 $MESS["TASK_NAME_IBLOCK_FULL"] = "Full access";
 $MESS["TASK_DESC_IBLOCK_FULL"] = "Edit information blocks, elements and sections; no restrictions";
+$MESS["TASK_BINDING_IBLOCK"] = "Infoblock";
 ?>

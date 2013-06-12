@@ -106,7 +106,7 @@ function BxInterfaceGrid(table_id)
 				r = tbl.rows[tbl.rows.length-2];
 			r.className += ' bx-bottom';
 		}
-	}
+	};
 
 	this.OnRowContext = function(e)
 	{
@@ -155,8 +155,8 @@ function BxInterfaceGrid(table_id)
 				_this.activeRow.className = _this.activeRow.className.replace(/\s*bx-active/i, '');
 				_this.activeRow = null;
 			}
-			_this.SaveColumns;
-		}
+			_this.SaveColumns();
+		};
 
 		//combined menu
 		var menuItems = BX.util.array_merge(col_menu, el.oncontextmenu());
@@ -177,7 +177,7 @@ function BxInterfaceGrid(table_id)
 		e.returnValue = false;
 		if(e.preventDefault)
 			e.preventDefault();
-	}
+	};
 
 	this.ShowActionMenu = function(el, index)
 	{
@@ -197,7 +197,7 @@ function BxInterfaceGrid(table_id)
 				}
 			}
 		);
-	}
+	};
 
 	this.HighlightGutter = function(cell, on)
 	{
@@ -230,7 +230,7 @@ function BxInterfaceGrid(table_id)
 				cell.className = cell.className.replace(/\s*bx-over/i, '');
 			}
 		}
-	}
+	};
 
 	this.HighlightRow = function(row, on)
 	{
@@ -238,7 +238,7 @@ function BxInterfaceGrid(table_id)
 			row.className += ' bx-over';
 		else
 			row.className = row.className.replace(/\s*bx-over/i, '');
-	}
+	};
 
 	this.SelectRow = function(checkbox)
 	{
@@ -257,7 +257,7 @@ function BxInterfaceGrid(table_id)
 			row.className = row.className.replace(/\s*bx-selected/ig, '');
 			selCount--;
 		}
-		span.innerHTML = selCount;
+		span.innerHTML = selCount.toString();
 
 		var checkAll = document.getElementById(tbl.id+'_check_all');
 
@@ -265,12 +265,12 @@ function BxInterfaceGrid(table_id)
 			checkAll.checked = true;
 		else
 			checkAll.checked = false;
-	}
+	};
 
 	this.OnClickRow = function(e)
 	{
 		if(!e)
-			var e = window.event;
+			e = window.event;
 		if(!e.ctrlKey)
 			return;
 		var obj = (e.target? e.target : (e.srcElement? e.srcElement : null));
@@ -285,7 +285,7 @@ function BxInterfaceGrid(table_id)
 			_this.SelectRow(checkbox);
 		}
 		_this.EnableActions();
-	}
+	};
 
 	this.SelectAllRows = function(checkbox)
 	{
@@ -306,7 +306,7 @@ function BxInterfaceGrid(table_id)
 			}
 		}
 		this.EnableActions();
-	}
+	};
 
 	this.EnableActions = function()
 	{
@@ -321,7 +321,7 @@ function BxInterfaceGrid(table_id)
 		if(b) b.className = 'context-button icon action-edit-button'+(bEnabledEdit? '':'-dis');
 		b = document.getElementById('delete_button_'+this.table_id);
 		if(b) b.className = 'context-button icon action-delete-button'+(bEnabled? '':'-dis');
-	}
+	};
 
 	this.IsActionEnabled = function(action)
 	{
@@ -338,7 +338,7 @@ function BxInterfaceGrid(table_id)
 			return !(elAll && elAll.checked) && bChecked;
 		else
 			return (elAll && elAll.checked) || bChecked;
-	}
+	};
 
 	this.SwitchActionButtons = function(bShow)
 	{
@@ -347,7 +347,7 @@ function BxInterfaceGrid(table_id)
 		while(td = jsUtils.FindNextSibling(td, 'td'))
 			td.style.display = (bShow? 'none':'');
 		buttonsTd.style.display = (bShow? '':'none');
-	}
+	};
 
 	this.ActionEdit = function(a)
 	{
@@ -459,7 +459,7 @@ function BxInterfaceGrid(table_id)
 
 			form.elements['action_button_'+this.table_id].value = 'edit';
 		}
-	}
+	};
 
 	this.ActionCancel = function()
 	{
@@ -502,7 +502,7 @@ function BxInterfaceGrid(table_id)
 		}
 
 		form.elements['action_button_'+this.table_id].value = '';
-	}
+	};
 
 	this.ActionDelete = function()
 	{
@@ -513,7 +513,7 @@ function BxInterfaceGrid(table_id)
 		form.elements['action_button_'+this.table_id].value = 'delete';
 
 		BX.submit(form);
-	}
+	};
 
 	this.DeleteItem = function(field_id, message)
 	{
@@ -540,7 +540,7 @@ function BxInterfaceGrid(table_id)
 				this.ActionDelete();
 			}
 		}
-	}
+	};
 
 	this.ForAllClick = function(el)
 	{
@@ -561,7 +561,7 @@ function BxInterfaceGrid(table_id)
 		}
 
 		this.EnableActions();
-	}
+	};
 
 	this.Sort = function(url, sort_state, def_order, args)
 	{
@@ -582,7 +582,7 @@ function BxInterfaceGrid(table_id)
 			url += 'asc';
 
 		this.Reload(url);
-	}
+	};
 
 	this.InitVisCols = function()
 	{
@@ -592,7 +592,7 @@ function BxInterfaceGrid(table_id)
 			for(var id in this.oColsMeta)
 				this.oVisibleCols[id] = true;
 		}
-	}
+	};
 
 	this.CheckColumn = function(column, menuItem)
 	{
@@ -603,7 +603,7 @@ function BxInterfaceGrid(table_id)
 		this.InitVisCols();
 		this.oVisibleCols[column] = bShow;
 		this.bColsChanged = true;
-	}
+	};
 
 	this.HideColumn = function(column)
 	{
@@ -611,13 +611,13 @@ function BxInterfaceGrid(table_id)
 		this.oVisibleCols[column] = false;
 		this.bColsChanged = true;
 		this.SaveColumns();
-	}
+	};
 
 	this.ApplySaveColumns = function()
 	{
 		this.menu.PopupHide();
 		this.SaveColumns();
-	}
+	};
 
 	this.SaveColumns = function(columns)
 	{
@@ -636,20 +636,26 @@ function BxInterfaceGrid(table_id)
 					sCols += (sCols!=''? ',':'')+id;
 		}
 		BX.ajax.get('/bitrix/components'+_this.vars.component_path+'/settings.php?GRID_ID='+_this.table_id+'&action=showcolumns&columns='+sCols+'&sessid='+_this.vars.sessid, function(){_this.Reload()});
-	}
+	};
 
 	this.Reload = function(url)
 	{
 		jsDD.Disable();
 
 		if(!url)
+		{
 			url = this.vars.current_url;
+		}
 
 		if(this.vars.ajax.AJAX_ID != '')
+		{
 			BX.ajax.insertToNode(url+(url.indexOf('?') == -1? '?':'&')+'bxajaxid='+this.vars.ajax.AJAX_ID, 'comp_'+this.vars.ajax.AJAX_ID);
+		}
 		else
+		{
 			window.location = url;
-	}
+		}
+	};
 
 	this.SetTheme = function(menuItem, theme)
 	{
@@ -661,7 +667,7 @@ function BxInterfaceGrid(table_id)
 		themeMenu.SetItemIcon(menuItem, 'checked');
 
 		BX.ajax.get('/bitrix/components'+_this.vars.component_path+'/settings.php?GRID_ID='+_this.table_id+'&action=settheme&theme='+theme+'&sessid='+_this.vars.sessid);
-	}
+	};
 
 	this.SetView = function(view_id)
 	{
@@ -671,21 +677,17 @@ function BxInterfaceGrid(table_id)
 			function(){_this.Reload()});
 
 		BX.ajax.get('/bitrix/components'+_this.vars.component_path+'/settings.php?GRID_ID='+_this.table_id+'&action=setview&view_id='+view_id+'&sessid='+_this.vars.sessid, func);
-	}
+	};
 
 	this.EditCurrentView = function()
 	{
 		this.ShowSettings(this.oOptions.views[this.oOptions.current_view],
 			function()
 			{
-				var data = _this.SaveSettings(_this.oOptions.current_view);
-				if(data.saved_filter && _this.oOptions.filters[data.saved_filter])
-					_this.ApplyFilter(data.saved_filter);
-				else
-					_this.Reload();
+				_this.SaveSettings(_this.oOptions.current_view, true);
 			}
 		);
-	}
+	};
 
 	this.AddView = function()
 	{
@@ -715,7 +717,7 @@ function BxInterfaceGrid(table_id)
 				form.views_list.options[form.views_list.length] = new Option((data.name != ''? data.name:_this.vars.mess.viewsNoName), view_id, true, true);
 			}
 		);
-	}
+	};
 
 	this.EditView = function(view_id)
 	{
@@ -738,7 +740,7 @@ function BxInterfaceGrid(table_id)
 				form.views_list.options[form.views_list.selectedIndex].text = (data.name != ''? data.name:_this.vars.mess.viewsNoName);
 			}
 		);
-	}
+	};
 
 	this.DeleteView = function(view_id)
 	{
@@ -753,7 +755,7 @@ function BxInterfaceGrid(table_id)
 		this.bViewsChanged = true;
 
 		BX.ajax.get('/bitrix/components'+this.vars.component_path+'/settings.php?GRID_ID='+this.table_id+'&action=delview&view_id='+view_id+'&sessid='+_this.vars.sessid);
-	}
+	};
 
 	this.ShowSettings = function(view, action)
 	{
@@ -805,18 +807,18 @@ function BxInterfaceGrid(table_id)
 		}
 
 		var oVisCols = {};
-		for(var i=0, n=aVisCols.length; i<n; i++)
+		for(i=0, n=aVisCols.length; i<n; i++)
 			oVisCols[aVisCols[i]] = true;
 
 		//invisible cols
 		jsSelectUtils.deleteAllOptions(form.view_all_cols);
-		for(var i in this.oColsNames)
+		for(i in this.oColsNames)
 			if(!oVisCols[i])
 				form.view_all_cols.options[form.view_all_cols.length] = new Option(this.oColsNames[i], i, false, false);
 
 		//visible cols
 		jsSelectUtils.deleteAllOptions(form.view_cols);
-		for(var i in oVisCols)
+		for(i in oVisCols)
 			form.view_cols.options[form.view_cols.length] = new Option(this.oColsNames[i], i, false, false);
 
 		//sorting
@@ -829,11 +831,11 @@ function BxInterfaceGrid(table_id)
 		//saved filter
 		jsSelectUtils.deleteAllOptions(form.view_filters);
 		form.view_filters.options[0] = new Option(this.vars.mess.viewsFilter, '');
-		for(var i in this.oOptions.filters)
+		for(i in this.oOptions.filters)
 			form.view_filters.options[form.view_filters.length] = new Option(this.oOptions.filters[i].name, i, (i == view.saved_filter), (i == view.saved_filter));
-	}
+	};
 
-	this.SaveSettings = function(view_id)
+	this.SaveSettings = function(view_id, doReload)
 	{
 		var form = document['settings_'+this.table_id];
 
@@ -854,17 +856,33 @@ function BxInterfaceGrid(table_id)
 			'page_size': form.view_page_size.value,
 			'saved_filter': form.view_filters.value
 		};
+		
+		var handler = null;
+		if(doReload === true)
+		{
+			handler = function()
+			{
+				if(data.saved_filter && _this.oOptions.filters[data.saved_filter])
+				{
+					_this.ApplyFilter(data.saved_filter);
+				}
+				else
+				{
+					_this.Reload();
+				}
+			};
+		}
 
-		BX.ajax.post('/bitrix/components'+_this.vars.component_path+'/settings.php', data);
+		BX.ajax.post('/bitrix/components'+_this.vars.component_path+'/settings.php', data, handler);
 
 		return data;
-	}
+	};
 
 	this.ReloadViews = function()
 	{
 		if(_this.bViewsChanged)
 			_this.Reload();
-	}
+	};
 
 	this.ShowViews = function()
 	{
@@ -905,7 +923,7 @@ function BxInterfaceGrid(table_id)
 
 		if(bCreated)
 			form.appendChild(BX('views_list_'+this.table_id));
-	}
+	};
 
 	/* DD handlers */
 
@@ -927,7 +945,7 @@ function BxInterfaceGrid(table_id)
 		this.__dragArrowDiv = arrowDiv;
 
 		return true;
-	}
+	};
 
 	this.Drag = function(x, y)
 	{
@@ -936,7 +954,7 @@ function BxInterfaceGrid(table_id)
 		div.style.top = y+'px';
 
 		return true;
-	}
+	};
 
 	this.DragStop = function()
 	{
@@ -949,7 +967,7 @@ function BxInterfaceGrid(table_id)
 		this.__dragArrowDiv = null;
 
 		return true;
-	}
+	};
 
 	this.DragHover = function(obDrag, x, y)
 	{
@@ -965,7 +983,7 @@ function BxInterfaceGrid(table_id)
 		div.style.top = (pos['top']-12)+'px';
 
 		return true;
-	}
+	};
 
 	this.DragOut = function(obDrag, x, y)
 	{
@@ -976,7 +994,7 @@ function BxInterfaceGrid(table_id)
 		div.style.left = '-1000px';
 
 		return true;
-	}
+	};
 
 	this.DragFinish = function(obDrag, x, y, e)
 	{
@@ -991,7 +1009,7 @@ function BxInterfaceGrid(table_id)
 		var delta = 0;
 		for(var i=0; i < 2; i++)
 		{
-			cell = tbl.rows[1].cells[i];
+			var cell = tbl.rows[1].cells[i];
 			if(cell.className && (cell.className.indexOf('bx-actions-col') != -1 || cell.className.indexOf('bx-checkbox-col') != -1))
 				delta ++;
 		}
@@ -1006,23 +1024,23 @@ function BxInterfaceGrid(table_id)
 		var tmp = cols[index_from];
 		if(index_to < index_from)
 		{
-			for(var i = index_from; i > index_to; i--)
+			for(i = index_from; i > index_to; i--)
 				cols[i] = cols[i-1];
 		}
 		else
 		{
-			for(var i = index_from; i < index_to; i++)
+			for(i = index_from; i < index_to; i++)
 				cols[i] = cols[i+1];
 		}
 		cols[index_to] = tmp;
 
 		var sCols = '';
-		for(var i=0; i<cols.length; i++)
+		for(i=0; i<cols.length; i++)
 			sCols += (sCols != ''? ',':'')+cols[i];
 
 		_this.SaveColumns(sCols);
 		return true;
-	}
+	};
 
 	/* Filter */
 
@@ -1031,7 +1049,7 @@ function BxInterfaceGrid(table_id)
 		var row = BX('flt_header_'+this.table_id);
 		if(row)
 			jsUtils.addEvent(row, "contextmenu", this.OnRowContext);
-	}
+	};
 
 	this.SwitchFilterRow = function(row_id, menuItem)
 	{
@@ -1062,7 +1080,7 @@ function BxInterfaceGrid(table_id)
 			this.SwitchFilter(a);
 
 		this.SaveFilterRows();
-	}
+	};
 
 	this.SwitchFilterRows = function(on)
 	{
@@ -1080,7 +1098,7 @@ function BxInterfaceGrid(table_id)
 		}
 
 		var mnu = this.filterMenu[0].MENU;
-		for(var i=0; i<mnu.length; i++)
+		for(i=0; i<mnu.length; i++)
 		{
 			if(i == 0 && on == false)
 				continue;
@@ -1094,7 +1112,7 @@ function BxInterfaceGrid(table_id)
 			this.SwitchFilter(a);
 
 		this.SaveFilterRows();
-	}
+	};
 
 	this.SaveFilterRows = function()
 	{
@@ -1104,7 +1122,7 @@ function BxInterfaceGrid(table_id)
 				sRows += (sRows!=''? ',':'')+id;
 
 		BX.ajax.get('/bitrix/components'+this.vars.component_path+'/settings.php?GRID_ID='+this.table_id+'&action=filterrows&rows='+sRows+'&sessid='+this.vars.sessid);
-	}
+	};
 
 	this.SwitchFilter = function(a)
 	{
@@ -1116,7 +1134,7 @@ function BxInterfaceGrid(table_id)
 		row.style.display = (on? 'none':'');
 
 		BX.ajax.get('/bitrix/components'+this.vars.component_path+'/settings.php?GRID_ID='+this.table_id+'&action=filterswitch&show='+(on? 'N':'Y')+'&sessid='+this.vars.sessid);
-	}
+	};
 
 	this.ClearFilter = function(form)
 	{
@@ -1148,7 +1166,7 @@ function BxInterfaceGrid(table_id)
 
 		form.clear_filter.value = "Y";
 		BX.submit(form);
-	}
+	};
 
 	this.ShowFilters = function()
 	{
@@ -1183,7 +1201,7 @@ function BxInterfaceGrid(table_id)
 		var form = document['filters_'+this.table_id];
 		if(bCreated)
 			form.appendChild(BX('filters_list_'+this.table_id));
-	}
+	};
 
 	this.AddFilter = function(fields)
 	{
@@ -1211,7 +1229,7 @@ function BxInterfaceGrid(table_id)
 				_this.filterMenu = BX.util.insertIntoArray(_this.filterMenu, 2, mnuItem);
 			}
 		);
-	}
+	};
 
 	this.AddFilterAs = function()
 	{
@@ -1219,7 +1237,7 @@ function BxInterfaceGrid(table_id)
 		var fields = this.GetFilterFields(form);
 		this.ShowFilters();
 		this.AddFilter(fields);
-	}
+	};
 
 	this.EditFilter = function(filter_id)
 	{
@@ -1246,7 +1264,7 @@ function BxInterfaceGrid(table_id)
 				}
 			}
 		);
-	}
+	};
 
 	this.DeleteFilter = function(filter_id)
 	{
@@ -1272,7 +1290,7 @@ function BxInterfaceGrid(table_id)
 		delete this.oOptions.filters[filter_id];
 
 		BX.ajax.get('/bitrix/components'+this.vars.component_path+'/settings.php?GRID_ID='+this.table_id+'&action=delfilter&filter_id='+filter_id+'&sessid='+_this.vars.sessid);
-	}
+	};
 
 	this.ShowFilterSettings = function(filter, action)
 	{
@@ -1311,7 +1329,7 @@ function BxInterfaceGrid(table_id)
 		form.filter_name.value = filter.name;
 
 		this.SetFilterFields(form, filter.fields);
-	}
+	};
 
 	this.SetFilterFields = function(form, fields)
 	{
@@ -1354,7 +1372,7 @@ function BxInterfaceGrid(table_id)
 			if(el.onchange)
 				el.onchange();
 		}
-	}
+	};
 
 	this.GetFilterFields = function(form)
 	{
@@ -1390,7 +1408,7 @@ function BxInterfaceGrid(table_id)
 			}
 		}
 		return fields;
-	}
+	};
 
 	this.SaveFilter = function(filter_id)
 	{
@@ -1407,7 +1425,7 @@ function BxInterfaceGrid(table_id)
 		BX.ajax.post('/bitrix/components'+_this.vars.component_path+'/settings.php', data);
 
 		return data;
-	}
+	};
 
 	this.ApplyFilter = function(filter_id)
 	{
@@ -1415,7 +1433,7 @@ function BxInterfaceGrid(table_id)
 		this.SetFilterFields(form, this.oOptions.filters[filter_id].fields);
 
 		BX.submit(form);
-	}
+	};
 
 	this.OnDateChange = function(sel)
 	{
@@ -1437,5 +1455,5 @@ function BxInterfaceGrid(table_id)
 		var span = BX.findNextSibling(sel, {'tag':'span', 'class':'bx-filter-br'});
 		if(span)
 			span.style.display = (bShowBr? '':'none');
-	}
+	};
 }

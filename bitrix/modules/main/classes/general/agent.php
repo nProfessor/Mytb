@@ -1,5 +1,13 @@
-<?
+<?php
+/**
+ * Bitrix Framework
+ * @package bitrix
+ * @subpackage main
+ * @copyright 2001-2013 Bitrix
+ */
+
 IncludeModuleLangFile($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/classes/general/agent.php");
+
 class CAllAgent
 {
 	function AddAgent(
@@ -176,15 +184,18 @@ class CAllAgent
 		else
 			$filter_keys = array_keys($arFilter);
 
-		for($i=0; $i<count($filter_keys); $i++)
+		for($i = 0, $n = count($filter_keys); $i < $n; $i++)
 		{
 			$val = $arFilter[$filter_keys[$i]];
 			$key = strtoupper($filter_keys[$i]);
-			if(strlen($val)<=0 || ($key=="USER_ID" && $val!==false && $val!==null)) continue;
+			if(strlen($val)<=0 || ($key=="USER_ID" && $val!==false && $val!==null))
+				continue;
+
 			switch($key)
 			{
 				case "ID":
 					$arSqlSearch[] = "A.ID=".IntVal($val);
+					break;
 				case "ACTIVE":
 					$t_val = strtoupper($val);
 					if($t_val == "Y" || $t_val == "N")
@@ -205,7 +216,7 @@ class CAllAgent
 					$arSqlSearch[] = "A.USER_ID ".(IntVal($val)<=0?"IS NULL":"=".IntVal($val));
 					break;
 				case "LAST_EXEC":
-					$arr = ParseDateTime($val, CLang::GetDateFormat($format_type, $lang));
+					$arr = ParseDateTime($val, CLang::GetDateFormat());
 					if($arr)
 					{
 						$date2 = mktime(0, 0, 0, $arr["MM"], $arr["DD"]+1, $arr["YYYY"]);
@@ -219,7 +230,6 @@ class CAllAgent
 						$date2 = mktime(0, 0, 0, $arr["MM"], $arr["DD"]+1, $arr["YYYY"]);
 						$arSqlSearch[] = "A.NEXT_EXEC>=".$DB->CharToDateFunction($DB->ForSql($val), "SHORT")." AND A.NEXT_EXEC<".$DB->CharToDateFunction(ConvertTimeStamp($date2), "SHORT");
 					}
-
 					break;
 			}
 		}
@@ -254,7 +264,8 @@ class CAllAgent
 
 	function CheckFields(&$arFields, $ign_name = false)
 	{
-		global $DB;
+		global $DB, $APPLICATION;
+
 		$errMsg = array();
 
 		if(!$ign_name && (!is_set($arFields, "NAME") || strlen(trim($arFields["NAME"])) <= 2))
@@ -267,21 +278,27 @@ class CAllAgent
 				|| !$DB->IsDate($arFields["NEXT_EXEC"], false, LANG, "FULL")
 			)
 		)
+		{
 			$errMsg[] = array("id" => "NEXT_EXEC", "text" => GetMessage("MAIN_AGENT_ERROR_NEXT_EXEC"));
+		}
 
 		if(
 			array_key_exists("DATE_CHECK", $arFields)
 			&& $arFields["DATE_CHECK"] <> ""
 			&& !$DB->IsDate($arFields["DATE_CHECK"], false, LANG, "FULL")
 		)
+		{
 			$errMsg[] = array("id" => "DATE_CHECK", "text" => GetMessage("MAIN_AGENT_ERROR_DATE_CHECK"));
+		}
 
 		if(
 			array_key_exists("LAST_EXEC", $arFields)
 			&& $arFields["LAST_EXEC"] <> ""
 			&& !$DB->IsDate($arFields["LAST_EXEC"], false, LANG, "FULL")
 		)
+		{
 			$errMsg[] = array("id" => "LAST_EXEC", "text" => GetMessage("MAIN_AGENT_ERROR_LAST_EXEC"));
+		}
 
 		if($arFields["MODULE_ID"] <> '')
 			if(!IsModuleInstalled($arFields["MODULE_ID"]))
@@ -290,10 +307,9 @@ class CAllAgent
 		if(count($errMsg)>0)
 		{
 			$e = new CAdminException($errMsg);
-			$GLOBALS["APPLICATION"]->ThrowException($e);
+			$APPLICATION->ThrowException($e);
 			return false;
 		}
 		return true;
 	}
 }
-?>

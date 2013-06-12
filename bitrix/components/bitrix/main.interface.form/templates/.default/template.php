@@ -1,9 +1,29 @@
 <?
+/**
+ * Bitrix Framework
+ * @package bitrix
+ * @subpackage main
+ * @copyright 2001-2013 Bitrix
+ */
+
+/**
+ * Bitrix vars
+ *
+ * @var array $arParams
+ * @var array $arResult
+ * @var CBitrixComponentTemplate $this
+ * @global CMain $APPLICATION
+ * @global CUser $USER
+ */
+
 if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== true)
 	die();
 
 //color schemes
-$arThemes = CGridOptions::GetThemes($this->GetFolder());
+if($arParams["USE_THEMES"])
+	$arThemes = CGridOptions::GetThemes($this->GetFolder());
+else
+	$arThemes = array();
 ?>
 
 <div class="bx-interface-form">
@@ -39,12 +59,12 @@ foreach($arResult["TABS"] as $tab):
 endforeach;
 ?>
 					<td width="100%"<?if($USER->IsAuthorized() && $arParams["SHOW_SETTINGS"] == true):?> ondblclick="bxForm_<?=$arParams["FORM_ID"]?>.ShowSettings()"<?endif?> style="white-space:nowrap; text-align:right">
-<?
-if(count($arResult["TABS"]) > 1 && $arParams["CAN_EXPAND_TABS"] == true):
-?>
+<?if(count($arResult["TABS"]) > 1 && $arParams["CAN_EXPAND_TABS"] == true):?>
 <a href="javascript:void(0)" onclick="bxForm_<?=$arParams["FORM_ID"]?>.ToggleTabs();" title="<?echo GetMessage("interface_form_show_all")?>" id="bxForm_<?=$arParams["FORM_ID"]?>_expand_link" class="bx-context-button bx-down"><span></span></a>
 <?endif?>
+<?if($arParams["SHOW_SETTINGS"] || !empty($arThemes)):?>
 <a href="javascript:void(0)" onclick="bxForm_<?=$arParams["FORM_ID"]?>.menu.ShowMenu(this, bxForm_<?=$arParams["FORM_ID"]?>.settingsMenu);" title="<?echo GetMessage("interface_form_settings")?>" class="bx-context-button bx-form-menu"><span></span></a>
+<?endif;?>
 					</td>
 				</tr>
 			</table>
@@ -245,7 +265,7 @@ if(isset($arParams["BUTTONS"])):
 </form>
 <?endif?>
 
-<?if($GLOBALS['USER']->IsAuthorized() && $arParams["SHOW_SETTINGS"] == true):?>
+<?if($USER->IsAuthorized() && $arParams["SHOW_SETTINGS"] == true):?>
 <div style="display:none">
 
 <div id="form_settings_<?=$arParams["FORM_ID"]?>">
@@ -350,29 +370,65 @@ bxForm_<?=$arParams["FORM_ID"]?>.vars = <?=CUtil::PhpToJsObject($variables)?>;
 bxForm_<?=$arParams["FORM_ID"]?>.oTabsMeta = <?=CUtil::PhpToJsObject($arResult["TABS_META"])?>;
 bxForm_<?=$arParams["FORM_ID"]?>.oFields = <?=CUtil::PhpToJsObject($arResult["AVAILABLE_FIELDS"])?>;
 <?endif?>
-bxForm_<?=$arParams["FORM_ID"]?>.settingsMenu = [
-<?if($arParams["SHOW_SETTINGS"] == true):?>
-	{'TEXT': '<?=CUtil::JSEscape(GetMessage("intarface_form_mnu_settings"))?>', 'TITLE': '<?=CUtil::JSEscape(GetMessage("intarface_form_mnu_settings_title"))?>', 'ONCLICK': 'bxForm_<?=$arParams["FORM_ID"]?>.ShowSettings()', 'DEFAULT':true, 'DISABLED':<?=($USER->IsAuthorized()? 'false':'true')?>, 'ICONCLASS':'form-settings'},
-<?if(!empty($arResult["OPTIONS"]["tabs"])):?>
-<?if($arResult["OPTIONS"]["settings_disabled"] == "Y"):?>
-	{'TEXT': '<?=CUtil::JSEscape(GetMessage("intarface_form_mnu_on"))?>', 'TITLE': '<?=CUtil::JSEscape(GetMessage("intarface_form_mnu_on_title"))?>', 'ONCLICK': 'bxForm_<?=$arParams["FORM_ID"]?>.EnableSettings(true)', 'DISABLED':<?=($USER->IsAuthorized()? 'false':'true')?>, 'ICONCLASS':'form-settings-on'},
-<?else:?>
-	{'TEXT': '<?=CUtil::JSEscape(GetMessage("intarface_form_mnu_off"))?>', 'TITLE': '<?=CUtil::JSEscape(GetMessage("intarface_form_mnu_off_title"))?>', 'ONCLICK': 'bxForm_<?=$arParams["FORM_ID"]?>.EnableSettings(false)', 'DISABLED':<?=($USER->IsAuthorized()? 'false':'true')?>, 'ICONCLASS':'form-settings-off'},
-<?endif;?>
-<?endif?>
-<?endif?>
-	{'TEXT': '<?=CUtil::JSEscape(GetMessage("interface_form_colors"))?>', 'TITLE': '<?=CUtil::JSEscape(GetMessage("interface_form_colors_title"))?>', 'CLASS': 'bx-grid-themes-menu-item', 'MENU':[
 <?
-$i = 0;
-foreach($arThemes as $theme):
+$settingsMenu = array();
+if($arParams["SHOW_SETTINGS"])
+{
+	$settingsMenu[] = array(
+		'TEXT' => GetMessage("intarface_form_mnu_settings"),
+		'TITLE' => GetMessage("intarface_form_mnu_settings_title"),
+		'ONCLICK' => 'bxForm_'.$arParams["FORM_ID"].'.ShowSettings()',
+		'DEFAULT' => true,
+		'DISABLED' => ($USER->IsAuthorized()? false:true),
+		'ICONCLASS' => 'form-settings'
+	);
+	if(!empty($arResult["OPTIONS"]["tabs"]))
+	{
+		if($arResult["OPTIONS"]["settings_disabled"] == "Y")
+		{
+			$settingsMenu[] = array(
+				'TEXT' => GetMessage("intarface_form_mnu_on"),
+				'TITLE' => GetMessage("intarface_form_mnu_on_title"),
+				'ONCLICK' => 'bxForm_'.$arParams["FORM_ID"].'.EnableSettings(true)',
+				'DISABLED' => ($USER->IsAuthorized()? false:true),
+				'ICONCLASS' => 'form-settings-on'
+			);
+		}
+		else
+		{
+			$settingsMenu[] = array(
+				'TEXT' => GetMessage("intarface_form_mnu_off"),
+				'TITLE' => GetMessage("intarface_form_mnu_off_title"),
+				'ONCLICK' => 'bxForm_'.$arParams["FORM_ID"].'.EnableSettings(false)',
+				'DISABLED' => ($USER->IsAuthorized()? false:true),
+				'ICONCLASS' => 'form-settings-off'
+			);
+		}
+	}
+}
+if(!empty($arThemes))
+{
+	$themeItems = array();
+	foreach($arThemes as $theme)
+	{
+		$themeItems[] = array(
+			'TEXT' => $theme["name"].($theme["theme"] == $arResult["GLOBAL_OPTIONS"]["theme"]? ' '.GetMessage("interface_form_default"):''),
+			'ONCLICK' => 'bxForm_'.$arParams["FORM_ID"].'.SetTheme(this, \''.$theme["theme"].'\')',
+			'ICONCLASS' => ($theme["theme"] == $arResult["OPTIONS"]["theme"] || $theme["theme"] == "grey" && $arResult["OPTIONS"]["theme"] == ''? 'checked' : '')
+		);
+	}
+
+	$settingsMenu[] = array(
+		'TEXT' => GetMessage("interface_form_colors"),
+		'TITLE' => GetMessage("interface_form_colors_title"),
+		'CLASS' => 'bx-grid-themes-menu-item',
+		'MENU' => $themeItems,
+		'DISABLED' => ($USER->IsAuthorized()? false:true),
+		'ICONCLASS' => 'form-themes'
+	);
+}
 ?>
-		<?if($i > 0) echo ','?>{'TEXT': '<?=CUtil::JSEscape($theme["name"])?><?if($theme["theme"] == $arResult["GLOBAL_OPTIONS"]["theme"]) echo ' '.CUtil::JSEscape(GetMessage("interface_form_default"))?>', 'ONCLICK': 'bxForm_<?=$arParams["FORM_ID"]?>.SetTheme(this, \'<?=CUtil::JSEscape($theme["theme"])?>\')'<?if($theme["theme"] == $arResult["OPTIONS"]["theme"] || $theme["theme"] == "grey" && $arResult["OPTIONS"]["theme"] == ''):?>, 'ICONCLASS':'checked'<?endif?>}
-<?
-	$i++;
-endforeach;
-?>
-	], 'DISABLED':<?=($USER->IsAuthorized()? 'false':'true')?>, 'ICONCLASS':'form-themes'}
-];
+bxForm_<?=$arParams["FORM_ID"]?>.settingsMenu = <?=CUtil::PhpToJsObject($settingsMenu)?>;
 
 <?if($arResult["OPTIONS"]["expand_tabs"] == "Y"):?>
 BX.ready(function(){bxForm_<?=$arParams["FORM_ID"]?>.ToggleTabs(true);});

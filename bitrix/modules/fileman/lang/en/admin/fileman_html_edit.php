@@ -50,4 +50,5 @@ $MESS["FILEMAN_FILE_EDIT"] = "Edit";
 $MESS["FILEMAN_FILE_TRANS_LINKED"] = "Use titles for file names: Enabled";
 $MESS["FILEMAN_FILE_TRANS_UNLINKED"] = "Use titles for file names: Disabled";
 $MESS["FILEMAN_FILEEDIT_FILE_IMAGE_ERROR"] = "Invalid file type.";
+$MESS["FILEMAN_BACK"] = "Folder";
 ?>

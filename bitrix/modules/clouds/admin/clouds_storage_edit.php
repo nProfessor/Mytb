@@ -248,7 +248,7 @@ $tabControl->BeginNextTab();
 			<?
 			foreach(CCloudStorage::GetServiceLocationList($arRes["SERVICE_ID"]) as $LOCATION_ID => $LOCATION_NAME)
 			{
-				if($arRes["LOCATION"] === $LOCATION_ID)
+				if($arRes["LOCATION"] == $LOCATION_ID)
 					echo htmlspecialcharsex($LOCATION_NAME);
 			}
 			?>
@@ -377,8 +377,8 @@ BX.ready(function() {
 		}
 	});
 });
-</script>
-		<a href="javascript:void(0)" onclick="editAddRule(this)" hidefocus="true" class="bx-action-href"><?echo GetMessage("CLO_STORAGE_EDIT_ADD_FILE_RULE")?></a>
+</script><br>
+		<a class="adm-btn" href="javascript:void(0)" onclick="editAddRule(this)" hidefocus="true" class="bx-action-href"><?echo GetMessage("CLO_STORAGE_EDIT_ADD_FILE_RULE")?></a>
 	</td></tr>
 	<tr><td>
 		<?echo

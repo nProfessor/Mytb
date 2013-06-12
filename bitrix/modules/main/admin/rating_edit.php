@@ -1,10 +1,16 @@
-<?
-##############################################
-# Bitrix Site Manager                        #
-# Copyright (c) 2002-2010 Bitrix             #
-# http://www.bitrixsoft.com                  #
-# mailto:admin@bitrixsoft.com                #
-##############################################
+<?php
+/**
+ * Bitrix Framework
+ * @package bitrix
+ * @subpackage main
+ * @copyright 2001-2013 Bitrix
+ */
+
+/**
+ * Bitrix vars
+ * @global CUser $USER
+ * @global CMain $APPLICATION
+ */
 
 require_once(dirname(__FILE__)."/../include/prolog_admin_before.php");
 
@@ -15,7 +21,7 @@ if(!$USER->CanDoOperation('edit_ratings'))
 
 IncludeModuleLangFile(__FILE__);
 
-$ID = intval($ID);
+$ID = intval($_REQUEST["ID"]);
 $message = null;
 $bVarsFromForm = false;
 
@@ -41,7 +47,7 @@ if($_SERVER['REQUEST_METHOD']=="POST" && ($_POST['save']<>"" || $_POST['apply']<
 
 	if($res)
 	{
-		if($apply <> "")
+		if($_POST["apply"] <> "")
 		{
 			$_SESSION["SESS_ADMIN"]["RATING_EDIT_MESSAGE"]=array("MESSAGE"=>GetMessage("RATING_EDIT_SUCCESS"), "TYPE"=>"OK");
 			LocalRedirect("rating_edit.php?ID=".$ID."&lang=".LANG);
@@ -245,14 +251,14 @@ foreach ($arRatingConfigs as $arConfigModule => $arConfigModuleValue)
 										{
 											// define a default value
 											$strFieldValue = isset($_POST['CONFIGS'][$arConfigModule][$arConfigType][$arConfig['ID']][$arConfig['FIELDS'][$i]['ID']]) ?
-															($_POST['CONFIGS'][$arConfigModule][$arConfigType][$arConfig['ID']][$arConfig['FIELDS'][$i]['ID']]) : $arConfig['FIELDS'][$i]['DEFAULT'];
+												($_POST['CONFIGS'][$arConfigModule][$arConfigType][$arConfig['ID']][$arConfig['FIELDS'][$i]['ID']]) : $arConfig['FIELDS'][$i]['DEFAULT'];
 											// if exist editing data and block configuration is active
 											if (isset($str_CONFIGS[$arConfigModule][$arConfigType][$arConfig['ID']][$arConfig['FIELDS'][$i]['ID']]))
 												$strFieldValue = $str_CONFIGS[$arConfigModule][$arConfigType][$arConfig['ID']][$arConfig['FIELDS'][$i]['ID']];
 
 											// define a default value
 											$strFieldValueInput = isset($_POST['CONFIGS'][$arConfigModule][$arConfigType][$arConfig['ID']][$arConfig['FIELDS'][$i]['ID_INPUT']]) ?
-																($_POST['CONFIGS'][$arConfigModule][$arConfigType][$arConfig['ID']][$arConfig['FIELDS'][$i]['ID_INPUT']]) : $arConfig['FIELDS'][$i]['DEFAULT_INPUT'];
+												($_POST['CONFIGS'][$arConfigModule][$arConfigType][$arConfig['ID']][$arConfig['FIELDS'][$i]['ID_INPUT']]) : $arConfig['FIELDS'][$i]['DEFAULT_INPUT'];
 											// if exist editing data and block configuration is active
 											if (isset($str_CONFIGS[$arConfigModule][$arConfigType][$arConfig['ID']][$arConfig['FIELDS'][$i]['ID_INPUT']]))
 												$strFieldValue = $str_CONFIGS[$arConfigModule][$arConfigType][$arConfig['ID']][$arConfig['FIELDS'][$i]['ID_INPUT']];
@@ -268,8 +274,8 @@ foreach ($arRatingConfigs as $arConfigModule => $arConfigModuleValue)
 											<tr valign="top">
 												<td class="rating-table-component-table-td-table-td rating-table-component-table-td-table-td-1 field-name" style="vertical-align:middle"><label><? echo isset($arConfig['FIELDS'][$i]['NAME'])? $arConfig['FIELDS'][$i]['NAME']: GetMessage('RATING_FIELDS_DEF_NAME')?></label></td>
 												<td class="rating-table-component-table-td-table-td rating-table-component-table-td-table-td-2" width="25%" >
-													<?=SelectBoxFromArray("CONFIGS[$arConfigModule][$arConfigType>][".$arConfig['ID']."][".$arCurrentCondition['FIELDS'][$i]['ID']."]", $arSelect, $strFieldValue, "");?>
-													<input type="text" name="CONFIGS[<?=$arConfigModule?>][<?=$arConfigType?>][<?=$arConfig['ID']?>][<?=$arCurrentCondition['FIELDS'][$i]['ID_INPUT']?>]" value="<?=$strFieldValueInput?>" style="width:45px;">
+													<?=SelectBoxFromArray("CONFIGS[$arConfigModule][$arConfigType>][".$arConfig['ID']."][".$arConfig['FIELDS'][$i]['ID']."]", $arSelect, $strFieldValue, "");?>
+													<input type="text" name="CONFIGS[<?=$arConfigModule?>][<?=$arConfigType?>][<?=$arConfig['ID']?>][<?=$arConfig['FIELDS'][$i]['ID_INPUT']?>]" value="<?=htmlspecialcharsbx($strFieldValueInput)?>" style="width:45px;">
 												</td>
 											</tr>
 											<?
@@ -278,14 +284,14 @@ foreach ($arRatingConfigs as $arConfigModule => $arConfigModuleValue)
 										{
 											// define a default value
 											$strFieldValue = isset($_POST['CONFIGS'][$arConfigModule][$arConfigType][$arConfig['ID']][$arConfig['FIELDS'][$i]['ID']]) ?
-															($_POST['CONFIGS'][$arConfigModule][$arConfigType][$arConfig['ID']][$arConfig['FIELDS'][$i]['ID']]) : $arConfig['FIELDS'][$i]['DEFAULT'];
+												($_POST['CONFIGS'][$arConfigModule][$arConfigType][$arConfig['ID']][$arConfig['FIELDS'][$i]['ID']]) : $arConfig['FIELDS'][$i]['DEFAULT'];
 											// if exist editing data and block configuration is active
 											if (isset($str_CONFIGS[$arConfigModule][$arConfigType][$arConfig['ID']][$arConfig['FIELDS'][$i]['ID']]))
 												$strFieldValue = $str_CONFIGS[$arConfigModule][$arConfigType][$arConfig['ID']][$arConfig['FIELDS'][$i]['ID']];
 											?>
 											<tr valign="top" style="">
 												<td class="rating-table-component-table-td-table-td rating-table-component-table-td-table-td-1 field-name" style="vertical-align:middle"><label><? echo isset($arConfig['FIELDS'][$i]['NAME'])? $arConfig['FIELDS'][$i]['NAME']: GetMessage('RATING_FIELDS_DEF_NAME')?></label></td>
-												<td class="rating-table-component-table-td-table-td rating-table-component-table-td-table-td-2" width="20%"><input type="text" name="CONFIGS[<?=$arConfigModule?>][<?=$arConfigType?>][<?=$arConfig['ID']?>][<?=$arConfig['FIELDS'][$i]['ID']?>]" value="<?=$strFieldValue?>"></td>
+												<td class="rating-table-component-table-td-table-td rating-table-component-table-td-table-td-2" width="20%"><input type="text" name="CONFIGS[<?=$arConfigModule?>][<?=$arConfigType?>][<?=$arConfig['ID']?>][<?=$arConfig['FIELDS'][$i]['ID']?>]" value="<?=htmlspecialcharsbx($strFieldValue)?>"></td>
 											</tr>
 											<?
 										}

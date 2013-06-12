@@ -24,6 +24,7 @@ function BXHTMLEditor(name, start_func)
 	this.customToolbars = true;
 	this.bDotNet = window.bDotNet || false;
 	this.limit_php_access = limit_php_access; // Limit php access
+	this.lastCursorId = 'bx-editor-cursor-id';
 	this.bxTags = {};
 
 	this.bLoadFinish = false;
@@ -201,6 +202,9 @@ BXHTMLEditor.prototype.OnLoad = function()
 		this.pEditorDocument = this.pEditorFrame.contentDocument;
 	else
 		this.pEditorDocument = this.pEditorFrame.contentWindow.document;
+	this.pEditorWindow = this.pEditorFrame.contentWindow;
+	this.pEditorDocument.className = "pEditorDocument";
+	this.pEditorDocument.pMainObj = this;
 
 	//Toolbarsets creation
 	this.pTopToolbarset = BX(this.name + '_toolBarSet0');
@@ -213,11 +217,8 @@ BXHTMLEditor.prototype.OnLoad = function()
 	//Taskbarsets creation
 	this.arTaskbarSet[2] = new BXTaskbarSet(BX(this.name + '_taskBarSet2'), this, 2); // Right taskbar
 	this.arTaskbarSet[3] = new BXTaskbarSet(BX(this.name + '_taskBarSet3'), this, 3); // Bottom taskbar
-
 	this.pTaskTabs = BX(this.name + '_taskBarTabs'); // Taskbar Tabs
-	this.pEditorWindow = this.pEditorFrame.contentWindow;
-	this.pEditorDocument.className = "pEditorDocument";
-	this.pEditorDocument.pMainObj = this;
+
 
 	var ta = BX.create("TEXTAREA", {props: {className: "bxeditor-textarea"}, style: {height: '100%'}});
 	if (BX.browser.IsIE())
@@ -361,8 +362,20 @@ BXHTMLEditor.prototype.OnLoad = function()
 		return true;
 	};
 
-	BXHTMLEditor.prototype.OnClick = function ()
+	BXHTMLEditor.prototype.OnClick = function(e)
 	{
+		if (!e)
+			e = this.pEditorWindow.event;
+		if (!e)
+			e = window.event;
+
+		if (e)
+		{
+			var pElement = e.target || e.srcElement;
+			if (pElement && pElement.nodeType == 1 && pElement.tagName && pElement.tagName.toLowerCase() == 'img')
+				this.SelectElement(pElement);
+		}
+
 		if (this.__bMouseDownComp) // Prevent default for selecting other element after Rendered Component selection
 			return;
 
@@ -640,30 +653,38 @@ BXHTMLEditor.prototype.OnLoad = function()
 	//}catch(e){alert('ERROR: BXHTMLEditor.prototype.OnLoad'); alert(e);}
 
 	// Autosave handlers
-	if (obj.pValue.form && obj.pValue.form.BXAUTOSAVE)
+	var pForm = obj.pValue.form;
+	if (pForm)
 	{
-		try{
-			BX.addCustomEvent(this, 'onChange', function(){
-				obj.pValue.form.BXAUTOSAVE.Init();
-			});
-			BX.addCustomEvent(this.pValue.form, 'onAutoSave', function (ob, data)
+		//BX.addCustomEvent(pForm, 'onAutoSavePrepare', function()
+		//{
+			if (pForm && pForm.BXAUTOSAVE)
 			{
-				if (obj.bShowed)
-				{
-					obj.SaveContent(); // Save editor content
-					data[obj.name] = obj.GetContent(); // Get it from textarea and put to form_data to saving
-				}
-			});
+				try{
+					BX.addCustomEvent(obj, 'onChange', function()
+					{
+						pForm.BXAUTOSAVE.Init();
+					});
+					BX.addCustomEvent(pForm, 'onAutoSave', function (ob, data)
+					{
+						if (obj.bShowed)
+						{
+							obj.SaveContent(); // Save editor content
+							data[obj.name] = obj.GetContent(); // Get it from textarea and put to form_data to saving
+						}
+					});
 
-			BX.addCustomEvent(this.pValue.form, 'onAutoSaveRestore', function (ob, data)
-			{
-				if (obj.bShowed)
-				{
-					obj.SetContent(data[obj.name]);
-					obj.LoadContent();
-				}
-			});
-		}catch(e){}
+					BX.addCustomEvent(pForm, 'onAutoSaveRestore', function (ob, data)
+					{
+						if (obj.bShowed)
+						{
+							obj.SetContent(data[obj.name]);
+							obj.LoadContent();
+						}
+					});
+				}catch(e){}
+			}
+		//});
 	}
 };
 
@@ -725,11 +746,15 @@ BXHTMLEditor.prototype.SaveContent = function()
 
 BXHTMLEditor.prototype.SetEditorContent = function(sContent)
 {
-	var obj = this;
 	var _this = this;
 	sContent = this.pParser.SystemParse(sContent);
 
-	try{this.pEditorDocument.designMode='off';}catch(e){_alert('pMainObj.SetEditorContent: designMode=\'off\'');}
+	if (this.pEditorDocument.designMode)
+	{
+		try{
+			this.pEditorDocument.designMode = 'off';
+		}catch(e){_alert('SetEditorContent: designMode=\'off\'');}
+	}
 	this.OnEvent('SetEditorContentBefore', [sContent]);
 	//Writing content
 	this.pEditorDocument.open();
@@ -762,6 +787,7 @@ BXHTMLEditor.prototype.SetEditorContent = function(sContent)
 	this.pEditorDocument.className = 'pEditorDocument';
 	this.pEditorDocument.pMainObj = this;
 	pBXEventDispatcher.SetEvents(this.pEditorDocument);
+
 	addAdvEvent(this.pEditorDocument, 'contextmenu', window['onContextMenu_'+this.name]);
 	addAdvEvent(this.pEditorDocument, 'click', window['onClick_'+this.name]);
 	addAdvEvent(this.pEditorDocument, 'dblclick', window['onDblClick_'+this.name]);
@@ -770,17 +796,11 @@ BXHTMLEditor.prototype.SetEditorContent = function(sContent)
 
 	addAdvEvent(this.pEditorDocument, 'keydown', BX.proxy(function(e){return this.OnKeyPress(e, true)}, this));
 	addAdvEvent(this.pEditorDocument, 'keyup', BX.proxy(function(e){_this.OnClick(e); _this.OnChange("keyup", "");}, this));
-	//addAdvEvent(document, 'keypress', BX.proxy(this.OnKeyPress, this));
-	//addAdvEvent(this.pEditorDocument, 'keypress', window['onKeyPress_' + this.name]);
-	//addAdvEvent(this.pDocument, "keypress", PreventEnterClosing);
 
 	if(BX.browser.IsIE())
-		addAdvEvent(this.pEditorDocument.body, 'paste', window['onPaste_'+this.name]);
-	//else
-	addAdvEvent(this.pEditorDocument, 'keydown', window['onKeyDown_'+this.name]);
+		addAdvEvent(this.pEditorDocument.body, 'paste', window['onPaste_' + this.name]);
+	addAdvEvent(this.pEditorDocument, 'keydown', window['onKeyDown_' + this.name]);
 
-	//addEvent(this.pEditorDocument, 'mouseup', function (e){_this.OnClick(e);});
-	//addEvent(this.pEditorDocument, 'keyup', function (e){_this.OnClick(e); _this.OnChange("keyup", "");});
 	pBXEventDispatcher.OnEditorEvent("OnSetEditorContent", this);
 	this.OnEvent('SetEditorContentAfter');
 };
@@ -1133,6 +1153,15 @@ BXHTMLEditor.prototype.SetTemplate = function (templateID, arTemplateParams, bRe
 	if (to_template_path && this.arTemplateParams.ID)
 		this.oStyles.Parse(this.arTemplateParams["STYLES"], to_template_path + this.arTemplateParams.ID);
 
+	var styleTitles = this.arTemplateParams["STYLES_TITLE"];
+	if (styleTitles)
+	{
+		// Workaround for Chrome
+		for (var title in styleTitles)
+			if (title && title != title.toLowerCase() && !styleTitles[title.toLowerCase()])
+				styleTitles[title.toLowerCase()] = styleTitles[title];
+	}
+
 	// Set styles
 	this.oStyles.SetToDocument(this.pEditorDocument);
 
@@ -1189,8 +1218,12 @@ BXHTMLEditor.prototype.OnContextMenu = function (e, pElement, bNotFrame, arParam
 	obj.OnEvent("OnSelectionChange");
 	if(obj.pEditorWindow.event)
 		e = obj.pEditorWindow.event;
+	if(!e)
+		e = window.event;
 
-	if(!e) e = window.event;
+	if (!pElement)
+		pElement = e.target || e.srcElement;
+
 	if(e.pageX || e.pageY)
 	{
 		e.realX = e.pageX;
@@ -1655,6 +1688,20 @@ BXHTMLEditor.prototype.SelectElement = function (pElement)
 	}
 	return oRange;
 };
+
+BXHTMLEditor.prototype.CollapseSelection = function ()
+{
+	if(this.pEditorWindow.getSelection)
+	{
+		var oSel = this.pEditorWindow.getSelection();
+		if (oSel.collapseToEnd)
+			oSel.collapseToEnd();
+	}
+	else if (this.pEditorDocument && this.pEditorDocument.selection && this.pEditorDocument.selection.empty)
+	{
+		this.pEditorDocument.selection.empty();
+	}
+}
 
 BXHTMLEditor.prototype.GetSelectedNode = function(bOnlyNode)
 {
@@ -2403,6 +2450,33 @@ BXHTMLEditor.prototype.AuthFailureHandler = function(name, arAuthResult)
 	});
 };
 
+BXHTMLEditor.prototype.InsertHtmlEx = function(html, timeout)
+{
+	if (!timeout)
+		timeout = 50;
+	var id = 'tmp_bxid_' + Math.round(Math.random() * 1000000);
+	this.insertHTML('<a id="' + id + '" href="#" _moz_editor_bogus_node="on">+</a>');
+	var pDoc = this.pEditorDocument;
+	setTimeout(function(){
+		var pTmp = pDoc.getElementById(id);
+		if (pTmp)
+		{
+			pTmp.innerHTML = html;
+			setTimeout(function(){
+				var pTmp = pDoc.getElementById(id);
+				if (pTmp)
+				{
+					for (var i = pTmp.childNodes.length - 1; i >= 0; i--)
+						pTmp.parentNode.insertBefore(pTmp.childNodes[i], pTmp);
+					if (pTmp.parentNode)
+						pTmp.parentNode.removeChild(pTmp);
+				}
+			}, timeout);
+		}
+	}, timeout);
+}
+
+
 function BXContextMenuOnclick(e)
 {
 	removeEvent(this.pMainObj.pEditorDocument, "click", BXContextMenuOnclick);
@@ -2452,14 +2526,4 @@ function BXStyles(pMainObj)
 	};
 }
 
-function OnUnload(e)
-{
-	//try{
-	//for (var ind in pBXEventDispatcher.arEditors)
-	//	GarbageCollector.apply(pBXEventDispatcher.arEditors[ind]);
-	//} catch(e){}
-}
-
 BX.ready(BXEditorLoad);
-// window.onload = BXEditorLoad;
-// window.onunload = OnUnload;

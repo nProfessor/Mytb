@@ -1,21 +1,29 @@
 <?php
-
+/**
+ * Bitrix Framework
+ * @package bitrix
+ * @subpackage iblock
+ * @copyright 2001-2012 Bitrix
+ */
 namespace Bitrix\Iblock;
 
 use Bitrix\Main\Entity;
 
-class SectionElementEntity extends Entity\Base
+class SectionElementTable extends Entity\DataManager
 {
-	protected function __construct() {}
-
-	public function Initialize()
+	public static function getFilePath()
 	{
-		$this->className = __CLASS__;
-		$this->filePath = __FILE__;
+		return __FILE__;
+	}
 
-		$this->dbTableName = 'b_iblock_section_element';
+	public static function getTableName()
+	{
+		return 'b_iblock_section_element';
+	}
 
-		$this->fieldsMap = array(
+	public static function getMap()
+	{
+		return array(
 			'IBLOCK_SECTION_ID' => array(
 				'data_type' => 'integer',
 				'primary' => true
@@ -42,4 +50,3 @@ class SectionElementEntity extends Entity\Base
 		);
 	}
 }
-?>

@@ -200,14 +200,15 @@ endif;
 				?><div class="bx-gadgets-colourful bx-gadgets<?=(strlen($arGadget["TITLE_ICON_CLASS"]) > 0 ? " ".$arGadget["TITLE_ICON_CLASS"] : "")?>" id="t<?=$arGadget["ID"]?>">
 					<div class="bx-gadgets-content">
 						<?=$arGadget["CONTENT"]?>
-						<div class="bx-gadgets-side" style="cursor:pointer;" onmousedown="return getGadgetHolder('<?=AddSlashes($arResult["ID"])?>').DragStart('<?=$arGadget["ID"]?>', event)"><div></div></div>
+						<a href="javascript:void(0)" class="bx-gadgets-color-config-close" onclick="return getGadgetHolder('<?=AddSlashes($arResult["ID"])?>').Delete('<?=$arGadget["ID"]?>');" title="<?=GetMessage("CMDESKTOP_TDEF_DELETE")?>"></a>
+						<div class="bx-gadgets-side" style="cursor:move;" onmousedown="return getGadgetHolder('<?=AddSlashes($arResult["ID"])?>').DragStart('<?=$arGadget["ID"]?>', event)"></div>
 					</div>
 				</div><?
 			}
 			else
 			{
 				?><div class="bx-gadgets<?=(strlen($arGadget["TITLE_ICON_CLASS"]) > 0 ? " ".$arGadget["TITLE_ICON_CLASS"] : "")?>" id="t<?=$arGadget["ID"]?>">
-					<div class="bx-gadgets-top-wrap" style="cursor:pointer;" onmousedown="return getGadgetHolder('<?=AddSlashes($arResult["ID"])?>').DragStart('<?=$arGadget["ID"]?>', event)">
+					<div class="bx-gadgets-top-wrap" onmousedown="return getGadgetHolder('<?=AddSlashes($arResult["ID"])?>').DragStart('<?=$arGadget["ID"]?>', event)">
 						<div class="bx-gadgets-top-center">
 							<div class="bx-gadgets-top-title"><?=$arGadget["TITLE"]?></div>
 							<div class="bx-gadgets-top-button"><?
@@ -221,8 +222,6 @@ endif;
 					<div class="bx-gadgets-content"><?=$arGadget["CONTENT"]?></div>
 				</div><?
 			}
-			
-			
 			
 			?><div style="display:none; border:1px #404040 dashed; margin-bottom:8px;" id="d<?=$arGadget["ID"]?>"></div>
 		<?endforeach;?>

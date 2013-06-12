@@ -13,20 +13,22 @@ namespace Bitrix\Main\Entity;
  * @package bitrix
  * @subpackage main
  */
-abstract class Base
+class Base
 {
 	protected
 		$className,
 		$name,
+		$connectionName,
 		$dbTableName,
-		$primary;
+		$primary,
+		$autoIncrement;
 
 	protected
-		$uf_id;
+		$uf_id,
+		$isUts,
+		$isUtm;
 
-	/**
-	 * @var Field
-	 */
+	/** @var Field[] */
 	protected $fields;
 
 	protected
@@ -52,7 +54,12 @@ abstract class Base
 	 */
 	public static function getInstance($entityName)
 	{
-		return self::getInstanceDirect($entityName . 'Entity');
+		if (strtolower(substr($entityName, -5)) !== 'table')
+		{
+			$entityName .= 'Table';
+		}
+
+		return self::getInstanceDirect($entityName);
 	}
 
 
@@ -60,9 +67,11 @@ abstract class Base
 	{
 		if (empty(self::$instances[$className]))
 		{
-			self::$instances[$className] = new $className;
-			self::$instances[$className]->initialize();
-			self::$instances[$className]->postInitialize();
+			$entity = new static;
+			$entity->initialize($className);
+			$entity->postInitialize();
+
+			self::$instances[$className] = $entity;
 		}
 
 		return self::$instances[$className];
@@ -83,11 +92,11 @@ abstract class Base
 			if (strpos($fieldInfo['data_type'], '\\') === false)
 			{
 				// if reference has no namespace, then it'is in the same namespace
-				$fieldInfo['data_type'] = $this->getNamespace().'\\'.$fieldInfo['data_type'];
+				$fieldInfo['data_type'] = $this->getNamespace().$fieldInfo['data_type'];
 			}
 
-			$refEntity = Base::getInstance($fieldInfo['data_type']);
-			$field = new ReferenceField($fieldName, $this, $refEntity, $fieldInfo['reference'], $fieldInfo);
+			//$refEntity = Base::getInstance($fieldInfo['data_type']."Table");
+			$field = new ReferenceField($fieldName, $this, $fieldInfo['data_type'], $fieldInfo['reference'], $fieldInfo);
 		}
 		elseif (!empty($fieldInfo['expression']))
 		{
@@ -118,15 +127,24 @@ abstract class Base
 		return $field;
 	}
 
-
-	abstract public function initialize();
-
+	public function initialize($className)
+	{
+		$this->className = $className;
+		//TODO: don't use $this->filePath
+		$this->filePath = $className::getFilePath();
+		$this->connectionName = $className::getConnectionName();
+		$this->dbTableName = $className::getTableName();
+		$this->fieldsMap = $className::getMap();
+		$this->uf_id = $className::getUfId();
+		$this->isUts = $className::isUts();
+		$this->isUtm = $className::isUtm();
+	}
 
 	public function postInitialize()
 	{
-		// базовые свойства
-		$classPath = explode('\\', $this->className);
-		$this->name = substr(end($classPath), 0, -6);
+		// basic properties
+		$classPath = explode('\\', ltrim($this->className, '\\'));
+		$this->name = substr(end($classPath), 0, -5);
 
 		// default db table name
 		if (is_null($this->dbTableName))
@@ -166,14 +184,7 @@ abstract class Base
 		$this->primary = array();
 		$this->references = array();
 
-		if (empty($this->filePath))
-		{
-			throw new \Exception(sprintf(
-				'Parameter `filePath` required for `%s` Entity', $this->name
-			));
-		}
-
-		// инициализация атрибутов
+		// attributes
 		foreach ($this->fieldsMap as $fieldName => &$fieldInfo)
 		{
 			$field = $this->initializeField($fieldName, $fieldInfo);
@@ -189,12 +200,15 @@ abstract class Base
 			if ($field instanceof ScalarField && $field->isPrimary())
 			{
 				$this->primary[] = $fieldName;
+
+				if($field->isAutocomplete())
+					$this->autoIncrement = $fieldName;
 			}
 
 			// add reference field for UField iblock_section
 			if ($field instanceof UField && $field->getTypeId() == 'iblock_section')
 			{
-				$refFieldName = $field->GetName().'_BY';
+				$refFieldName = $field->getName().'_BY';
 
 				if ($field->isMultiple())
 				{
@@ -202,7 +216,7 @@ abstract class Base
 				}
 				else
 				{
-					$localFieldName = $field->GetName();
+					$localFieldName = $field->getName();
 				}
 
 				$newFieldInfo = array(
@@ -210,8 +224,8 @@ abstract class Base
 					'reference' => array($localFieldName, 'ID')
 				);
 
-				$refEntity = Base::getInstance($newFieldInfo['data_type']);
-				$newRefField = new ReferenceField($refFieldName, $this, $refEntity, $newFieldInfo['reference'][0], $newFieldInfo['reference'][1]);
+				//$refEntity = Base::getInstance($newFieldInfo['data_type']."Table");
+				$newRefField = new ReferenceField($refFieldName, $this, $newFieldInfo['data_type'], $newFieldInfo['reference'][0], $newFieldInfo['reference'][1]);
 
 				$this->fields[$refFieldName] = $newRefField;
 			}
@@ -244,13 +258,11 @@ abstract class Base
 		return array();
 	}
 
-
 	// getters
 	public function getFields()
 	{
 		return $this->fields;
 	}
-
 
 	/**
 	 * @param $name
@@ -270,12 +282,10 @@ abstract class Base
 		));
 	}
 
-
 	public function hasField($name)
 	{
 		return isset($this->fields[$name]);
 	}
-
 
 	public function getUField($name)
 	{
@@ -289,7 +299,6 @@ abstract class Base
 		));
 	}
 
-
 	public function hasUField($name)
 	{
 		if (is_null($this->u_fields))
@@ -298,12 +307,10 @@ abstract class Base
 
 			if (strlen($this->uf_id))
 			{
-				/**
-				 * @var $USER_FIELD_MANAGER CAllUserTypeManager
-				 */
+				/** @var \CAllUserTypeManager $USER_FIELD_MANAGER */
 				global $USER_FIELD_MANAGER;
 
-				foreach ($USER_FIELD_MANAGER->GetUserFields($this->uf_id) as $info)
+				foreach ($USER_FIELD_MANAGER->getUserFields($this->uf_id) as $info)
 				{
 					$this->u_fields[$info['FIELD_NAME']] = new UField($info, $this);
 
@@ -320,21 +327,40 @@ abstract class Base
 		return isset($this->u_fields[$name]);
 	}
 
-
 	public function getName()
 	{
 		return $this->name;
 	}
 
+	public function getFullName()
+	{
+		return substr($this->className, 0, -5);
+	}
 
 	public function getNamespace()
 	{
-		return substr($this->className, 0, strrpos($this->className, '\\'));
+		return substr($this->className, 0, strrpos($this->className, '\\')+1);
+	}
+
+	public function getModule()
+	{
+		// Bitrix\Main\Site -> main
+		// Partner\Module\Thing -> partner.module
+		$parts = explode("\\", $this->className);
+		if($parts[0] == "Bitrix")
+			return strtolower($parts[1]);
+		else
+			return strtolower($parts[0].".".$parts[1]);
 	}
 
 	public function getDataClass()
 	{
-		return substr($this->className, 0, -6);
+		return $this->className;
+	}
+
+	public function getConnection()
+	{
+		return \Bitrix\Main\Application::getInstance()->getDbConnectionPool()->getConnection($this->connectionName);
 	}
 
 	public function getFilePath()
@@ -342,45 +368,44 @@ abstract class Base
 		return $this->filePath;
 	}
 
-
 	public function getDBTableName()
 	{
 		return $this->dbTableName;
 	}
-
 
 	public function getPrimary()
 	{
 		return count($this->primary) == 1 ? $this->primary[0] : $this->primary;
 	}
 
-
 	public function getPrimaryArray()
 	{
 		return $this->primary;
 	}
 
-	public function isUts()
+	public function getAutoIncrement()
 	{
-		return false;
+		return $this->autoIncrement;
 	}
 
+	public function isUts()
+	{
+		return $this->isUts;
+	}
 
 	public function isUtm()
 	{
-		return false;
+		return $this->isUtm;
 	}
-
 
 	public function getUfId()
 	{
 		return $this->uf_id;
 	}
 
-
 	public static function isExists($name)
 	{
-		return class_exists($name . 'Entity');
+		return class_exists($name . 'Table');
 	}
 
 	public function getCode()
@@ -388,7 +413,7 @@ abstract class Base
 		$code = '';
 
 		// get absolute path to class
-		$class_path = explode('\\', strtoupper($this->className));
+		$class_path = explode('\\', strtoupper(ltrim($this->className, '\\')));
 
 		// cut class name to leave namespace only
 		$class_path = array_slice($class_path, 0, -1);
@@ -411,30 +436,33 @@ abstract class Base
 		return $code;
 	}
 
-
 	public function getLangCode()
 	{
 		return $this->getCode().'_ENTITY';
 	}
-
 
 	public static function camel2snake($str)
 	{
 		return strtolower(preg_replace('/(.)([A-Z])(.*?)/', '$1_$2$3', $str));
 	}
 
-
 	public static function snake2camel($str)
 	{
 		$str = str_replace('_', ' ', strtolower($str));
 		return str_replace(' ', '', ucwords($str));
 	}
-	
+
 	public static function getInstanceByQuery(Query $query, &$entity_name = null)
 	{
-		if (empty($entity_name))
+		if ($entity_name === null)
 		{
 			$entity_name = 'Tmp'.randString();
+		}
+		elseif (!preg_match('/^[a-z0-9_]+$/i', $entity_name))
+		{
+			throw new \Exception(sprintf(
+				'Invalid entity name `%s`.', $entity_name
+			));
 		}
 
 		$query_string = '('.$query->getQuery().')';
@@ -449,11 +477,13 @@ abstract class Base
 		{
 			if (is_array($v))
 			{
+				// expression
 				$fieldsMap[$k] = array('data_type' => $v['data_type']);
 			}
 			else
 			{
-				$fieldsMap[$k] = array('data_type' => $query_chains[$k]->getLastElement()->getValue()->getDataType());
+				$fieldDefinition = is_numeric($k) ? $v : $k;
+				$fieldsMap[$fieldDefinition] = array('data_type' => $query_chains[$fieldDefinition]->getLastElement()->getValue()->getDataType());
 			}
 
 			if (isset($replaced_aliases[$k]))
@@ -463,12 +493,17 @@ abstract class Base
 		}
 
 		// generate class content
-		$eval = 'class '.$entity_name.'Entity extends '.__CLASS__.' {'.PHP_EOL;
-		$eval .= 'protected function __construct(){}'.PHP_EOL;
-		$eval .= 'public function initialize() { $this->className = __CLASS__; $this->filePath = __FILE__;'.PHP_EOL;
-		$eval .= '$this->dbTableName = '.var_export($query_string, true).';'.PHP_EOL;
-		$eval .= '$this->fieldsMap = '.var_export($fieldsMap, true).';'.PHP_EOL;
-		$eval .= '}}';
+		$eval = 'class '.$entity_name.'Table extends '.__NAMESPACE__.'\DataManager {'.PHP_EOL;
+		$eval .= 'public static function getMap() {'.PHP_EOL;
+		$eval .= 'return '.var_export($fieldsMap, true).';'.PHP_EOL;
+		$eval .= '}';
+		$eval .= 'public static function getTableName() {'.PHP_EOL;
+		$eval .= 'return '.var_export($query_string, true).';'.PHP_EOL;
+		$eval .= '}';
+		$eval .= 'public static function getFilePath() {'.PHP_EOL;
+		$eval .= 'return null;'.PHP_EOL;
+		$eval .= '}';
+		$eval .= '}';
 
 		eval($eval);
 

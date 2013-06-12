@@ -7,7 +7,7 @@ class CBXVirtualIoFileSystem
 
 	const directionEncode = 1;
 	const directionDecode = 2;
-	const invalidChars = "\\\\/:*?\"'<>|~\\0";
+	const invalidChars = "\\/:*?\"'<>|~\0#";
 
 	private $arErrors = array();
 
@@ -64,8 +64,7 @@ class CBXVirtualIoFileSystem
 				'serverEncoding' => self::$serverEncoding
 			);
 
-			$rsEvents = GetModuleEvents("main", "BXVirtualIO_ConvertCharset");
-			while ($arEvent = $rsEvents->Fetch())
+			foreach (GetModuleEvents("main", "BXVirtualIO_ConvertCharset", true) as $arEvent)
 			{
 				$evResult = ExecuteModuleEventEx($arEvent, array($arEventParams));
 				if ($evResult !== false)
@@ -184,9 +183,6 @@ class CBXVirtualIoFileSystem
 		if (($p = strpos($res, "\0")) !== false)
 			$res = substr($res, 0, $p);
 
-		while(strpos($res, ".../") !== false)
-			$res = str_replace(".../", "../", $res);
-
 		$arPath = explode('/', $res);
 		$nPath = count($arPath);
 		$pathStack = array();
@@ -229,7 +225,10 @@ class CBXVirtualIoFileSystem
 		if (strpos($path, "\0") !== false)
 			return false;
 
-		return (preg_match("#^([a-z]:)?/([^".self::invalidChars."]+/?)*$#is", $path) > 0);
+		if(defined("BX_UTF") && !mb_check_encoding($path, "UTF-8"))
+			return false;
+
+		return (preg_match("#^([a-z]:)?/([^".preg_quote(self::invalidChars, "#")."]+/?)*$#is", $path) > 0);
 	}
 
 	function ValidateFilenameString($filename)
@@ -241,12 +240,15 @@ class CBXVirtualIoFileSystem
 		if (strpos($filename, "\0") !== false)
 			return false;
 
-		return (preg_match("#^[^".self::invalidChars."]+$#is", $filename) > 0);
+		if(defined("BX_UTF") && !mb_check_encoding($filename, "UTF-8"))
+			return false;
+
+		return (preg_match("#^[^".preg_quote(self::invalidChars, "#")."]+$#is", $filename) > 0);
 	}
-	
+
 	function RandomizeInvalidFilename($filename)
 	{
-		return preg_replace('#(['.self::invalidChars.'])#e', "chr(rand(97, 122))", $filename);
+		return preg_replace('#(['.preg_quote(self::invalidChars, "#").'])#e', "chr(rand(97, 122))", $filename);
 	}
 
 	public function DirectoryExists($path)
@@ -600,6 +602,11 @@ class CBXVirtualFileFileSystem
 		return readfile($this->GetPathWithNameEncoded());
 	}
 
+	public function unlink()
+	{
+		return unlink($this->GetPathWithNameEncoded());
+	}
+
 	public function GetErrors()
 	{
 		return $this->arErrors;
@@ -707,6 +714,31 @@ class CBXVirtualDirectoryFileSystem
 			return fileatime($this->GetPathWithNameEncoded());
 
 		return null;
+	}
+
+	public function IsEmpty()
+	{
+		if ($this->IsExists())
+		{
+			if ($handle = opendir($this->GetPathWithNameEncoded()))
+			{
+				while (($file = readdir($handle)) !== false)
+				{
+					if ($file != "." && $file != "..")
+					{
+						closedir($handle);
+						return false;
+					}
+				}
+				closedir($handle);
+			}
+		}
+		return true;
+	}
+
+	public function rmdir()
+	{
+		return rmdir($this->GetPathWithNameEncoded());
 	}
 
 	public function GetErrors()

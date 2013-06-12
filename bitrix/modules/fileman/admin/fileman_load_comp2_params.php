@@ -87,6 +87,7 @@ function fetchPropsHelp($componentName_)
 
 function push2arComp2Props($name, $arParam, $arGroup)
 {
+	$name = preg_replace("/[^a-zA-Z0-9_-]/is", "_", $name);
 	?>
 var p = {};
 p.param_name = '<?=CUtil::JSEscape($name);?>';

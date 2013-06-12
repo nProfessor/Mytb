@@ -60,30 +60,27 @@ $arResult['USER_PROPERTY'] = array(
 
 if (IsModuleInstalled('socialnetwork'))
 {
-	global $MESS;
-	include($_SERVER["DOCUMENT_ROOT"].$this->GetFolder()."/lang/".LANGUAGE_ID."/result_modifier.php");
-	
 	if (strlen(trim($arParams["NAME_TEMPLATE"])) <= 0)
-		$arParams["NAME_TEMPLATE"] = GetMessage('TP_BSP_RM_NAME_TEMPLATE');
+		$arParams["NAME_TEMPLATE"] = CSite::GetNameFormat();
 	$arParams['SHOW_LOGIN'] = $arParams['SHOW_LOGIN'] != "N" ? "Y" : "N";
 
 	$arParams["PATH_TO_SONET_MESSAGES_CHAT"] = trim($arParams["PATH_TO_SONET_MESSAGES_CHAT"]);
 	if (strlen($arParams["PATH_TO_SONET_MESSAGES_CHAT"]) <= 0)
-		$arParams["PATH_TO_SONET_MESSAGES_CHAT"] = "/company/personal/messages/chat/#USER_ID#/";		
-		
+		$arParams["PATH_TO_SONET_MESSAGES_CHAT"] = "/company/personal/messages/chat/#USER_ID#/";
+
 	if (IsModuleInstalled('intranet'))
 	{
 		$arParams["PATH_TO_CONPANY_DEPARTMENT"] = trim($arParams["PATH_TO_CONPANY_DEPARTMENT"]);
 		if (strlen($arParams["PATH_TO_CONPANY_DEPARTMENT"]) <= 0)
 			$arParams["PATH_TO_CONPANY_DEPARTMENT"] = "/company/structure.php?set_filter_structure=Y&structure_UF_DEPARTMENT=#ID#";
 	}
-	
+
 	if (IsModuleInstalled('video'))
 	{
 		$arParams["PATH_TO_VIDEO_CALL"] = trim($arParams["PATH_TO_VIDEO_CALL"]);
 		if (strlen($arParams["PATH_TO_VIDEO_CALL"]) <= 0)
 			$arParams["PATH_TO_VIDEO_CALL"] = "/company/personal/video/#USER_ID#/";
-	}		
+	}
 }
 
 $arIBlocks = array();

@@ -1,10 +1,19 @@
-<?
-if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
+<?php
+if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)
+	die();
+
+/**
+ * Bitrix Framework
+ * @package bitrix
+ * @subpackage main
+ * @copyright 2001-2013 Bitrix
+ */
 
 CComponentUtil::__IncludeLang("/bitrix/components/bitrix/desktop/", "/include.php");
 
 function GDCSaveSettings($arParams, $POS)
 {
+ 	/** @global CMain $APPLICATION */
 	global $APPLICATION;
 
 	if ($arParams["DEFAULT_ID"])
@@ -22,12 +31,13 @@ function GDCSaveSettings($arParams, $POS)
 	
 	if (!$arUserOptions && !$user_option_id)
 	{
+		$tmp_desktop_id = false;
 		if (in_array($APPLICATION->GetCurPage(), array(SITE_DIR."index.php", SITE_DIR, "/")))
 			$tmp_desktop_id = "mainpage";
 		elseif (in_array($APPLICATION->GetCurPage(), array(SITE_DIR."desktop.php", "/desktop.php")))
 			$tmp_desktop_id = "dashboard";
 
-		if ($tmp_desktop_id)
+		if ($tmp_desktop_id !== false)
 			$arUserOptions = CUserOptions::GetOption("intranet", "~gadgets_".$tmp_desktop_id, false, false);
 	}
 	
@@ -38,8 +48,8 @@ function GDCSaveSettings($arParams, $POS)
 	}
 
 	if(!is_array($arUserOptions))
-		$arUserOptions = Array("GADGETS"=>Array());
-	$arNewUserOptions = Array("GADGETS"=>Array());
+		$arUserOptions = array("GADGETS"=>array());
+	$arNewUserOptions = array("GADGETS"=>array());
 
 	if (array_key_exists("COLS", $arUserOptions))
 		$arNewUserOptions["COLS"] = $arUserOptions["COLS"];
@@ -63,7 +73,7 @@ function GDCSaveSettings($arParams, $POS)
 			if(is_array($arUserOptions["GADGETS"][$gdId]))
 				$arNewUserOptions["GADGETS"][$gdId] = $arUserOptions["GADGETS"][$gdId];
 			else
-				$arNewUserOptions["GADGETS"][$gdId] = Array();
+				$arNewUserOptions["GADGETS"][$gdId] = array();
 
 			$arNewUserOptions["GADGETS"][$gdId]["COLUMN"] = $col;
 			$arNewUserOptions["GADGETS"][$gdId]["ROW"] = $row;
@@ -80,12 +90,6 @@ function GDCSaveSettings($arParams, $POS)
 	CUserOptions::SetOption("intranet", "~gadgets_".$arParams["ID"], $arNewUserOptions, false, $user_option_id);
 }
 
-function GDCGetGadgetObject($gdid, $arParams, $arGadgetParams, $bHide = false)
-{
-	return $arGadget;
-}
-
-
 class BXGadget
 {
 	function GetGadgetContent(&$arGadget, $arParams)
@@ -96,47 +100,56 @@ class BXGadget
 
 		$arGadgetParams = $arGadget["SETTINGS"];
 		$id = $arGadget["ID"];
+
 		ob_start();
 		include($arGadget["PATH"]."/index.php");
-		$r = ob_get_contents();
-		ob_end_clean();
-		return $r;
+		return ob_get_clean();
 	}
 
 	function GetList($bWithParameters = false, $arAllCurrentValues = false)
 	{
-		// Найдем все пространства имен гаджетов
-		$arGdNS = Array("bitrix");
-		$gdDir = $_SERVER["DOCUMENT_ROOT"]."/bitrix/gadgets";
-		if($handle = opendir($gdDir))
-		{
-			while(false !== ($item = readdir($handle)))
-				if(is_dir($gdDir."/".$item) && $item != "." && $item != ".." && $item != "bitrix")
-					$arGdNS[] = $item;
-		}
+		$arGadgets = array();
 
-		// В цикле найдем все гаджеты
-		$arGadgets = Array();
-		foreach($arGdNS as $NS)
+		$folders = array(
+			"/bitrix/gadgets",
+			"/local/gadgets",
+		);
+
+		foreach($folders as $folder)
 		{
-			$gdDir = $_SERVER["DOCUMENT_ROOT"]."/bitrix/gadgets/".$NS;
-			if ($handle = opendir($gdDir))
+			// Find all namespaces of gadgets
+			$arGdNS = array("bitrix");
+			$gdDir = $_SERVER["DOCUMENT_ROOT"].$folder;
+			if(is_dir($gdDir) && ($handle = opendir($gdDir)))
 			{
-				while (false !== ($file = readdir($handle)))
-				{
-					if($file=="." || $file=="..")
-						continue;
-					$arGadgetParams = BXGadget::GetById($NS."/".$file, $bWithParameters, $arAllCurrentValues);
-					if($arGadgetParams)
-						$arGadgets[$file] = $arGadgetParams;
-					else
-						unset($arGadgets[$file]);
-				}
+				while(false !== ($item = readdir($handle)))
+					if(is_dir($gdDir."/".$item) && $item != "." && $item != ".." && $item != "bitrix")
+						$arGdNS[] = $item;
 				closedir($handle);
+			}
+
+			// Find all gadgets
+			foreach($arGdNS as $NS)
+			{
+				$gdDir = $_SERVER["DOCUMENT_ROOT"].$folder."/".$NS;
+				if(is_dir($gdDir) && ($handle = opendir($gdDir)))
+				{
+					while (false !== ($file = readdir($handle)))
+					{
+						if($file=="." || $file=="..")
+							continue;
+						$arGadgetParams = BXGadget::GetById($NS."/".$file, $bWithParameters, $arAllCurrentValues);
+						if($arGadgetParams)
+							$arGadgets[$file] = $arGadgetParams;
+						else
+							unset($arGadgets[$file]);
+					}
+					closedir($handle);
+				}
 			}
 		}
 
-		uasort($arGadgets, Array("BXGadget", "_sort"));
+		uasort($arGadgets, array("BXGadget", "_sort"));
 
 		return $arGadgets;
 	}
@@ -150,101 +163,112 @@ class BXGadget
 	{
 		$id = _normalizePath(strtolower($id));
 
-		$arGdNS = Array("bitrix");
+		$folders = array(
+			"/bitrix/gadgets",
+			"/local/gadgets",
+		);
+
 		if(($p = strpos($id, "/"))>0)
 		{
-			$arGdNS = Array(substr($id, 0, $p));
+			//specific namespace
+			$arGdNS = array(substr($id, 0, $p));
 			$id = substr($id, $p+1);
 		}
 		else
 		{
-			// Найдем все пространства имен гаджетов
-			$gdDir = $_SERVER["DOCUMENT_ROOT"]."/bitrix/gadgets";
-			if($handle = opendir($gdDir))
+			// Find all namespaces of gadgets
+			$arGdNS = array("bitrix");
+			foreach($folders as $folder)
 			{
-				while(false !== ($item = readdir($handle)))
-					if(is_dir($gdDir."/".$item) && $item != "." && $item != ".." && $item != "bitrix")
-						$arGdNS[] = $item;
+				$gdDir = $_SERVER["DOCUMENT_ROOT"].$folder;
+				if(is_dir($gdDir) && ($handle = opendir($gdDir)))
+				{
+					while(false !== ($item = readdir($handle)))
+						if(is_dir($gdDir."/".$item) && $item != "." && $item != ".." && $item != "bitrix")
+							$arGdNS[] = $item;
+					closedir($handle);
+				}
 			}
 		}
 
-		// В цикле найдем все гаджеты
+		// Find all gadgets
 		$arGadget = false;
-		foreach($arGdNS as $NS)
+		foreach($folders as $folder)
 		{
-			$gdDir = $_SERVER["DOCUMENT_ROOT"]."/bitrix/gadgets/".$NS;
-			$gdDirSiteRoot = "/bitrix/gadgets/".$NS;			
-			if(is_dir($gdDir."/".$id))
+			foreach($arGdNS as $NS)
 			{
-				$arDescription = Array();
-				
-				CComponentUtil::__IncludeLang($gdDirSiteRoot."/".$id, "/.description.php");
-
-				if(!file_exists($gdDir."/".$id."/.description.php"))
-					continue;
-
-				if(!@include($gdDir."/".$id."/.description.php"))
+				$gdDir = $_SERVER["DOCUMENT_ROOT"].$folder."/".$NS;
+				$gdDirSiteRoot = $folder."/".$NS;
+				if(is_dir($gdDir."/".$id))
 				{
-					$arGadget = false;
-					continue;
-				}
+					$arDescription = array();
 
-				if(isset($arDescription["LANG_ONLY"]) && $arDescription["LANG_ONLY"]!=LANGUAGE_ID)
-				{
-					$arGadget = false;
-					continue;
-				}
+					CComponentUtil::__IncludeLang($gdDirSiteRoot."/".$id, "/.description.php");
 
-				if($bWithParameters)
-				{
-					$arCurrentValues = Array();
-					if(is_array($arAllCurrentValues))
+					if(!file_exists($gdDir."/".$id."/.description.php"))
+						continue;
+
+					if(!@include($gdDir."/".$id."/.description.php"))
 					{
-						foreach($arAllCurrentValues as $k=>$v)
-						{
-							$pref = "G_".strtoupper($id)."_";
-							if(substr($k, 0, strlen($pref)) == $pref)
-								$arCurrentValues[substr($k, strlen($pref))] = $v;
-							else
-							{
-								$pref = "GU_".strtoupper($id)."_";
-								if(substr($k, 0, strlen($pref)) == $pref)
-									$arCurrentValues[substr($k, strlen($pref))] = $v;
-							}
-						}
+						$arGadget = false;
+						continue;
 					}
 
-					CComponentUtil::__IncludeLang($gdDirSiteRoot."/".$id, "/.parameters.php");
+					if(isset($arDescription["LANG_ONLY"]) && $arDescription["LANG_ONLY"]!=LANGUAGE_ID)
+					{
+						$arGadget = false;
+						continue;
+					}
 
-					$arParameters = Array();
+					if($bWithParameters)
+					{
+						$arCurrentValues = array();
+						if(is_array($arAllCurrentValues))
+						{
+							foreach($arAllCurrentValues as $k=>$v)
+							{
+								$pref = "G_".strtoupper($id)."_";
+								if(substr($k, 0, strlen($pref)) == $pref)
+									$arCurrentValues[substr($k, strlen($pref))] = $v;
+								else
+								{
+									$pref = "GU_".strtoupper($id)."_";
+									if(substr($k, 0, strlen($pref)) == $pref)
+										$arCurrentValues[substr($k, strlen($pref))] = $v;
+								}
+							}
+						}
 
-					if(file_exists($gdDir."/".$id."/.parameters.php"))
-						include($gdDir."/".$id."/.parameters.php");
-					$arDescription["PARAMETERS"] = $arParameters["PARAMETERS"];
-					$arDescription["USER_PARAMETERS"] = array(
-						"TITLE_STD" => Array(
-							"NAME" => GetMessage("CMDESKTOP_UP_TITLE_STD"),
-							"TYPE" => "STRING",
-							"DEFAULT" => ""
-						)
-					);
-					if (array_key_exists("USER_PARAMETERS", $arParameters) && is_array($arParameters["USER_PARAMETERS"]))
-						$arDescription["USER_PARAMETERS"] = array_merge($arDescription["USER_PARAMETERS"], $arParameters["USER_PARAMETERS"]);
+						CComponentUtil::__IncludeLang($gdDirSiteRoot."/".$id, "/.parameters.php");
+
+						$arParameters = array();
+
+						if(file_exists($gdDir."/".$id."/.parameters.php"))
+							include($gdDir."/".$id."/.parameters.php");
+						$arDescription["PARAMETERS"] = $arParameters["PARAMETERS"];
+						$arDescription["USER_PARAMETERS"] = array(
+							"TITLE_STD" => array(
+								"NAME" => GetMessage("CMDESKTOP_UP_TITLE_STD"),
+								"TYPE" => "STRING",
+								"DEFAULT" => ""
+							)
+						);
+						if (array_key_exists("USER_PARAMETERS", $arParameters) && is_array($arParameters["USER_PARAMETERS"]))
+							$arDescription["USER_PARAMETERS"] = array_merge($arDescription["USER_PARAMETERS"], $arParameters["USER_PARAMETERS"]);
+					}
+					$arDescription["PATH"] = $gdDir."/".$id;
+					$arDescription["PATH_SITEROOT"] = $gdDirSiteRoot."/".$id;
+
+					$arDescription["ID"] = strtoupper($id);
+					if($arDescription["ICON"] && substr($arDescription["ICON"], 0, 1)!="/")
+						$arDescription["ICON"] = "/bitrix/gadgets/".$NS."/".$id."/".$arDescription["ICON"];
+
+					unset($arDescription["NOPARAMS"]);
+
+					$arGadget = $arDescription;
 				}
-				$arDescription["PATH"] = $gdDir."/".$id;
-				$arDescription["PATH_SITEROOT"] = $gdDirSiteRoot."/".$id;
-
-				$arDescription["ID"] = strtoupper($id);
-				if($arDescription["ICON"] && substr($arDescription["ICON"], 0, 1)!="/")
-					$arDescription["ICON"] = "/bitrix/gadgets/".$NS."/".$id."/".$arDescription["ICON"];
-
-				unset($arDescription["NOPARAMS"]);
-
-				$arGadget = $arDescription;
 			}
 		}
 		return $arGadget;
 	}
 }
-
-?>

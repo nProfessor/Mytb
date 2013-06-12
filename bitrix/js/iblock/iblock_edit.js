@@ -218,22 +218,29 @@ JCIBlockProperty.prototype.addPropRow = function()
 	for (i = 0; i < this.CELL_CENT.length; i++)
 	{
 		var needCell = newRow.cells[this.CELL_CENT[i]-1];
-		if (needCell)
+		if (!!needCell)
 		{
-			needCell.setAttribute('align','center');
+			BX.adjust(needCell, { style: {'textAlign': 'center', 'verticalAlign' : 'middle'} });
 		}
 	}
+	var needCell = newRow.cells[0];
+	if (!!needCell)
+	{
+		BX.adjust(needCell, { style: {'verticalAlign' : 'middle'} });
+	}
+
 	if (newRow.cells[this.CELL_IND])
 	{
 		var needCell = newRow.cells[this.CELL_IND];
 		var clButtons = BX.findChildren(needCell, {'tag': 'input','attribute': { 'type':'button'}}, true);
-		if (clButtons)
+		if (!!clButtons)
 		{
 			for (var i = 0; i < clButtons.length; i++)
 				BX.bind(clButtons[i], 'click', BX.proxy(function(e){this.ShowPropertyDialog(e);}, this));
 		}
 	}
 
+	BX.adminFormTools.modifyFormElements(this.FORM_ID);
 
 	setTimeout(function() {
 		var r = BX.findChildren(newRow.parentNode, {tag: /^(input|select|textarea)$/i}, true);

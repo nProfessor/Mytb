@@ -74,7 +74,7 @@ if($obBucket->Init() && $_GET["file"]!=="y")
 	{
 		$e = $APPLICATION->GetException();
 		if(is_object($e))
-			$message = new CAdminMessage(GetMessage("CLO_STORAGE_FILE_LIST_ERROR"), $e);
+			$message = new CAdminMessage(GetMessage("CLO_STORAGE_SEARCH_LIST_ERROR"), $e);
 	}
 }
 

@@ -1,24 +1,33 @@
 <?php
-
+/**
+ * Bitrix Framework
+ * @package bitrix
+ * @subpackage iblock
+ * @copyright 2001-2012 Bitrix
+ */
 namespace Bitrix\Iblock;
 
 use Bitrix\Main\Entity;
 
-class IblockEntity extends Entity\Base
+class IblockTable extends Entity\DataManager
 {
-	protected function __construct() {}
-
-	public function Initialize()
+	public static function getFilePath()
 	{
-		$this->className = __CLASS__;
-		$this->filePath = __FILE__;
+		return __FILE__;
+	}
 
-		$this->dbTableName = 'b_iblock';
+	public static function getTableName()
+	{
+		return 'b_iblock';
+	}
 
-		$this->fieldsMap = array(
+	public static function getMap()
+	{
+		return array(
 			'ID' => array(
 				'data_type' => 'integer',
-				'primary' => true
+				'primary' => true,
+				'autocomplete' => true,
 			),
 			'IBLOCK_TYPE_ID' => array(
 				'data_type' => 'string'

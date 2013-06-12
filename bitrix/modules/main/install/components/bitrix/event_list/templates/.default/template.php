@@ -1,5 +1,14 @@
 <?php
-if (!defined('B_PROLOG_INCLUDED') || B_PROLOG_INCLUDED!==true)die();
+if (!defined('B_PROLOG_INCLUDED') || B_PROLOG_INCLUDED!==true)
+	die();
+
+/**
+ * Bitrix vars
+ * @global CMain $APPLICATION
+ * @param array $arParams
+ * @param array $arResult
+ * @param CBitrixComponentTemplate $this
+ */
 
 CUtil::InitJSCore(array("popup"));
 CAjax::Init();
@@ -29,7 +38,7 @@ CUtil::InitJSCore(array("ajax", "window", "tooltip"));
 		<div class="event-list-filter-line"></div>
 		<form method="GET" name="log_filter" >
 			<script type="text/javascript">
-				var arFltFeaturesID = new Array();
+				var arFltFeaturesID = [];
 			</script>
 			<?if (!$arResult["NO_ACTIVE_FEATURES"]):?>
 			<div class="log-filter-title"><?=GetMessage("EVENT_LIST_FILTER_FEATURES_TITLE")?></div>
@@ -62,7 +71,7 @@ CUtil::InitJSCore(array("ajax", "window", "tooltip"));
 					<div class="event-list-filter-createdby-title"><?=GetMessage("EVENT_LIST_FILTER_CREATED_BY");?></div>
 					<?
 					if (IsModuleInstalled("intranet")):
-						$GLOBALS["APPLICATION"]->IncludeComponent('bitrix:intranet.user.selector', '', array(
+						$APPLICATION->IncludeComponent('bitrix:intranet.user.selector', '', array(
 							'INPUT_NAME' => "flt_created_by_id",
 							'INPUT_NAME_STRING' => "flt_created_by_string",
 							'INPUT_NAME_SUSPICIOUS' => "flt_created_by_suspicious",
@@ -208,11 +217,10 @@ if ($arResult["EVENT"])
 		<?
 		}
 	}
-	$arResult["NAV"]->NavPrint(GetMessage("EVENT_LIST_PAGE_NAV"));
+	echo $arResult["NAV"]->GetPageNavString(GetMessage("EVENT_LIST_PAGE_NAV"));
 }
 else
 {
 	echo GetMessage("EVENT_LIST_NO_UPDATES");
 }
 ?>
-

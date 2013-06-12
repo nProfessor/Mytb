@@ -1,5 +1,7 @@
 <?
-IncludeModuleLangFile(__FILE__); ?>
+/** @global CMain $APPLICATION */
+IncludeModuleLangFile(__FILE__);
+?>
 <p><?echo GetMessage("BCL_INSTALL"); ?></p>
 <form action="<?echo $APPLICATION->GetCurPage(); ?>" name="form1">
 <?echo bitrix_sessid_post(); ?>

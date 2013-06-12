@@ -1,25 +1,37 @@
 <?
+class CIBlockPropertyEnumResult extends CDBResult
+{
+	function Fetch()
+	{
+		$a = parent::Fetch();
+		if($a && defined("BX_COMP_MANAGED_CACHE"))
+		{
+			$GLOBALS["CACHE_MANAGER"]->RegisterTag("iblock_property_enum_".$a["PROPERTY_ID"]);
+		}
+		return $a;
+	}
+}
 class CIBlockPropertyEnum
 {
-	function GetList($arOrder=Array("SORT"=>"ASC", "VALUE"=>"ASC"), $arFilter=Array())
+	public static function GetList($arOrder = array("SORT"=>"ASC", "VALUE"=>"ASC"), $arFilter = array())
 	{
 		global $DB;
-		$arSqlSearch = Array();
-		$filter_keys = array_keys($arFilter);
-		for($i=0; $i<count($filter_keys); $i++)
+
+		$arSqlSearch = array();
+		foreach ($arFilter as $key => $val)
 		{
-			$val = $arFilter[$filter_keys[$i]];
-			$key = $filter_keys[$i];
-			if($key[0]=="!")
+			if ($key[0] == "!")
 			{
 				$key = substr($key, 1);
 				$bInvert = true;
 			}
 			else
+			{
 				$bInvert = false;
+			}
 
 			$key = strtoupper($key);
-			switch($key)
+			switch ($key)
 			{
 			case "CODE":
 				$arSqlSearch[] = CIBlock::FilterCreate("P.CODE", $val, "string", $bInvert);
@@ -33,7 +45,9 @@ class CIBlockPropertyEnum
 			case "EXTERNAL_ID":
 				$arSqlSearch[] = CIBlock::FilterCreate("BEN.XML_ID", $val, "string_equal", $bInvert);
 				break;
-			case "VALUE": case "XML_ID": case "TMP_ID":
+			case "VALUE":
+			case "XML_ID":
+			case "TMP_ID":
 				$arSqlSearch[] = CIBlock::FilterCreate("BEN.".$key, $val, "string", $bInvert);
 				break;
 			case "PROPERTY_ID":
@@ -42,51 +56,48 @@ class CIBlockPropertyEnum
 				else
 					$arSqlSearch[] = CIBlock::FilterCreate("P.CODE", $val, "string", $bInvert);
 				break;
-			case "ID": case "SORT":
+			case "ID":
+			case "SORT":
 				$arSqlSearch[] = CIBlock::FilterCreate("BEN.".$key, $val, "number", $bInvert);
 				break;
 			}
 		}
 
 		$strSqlSearch = "";
-		for($i=0; $i<count($arSqlSearch); $i++)
-			if(strlen($arSqlSearch[$i])>0)
-				$strSqlSearch .= " AND  (".$arSqlSearch[$i].") ";
+		foreach(array_filter($arSqlSearch) as $sqlCondition)
+			$strSqlSearch .= " AND  (".$sqlCondition.") ";
 
-		$arSqlOrder = Array();
-		foreach($arOrder as $by=>$order)
+		$arSqlOrder = array();
+		foreach ($arOrder as $by => $order)
 		{
-			$by = strtolower($by);
-			$order = strtolower($order);
-			if ($order!="asc")
-				$order = "desc";
-
-			if ($by == "id")				$arSqlOrder[] = " BEN.ID ".$order." ";
-			elseif ($by == "property_id")	$arSqlOrder[] = " BEN.PROPERTY_ID ".$order." ";
-			elseif ($by == "value")			$arSqlOrder[] = " BEN.VALUE ".$order." ";
-			elseif ($by == "xml_id")		$arSqlOrder[] = " BEN.XML_ID ".$order." ";
-			elseif ($by == "external_id")	$arSqlOrder[] = " BEN.XML_ID ".$order." ";
-			elseif ($by == "property_sort")	$arSqlOrder[] = " P.SORT ".$order." ";
-			elseif ($by == "property_code")	$arSqlOrder[] = " P.CODE ".$order." ";
-			elseif ($by == "def")			$arSqlOrder[] = " BEN.DEF ".$order." ";
-			else
+			$order = strtolower($order) != "asc"? "desc": "asc";
+			$by = strtoupper($by);
+			switch ($by)
 			{
-				$arSqlOrder[] = "  BEN.SORT ".$order." ";
-				$by = "sort";
+			case "ID":
+			case "PROPERTY_ID":
+			case "VALUE":
+			case "XML_ID":
+			case "EXTERNAL_ID":
+			case "DEF":
+				$arSqlOrder[$by] = "BEN.".$by." ".$order;
+				break;
+			case "PROPERTY_SORT":
+				$arSqlOrder[$by] = "P.SORT ".$order;
+				break;
+			case "PROPERTY_CODE":
+				$arSqlOrder[$by] = "P.CODE ".$order;
+				break;
+			default:
+				$arSqlOrder["SORT"] = " BEN.SORT ".$order;
+				break;
 			}
 		}
 
-		$arSqlOrder = array_unique($arSqlOrder);
-		$strSqlOrder = "";
-		DelDuplicateSort($arSqlOrder); for ($i=0; $i<count($arSqlOrder); $i++)
-		{
-			if($i==0)
-				$strSqlOrder = " ORDER BY ";
-			else
-				$strSqlOrder .= ",";
-
-			$strSqlOrder .= $arSqlOrder[$i];
-		}
+		if (!empty($arSqlOrder))
+			$strSqlOrder = "ORDER BY ".implode(", ", $arSqlOrder);
+		else
+			$strSqlOrder = "";
 
 		$strSql = "
 			SELECT
@@ -102,15 +113,15 @@ class CIBlockPropertyEnum
 				BEN.PROPERTY_ID=P.ID
 			$strSqlSearch
 			$strSqlOrder
-			";
-		//echo "<pre>".htmlspecialcharsbx($strSql)."</pre>";
+		";
+
 		$rs = $DB->Query($strSql, false, "FILE: ".__FILE__."<br> LINE: ".__LINE__);
-		return $rs;
+		return new CIBlockPropertyEnumResult($rs);
 	}
 
-	function Add($arFields)
+	public static function Add($arFields)
 	{
-		global $DB;
+		global $DB, $CACHE_MANAGER;
 
 		if(strlen($arFields["VALUE"])<=0)
 			return false;
@@ -132,19 +143,22 @@ class CIBlockPropertyEnum
 
 		$ID = $DB->Add("b_iblock_property_enum", $arFields);
 
+		if (defined("BX_COMP_MANAGED_CACHE"))
+			$CACHE_MANAGER->ClearByTag("iblock_property_enum_".$arFields["PROPERTY_ID"]);
+
 		return $ID;
 	}
 
 	function Update($ID, $arFields)
 	{
-		global $DB;
+		global $DB, $CACHE_MANAGER;
 		$ID = IntVal($ID);
 
 		if(is_set($arFields, "VALUE") && strlen($arFields["VALUE"])<=0)
 			return false;
 
 		if(CACHED_b_iblock_property_enum !== false)
-			$GLOBALS["CACHE_MANAGER"]->CleanDir("b_iblock_property_enum");
+			$CACHE_MANAGER->CleanDir("b_iblock_property_enum");
 
 		if(is_set($arFields, "EXTERNAL_ID"))
 			$arFields["XML_ID"] = $arFields["EXTERNAL_ID"];
@@ -156,15 +170,21 @@ class CIBlockPropertyEnum
 		if(strlen($strUpdate) > 0)
 			$DB->Query("UPDATE b_iblock_property_enum SET ".$strUpdate." WHERE ID=".$ID);
 
+		if (defined("BX_COMP_MANAGED_CACHE") && IntVal($arFields["PROPERTY_ID"]) > 0)
+			$CACHE_MANAGER->ClearByTag("iblock_property_enum_".$arFields["PROPERTY_ID"]);
+
 		return true;
 	}
 
-	function DeleteByPropertyID($PROPERTY_ID, $bIgnoreError=false)
+	public static function DeleteByPropertyID($PROPERTY_ID, $bIgnoreError=false)
 	{
 		global $DB, $CACHE_MANAGER;
 
 		if(CACHED_b_iblock_property_enum !== false)
 			$CACHE_MANAGER->CleanDir("b_iblock_property_enum");
+
+		if (defined("BX_COMP_MANAGED_CACHE"))
+			$CACHE_MANAGER->ClearByTag("iblock_property_enum_".$PROPERTY_ID);
 
 		return $DB->Query("
 			DELETE FROM b_iblock_property_enum
@@ -189,7 +209,7 @@ class CIBlockPropertyEnum
 		return true;
 	}
 
-	function GetByID($ID)
+	public static function GetByID($ID)
 	{
 		global $DB, $CACHE_MANAGER;
 		static $BX_IBLOCK_ENUM_CACHE = array();

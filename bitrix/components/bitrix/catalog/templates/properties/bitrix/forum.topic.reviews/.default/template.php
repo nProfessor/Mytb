@@ -1,5 +1,5 @@
 <?if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
-CUtil::InitJSCore(array('ajax', 'fx'));
+CUtil::InitJSCore(array('ajax', 'fx')); 
 // ************************* Input params***************************************************************
 $arParams["SHOW_LINK_TO_FORUM"] = ($arParams["SHOW_LINK_TO_FORUM"] == "N" ? "N" : "Y");
 $arParams["FILES_COUNT"] = intVal(intVal($arParams["FILES_COUNT"]) > 0 ? $arParams["FILES_COUNT"] : 1);
@@ -65,8 +65,8 @@ foreach ($arResult["MESSAGES"] as $res):
 							"TOTAL_NEGATIVE_VOTES" => 0,
 							"TOTAL_VALUE" => 0
 						);
-
-
+				
+				
 				$arRatingParams = array_merge($arRatingParams, $res['RATING']);
 				$GLOBALS["APPLICATION"]->IncludeComponent( "bitrix:rating.vote", $arParams["RATING_TYPE"], $arRatingParams, $component, array("HIDE_ICONS" => "Y"));
 				?>
@@ -90,7 +90,7 @@ foreach ($arResult["MESSAGES"] as $res):
 	<tr><td>
 		<div class="reviews-text" id="message_text_<?=$res["ID"]?>"><?=$res["POST_MESSAGE_TEXT"]?></div>
 <?
-	foreach ($res["FILES"] as $arFile):
+	foreach ($res["FILES"] as $arFile): 
 	?><div class="reviews-message-img"><?
 		?><?$GLOBALS["APPLICATION"]->IncludeComponent(
 			"bitrix:forum.interface", "show_file",
@@ -114,20 +114,20 @@ foreach ($arResult["MESSAGES"] as $res):
 <?  if ($arResult["SHOW_POST_FORM"] == "Y") { ?>
 		<div class="reviews-post-reply-buttons"><noindex>
 			<a href="#review_anchor" style='margin-left:0;' title="<?=GetMessage("F_NAME")?>"  class="reviews-button-small" <?
-				?>onMouseDown="reply2author('<?=$res["FOR_JS"]["AUTHOR_NAME"]?>,')"><?=GetMessage("F_NAME")?></a>
+				?>onclick="return reply2author('<?=$res["FOR_JS"]["AUTHOR_NAME"]?>');"><?=GetMessage("F_NAME")?></a>
 <?			if ($arResult["FORUM"]["ALLOW_QUOTE"] == "Y") { ?>
 				<span class="separator"></span>
 				<a href="#review_anchor" title="<?=GetMessage("F_QUOTE_HINT")?>" class="reviews-button-small" <?
-					?>onMouseDown="quoteMessageEx('<?=$res["FOR_JS"]["AUTHOR_NAME"]?>', 'message_text_<?=$res["ID"]?>')"><?=GetMessage("F_QUOTE_FULL")?></a>
-<?		  	} ?>
+					?>onmousedown="quoteMessageEx('<?=$res["FOR_JS"]["AUTHOR_NAME"]?>', 'message_text_<?=$res["ID"]?>');return false;"><?=GetMessage("F_QUOTE_FULL")?></a>
+<?			} ?>
 <?			if ($arResult["PANELS"]["MODERATE"] == "Y") { ?>
 				<span class="separator"></span>
 				<a rel="nofollow" href="<?=$res["URL"]["MODERATE"]?>" class="reviews-button-small" <? if ($arParams['AJAX_POST'] == 'Y') { ?>onclick="return replyActionComment(this, 'MODERATE');"<? } ?>><?=GetMessage((($res["APPROVED"] == 'Y') ? "F_HIDE" : "F_SHOW"))?></a>
-<?		  	} ?>
+<?			} ?>
 <?			if ($arResult["PANELS"]["DELETE"] == "Y") { ?>
 				<span class="separator"></span>
 				<a rel="nofollow" href="<?=$res["URL"]["DELETE"]?>" class="reviews-button-small" <? if ($arParams['AJAX_POST'] == 'Y') { ?>onclick="return replyActionComment(this, 'DEL');"<? } ?>><?=GetMessage("F_DELETE")?></a>
-<?		  	} ?>
+<?			} ?>
 <?			if ($arParams["SHOW_RATING"] == "Y") { ?>
 			<span class="rating_vote_text">
 			<span class="separator"></span>
@@ -222,7 +222,7 @@ if (!empty($arResult["MESSAGE_VIEW"])):
 			<div class="reviews-post-attachments">
 				<label><?=GetMessage("F_ATTACH_FILES")?></label>
 <?
-			foreach ($arResult["REVIEW_FILES"] as $arFile):
+			foreach ($arResult["REVIEW_FILES"] as $arFile): 
 ?>
 				<div class="reviews-post-attachment"><?
 				?><?$GLOBALS["APPLICATION"]->IncludeComponent(
@@ -264,7 +264,7 @@ endif;
 <div class="reviews-reply-form" <?=(($arParams['SHOW_MINIMIZED'] == "Y")?'style="display:none;"':'')?>>
 <a name="review_anchor"></a>
 <?
-if (!empty($arResult["ERROR_MESSAGE"])):
+if (!empty($arResult["ERROR_MESSAGE"])): 
 ?>
 <div class="reviews-note-box reviews-note-error">
 	<div class="reviews-note-box-text"><?=ShowError($arResult["ERROR_MESSAGE"], "reviews-note-error");?></div>
@@ -296,7 +296,7 @@ if (!$arResult["IS_AUTHORIZED"]):
 			<div class="reviews-reply-field reviews-reply-field-author"><label for="REVIEW_AUTHOR<?=$arParams["form_index"]?>"><?=GetMessage("OPINIONS_NAME")?><?
 				?><span class="reviews-required-field">*</span></label>
 				<span><input name="REVIEW_AUTHOR" id="REVIEW_AUTHOR<?=$arParams["form_index"]?>" size="30" type="text" value="<?=$arResult["REVIEW_AUTHOR"]?>" tabindex="<?=$tabIndex++;?>" /></span></div>
-<?
+<?		
 	if ($arResult["FORUM"]["ASK_GUEST_EMAIL"]=="Y"):
 ?>
 			<div class="reviews-reply-field-user-sep">&nbsp;</div>
@@ -315,7 +315,7 @@ endif;
 	<div class="reviews-reply-field reviews-reply-field-text">
 <?
 	$arSmiles = array();
-	if ($arResult["FORUM"]["ALLOW_SMILES"] == "Y")
+	if ($arResult["FORUM"]["ALLOW_SMILES"] == "Y") 
 	{
 		foreach($arResult["SMILES"] as $arSmile)
 		{
@@ -452,13 +452,6 @@ if ($arResult["SHOW_SUBSCRIBE"] == "Y"):
 					?><?=($arResult["TOPIC_SUBSCRIBE"] == "Y")? "checked disabled " : "";?> tabindex="<?=$tabIndex++;?>" /><?
 				?>&nbsp;<label for="TOPIC_SUBSCRIBE<?=$arParams["form_index"]?>"><?=GetMessage("F_WANT_SUBSCRIBE_TOPIC")?></label></div>
 <?
-	if ($arResult["FORUM_SUBSCRIBE"] == "Y"):
-?>			<div class="reviews-reply-field-setting">
-				<input type="checkbox" name="FORUM_SUBSCRIBE" id="FORUM_SUBSCRIBE<?=$arParams["form_index"]?>" value="Y" <?
-				?><?=($arResult["FORUM_SUBSCRIBE"] == "Y")? "checked disabled " : "";?> tabindex="<?=$tabIndex++;?>"/><?
-				?>&nbsp;<label for="FORUM_SUBSCRIBE<?=$arParams["form_index"]?>"><?=GetMessage("F_WANT_SUBSCRIBE_FORUM")?></label></div>
-<?
-	endif;
 endif;
 ?>
 		</div>
@@ -558,27 +551,21 @@ function fToggleCommentsForm(link, forceOpen)
 			}, 100);
 }
 
-function reply2author(name)
-{
+function reply2author(name) {
 	name = name.replace(/&lt;/gi, "<").replace(/&gt;/gi, ">").replace(/&quot;/gi, "\"");
-	replyForumFormOpen();
-
-	if (window.oLHE)
+	if (!!window.oLHE && !!name)
 	{
-		var content = '';
-		if (window.oLHE.sEditorMode == 'code')
-			content = window.oLHE.GetCodeEditorContent();
-		else
-			content = window.oLHE.GetEditorContent();
-<? if ($arResult["FORUM"]["ALLOW_BIU"] == "Y") { ?>
-		content += "[B]"+name+"[/B]";
-<? } ?>
-		content += " \n";
-		if (window.oLHE.sEditorMode == 'code')
-			window.oLHE.SetContent(content);
-		else
-			window.oLHE.SetEditorContent(content);
-		setTimeout(function() { window.oLHE.SetFocusToEnd();}, 300);
+		replyForumFormOpen();
+		name = name.replace(/&lt;/gi, "<").replace(/&gt;/gi, ">").replace(/&quot;/gi, "\"");
+		if (window.oLHE.sEditorMode == 'code' && window.oLHE.bBBCode) { // BB Codes
+		<?if ($arResult["FORUM"]["ALLOW_BIU"] == "Y") { ?> name = '[B]' + name + '[/B], ';<? } ?>
+			window.oLHE.WrapWith("", "", name);
+		} else if (window.oLHE.sEditorMode == 'html') { // WYSIWYG
+		<?if ($arResult["FORUM"]["ALLOW_BIU"] == "Y") { ?> name = '<b>' + name + '</b>, ';<? } ?>
+			window.oLHE.InsertHTML(name);
+		}
+		window.oLHE.SetFocus();
+		BX.defer(window.oLHE.SetFocus, window.oLHE)();
 	}
 	return false;
 }

@@ -57,7 +57,7 @@ function JCMainLookupSelector(arParams)
 				url += '&' + param_name + '=' + encodeURIComponent(_this.arParams.AJAX_PARAMS[param_name]);
 		}
 		jsAjaxUtil.LoadData(url, _this.ShowSearchResults);
-	}
+	};
 
 	this.ShowSearchResults = function(data)
 	{
@@ -114,12 +114,37 @@ function JCMainLookupSelector(arParams)
 
 			if (null == _this.SEARCH)
 			{
-				_this.SEARCH = _this.LAYOUT.appendChild(document.createElement('DIV'));
-				_this.SEARCH.className = 'mli-search-results';
-				_this.SEARCH.style.position = 'absolute';
+				if (!!_this.arParams.VISUAL.SEARCH_POSITION && 'absolute' == _this.arParams.VISUAL.SEARCH_POSITION)
+				{
+					_this.SEARCH = BX.GetDocElement().appendChild(document.createElement('DIV'));
+					_this.SEARCH.className = 'mli-search-results';
+					_this.SEARCH.style.position = 'absolute';
+					if (!!_this.arParams.VISUAL.SEARCH_ZINDEX)
+					{
+						_this.arParams.VISUAL.SEARCH_ZINDEX = parseInt(_this.arParams.VISUAL.SEARCH_ZINDEX);
+						if (!isNaN(_this.arParams.VISUAL.SEARCH_ZINDEX) && 0 < _this.arParams.VISUAL.SEARCH_ZINDEX)
+						{
+							_this.SEARCH.style.zIndex = _this.arParams.VISUAL.SEARCH_ZINDEX;
+						}
+					}
+				}
+				else
+				{
+					_this.SEARCH = _this.LAYOUT.appendChild(document.createElement('DIV'));
+					_this.SEARCH.className = 'mli-search-results';
+					_this.SEARCH.style.position = 'absolute';
+				}
 			}
 
-			var pos = BX.pos(_this.VISUAL.TEXT, true);
+			var pos;
+			if (!!_this.arParams.VISUAL.SEARCH_POSITION && 'absolute' == _this.arParams.VISUAL.SEARCH_POSITION)
+			{
+				pos = BX.pos(_this.VISUAL.TEXT, false);
+			}
+			else
+			{
+				pos = BX.pos(_this.VISUAL.TEXT, true);
+			}
 			_this.SEARCH.style.top = pos.bottom + 'px';
 			_this.SEARCH.style.left = pos.left + 'px';
 			_this.SEARCH.style.width = (pos.right - pos.left - 2) + 'px';
@@ -141,13 +166,13 @@ function JCMainLookupSelector(arParams)
 		{
 			_this.__hideSearch();
 		}
-	}
+	};
 
 	this.__search_result_click = function()
 	{
 		_this.VISUAL.SetTokenData(_this._currentSearchStr, this.BX_ROW_DATA);
 		_this.__hideSearch();
-	}
+	};
 
 	this.__search_result_over = function()
 	{
@@ -156,7 +181,7 @@ function JCMainLookupSelector(arParams)
 
 		_this.__search_current_row = this;
 		this.className = 'mli-search-result mli-search-current';
-	}
+	};
 
 	jsUtils.addCustomEvent('onEmpUserSelectorChangeTokenActivity', this.SetTokenInput, null, this);
 	jsUtils.addEvent(window, 'load', function() {_this.Init()});
@@ -186,7 +211,7 @@ JCMainLookupSelector.prototype.Init = function()
 			//_this.timerId = setTimeout(_this.processSearchStr, 100);
 			_this.processSearchStr();
 		}
-	}
+	};
 
 	this.VISUAL.onCurrentStringChange = function()
 	{
@@ -194,7 +219,7 @@ JCMainLookupSelector.prototype.Init = function()
 			clearTimeout(_this.timerId);
 
 		_this.__hideSearch();
-	}
+	};
 
 	this.VISUAL.onUnidentifiedTokenFound = function(str)
 	{
@@ -215,7 +240,7 @@ JCMainLookupSelector.prototype.Init = function()
 			if (DATA.length == 1 && DATA[0].READY == 'Y')
 				_this.VISUAL.SetTokenData(str, DATA[0], false);
 		});
-	}
+	};
 
 	this.VISUAL.onControlKeyPressed = function(keyCode)
 	{
@@ -230,7 +255,7 @@ JCMainLookupSelector.prototype.Init = function()
 
 				case 40: // down key - navigate down on search results
 					if (null == _this.__search_current_row)
-						_this.SEARCH.firstChild.onmouseover()
+						_this.SEARCH.firstChild.onmouseover();
 					else if (null != _this.__search_current_row.nextSibling)
 						_this.__search_current_row.nextSibling.onmouseover();
 					return false;
@@ -238,7 +263,7 @@ JCMainLookupSelector.prototype.Init = function()
 
 				case 38: // up key - navigate up on search results
 					if (null == _this.__search_current_row)
-						_this.SEARCH.lastChild.onmouseover()
+						_this.SEARCH.lastChild.onmouseover();
 					else if (null != _this.__search_current_row.previousSibling)
 						_this.__search_current_row.previousSibling.onmouseover();
 					return false;
@@ -253,7 +278,7 @@ JCMainLookupSelector.prototype.Init = function()
 		}
 
 		return true;
-	}
+	};
 
 	if (null != this.arParams.INPUT_NAME_SUSPICIOUS)
 	{
@@ -272,17 +297,17 @@ JCMainLookupSelector.prototype.Init = function()
 		}
 	}
 
-	this.__hideSearch = function() {if (null != _this.SEARCH) _this.SEARCH.style.display = 'none';}
-	this.__delayedHideSearch = function() {if (null != _this.SEARCH) setTimeout(_this.__hideSearch, 500);}
+	this.__hideSearch = function() {if (null != _this.SEARCH) _this.SEARCH.style.display = 'none';};
+	this.__delayedHideSearch = function() {if (null != _this.SEARCH) setTimeout(_this.__hideSearch, 500);};
 
-	jsUtils.addEvent(this.VISUAL.TEXT, 'blur', _this.__delayedHideSearch);
+	jsUtils.addEvent(this.VISUAL.TEXT, 'blur', this.__delayedHideSearch);
 
 	this.VALUE_CONTAINER = this.LAYOUT.appendChild(document.createElement('DIV'));
 	this.VALUE_CONTAINER.style.display = 'none';
 
 	if (null != this.arParams.VALUE)
 		this.SetValue(this.arParams.VALUE);
-}
+};
 
 // object destructor
 JCMainLookupSelector.prototype.Clear = function()
@@ -298,7 +323,7 @@ JCMainLookupSelector.prototype.Clear = function()
 	this.VISUAL.onControlKeyPressed = null;
 	this.VISUAL.onSuspiciousTokensFound = null;
 
-	jsUtils.removeEvent(this.VISUAL.TEXT, 'blur', _this.__delayedHideSearch);
+	jsUtils.removeEvent(this.VISUAL.TEXT, 'blur', this.__delayedHideSearch);
 
 	// reset and kill textarea processing object
 	this.VISUAL.Reset(false, true);
@@ -315,7 +340,8 @@ JCMainLookupSelector.prototype.Clear = function()
 	}
 
 	this._currentSearchStr = '';
-}
+	BX.cleanNode(this.LAYOUT, true);
+};
 
 JCMainLookupSelector.prototype.SetTokenInput = function(arParams, arEventParams)
 {
@@ -343,7 +369,7 @@ JCMainLookupSelector.prototype.SetTokenInput = function(arParams, arEventParams)
 		this.VALUE_CONTAINER.removeChild(arEventParams.TOKEN.INPUT);
 		jsUtils.onCustomEvent('onLookupInputChange', {'CONTROL_ID': this.arParams.CONTROL_ID, 'ACTION': 'remove', 'DATA': arEventParams.TOKEN.DATA});
 	}
-}
+};
 
 
 JCMainLookupSelector.prototype.AddValue = function(arValue)
@@ -389,7 +415,7 @@ JCMainLookupSelector.prototype.AddValue = function(arValue)
 			}
 		}
 	}
-}
+};
 
 JCMainLookupSelector.prototype.SetValue = function(arValue)
 {
@@ -438,7 +464,7 @@ function JCMainLookupSelectorText(arParams)
 		{
 			_this.TEXT.value = '';
 		}
-	}
+	};
 	this.__text_blur = function()
 	{
 		_this.TEXT.bx_focused = false;
@@ -446,12 +472,12 @@ function JCMainLookupSelectorText(arParams)
 		{
 			_this.TEXT.value = _this.arParams.START_TEXT;
 		}
-	}
+	};
 	this.__text_additional_check = function()
 	{
 		_this.TEXT.bx_focused = false;
 		_this.__process();
-	}
+	};
 
 	if (this.TEXT.value == '')
 	{
@@ -496,7 +522,7 @@ function JCMainLookupSelectorText(arParams)
 			}
 		}
 
-	}
+	};
 
 	this.TEXT.onclick = this.TEXT.onkeyup = function(e) {
 		if (null == e) e = window.event;
@@ -511,10 +537,10 @@ function JCMainLookupSelectorText(arParams)
 		}
 
 		if (null != _this.timerId)
-			clearTimeout(_this.timerId)
+			clearTimeout(_this.timerId);
 
 		_this.timerId = setTimeout(_this.__pre_process, 500);
-	}
+	};
 
 	if (this.TEXT.value.length > 0)
 	{
@@ -537,8 +563,8 @@ JCMainLookupSelectorText.prototype.__split = function (str, separator, limit) {
 	var output = [];
 	var lastLastIndex = 0;
 	var flags = (separator.ignoreCase ? "i" : "") + (separator.multiline  ? "m" : "") + (separator.sticky     ? "y" : "");
-        var separator = RegExp(separator.source, flags + "g");
-        var separator2, match, lastIndex, lastLength;
+	separator = RegExp(separator.source, flags + "g");
+	var separator2, match, lastIndex, lastLength;
 
 	str = str + ""; // type conversion
 	if (!_compliantExecNpcg)
@@ -607,7 +633,7 @@ JCMainLookupSelectorText.prototype.__split = function (str, separator, limit) {
 	}
 
 	return output.length > limit ? output.slice(0, limit) : output;
-}
+};
 
 //This function splits string with respect to __check_reg pattern
 JCMainLookupSelectorText.prototype.__parse = function(str, split_reg, check_reg, arTokens, newStr)
@@ -647,15 +673,29 @@ JCMainLookupSelectorText.prototype.__parse = function(str, split_reg, check_reg,
 		if(tok.length)
 		{
 			arToks[arToks.length] = tok;
-			var start = -1;
+			start = -1;
 			while( (start = str.indexOf(tok, start+1)) > -1 )
 			{
-				arResult[arResult.length] = {
-					'start' : start,
-					'end' : start + tok.length,
-					'tok' : tok,
-					'delim' : ''
-				};
+				var found = false;
+				for(var i =0; i < arResult.length; i++)
+				{
+					if(start >= arResult[i].start && start < arResult[i].end)
+					{
+						start = arResult[i].end;
+						found = true;
+					}
+				}
+
+				if(!found)
+				{
+					arResult[arResult.length] = {
+						'start' : start,
+						'end' : start + tok.length,
+						'tok' : tok,
+						'delim' : ''
+					};
+					break;
+				}
 			}
 		}
 	}
@@ -665,7 +705,7 @@ JCMainLookupSelectorText.prototype.__parse = function(str, split_reg, check_reg,
 	tok = '';
 	var delim = '';
 	var cur_pos = 0;
-	for(var i = 0; i < arTmp.length; i++)
+	for(i = 0; i < arTmp.length; i++)
 	{
 		tok = arTmp[i];
 
@@ -695,7 +735,7 @@ JCMainLookupSelectorText.prototype.__parse = function(str, split_reg, check_reg,
 			//Additional check if this is string followed known token
 			if(check_reg.test(tok) && arToks.length > 0)
 			{
-				for(var j = 0; j < arToks.length; j++)
+				for(j = 0; j < arToks.length; j++)
 				{
 					if(
 						tok.length > arToks[j].length
@@ -751,7 +791,7 @@ JCMainLookupSelectorText.prototype.__parse = function(str, split_reg, check_reg,
 //		};
 
 	return arResult;
-}
+};
 
 JCMainLookupSelectorText.prototype.__process = function()
 {
@@ -841,7 +881,7 @@ JCMainLookupSelectorText.prototype.__process = function()
 
 	this.CheckTokens();
 	this.AdjustHeight();
-}
+};
 
 JCMainLookupSelectorText.prototype.Reset = function(bClearText, bClearEvents)
 {
@@ -850,6 +890,8 @@ JCMainLookupSelectorText.prototype.Reset = function(bClearText, bClearEvents)
 
 	for (var i = 0; i < this.arTokens.length; i++)
 	{
+		if (null == this.arTokens[i])
+			continue;
 		this.arTokensMap[this.arTokens[i].TEXT_HASH] = null;
 		this.arTokens[i] = null;
 	}
@@ -877,7 +919,7 @@ JCMainLookupSelectorText.prototype.Reset = function(bClearText, bClearEvents)
 			jsUtils.removeEvent(this.TEXT.form, 'submit', this.__text_focus);
 
 	}
-}
+};
 
 JCMainLookupSelectorText.prototype.CheckTokens = function()
 {
@@ -907,13 +949,13 @@ JCMainLookupSelectorText.prototype.CheckTokens = function()
 
 		this.arTokens[i].SetActive(bTokenFound);
 	}
-}
+};
 
 JCMainLookupSelectorText.prototype.AdjustHeight = function()
 {
 	if (this.TEXT.scrollHeight > this.TEXT.clientHeight)
 	{
-		var dy = this.TEXT.offsetHeight - this.TEXT.clientHeight
+		var dy = this.TEXT.offsetHeight - this.TEXT.clientHeight;
 		var newHeight = this.TEXT.scrollHeight + dy;
 
 		if (newHeight > this.arParams.MAX_HEIGHT)
@@ -922,7 +964,7 @@ JCMainLookupSelectorText.prototype.AdjustHeight = function()
 		if(this.TEXT.type.toLowerCase() == "textarea")
 			this.TEXT.style.height = newHeight + 'px';
 	}
-}
+};
 
 JCMainLookupSelectorText.prototype.AddTokenData = function(data, bSelect)
 {
@@ -948,7 +990,7 @@ JCMainLookupSelectorText.prototype.AddTokenData = function(data, bSelect)
 	}
 	else
 	{
-		var str = jsUtils.trim(data.NAME + ' [' + data.ID + ']');
+		str = jsUtils.trim(data.NAME + ' [' + data.ID + ']');
 		if(this.TEXT.value.indexOf(str) < 0)
 		{
 			this.TEXT.value = str;
@@ -956,7 +998,7 @@ JCMainLookupSelectorText.prototype.AddTokenData = function(data, bSelect)
 		}
 	}
 
-}
+};
 
 JCMainLookupSelectorText.prototype.SetTokenData = function(str, data, bSelect)
 {
@@ -975,7 +1017,7 @@ JCMainLookupSelectorText.prototype.SetTokenData = function(str, data, bSelect)
 	if(delim == '')//fall to default
 		delim = "\n";
 
-	for (var i = 0; i < arToks.length; i++)
+	for (i = 0; i < arToks.length; i++)
 	{
 		var s = jsUtils.trim(arToks[i].tok);
 
@@ -1035,7 +1077,7 @@ JCMainLookupSelectorText.prototype.SetTokenData = function(str, data, bSelect)
 	}
 
 	this.AddTokenData(data, bSelect);
-}
+};
 
 JCMainLookupSelectorText.prototype.AdjustTokensPos = function(start_pos, change)
 {
@@ -1047,7 +1089,7 @@ JCMainLookupSelectorText.prototype.AdjustTokensPos = function(start_pos, change)
 			this.arTokens[i].FINISH += change;
 		}
 	}
-}
+};
 
 JCMainLookupSelectorText.prototype.SetCursorPos = function(pos)
 {
@@ -1063,7 +1105,7 @@ JCMainLookupSelectorText.prototype.SetCursorPos = function(pos)
 			r.select();
 		} catch (e) {}
 	}
-}
+};
 
 JCMainLookupSelectorText.prototype.GetCursorPos = function()
 {
@@ -1085,8 +1127,8 @@ JCMainLookupSelectorText.prototype.GetCursorPos = function()
 		}
 
 		return this.TEXT.bx_last_position;
-	} catch (e) {return 0};
-}
+	} catch (e) {return 0}
+};
 
 JCMainLookupSelectorText.prototype.GetHash = function(text)
 {
@@ -1096,7 +1138,7 @@ JCMainLookupSelectorText.prototype.GetHash = function(text)
 		hash += text.charCodeAt(i).toString(16);
 	}
 	return hash;
-}
+};
 
 /**************** Visual textarea token ******************/
 function JCMainLookupSelectorToken(arParams)
@@ -1122,13 +1164,13 @@ JCMainLookupSelectorToken.prototype.SetActive = function(flag)
 {
 	this.ACTIVE = !!flag;
 	jsUtils.onCustomEvent('onEmpUserSelectorChangeTokenActivity', {'CONTROL_ID': this.CONTROL_ID, 'TOKEN': this});
-}
+};
 
 JCMainLookupSelectorToken.prototype.SetPos = function(start, finish)
 {
 	if (null == finish) finish = start+this.TOKEN.length;
 
 	this.START = start; this.FINISH = finish;
-}
+};
 
 JCMainLookupSelectorToken.prototype.GetHash = JCMainLookupSelectorText.prototype.GetHash;

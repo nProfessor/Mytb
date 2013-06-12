@@ -68,6 +68,8 @@ class CSocServTwitter extends CSocServAuth
 					if ($arPic = CFile::MakeFileArray($twUser["profile_image_url"]))
 						$arFields["PERSONAL_PHOTO"] = $arPic;
 				$arFields["PERSONAL_WWW"] = "https://twitter.com/".$arResult["screen_name"];
+				if(strlen(SITE_ID) > 0)
+					$arFields["SITE_ID"] = SITE_ID;
 				if(COption::GetOptionString('socialservices','last_twit_id','1') == 1)
 				{
 					if(isset($twUser["status"]["id_str"]))
@@ -106,9 +108,9 @@ window.close();
 			{
 				$key = array_rand($arToken, 1);
 				$token = $arToken[$key];
+				if(is_array($socServUserArray[2]))
+					$secret = $socServUserArray[2][$key];
 			}
-			if(is_array($socServUserArray[2]))
-				$secret = $socServUserArray[2][$key];
 
 			$tw = new CTwitterInterface($appID, $appSecret, $token, false, $secret);
 			$result = $tw->SearchByHash($hash, $socServUserArray, $sinceId);
@@ -125,12 +127,13 @@ window.close();
 		return false;
 	}
 
-	public static function SendUserFeed($userId, $message)
+	public static function SendUserFeed($userId, $message, $messageId)
 	{
+
 		$appID = trim(self::GetOption("twitter_key"));
 		$appSecret = trim(self::GetOption("twitter_secret"));
 		$tw = new CTwitterInterface($appID, $appSecret);
-		return $tw->SendTwit($userId, $message);
+		return $tw->SendTwit($userId, $message, $messageId);
 	}
 
 }
@@ -153,6 +156,7 @@ class CTwitterInterface
 
 	public function __construct($appID, $appSecret, $token=false, $tokenVerifier=false, $tokenSecret=false)
 	{
+		$this->httpTimeout = 10;
 		$this->appID = $appID;
 		$this->appSecret = $appSecret;
 		$this->token = $token;
@@ -183,9 +187,7 @@ class CTwitterInterface
 		));
 
 		$arParams["oauth_signature"] = $this->BuildSignature($this->GetSignatureString($arParams, self::REQUEST_URL));
-
-		$result = CHTTP::sPost(self::REQUEST_URL, $arParams);
-
+		$result = CHTTP::sPostHeader(self::REQUEST_URL, $arParams, array(), $this->httpTimeout);
 		parse_str($result, $arResult);
 		if(isset($arResult["oauth_token"]) && $arResult["oauth_token"] <> '')
 		{
@@ -215,8 +217,7 @@ class CTwitterInterface
 		));
 
 		$arParams["oauth_signature"] = $this->BuildSignature($this->GetSignatureString($arParams, self::TOKEN_URL));
-
-		$result = CHTTP::sPost(self::TOKEN_URL, $arParams);
+		$result = CHTTP::sPostHeader(self::TOKEN_URL, $arParams, array(), $this->httpTimeout);
 		parse_str($result, $arResult);
 		if(isset($arResult["oauth_token"]) && $arResult["oauth_token"] <> '')
 		{
@@ -241,7 +242,7 @@ class CTwitterInterface
 			"Content-type" => "application/x-www-form-urlencoded",
 		);
 
-		$result = CHTTP::sGetHeader(self::API_URL.'?user_id='.$user_id, $arHeaders);
+		$result = CHTTP::sGetHeader(self::API_URL.'?user_id='.$user_id, $arHeaders, $this->httpTimeout);
 
 		if(!defined("BX_UTF"))
 			$result = CharsetConverter::ConvertCharset($result, "utf-8", LANG_CHARSET);
@@ -256,6 +257,9 @@ class CTwitterInterface
 			$this->token = $arOauth["OATOKEN"];
 			$this->tokenSecret = $arOauth["OASECRET"];
 		}
+		if(!$this->token || !$this->tokenSecret)
+			return false;
+		return true;
 	}
 
 	public function SearchByHash($hash, $socServUserArray, $sinceId)
@@ -274,7 +278,7 @@ class CTwitterInterface
 			"Authorization" => 'OAuth oauth_consumer_key="'.$arParams["oauth_consumer_key"].'", oauth_nonce="'.$arParams["oauth_nonce"].'", oauth_signature="'.$arParams["oauth_signature"].'", oauth_signature_method="HMAC-SHA1", oauth_timestamp="'.$arParams["oauth_timestamp"].'", oauth_token="'.$this->token.'", oauth_version="1.0"',
 			"Content-type" => "application/x-www-form-urlencoded",
 		);
-		$result = CHTTP::sGetHeader(self::SEARCH_URL."?count=100&include_entities=false&q=".urlencode($hash)."&since_id=".$sinceId, $arHeaders);
+		$result = @CHTTP::sGetHeader(self::SEARCH_URL."?count=100&include_entities=false&q=".urlencode($hash)."&since_id=".$sinceId, $arHeaders, $this->httpTimeout);
 		if(!defined("BX_UTF"))
 			$result = CharsetConverter::ConvertCharset($result, "utf-8", LANG_CHARSET);
 		$arResult = CUtil::JsObjectToPhp($result);
@@ -313,8 +317,7 @@ class CTwitterInterface
 			"Authorization" => 'OAuth oauth_consumer_key="'.$arParams["oauth_consumer_key"].'", oauth_nonce="'.$arParams["oauth_nonce"].'", oauth_signature="'.$arParams["oauth_signature"].'", oauth_signature_method="HMAC-SHA1", oauth_timestamp="'.$arParams["oauth_timestamp"].'", oauth_token="'.$this->token.'", oauth_version="1.0"',
 			"Content-type" => "application/x-www-form-urlencoded",
 		);
-
-		$result = CHTTP::sGetHeader(self::SEARCH_URL."?count=".$searchMetaData["count"]."&include_entities=".$searchMetaData["include_entities"]."&max_id=".$searchMetaData["max_id"]."&q=".urlencode($searchMetaData["q"]), $arHeaders);
+		$result = CHTTP::sGetHeader(self::SEARCH_URL."?count=".$searchMetaData["count"]."&include_entities=".$searchMetaData["include_entities"]."&max_id=".$searchMetaData["max_id"]."&q=".urlencode($searchMetaData["q"]), $arHeaders, $this->httpTimeout);
 
 		if(!defined("BX_UTF"))
 			$result = CharsetConverter::ConvertCharset($result, "utf-8", LANG_CHARSET);
@@ -337,13 +340,21 @@ class CTwitterInterface
 		return self::GetAllPages($arResult);
 	}
 
-	public function SendTwit($socServUserId, $message)
+	public function SendTwit($socServUserId, $message, $messageId)
 	{
+		$isSetOauthKeys = true;
 		if(!$this->token || !$this->tokenSecret)
-			self::SetOauthKeys($socServUserId);
+			$isSetOauthKeys = self::SetOauthKeys($socServUserId);
+
+		if($isSetOauthKeys === false)
+		{
+			CSocServMessage::Delete($messageId);
+			return false;
+		}
 
 		if(strlen($message) > 139)
 			$message = substr($message, 0, 137)."...";
+
 		if(!defined("BX_UTF"))
 			$message = CharsetConverter::ConvertCharset($message, LANG_CHARSET, "utf-8");
 
@@ -357,11 +368,16 @@ class CTwitterInterface
 			"Authorization" => 'OAuth oauth_consumer_key="'.$arParams["oauth_consumer_key"].'", oauth_nonce="'.$arParams["oauth_nonce"].'", oauth_signature="'.$arParams["oauth_signature"].'", oauth_signature_method="HMAC-SHA1", oauth_timestamp="'.$arParams["oauth_timestamp"].'", oauth_token="'.$this->token.'", oauth_version="1.0"',
 		);
 		$arPost = array("status"=> $message);
-		$result = CHTTP::sPostHeader($this::POST_URL, $arPost, $arHeaders);
+		$result = @CHTTP::sPostHeader($this::POST_URL, $arPost, $arHeaders, $this->httpTimeout);
+		if($result !== false)
+		{
+			if(!defined("BX_UTF"))
+				$result = CharsetConverter::ConvertCharset($result, "utf-8", LANG_CHARSET);
+			return CUtil::JsObjectToPhp($result);
+		}
+		else
+			return false;
 
-		if(!defined("BX_UTF"))
-			$result = CharsetConverter::ConvertCharset($result, "utf-8", LANG_CHARSET);
-		return CUtil::JsObjectToPhp($result);
 	}
 
 	private function GetUserPerms($userXmlId)
@@ -371,9 +387,10 @@ class CTwitterInterface
 		while($arSocUser = $dbSocUser->Fetch())
 		{
 			$arUserPermis = unserialize($arSocUser["PERMISSIONS"]);
-			foreach($arUserPermis as $key=>$value)
-				if($value == "UA")
-					$arUserPermis[$key] = "G2";
+			if(is_array($arUserPermis))
+				foreach($arUserPermis as $key=>$value)
+					if($value == "UA")
+						$arUserPermis[$key] = "G2";
 		}
 		if(!empty($arUserPermis))
 			return $arUserPermis;

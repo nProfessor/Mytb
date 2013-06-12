@@ -39,8 +39,11 @@ class CUserTypeFile
 
 		foreach($ext as $k=>$v)
 		{
-			$v = trim($v);
-			if(strlen($v)>0)
+			if ($v === true)
+				$v = trim($k);
+			else
+				$v = trim($v);
+			if(strlen($v) > 0)
 				$ar[$v] = true;
 		}
 
@@ -77,13 +80,13 @@ class CUserTypeFile
 		elseif(is_array($arUserField))
 			$width = intval($arUserField["SETTINGS"]["LIST_WIDTH"]);
 		else
-			$width = 0;
+			$width = 200;
 		if($bVarsFromForm)
 			$height = intval($GLOBALS[$arHtmlControl["NAME"]]["LIST_HEIGHT"]);
 		elseif(is_array($arUserField))
 			$height = intval($arUserField["SETTINGS"]["LIST_HEIGHT"]);
 		else
-			$height = 0;
+			$height = 200;
 		$result .= '
 		<tr>
 			<td>'.GetMessage("USER_TYPE_FILE_WIDTH_AND_HEIGHT").':</td>
@@ -158,14 +161,68 @@ class CUserTypeFile
 
 	function GetEditFormHTML($arUserField, $arHtmlControl)
 	{
+		CModule::IncludeModule("fileman");
+
+		$arHtmlControl["VALIGN"] = "middle";
+		$arHtmlControl["ROWCLASS"] = "adm-detail-file-row";
+
 		if(($p=strpos($arHtmlControl["NAME"], "["))>0)
 			$strOldIdName = substr($arHtmlControl["NAME"], 0, $p)."_old_id".substr($arHtmlControl["NAME"], $p);
 		else
 			$strOldIdName = $arHtmlControl["NAME"]."_old_id";
-		return '<input type="hidden" name="'.$strOldIdName.'" value="'.$arHtmlControl["VALUE"].'">'.
-			CFile::InputFile($arHtmlControl["NAME"], $arUserField["SETTINGS"]["SIZE"], $arHtmlControl["VALUE"], false, 0, "", ($arUserField["EDIT_IN_LIST"]!="Y"? ' disabled="disabled" ': ''), 0, "", 'value="'.$arHtmlControl["VALUE"].'"').
-			'<br>'.
-			CFile::ShowImage($arHtmlControl["VALUE"]);
+
+		return CFileInput::Show($arHtmlControl["NAME"], $arHtmlControl["VALUE"], array(
+				"IMAGE" => "Y",
+				"PATH" => "Y",
+				"FILE_SIZE" => "Y",
+				"DIMENSIONS" => "Y",
+				"IMAGE_POPUP" => "Y",
+				"MAX_SIZE" => array("W" => 200, "H"=>200)
+			),
+			array(
+				'upload' => $arUserField["EDIT_IN_LIST"] == "Y",
+				'medialib' => false,
+				'file_dialog' => false,
+				'cloud' => false,
+				'del' => true,
+				'description' => false
+			)
+		).'<input type="hidden" name="'.$strOldIdName.'" value="'.$arHtmlControl["VALUE"].'">';
+	}
+
+	function GetEditFormHTMLMulty($arUserField, $arHtmlControl)
+	{
+		$arHtmlControl["ROWCLASS"] = "adm-detail-file-row";
+
+		CModule::IncludeModule("fileman");
+
+		$values = array();
+		$fieldName = substr($arHtmlControl["NAME"], 0, -2);
+		$result = "";
+		foreach ($arHtmlControl["VALUE"] as $key => $fileId)
+		{
+			$result .= '<input type="hidden" name="'.$fieldName.'_old_id['.$key.']" value="'.$fileId.'">';
+			$values[$fieldName."[".$key."]"] = $fileId;
+		}
+
+		return CFileInput::ShowMultiple($values, $fieldName."[n#IND#]", array(
+				"IMAGE" => "Y",
+				"PATH" => "Y",
+				"FILE_SIZE" => "Y",
+				"DIMENSIONS" => "Y",
+				"IMAGE_POPUP" => "Y",
+				"MAX_SIZE" => array("W" => 200, "H"=>200)
+			),
+			false,
+			array(
+				'upload' => $arUserField["EDIT_IN_LIST"] == "Y",
+				'medialib' => false,
+				'file_dialog' => false,
+				'cloud' => false,
+				'del' => true,
+				'description' => false
+			)
+		).$result;
 	}
 
 	function GetFilterHTML($arUserField, $arHtmlControl)

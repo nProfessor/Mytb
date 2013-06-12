@@ -1,3 +1,3 @@
 <?
-require_once(dirname(__FILE__)."/../modules/main/classes/general/update_log.php");
+require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/classes/general/update_log.php");
 ?>

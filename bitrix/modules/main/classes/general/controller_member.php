@@ -19,6 +19,8 @@ class CControllerClient
 	function OnExternalLogin(&$arParams)
 	{
 		global $USER, $APPLICATION;
+		$FORMAT_DATE = false;
+		$FORMAT_DATETIME = false;
 
 		$prefix = COption::GetOptionString("main", "auth_controller_prefix", "controller");
 		if(
@@ -109,6 +111,10 @@ class CControllerClient
 			$arUser = $res['USER_INFO'];
 			if(is_array($arUser))
 				$arUser["CONTROLLER_ADMIN"] = "N";
+			if (isset($res["FORMAT_DATE"]))
+				$FORMAT_DATE = $res["FORMAT_DATE"];
+			if (isset($res["FORMAT_DATETIME"]))
+				$FORMAT_DATETIME = $res["FORMAT_DATETIME"];
 		}
 		else
 		{
@@ -135,7 +141,7 @@ class CControllerClient
 			else
 				$arUser['LOGIN'] = $site."\\".$arUser['LOGIN'];
 
-			$USER_ID = CControllerClient::UpdateUser($arUser);
+			$USER_ID = CControllerClient::UpdateUser($arUser, $FORMAT_DATE, $FORMAT_DATETIME);
 
 			if($arUser["CONTROLLER_ADMIN"]=="Y")
 			{
@@ -158,8 +164,10 @@ class CControllerClient
 			$USER->SetControllerAdmin();
 	}
 
-	function UpdateUser($arFields = Array())
+	function UpdateUser($arFields = Array(), $FORMAT_DATE = false, $FORMAT_DATETIME = false)
 	{
+		global $DB;
+
 		$arFields["ACTIVE"] = "Y";
 		$arFields["PASSWORD"] = md5(uniqid(rand(), true));
 
@@ -167,6 +175,14 @@ class CControllerClient
 		unset($arFields["ID"]);
 		unset($arFields["TIMESTAMP_X"]);
 		unset($arFields["DATE_REGISTER"]);
+		if (
+			isset($arFields["PERSONAL_BIRTHDAY"])
+			&& $arFields["PERSONAL_BIRTHDAY"] != ''
+			&& $FORMAT_DATE !== false
+		)
+		{
+			$arFields["PERSONAL_BIRTHDAY"] = $DB->FormatDate($arFields["PERSONAL_BIRTHDAY"], $FORMAT_DATE, FORMAT_DATE);
+		}
 
 		$dbr_user = CUser::GetList($O, $B, Array("LOGIN_EQUAL_EXACT"=>$arFields["LOGIN"], "EXTERNAL_AUTH_ID"=>"__controller"));
 		if($ar_user = $dbr_user->Fetch())
@@ -692,12 +708,11 @@ class CControllerClient
 		if(is_array($arSubGroups))
 		{
 			$arSubordGroupID = Array();
-			for($i=0; $i<count($arSubGroups); $i++)
+			foreach($arSubGroups as $sub_group_id)
 			{
-				if(($sub_group_id = CGroup::GetIDByCode($arSubGroups[$i]))<=0)
-					continue;
-
-				$arSubordGroupID[] = $sub_group_id;
+				$sub_group_id = CGroup::GetIDByCode($sub_group_id);
+				if($sub_group_id > 0)
+					$arSubordGroupID[] = $sub_group_id;
 			}
 
 			if(!is_set($arBackup["security_subord_groups"], $group_code))

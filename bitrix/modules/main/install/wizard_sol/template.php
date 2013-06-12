@@ -25,7 +25,7 @@ class WizardTemplate extends CWizardTemplate
 				$strError .= $arError[0]."<br />";
 
 			if (strlen($strError) > 0)
-				$strError = '<div id="step-error">'.$strError."</div>";
+				$strError = '<div class="inst-note-block inst-note-block-red"><div class="inst-note-block-icon"></div><div class="inst-note-block-text">'.$strError."</div></div>";
 		}
 
 		$stepTitle = $obStep->GetTitle();
@@ -73,7 +73,9 @@ class WizardTemplate extends CWizardTemplate
 		}
 		else
 		{
-			if (file_exists($_SERVER["DOCUMENT_ROOT"].$wizardPathCustom."/images/".LANGUAGE_ID."/logo.gif"))
+			if (file_exists($_SERVER["DOCUMENT_ROOT"].$wizardPathCustom."/images/".LANGUAGE_ID."/logo.png"))
+				$logoImage = '<img src="'.$wizardPathCustom.'/images/'.LANGUAGE_ID.'/logo.png" alt="" />';
+			elseif (file_exists($_SERVER["DOCUMENT_ROOT"].$wizardPathCustom."/images/".LANGUAGE_ID."/logo.gif"))
 				$logoImage = '<img src="'.$wizardPathCustom.'/images/'.LANGUAGE_ID.'/logo.gif" alt="" />';
 			elseif (file_exists($_SERVER["DOCUMENT_ROOT"].$wizardPathCustom."/images/en/logo.gif"))
 				$logoImage = '<img src="'.$wizardPathCustom.'/images/en/logo.gif" alt="" />';
@@ -110,29 +112,22 @@ class WizardTemplate extends CWizardTemplate
 
 			if ($stepID == $currentStepID)
 			{
-				$class = 'class="selected"';
+				$class = ' inst-active-step';
 				$currentSuccess = true;
 			}
 			elseif ($currentSuccess)
 				$class = '';
 			else
-				$class = 'class="done"';
+				$class = ' inst-past-stage';
 
 			$strNavigation .= '
-			<tr '.$class.'>
-				<td class="menu-number">'.$stepNumber.'</td>
-				<td class="menu-name">'.$stepObject->GetTitle().'</td>
-				<td class="menu-end"></td>
-			</tr>
-			<tr class="menu-separator">
-				<td colspan="3"></td>
-			</tr>';
+			<div class="inst-sequence-step-item'.$class.'"><span class="inst-sequence-step-num">'.$stepNumber.'</span><span class="inst-sequence-step-text">'.$stepObject->GetTitle().'</span></div>';
 
 			$stepNumber++;
 		}
 
 		if (strlen($strNavigation) > 0)
-			$strNavigation = '<table width="100%" cellpadding="0" cellspacing="0" id="menu">'.$strNavigation.'</table>';
+			$strNavigation = '<div class="inst-sequence-steps">'.$strNavigation.'</div>';
 
 		$jsCode = "";
 		$jsCode = file_get_contents($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/install/wizard_sol/script.js");
@@ -151,312 +146,15 @@ class WizardTemplate extends CWizardTemplate
 			$buttons .= '<a onclick="this.blur(); return SubmitForm(\'prev\');" href="" class="button-prev"><span id="prev-button-caption">'.$currentStep->GetPrevCaption().'</span></a>';
 
 		return <<<HTML
+<!DOCTYPE html>
 <html>
 	<head>
 		<title>{$wizardName}</title>
 		<meta http-equiv="Content-Type" content="text/html; charset={$charset}">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<link rel="stylesheet" href="/bitrix/images/install/installer_style.css">
 		<style type="text/css">
-
-			html {height:100%;}
-
-			body 
-			{
-				background:#781813 url({$wizardPath}/bg_fill.gif) repeat;
-				margin:0;
-				padding:0;
-				padding-bottom:6px;
-				font-family: Arial, Verdana, Helvetica, sans-serif;
-				font-size:82%;
-				height:100%;
-				color:black;
-				box-sizing:border-box;
-				-moz-box-sizing:border-box;
-				-webkit-box-sizing: border-box;
-				-khtml-box-sizing: border-box;
-			}
-
-			#noscript {display:none;}
-
-			table {font-size:100.01%;}
-
-			a {color:#2676b9}
-
-			h3 {font-size:120%;}
-
-			#container
-			{
-				padding-top:6px;
-				height:100%;
-				box-sizing:border-box;
-				-moz-box-sizing:border-box;
-				-webkit-box-sizing: border-box;
-				-khtml-box-sizing: border-box;
-			}
-
-			#main-table
-			{
-				width:760px;
-				height:100%;
-				border-collapse:collapse;
-			}
-
-			#main-table td {padding:0;}
-
-			td.wizard-title
-			{
-				background:#fefbd2 url({$wizardPath}/top_gradient_fill.gif) repeat-x; 
-				height:77px; 
-				color:#19448a; 
-				font-size:140%; 
-			}
-			#step-title
-			{
-				color:#cd4d3e; 
-				margin: 20px; 
-				padding-bottom:20px; 
-				border-bottom:1px solid #d9d9d9; 
-				font-weight:bold;
-				font-size:120%;
-			}
-			#step-content {margin:20px 25px; zoom:1;}
-
-			table.data-table
-			{
-				width:100%;
-				border-collapse:collapse;
-				border:1px solid #d0d0d0;
-			}
-
-			table.data-table td
-			{
-				padding:5px !important;
-				border:1px solid #d0d0d0;
-			}
-
-			table.data-table td.header
-			{
-				background: #e3f0f9;
-				font-weight: bold;
-			}
-			table.data-table-no-border
-			{
-				width:100%;
-			}
-
-			table.data-table-no-border td, table.data-table-no-border th
-			{
-				padding:3px;
-			}
-
-			table.data-table-no-border th
-			{
-				text-align:right;
-				vertical-align:top;
-				font-weight: normal;
-			}
-
-			#menu td.menu-number, #menu td.menu-name
-			{
-				background:#eaeaea url({$wizardPath}/menu_fill.gif) repeat-x;
-				height:40px;
-				color:#c0c0c0;
-			}
-
-			#menu tr.menu-separator
-			{
-				height:2px;
-				background: none;
-			}
-
-			#menu tr.selected td.menu-number, #menu tr.selected td.menu-name
-			{
-				background:#b41d07 url({$wizardPath}/menu_fill_selected.gif) repeat-x;
-				color:white;
-			}
-
-			#menu tr.done
-			{
-				color:black;
-			}
-
-			#menu td.menu-end
-			{
-				background: url({$wizardPath}/menu_end.gif) repeat-x;
-				width:11px;
-			}
-
-			#menu tr.selected td.menu-end
-			{
-				background: url({$wizardPath}/menu_end_selected.gif) repeat-x;
-				width:11px;
-			}
-
-			#menu td.menu-number
-			{
-				width:30px;
-				font-size: 170%;
-				text-align:center;
-			}
-
-			#menu td.menu-name
-			{
-				font-size:110%;
-				padding-bottom:1px;
-			}
-
-			#copyright {font-size:95%; color:#606060; margin:4px 7px 0 7px; zoom:1;}
-
-			input.wizard-prev-button {background: #ffe681 url({$wizardPath}/prev.gif); border:none; width:116px; height:31px; font-weight:bold; padding-bottom:4px; cursor:pointer; cursor:hand;}
-			input.wizard-next-button {background: #ffe681 url({$wizardPath}/next.gif); border:none; width:116px; height:31px; font-weight:bold; padding-bottom:4px; cursor:pointer; cursor:hand;}
-
-			form {margin:0; padding:0;}
-			#step-error {color:red; padding:4px 4px 4px 25px;margin-bottom:4px; background:url({$wizardPath}/error.gif) no-repeat;}
-			small{font-size:85%;}
-
-			.required {color:red;}
-
-			div.buttons
-			{
-				padding-bottom: 35px;
-			}
-			a.button-next
-			{
-				background: transparent url({$wizardPath}/button_next.png) no-repeat scroll top right;
-				display: block;
-				float: right;
-				font-size:14px;
-				height: 31px;
-				padding-right: 35px;
-				margin-left:15px;
-				text-decoration: none;
-				font-weight:bold;
-			}
-	
-			a.button-next span
-			{
-				background: transparent url({$wizardPath}/button_next.png) no-repeat;
-				display: block;
-				line-height: 17px;
-				color:black;
-				padding: 5px 0 9px 18px;
-			}
-
-			a.button-prev
-			{
-				background: transparent url({$wizardPath}/button_prev.png) no-repeat scroll top right;
-				display: block;
-				float: right;
-				font-size:14px;
-				height: 31px;
-				padding-right: 18px;
-				text-decoration: none;
-				font-weight:bold;
-			}
-	
-			a.button-prev span
-			{
-				background: transparent url({$wizardPath}/button_prev.png) no-repeat;
-				display: block;
-				line-height: 17px;
-				color:black;
-				padding: 5px 0 9px 35px;
-			}
 			
-			#solutions-container
-			{
-				margin-bottom: 15px;
-			}
-			
-			.solution-item
-			{
-				display:block; 
-				border: 0; 
-				margin-bottom: 10px; 
-				color: Black;
-				text-decoration: none;
-				outline: none;
-			}
-						
-			.solution-item h4
-			{
-				margin: 10px;
-				margin-top: 9px; /*compensating 1px padding*/
-				font-family:Helvetica;
-				font-size:1.5em;
-			}
-			.solution-item p
-			{
-				margin: 10px;
-			}
-			
-			div.solution-item-wrapper
-			{
-				width: 97px;
-				float: left;
-			}
-			
-			.solution-picture-item
-			{
-				margin: 3px;
-				text-align: center;
-			}
-			
-			div.solution-description
-			{
-				margin-top: 3px;
-				margin-left: 4px;
-				color: #999;
-				text-align:left;
-			}
-			
-			.solution-picture-item img.solution-image
-			{
-				width: 70px; 
-				float: none;
-				margin: 7px 0px 7px;
-			}
-			
-			img.solution-image
-			{
-				width: 100px; 
-				float: left; 
-				margin: 10px;
-				border: 1px solid #CFCFCF;
-			}
-			input.solution-radio
-			{
-				float: left;
-				margin: 10px 7px 10px 10px;
-				height: 1.5em;
-			}
-			div.solution-inner-item
-			{
-				padding: 1px;
-				overflow: hidden;
-				zoom: 1;
-			}
-			
-			.solution-item div.solution-inner-item, 
-			.solution-item b 
-			{
-				background-color:#F7F7F7;
-				cursor: pointer;
-				cursor: hand;
-			}
-			
-			.solution-item:hover div.solution-inner-item, 
-			.solution-item:hover b 
-			{
-				background-color: #FFF0B2;
-			}
-			
-			.solution-item-selected div.solution-inner-item, 
-			.solution-item-selected b,
-			.solution-item-selected:hover div.solution-inner-item, 
-			.solution-item-selected:hover b
-			{
-				background-color: #CADBEC;
-			}
 			
 			#solution-preview
 			{
@@ -487,11 +185,6 @@ class WizardTemplate extends CWizardTemplate
 			.r3 { margin: 0 3px; }
 			.r2 { margin: 0 2px; }
 			.r1 { margin: 0 1px; }
-
-			div.wizard-input-form
-			{
-			}
-			
 			div.wizard-input-form-block
 			{
 				margin-bottom:30px;
@@ -546,7 +239,6 @@ class WizardTemplate extends CWizardTemplate
 				overflow: hidden;
 				margin-bottom: 5px;
 			}
-
 		</style>
 
 		<noscript>
@@ -554,6 +246,7 @@ class WizardTemplate extends CWizardTemplate
 				div {display: none;}
 				#noscript {padding: 3em; font-size: 130%; background:white; display:block;}
 			</style>
+			<p id="noscript">{$noscriptInfo}</p>
 		</noscript>
 
 		<script type="text/javascript">
@@ -590,83 +283,55 @@ class WizardTemplate extends CWizardTemplate
 	</head>
 
 <body id="bitrix_install_template">
-<p id="noscript">{$noscriptInfo}</p>
-<div id="container">
-
-	<table id="main-table" align="center">
-		<tr>
-			<td width="10" height="10"><img src="{$wizardPath}/corner_top_left.gif" width="10" height="10" alt="" /></td>
-			<td width="100%">
-				<table width="100%" height="100%" cellpadding="0" cellspacing="0">
-					<tr>
-						<td width="215" height="10" style="background:white;"></td>
-						<td width="525" height="10" style="background:#fefbd2;"></td>
-					</tr>
-				</table>
-			</td>
-			<td width="10" height="10"><img src="{$wizardPath}/corner_top_right.gif" width="10" height="10" alt="" /></td>
-		</tr>
-		<tr>
-			<td colspan="3" height="100%" style="background:white">
-				<table width="100%" height="100%" cellpadding="0" cellspacing="0">
-					<tr>
-						<td width="225" valign="top">
-							<!-- Left column -->
-							<table width="100%" height="100%" cellpadding="0" cellspacing="0">
-								<tr><td align="center" height="185">{$boxImage}</td></tr>
-								<tr>
-									<td height="100%" valign="top">
-										<!-- Menu -->
-										{$strNavigation}
-									</td>
-								</tr>
-								<tr><td align="center" height="100">{$logoImage}</td></tr>
-							</table>
-						</td>
-						<td width="535" valign="top">
-							<!-- Right column -->
-							<table width="100%" height="77" cellpadding="0" cellspacing="0">
-								<tr>
-									<td width="9" style="background:#fefbd2;"><img src="{$wizardPath}/top_gradient_begin.gif" width="9" height="77" alt="" /></td>
-									<td class="wizard-title" width="14">&nbsp;</td>
-									<td class="wizard-title">{$title}</td>
-								</tr>
-							</table>
-							<div id="step-title">{$stepTitle}</div>
-							{#FORM_START#}
-							<div id="step-content">
-								{$strError}
-								{#CONTENT#}
-								<br /><br /><div class="buttons">{$buttons}</div><br />
-							</div>
-							
-							{#FORM_END#}
-						</td>
-					</tr>
-				</table>
-			</td>
-		</tr>
-
-		<tr height="20" style="background:#f7f7f7;">
-			<td colspan="3">
-				<div id="copyright">
-					<table width="100%" height="100%" cellpadding="0" cellspacing="5">
+<table class="installer-main-table" id="container">
+	<tr>
+		<td class="installer-main-table-cell">
+			<div class="installer-block-wrap">
+				<div class="installer-block">
+					{#FORM_START#}
+					<table class="installer-block-table">
 						<tr>
-							<td>{$copyright}</td>
-							<td align="right">{$support}</td>
+							<td class="installer-block-cell-left">
+								<table class="inst-left-side-img-table">
+									<tr>
+										<td class="inst-left-side-img-cell">{$boxImage}</td>
+									</tr>
+								</table>
+								{$strNavigation}
+							</td>
+							<td class="installer-block-cell-right">
+								<div class="inst-title-block">
+									<div class="inst-title">{$title}</div>
+								</div>
+								<div class="inst-cont-title-wrap">
+									<div class="inst-cont-title">{$stepTitle}</div>
+								</div>
+								<div id="step-content">
+									{$strError}
+									{#CONTENT#}
+								</div>
+								<div class="instal-btn-wrap">
+									{#BUTTONS#}
+								</div>
+							</td>
+						</tr>
+						<tr>
+							<td class="installer-block-cell-left installer-block-cell-bottom">{$logoImage}</td>
+							<td class="installer-block-cell-right installer-block-cell-bottom"></td>
 						</tr>
 					</table>
+					{#FORM_END#}
 				</div>
-		</tr>
-		<tr>
-			<td width="10" height="10" valign="bottom"><img src="{$wizardPath}/corner_bottom_left.gif" width="10" height="10" alt="" /></td>
-			<td width="100%" style="background:#f7f7f7;"></td>
-			<td width="10" height="10" valign="bottom"><img src="{$wizardPath}/corner_bottom_right.gif" width="10" height="10" alt="" /></td>
-		</tr>
-	</table>
-	<script type="text/javascript">PreloadImages("{$wizardPath}/");</script>
-
-</div>
+				<div class="installer-footer">
+					<div class="instal-footer-left-side">{$copyright}</div>
+					<div class="instal-footer-right-side">{$support}</div>
+				</div>
+			</div>
+		</td>
+	</tr>
+</table>
+<script type="text/javascript">PreloadImages("{$wizardPath}/");</script>
+<div class="instal-bg"><div class="instal-bg-inner"></div></div>
 </body>
 </html>
 

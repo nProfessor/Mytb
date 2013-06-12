@@ -1,5 +1,12 @@
 <?
 if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true) die();
+/** @var CBitrixComponent $this */
+/** @var array $arParams */
+/** @var array $arResult */
+/** @global CUser $USER */
+global $USER;
+/** @global CMain $APPLICATION */
+global $APPLICATION;
 
 /*************************************************************************
 	Processing of received parameters
@@ -63,7 +70,7 @@ if(!is_array($arParams["GROUP_PERMISSIONS"]))
 $bUSER_HAVE_ACCESS = !$arParams["USE_PERMISSIONS"];
 if($arParams["USE_PERMISSIONS"] && isset($GLOBALS["USER"]) && is_object($GLOBALS["USER"]))
 {
-	$arUserGroupArray = $GLOBALS["USER"]->GetUserGroupArray();
+	$arUserGroupArray = $USER->GetUserGroupArray();
 	foreach($arParams["GROUP_PERMISSIONS"] as $PERM)
 	{
 		if(in_array($PERM, $arUserGroupArray))
@@ -207,14 +214,14 @@ if($arParams["SHOW_WORKFLOW"] || $this->StartResultCache(false, ($arParams["CACH
 			if($arParams["SECTION_ID"])
 				$arSectionFilter["ID"]=$arParams["SECTION_ID"];
 			elseif($arParams["SECTION_CODE"])
-				$arSectionFilter["CODE"]=$arParams["SECTION_CODE"];
+				$arSectionFilter["=CODE"]=$arParams["SECTION_CODE"];
 
 			$rsSection = CIBlockSection::GetList(Array(),$arSectionFilter);
 			$rsSection->SetUrlTemplates("", $arParams["SECTION_URL"]);
 			if($arResult["SECTION"] = $rsSection->GetNext())
 			{
 				$arResult["SECTION"]["PATH"] = array();
-				$rsPath = GetIBlockSectionPath($arResult["SECTION"]["IBLOCK_ID"], $arResult["SECTION"]["ID"]);
+				$rsPath = CIBlockSection::GetNavChain($arResult["SECTION"]["IBLOCK_ID"], $arResult["SECTION"]["ID"]);
 				$rsPath->SetUrlTemplates("", $arParams["SECTION_URL"]);
 				while($arPath=$rsPath->GetNext())
 				{

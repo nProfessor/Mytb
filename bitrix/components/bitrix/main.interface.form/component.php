@@ -1,24 +1,46 @@
-<?
+<?php
+/**
+ * Bitrix Framework
+ * @package bitrix
+ * @subpackage main
+ * @copyright 2001-2013 Bitrix
+ */
+
+/**
+ * Bitrix vars
+ *
+ * @var array $arParams
+ * @var array $arResult
+ * @var CBitrixComponent $this
+ * @global CMain $APPLICATION
+ * @global CUser $USER
+ */
+
 if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== true)
 	die();
 
 if(!is_array($arParams["TABS"]))
 	$arParams["TABS"] = array();
 
-if($arParams["CAN_EXPAND_TABS"] <> 'N' && $arParams["CAN_EXPAND_TABS"] !== false)
+if($arParams["CAN_EXPAND_TABS"] !== 'N' && $arParams["CAN_EXPAND_TABS"] !== false)
 	$arParams["CAN_EXPAND_TABS"] = true;
 else
 	$arParams["CAN_EXPAND_TABS"] = false;
 
-if($arParams["SHOW_FORM_TAG"] <> 'N' && $arParams["SHOW_FORM_TAG"] !== false)
+if($arParams["SHOW_FORM_TAG"] !== 'N' && $arParams["SHOW_FORM_TAG"] !== false)
 	$arParams["SHOW_FORM_TAG"] = true;
 else
 	$arParams["SHOW_FORM_TAG"] = false;
 
-if($arParams["SHOW_SETTINGS"] <> 'N' && $arParams["SHOW_SETTINGS"] !== false)
+if($arParams["SHOW_SETTINGS"] !== 'N' && $arParams["SHOW_SETTINGS"] !== false)
 	$arParams["SHOW_SETTINGS"] = true;
 else
 	$arParams["SHOW_SETTINGS"] = false;
+
+if($arParams["USE_THEMES"] !== 'N' && $arParams["USE_THEMES"] !== false && CPageOption::GetOptionString("main.interface", "use_themes", "Y") !== "N")
+	$arParams["USE_THEMES"] = true;
+else
+	$arParams["USE_THEMES"] = false;
 
 if($arParams["MAX_FILE_SIZE"] == '')
 	$arParams["MAX_FILE_SIZE"] = 102400;
@@ -33,7 +55,7 @@ $aOptions = CUserOptions::GetOption("main.interface.form", $arParams["FORM_ID"],
 if(!is_array($aOptions["tabs"]))
 	$aOptions["tabs"] = array();
 
-if($arParams["THEME_GRID_ID"] <> '')
+if($arParams["USE_THEMES"] && $arParams["THEME_GRID_ID"] <> '')
 {
 	$aGridOptions = CUserOptions::GetOption("main.interface.grid", $arParams["THEME_GRID_ID"], array());
 	if($aGridOptions["theme"] <> '')
@@ -43,12 +65,21 @@ if($arParams["THEME_GRID_ID"] <> '')
 $arResult["OPTIONS"] = $aOptions;
 
 $arResult["GLOBAL_OPTIONS"] = CUserOptions::GetOption("main.interface", "global", array(), 0);
-if($arResult["GLOBAL_OPTIONS"]["theme_template"][SITE_TEMPLATE_ID] <> '')
-	$arResult["GLOBAL_OPTIONS"]["theme"] = $arResult["GLOBAL_OPTIONS"]["theme_template"][SITE_TEMPLATE_ID];
 
-if($arResult["OPTIONS"]["theme"] == '')
-	$arResult["OPTIONS"]["theme"] = $arResult["GLOBAL_OPTIONS"]["theme"];
+if($arParams["USE_THEMES"])
+{
+	if($arResult["GLOBAL_OPTIONS"]["theme_template"][SITE_TEMPLATE_ID] <> '')
+		$arResult["GLOBAL_OPTIONS"]["theme"] = $arResult["GLOBAL_OPTIONS"]["theme_template"][SITE_TEMPLATE_ID];
 
+	if($arResult["OPTIONS"]["theme"] == '')
+		$arResult["OPTIONS"]["theme"] = $arResult["GLOBAL_OPTIONS"]["theme"];
+
+	$arResult["OPTIONS"]["theme"] = preg_replace("/[^a-z0-9_.-]/i", "", $arResult["OPTIONS"]["theme"]);
+}
+else
+{
+	$arResult["OPTIONS"]["theme"] = '';
+}
 //*********************
 // Tabs manipulating
 //*********************
@@ -139,4 +170,3 @@ else
 //*********************
 
 $this->IncludeComponentTemplate();
-?>

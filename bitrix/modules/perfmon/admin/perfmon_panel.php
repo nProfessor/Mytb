@@ -734,7 +734,7 @@ require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_aft
 <script>
 var page_rate_count = 10;
 var session_count = <?echo $bSessionDB? '1': '10'?>;
-var duration = <?echo CPerfomanceKeeper::IsActive()? 0: COption::GetOptionInt("perfmon", "total_mark_duration", 0)?>;
+var duration = <?echo CPerfomanceKeeper::IsActive()? 0: intval(COption::GetOptionInt("perfmon", "total_mark_duration", 0))?>;
 
 function StopTest()
 {
@@ -805,7 +805,7 @@ function PageRate()
 
 	page_rate_count--;
 
-	var url = 'perfmon_panel.php?lang=<?echo LANGUAGE_ID?>&<?echo bitrix_sessid_get()?>&test=Y&show_page_exec_time=Y';
+	var url = 'perfmon_panel.php?lang=<?echo LANGUAGE_ID?>&<?echo bitrix_sessid_get()?>&test=Y';
 	if(page_rate_count == 0)
 		url += '&last=Y';
 
@@ -1307,11 +1307,17 @@ else
 			case "cphpcacheapc":
 				$cache_type = GetMessage("PERFMON_PANEL_CACHE_STORAGE_APC");
 				break;
+			case "cphpcachexcache":
+				$cache_type = GetMessage("PERFMON_PANEL_CACHE_STORAGE_XCACHE");
+				break;
 			case "cphpcachefiles":
 				$cache_type = GetMessage("PERFMON_PANEL_CACHE_STORAGE_FILES");
 				break;
 			case "cphpcachememcachecluster":
 				$cache_type = GetMessage("PERFMON_PANEL_CACHE_STORAGE_CLUSTER");
+				break;
+			default:
+				$cache_type = get_class($obCache->_cache);
 				break;
 			}
 			?>

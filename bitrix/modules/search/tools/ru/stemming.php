@@ -3,41 +3,32 @@ global $STEMMING_RU_VOWELS;
 $STEMMING_RU_VOWELS = "АЕИОУЫЭЮЯ";
 global $STEMMING_RU_PERFECTIVE_GERUND;
 $STEMMING_RU_PERFECTIVE_GERUND = "/(ЫВШИСЬ|ИВШИСЬ|ЯВШИСЬ|АВШИСЬ|ЫВШИ|ИВШИ|ЯВШИ|АВШИ|ЫВ|ИВ|ЯВ|АВ)$/".BX_UTF_PCRE_MODIFIER;
-global $STEMMING_RU_REFLEXIVE;
-$STEMMING_RU_REFLEXIVE=array("СЯ", "СЬ");
-global $STEMMING_RU_ADJECTIVE;
-$STEMMING_RU_ADJECTIVE=array("ЕЕ", "ИЕ", "ЫЕ", "ОЕ", "ИМИ", "ЫМИ", "ЕЙ", "ИЙ", "ЫЙ", "ОЙ", "ЕМ", "ИМ", "ЫМ", "ОМ", "ЕГО", "ОГО", "ЕМУ", "ОМУ", "ИХ", "ЫХ", "УЮ", "ЮЮ", "АЯ", "ЯЯ", "ОЮ", "ЕЮ");
-global $STEMMING_RU_PARTICIPLE_GR1;
-$STEMMING_RU_PARTICIPLE_GR1=array("ЕМ", "НН", "ВШ", "ЮЩ", "Щ");
-global $STEMMING_RU_PARTICIPLE_GR2;
-$STEMMING_RU_PARTICIPLE_GR2=array("ИВШ", "ЫВШ", "УЮЩ");
-global $STEMMING_RU_ADJECTIVAL_GR1;
+
+$STEMMING_RU_ADJECTIVE=array("ЕЕ"=>2, "ИЕ"=>2, "ЫЕ"=>2, "ОЕ"=>2, "ИМИ"=>3, "ЫМИ"=>3, "ЕЙ"=>2, "ИЙ"=>2, "ЫЙ"=>2, "ОЙ"=>2, "ЕМ"=>2, "ИМ"=>2, "ЫМ"=>2, "ОМ"=>2, "ЕГО"=>2, "ОГО"=>3, "ЕМУ"=>3, "ОМУ"=>3, "ИХ"=>2, "ЫХ"=>2, "УЮ"=>2, "ЮЮ"=>2, "АЯ"=>2, "ЯЯ"=>2, "ОЮ"=>2, "ЕЮ"=>2);
+$STEMMING_RU_PARTICIPLE_GR1=array("ЕМ"=>2, "НН"=>2, "ВШ"=>2, "ЮЩ"=>2, "Щ"=>1);
+$STEMMING_RU_PARTICIPLE_GR2=array("ИВШ"=>3, "ЫВШ"=>3, "УЮЩ"=>3);
 $STEMMING_RU_ADJECTIVAL_GR1=array();
-global $STEMMING_RU_ADJECTIVAL_GR2;
 $STEMMING_RU_ADJECTIVAL_GR2=array();
-foreach($STEMMING_RU_ADJECTIVE as $i)
+foreach($STEMMING_RU_ADJECTIVE as $i => $il)
 {
-	foreach($STEMMING_RU_PARTICIPLE_GR1 as $j) $STEMMING_RU_ADJECTIVAL_GR1[]=$j.$i;
-	foreach($STEMMING_RU_PARTICIPLE_GR2 as $j) $STEMMING_RU_ADJECTIVAL_GR2[]=$j.$i;
+	foreach($STEMMING_RU_PARTICIPLE_GR1 as $j => $jl) $STEMMING_RU_ADJECTIVAL_GR1[$j.$i]=$jl+$il;
+	foreach($STEMMING_RU_PARTICIPLE_GR2 as $j => $jl) $STEMMING_RU_ADJECTIVAL_GR2[$j.$i]=$jl+$il;
 }
 global $STEMMING_RU_ADJECTIVAL1;
-usort($STEMMING_RU_ADJECTIVAL_GR1, "stemming_ru_sort");
-$STEMMING_RU_ADJECTIVAL1="/([АЯ])(".implode("|", $STEMMING_RU_ADJECTIVAL_GR1).")$/".BX_UTF_PCRE_MODIFIER;
+arsort($STEMMING_RU_ADJECTIVAL_GR1);
+$STEMMING_RU_ADJECTIVAL1="/([АЯ])(".implode("|", array_keys($STEMMING_RU_ADJECTIVAL_GR1)).")$/".BX_UTF_PCRE_MODIFIER;
 
 global $STEMMING_RU_ADJECTIVAL2;
-foreach($STEMMING_RU_ADJECTIVE as $i)
-	$STEMMING_RU_ADJECTIVAL_GR2[]=$i;
-usort($STEMMING_RU_ADJECTIVAL_GR2, "stemming_ru_sort");
-$STEMMING_RU_ADJECTIVAL2="/(".implode("|", $STEMMING_RU_ADJECTIVAL_GR2).")$/".BX_UTF_PCRE_MODIFIER;
+foreach($STEMMING_RU_ADJECTIVE as $i => $il)
+	$STEMMING_RU_ADJECTIVAL_GR2[$i]=$il;
+arsort($STEMMING_RU_ADJECTIVAL_GR2);
+$STEMMING_RU_ADJECTIVAL2="/(".implode("|", array_keys($STEMMING_RU_ADJECTIVAL_GR2)).")$/".BX_UTF_PCRE_MODIFIER;
 
 global $STEMMING_RU_VERB1;
 $STEMMING_RU_VERB1="/([АЯ])(ННО|ЕТЕ|ЙТЕ|ЕШЬ|ЛА|НА|ЛИ|ЕМ|ЛО|НО|ЕТ|ЮТ|НЫ|ТЬ|Й|Л|Н)$/".BX_UTF_PCRE_MODIFIER;
 
-global $STEMMING_RU_VERB_GR2;
-$STEMMING_RU_VERB_GR2=array("ИЛА", "ЫЛА", "ЕНА", "ЕЙТЕ", "УЙТЕ", "ИТЕ", "ИЛИ", "ЫЛИ", "ЕЙ", "УЙ", "ИЛ", "ЫЛ", "ИМ", "ЫМ", "ЕН", "ИЛО", "ЫЛО", "ЕНО", "ЯТ", "УЕТ", "УЮТ", "ИТ", "ЫТ", "ЕНЫ", "ИТЬ", "ЫТЬ", "ИШЬ", "УЮ", "Ю");
-usort($STEMMING_RU_VERB_GR2, "stemming_ru_sort");
 global $STEMMING_RU_VERB2;
-$STEMMING_RU_VERB2="/(".implode("|", $STEMMING_RU_VERB_GR2).")$/".BX_UTF_PCRE_MODIFIER;
+$STEMMING_RU_VERB2="/(ЕЙТЕ|УЙТЕ|ИЛА|ЫЛА|ЕНА|ИТЕ|ИЛИ|ЫЛИ|ИЛО|ЫЛО|ЕНО|УЕТ|УЮТ|ЕНЫ|ИТЬ|ЫТЬ|ИШЬ|ЕЙ|УЙ|ИЛ|ЫЛ|ИМ|ЫМ|ЕН|ЯТ|ИТ|ЫТ|УЮ|Ю)$/".BX_UTF_PCRE_MODIFIER;
 global $STEMMING_RU_NOUN;
 $STEMMING_RU_NOUN="/(ИЯМИ|ИЯХ|ИЕМ|ИЯМ|АМИ|ЯМИ|ЬЯ|ИЯ|ЬЮ|ИЮ|ЯХ|АХ|ОМ|АМ|ЕМ|ЯМ|ИЙ|ОЙ|ЕЙ|ИЕЙ|ИИ|ЕИ|ЬЕ|ИЕ|ОВ|ЕВ|Ю|Ь|Ы|У|О|Й|И|Е|Я|А)$/".BX_UTF_PCRE_MODIFIER;
 function stemming_letter_ru()
@@ -95,13 +86,9 @@ function stemming_ru($word, $flags = 0)
 {
 	global $STEMMING_RU_VOWELS;
 	global $STEMMING_RU_PERFECTIVE_GERUND;
-	global $STEMMING_RU_REFLEXIVE;
-	global $STEMMING_RU_ADJECTIVE;
-	global $STEMMING_RU_PARTICIPLE_GR2;
 	global $STEMMING_RU_ADJECTIVAL1;
 	global $STEMMING_RU_ADJECTIVAL2;
 	global $STEMMING_RU_VERB1;
-	global $STEMMING_RU_VERB_GR2;
 	global $STEMMING_RU_VERB2;
 	global $STEMMING_RU_NOUN;
 	//There is a 33rd letter, ё (?), but it is rarely used, and we assume it is mapped into е (e).
@@ -113,6 +100,7 @@ function stemming_ru($word, $flags = 0)
 		"МЕНЮ"=>true,
 		"ГРАНАТ"=>true,
 		"ГРАНИТ"=>true,
+		"ТЕРМИНАЛ"=>true,
 		"ИЛИ"=>true,
 		"РУКАВ"=>true,
 		"ПРИЕМ"=>true,

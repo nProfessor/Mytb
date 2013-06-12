@@ -21,10 +21,10 @@ BX.adminPanel = function()
 		}
 
 		return BX.PreventDefault(e);
-	}
+	};
 
 	BX.ready(BX.defer(this.Init, this));
-}
+};
 
 BX.adminPanel.isFixed = BX.False;
 
@@ -48,22 +48,22 @@ BX.adminPanel.prototype.Init = function()
 
 		(BX.defer(this._recountWrapHeight, this))();
 	}
-}
+};
 
 BX.adminPanel.prototype.registerButton = function(id, config)
 {
 	this.buttons.push({ID: id, CONFIG: config});
-}
+};
 
 BX.adminPanel.prototype.setButtonMenu = function(button)
 {
 	BX.bind(button.BUTTON, 'click', BX.delegate(this._showMenu, button))
-}
+};
 
 BX.adminPanel.prototype.isFixed = function()
 {
 	return BX.hasClass(document.documentElement, 'adm-header-fixed');
-}
+};
 
 BX.adminPanel.prototype.Fix = function(el)
 {
@@ -84,7 +84,7 @@ BX.adminPanel.prototype.Fix = function(el)
 
 	BX.userOptions.save('admin_panel', 'settings', 'fix', (bFixed ? 'off':'on'));
 	BX.onCustomEvent('onAdminPanelFix', [!bFixed]);
-}
+};
 
 BX.adminPanel.prototype.addDesktop = function()
 {
@@ -95,14 +95,14 @@ BX.adminPanel.prototype.addDesktop = function()
 		'resizable': true,
 		'buttons': [BX.CAdminDialog.btnSave, BX.CAdminDialog.btnCancel]
 	})).Show();
-}
+};
 
 BX.adminPanel.prototype.recalcDesktopSettingsDialog = function(e)
 {
 	if(!e)
 		e = window.event;
 
-	col_count = this.value;
+	var col_count = this.value;
 	if (e.type == 'blur' && col_count.length <= 0)
 	{
 		col_count = current_col_count;
@@ -116,7 +116,7 @@ BX.adminPanel.prototype.recalcDesktopSettingsDialog = function(e)
 	else if (e.type == 'keyup' && col_count.length > 0)
 		current_col_count = col_count;
 
-	var tableNode = BX.findParent(this, {'tag':'tbody'})
+	var tableNode = BX.findParent(this, {'tag':'tbody'});
 
 	var arItems = BX.findChildren(tableNode, {'tag':'tr', 'class':'bx-gd-admin-settings-col'}, true);
 	if (!arItems)
@@ -130,7 +130,7 @@ BX.adminPanel.prototype.recalcDesktopSettingsDialog = function(e)
 
 	var col_add = col_count - i;
 
-	for (var i = 0; i < col_add; i++)
+	for (i = 0; i < col_add; i++)
 	{
 		tableNode.appendChild(BX.create('tr', {
 			props: {
@@ -165,7 +165,7 @@ BX.adminPanel.prototype.recalcDesktopSettingsDialog = function(e)
 			]
 		}));
 	}
-}
+};
 
 BX.adminPanel.prototype.setTitle = function(title)
 {
@@ -186,14 +186,14 @@ BX.adminPanel.prototype.setTitle = function(title)
 			BX.adjust(p, {text: title});
 		}
 	}
-}
+};
 
 BX.adminPanel.prototype._recountWrapHeight = function()
 {
 	if (this.isFixed())
 		BX.adminPanel.panel.parentNode.style.height = BX.adminPanel.panel.offsetHeight + 'px';
 	BX.onCustomEvent(this, 'onAdminPanelChange');
-}
+};
 
 BX.adminPanel.prototype.Notify = function(str)
 {
@@ -226,7 +226,7 @@ BX.adminPanel.prototype.Notify = function(str)
 
 BX.adminPanel.prototype.hideNotify = function(element)
 {
-	var element = BX.type.isDomNode(element)? element: this;
+	element = BX.type.isDomNode(element)? element: this;
 
 	if (!!element && !!element.parentNode && !!element.parentNode.parentNode)
 	{
@@ -249,7 +249,7 @@ BX.adminPanel.prototype.hideNotify = function(element)
 
 	(BX.defer(this._recountWrapHeight, this))();
 	setTimeout(BX.proxy(this._recountWrapHeight, this), 310);
-}
+};
 
 BX.adminPanel.Redirect =
 BX.adminPanel.prototype.Redirect = function(args, url, e)
@@ -277,7 +277,7 @@ BX.adminPanel.prototype._reShowWait = function()
 {
 	BX.adminPanel.closeWait(this);
 	BX.adminPanel.showWait(this);
-}
+};
 
 BX.adminPanel.showWait =
 BX.adminPanel.prototype.showWait = function(el)
@@ -289,7 +289,7 @@ BX.adminPanel.prototype.showWait = function(el)
 	if (BX.type.isElementNode(el)
 		&& (el.type == 'button' || el.type == 'submit')
 		&& !!el.name
-		&& BX.util.in_array(el.name, ['save', 'apply', 'cancel', 'save_and_add', 'set_filter', 'del_filter'])
+		&& BX.util.in_array(el.name.toLowerCase(), ['save', 'apply', 'cancel', 'save_and_add', 'set_filter', 'del_filter', 'template_preview'])
 		)
 	{
 		BX.defer(function(){el.disabled = true})();
@@ -312,7 +312,8 @@ BX.adminPanel.prototype.showWait = function(el)
 
 		return el.bxwaiter;
 	}
-}
+	return null;
+};
 
 BX.adminPanel.closeWait =
 BX.adminPanel.prototype.closeWait = function(el)
@@ -336,7 +337,7 @@ BX.adminPanel.prototype.closeWait = function(el)
 			BX.adminPanel.lastWaitElement = null;
 	}
 
-}
+};
 
 /**************************** admin forms *************************************/
 
@@ -385,6 +386,7 @@ BX.adminFormTools = {
 				return el;
 			}
 		}
+		return null;
 	},
 
 	modifyCheckbox: function(el)
@@ -450,7 +452,7 @@ BX.adminFormTools = {
 		}
 		else
 		{
-			var s = '';
+			s = '';
 			for(var i = 0; i < v.length; i++)
 			{
 				var n = v[i].name || v[i];
@@ -488,6 +490,7 @@ BX.adminFormTools = {
 				}
 			}
 		}
+		return null;
 	},
 
 	modifyButton: function(el)
@@ -512,7 +515,7 @@ BX.adminFormTools = {
 			return el;
 		}
 	}
-}
+};
 
 /*************************** admin menu ***************************************/
 
@@ -553,7 +556,7 @@ BX.adminMenu = function()
 		{
 			_ondestdragstop.apply(this);
 		}
-	}
+	};
 
 	var _ondestdragfinish = this._ondestdragfinish = {
 		item: BX.delegate(function(node)
@@ -612,7 +615,7 @@ BX.adminMenu = function()
 		var key = !!this.items[node.BXMENUITEM].CONFIG.FAV_ID ? 'fav' : 'item';
 
 		this.dest_cont[key].bxprogress = true;
-		BX.adminFav.showDDBlock(this.dest_cont[key], BX.proxy(__r, this.dest[key]))
+		BX.adminFav.showDDBlock(this.dest_cont[key], BX.proxy(__r, this.dest[key]));
 
 		BX.bind(window, 'scroll', BX.proxy(__r, this.dest[key]));
 	}, this);
@@ -625,7 +628,7 @@ BX.adminMenu = function()
 				if (!this.bxover && !this.bxprogress)
 					_ondestdragstop.apply(this);
 			}, this), 100);
-	}
+	};
 
 	var _ondestdragstop = this._ondestdragstop = BX.delegate(function()
 	{
@@ -1015,13 +1018,13 @@ BX.adminMenu.prototype._item_onmouseover = function()
 {
 	this.bxover = true;
 	setTimeout(BX.proxy(BX.adminMenu.__item_onmouseover, this), 500);
-}
+};
 
 BX.adminMenu.prototype._item_onmouseout = function()
 {
 	this.bxover = false;
 	setTimeout(BX.proxy(BX.adminMenu.__item_onmouseout, this), 50);
-}
+};
 
 BX.adminMenu.prototype.__item_onmouseover = function()
 {
@@ -1054,7 +1057,7 @@ BX.adminMenu.prototype.__item_onmouseover = function()
 			});
 		}
 	}
-}
+};
 
 BX.adminMenu.prototype.__item_onmouseout = function()
 {
@@ -1062,7 +1065,7 @@ BX.adminMenu.prototype.__item_onmouseout = function()
 	{
 		this.MSOVERMIRROR.style.display = 'none';
 	}
-}
+};
 
 BX.adminMenu.prototype._registerItem = function(i)
 {
@@ -1115,22 +1118,22 @@ BX.adminMenuResizer = function(node, startState)
 	this.dragger = document.body.appendChild(BX.create('DIV', {
 		props: {className: 'adm-resize-block' + (this.bMinimized ? ' adm-resize-block-close' : '')},
 		events: {
-			mouseover: function() {
+			mouseover: function(){
 				if (!this.bDrag)
 				{
 					var el = this;
 					el.bxover = true;
 					setTimeout(function(){
-						if (el.bxover && !this.bDrag)
+						if(el.bxover && !el.bDrag)
 							BX.addClass(el, 'adm-resize-block-hover');
 					}, 100);
 				}
 			},
-			mouseout: function() {
+			mouseout: function(){
 				var el = this;
 				el.bxover = false;
 				setTimeout(function(){
-					if (!el.bxover)
+					if(!el.bxover)
 						BX.removeClass(el, 'adm-resize-block-hover');
 				}, 50);
 			}
@@ -1166,7 +1169,7 @@ BX.adminMenuResizer.prototype.setDraggerPos = function()
 {
 	this.scrollLeft = BX.GetWindowScrollPos().scrollLeft;
 	this.dragger.style.left = this.minimizer.style.left = ((this.bMinimized ? 10 : this.pos-5) - this.scrollLeft) + 'px';
-}
+};
 
 BX.adminMenuResizer.prototype.Start = function()
 {
@@ -1453,19 +1456,19 @@ BX.adminFav = {
 			el.BXITEMSID = items_id;
 
 			if (!!el.BXFAVID)
-				BX.adminFav._titleLinkClickDel()
+				BX.adminFav._titleLinkClickDel();
 			else
-				BX.adminFav._titleLinkClickAdd()
+				BX.adminFav._titleLinkClickAdd();
 
 			el.BXFAVSET = true;
 		}
 	},
 
-	_titleLinkClickAdd: function(items_id)
+	_titleLinkClickAdd: function()
 	{
 		BX.adminFav.add(
 			BX.adminFav.titleNode.textContent||BX.adminFav.titleNode.innerText,
-			BX.adminHistory.pushSupported ? window.location.href : BX('navchain-link').getAttribute('href'),
+			BX.adminHistory.pushSupported ? window.location.pathname+window.location.search : BX('navchain-link').getAttribute('href'),
 			BX.adminFav.titleLink.BXITEMSID,
 			'',
 			function(result) {
@@ -1627,7 +1630,7 @@ BX.adminFav = {
 		obj.parentNode.style.display = "none";
 		BX.userOptions.save('favorites_menu', "hint", "hide", "Y");
 	}
-}
+};
 
 /**************************** admin grid ********************************/
 
@@ -1636,6 +1639,7 @@ BX.adminList = function(table_id, params)
 	this.table_id = table_id;
 	this.params = {
 		context_ctrl: !!(params||{}).context_ctrl,
+		context_menu: !!(params||{}).context_menu,
 		FIX_HEADER: !!(params||{}).FIX_HEADER,
 		FIX_FOOTER: !!(params||{}).FIX_FOOTER
 	};
@@ -1651,7 +1655,7 @@ BX.adminList = function(table_id, params)
 
 	BX.ready(BX.defer(this.Init, this));
 	BX.garbage(BX.proxy(this.Destroy, this));
-}
+};
 
 BX.adminList.prototype.Init = function()
 {
@@ -1666,7 +1670,7 @@ BX.adminList.prototype.Init = function()
 
 	this.ACTION_SELECTOR = this.FORM.action;
 	this.ACTION_BUTTON = this.FORM.apply;
-	this.ACTION_TARGET = this.FORM.action_target
+	this.ACTION_TARGET = this.FORM.action_target;
 
 	this.BUTTON_EDIT = BX('action_edit_button');
 	this.BUTTON_DELETE = BX('action_delete_button');
@@ -1682,7 +1686,11 @@ BX.adminList.prototype.Init = function()
 			{
 				BX.bind(this.TABLE.tBodies[0].rows[i], 'contextmenu', BX.proxy(function(e)
 				{
-					if(!this.params.context_ctrl && e.ctrlKey || this.params.context_ctrl && !e.ctrlKey)
+					if(!this.params.context_menu)
+						return;
+
+					e = e||window.event;
+					if(!this.params.context_ctrl && e.ctrlKey || this.params.context_ctrl && !e.ctrlKey || e.target && e.target.tagName.toUpperCase() == 'A')
 						return;
 
 					BX.adminList.ShowMenu({x: e.pageX || (e.clientX + document.body.scrollLeft), y: e.pageY || (e.clientY + document.body.scrollTop)}, BX.proxy_context.oncontextmenu(), BX.proxy_context);
@@ -1699,7 +1707,7 @@ BX.adminList.prototype.Init = function()
 	var checkboxList = BX.findChildren(this.LAYOUT || this.TABLE, {tagName: 'INPUT', property: {type: 'checkbox'}}, true);
 	if (!!checkboxList)
 	{
-		for (var i = 0; i < checkboxList.length; i++)
+		for (i = 0; i < checkboxList.length; i++)
 		{
 			BX.adminFormTools.modifyCheckbox(checkboxList[i]);
 			if(checkboxList[i].name == 'ID[]')
@@ -1781,7 +1789,6 @@ BX.adminList.prototype.Init = function()
 
 		if (!!this.FOOTER_EDIT)
 		{
-			var wndSize = BX.GetWindowSize()
 			if (!!this.CHECKBOX_DISABLED[0])
 			{
 				pos = BX.pos(this.CHECKBOX_DISABLED[0].parentNode);
@@ -1797,12 +1804,12 @@ BX.adminList.prototype.Init = function()
 	}
 
 	this.UpdateCheckboxCounter();
-}
+};
 
 BX.adminList.prototype.ReInit = function()
 {
 	BX.defer(this.Init, this)();
-}
+};
 
 BX.adminList.prototype.GetAdminList = function(url, callback)
 {
@@ -1821,24 +1828,24 @@ BX.adminList.prototype.GetAdminList = function(url, callback)
 				this._GetAdminList(result);
 
 				if (callback && BX.type.isFunction(callback))
-					callback();
+					callback(url);
 			}
 		}, this),
 		onfailure: function() {BX.debug('GetAdminList', arguments)}
 	});
-}
+};
 
 BX.adminList.prototype._GetAdminList = function(result)
 {
 	BX.adminPanel.closeWait();
 
-	this.Destroy(false);
+	this.Destroy();
 	this.LAYOUT.innerHTML = result;
 
 	this.ReInit();
 
 	BX.adminChain.addItems(this.table_id + "_navchain_div");
-}
+};
 
 BX.adminList.prototype.PostAdminList = function(url)
 {
@@ -1850,7 +1857,7 @@ BX.adminList.prototype.PostAdminList = function(url)
 
 	this.FORM.action = url;
 	BX.submit(this.FORM);
-}
+};
 
 BX.adminList.prototype.UpdateCheckboxCounter = function()
 {
@@ -1881,7 +1888,7 @@ BX.adminList.prototype.UpdateCheckboxCounter = function()
 		if (!!this.ACTION_BUTTON)
 			this.ACTION_BUTTON.disabled = this.ACTION_SELECTOR.selectedIndex <= 0;
 	}
-}
+};
 
 BX.adminList.prototype.Sort = function(url, bCheckCtrl, args)
 {
@@ -1899,7 +1906,7 @@ BX.adminList.prototype.Sort = function(url, bCheckCtrl, args)
 	}
 
 	this.GetAdminList(url);
-}
+};
 
 
 BX.adminList.prototype.RowClick = function(e)
@@ -1912,14 +1919,12 @@ BX.adminList.prototype.RowClick = function(e)
 	if (e.ctrlKey || e.metaKey || e.shiftKey && !this._last_row)
 	{
 		var c = BX.proxy_context.cells[0].firstChild;
-		c.checked = !c.checked
+		c.checked = !c.checked;
 
 		this.SelectRow(c, c.checked);
 
 		this.UpdateCheckboxCounter();
 		this.EnableActions();
-
-		return BX.PreventDefault(e);
 	}
 
 	if (e.shiftKey)
@@ -1933,7 +1938,7 @@ BX.adminList.prototype.RowClick = function(e)
 
 		for (var i = ixStart; i <= ixFinish; i++)
 		{
-			var c = tBody.rows[i-1].cells[0].firstChild;
+			c = tBody.rows[i-1].cells[0].firstChild;
 			if (!c.checked)
 			{
 				c.checked = true;
@@ -1943,10 +1948,8 @@ BX.adminList.prototype.RowClick = function(e)
 
 		this.UpdateCheckboxCounter();
 		this.EnableActions();
-
-		return BX.PreventDefault(e);
 	}
-}
+};
 
 BX.adminList.prototype._checkboxClick = function(e)
 {
@@ -1959,7 +1962,7 @@ BX.adminList.prototype._checkboxClick = function(e)
 	this.EnableActions();
 
 	return BX.eventCancelBubble(e);
-}
+};
 
 BX.adminList.prototype._checkboxCellClick = function(e)
 {
@@ -1975,7 +1978,7 @@ BX.adminList.prototype._checkboxCellClick = function(e)
 	this.EnableActions();
 
 	return BX.PreventDefault(e);
-}
+};
 
 BX.adminList.prototype.SelectRow = function(el, bSelect)
 {
@@ -2001,7 +2004,7 @@ BX.adminList.prototype.SelectRow = function(el, bSelect)
 		this._last_row = el;
 		this.num_checked += bSelect ? 1 : -1;
 	}
-}
+};
 
 BX.adminList.prototype.SelectAllRows = function(node)
 {
@@ -2018,7 +2021,7 @@ BX.adminList.prototype.SelectAllRows = function(node)
 
 	this.UpdateCheckboxCounter();
 	this.EnableActions();
-}
+};
 
 BX.adminList.prototype.IsActionEnabled = function(action)
 {
@@ -2026,7 +2029,7 @@ BX.adminList.prototype.IsActionEnabled = function(action)
 		return !(this.ACTION_TARGET && this.ACTION_TARGET.checked) && (this.num_checked > 0);
 	else
 		return (this.ACTION_TARGET && this.ACTION_TARGET.checked) || (this.num_checked > 0);
-}
+};
 
 BX.adminList.prototype.EnableActions = function()
 {
@@ -2045,7 +2048,7 @@ BX.adminList.prototype.EnableActions = function()
 		else
 			BX.addClass(this.BUTTON_DELETE, 'adm-edit-disable');
 	}
-}
+};
 
 BX.adminList.prototype.Destroy = function()
 {
@@ -2064,21 +2067,21 @@ BX.adminList.prototype.Destroy = function()
 
 	this._last_row = null;
 	this.num_checked = 0;
-}
+};
 
 BX.adminList.prototype.ShowSettings = function(url)
 {
 	(new BX.CDialog({
-			content_url: url,
-			resizable: true,
-			height: 475,
-			width: 560
-		})).Show();
-}
+		content_url: url,
+		resizable: true,
+		height: 475,
+		width: 560
+	})).Show();
+};
 
 BX.adminList.prototype.SaveSettings =  function(el)
 {
-	var sCols='', sBy='', sOrder='', sPageSize='';
+	var sCols='', sBy='', sOrder='', sPageSize;
 
 	var oSelect = document.list_settings.selected_columns;
 	var n = oSelect.length;
@@ -2115,7 +2118,7 @@ BX.adminList.prototype.SaveSettings =  function(el)
 			}
 		);
 	}, this));
-}
+};
 
 BX.adminList.prototype.DeleteSettings = function(bCommon)
 {
@@ -2128,10 +2131,10 @@ BX.adminList.prototype.DeleteSettings = function(bCommon)
 			function(){BX.WindowManager.Get().Close();}
 		);
 	}, this));
-}
+};
 
-BX.adminList._onpopupmenushow = function(){BX.addClass(this, 'adm-list-row-active');}
-BX.adminList._onpopupmenuclose = function(){BX.removeClass(this, 'adm-list-row-active');}
+BX.adminList._onpopupmenushow = function(){BX.addClass(this, 'adm-list-row-active');};
+BX.adminList._onpopupmenuclose = function(){BX.removeClass(this, 'adm-list-row-active');};
 
 BX.adminList.ShowMenu = function(el, menu, el_row)
 {
@@ -2145,7 +2148,7 @@ BX.adminList.ShowMenu = function(el, menu, el_row)
 
 		BX.adminShowMenu(el, menu, {active_class: 'adm-list-table-popup-active'});
 	}
-}
+};
 
 BX.adminTabControl = function (name, unique_name, aTabs)
 {
@@ -2162,10 +2165,9 @@ BX.adminTabControl = function (name, unique_name, aTabs)
 	this.bPublicMode = false;
 
 	this.PreInit();
-	BX.ready(BX.defer(this.Init, this));
-}
+};
 
-BX.adminTabControl.prototype.PreInit = function()
+BX.adminTabControl.prototype.PreInit = function(bSkipInit)
 {
 	for (var tab = 0; tab < this.aTabs.length; tab++)
 	{
@@ -2189,7 +2191,12 @@ BX.adminTabControl.prototype.PreInit = function()
 			var modifyFormElements = BX.adminFormTools.modifyFormElements(tbl);
 		}
 	}
-}
+
+	if(!bSkipInit)
+	{
+		BX.ready(BX.defer(this.Init, this));
+	}
+};
 
 BX.adminTabControl.prototype.Init = function()
 {
@@ -2234,20 +2241,6 @@ BX.adminTabControl.prototype.Init = function()
 				BX.addClass(tabs_block, 'adm-detail-tabs-block-pin');
 				tabs_block.lastChild.title = BX.message('JSADM_PIN_ON');
 			}
-
-			// hack to make tabs block always wider than tabs content - actual for resizing
-			var ob = BX.firstChild(this.TABS_BLOCK), min_width = 0;
-			while (ob)
-			{
-				if (BX.style(ob, 'position') != 'absolute')
-				{
-					min_width += ob.offsetWidth
-						+ parseInt(BX.style(ob, 'margin-left'))
-						+ parseInt(BX.style(ob, 'margin-right'));
-				}
-				ob = BX.nextSibling(ob);
-			}
-			BX(this.name + '_layout').style.minWidth = min_width + 'px';
 		}
 	}
 
@@ -2295,7 +2288,7 @@ BX.adminTabControl.prototype.Init = function()
 	}
 
 	this.bInited = true;
-}
+};
 
 BX.adminTabControl.prototype.setPublicMode = function(v)
 {
@@ -2307,7 +2300,7 @@ BX.adminTabControl.prototype.setPublicMode = function(v)
 			window[name] = null;
 		});
 	}
-}
+};
 
 BX.adminTabControl.prototype.ToggleFix = function(type, value)
 {
@@ -2364,7 +2357,7 @@ BX.adminTabControl.prototype.ToggleFix = function(type, value)
 
 	this.bFixed[type] = !this.bFixed[type];
 	BX.userOptions.save('edit', 'admin_tabs', 'fix_'+type, (this.bFixed[type] ? 'on': 'off'));
-}
+};
 
 BX.adminTabControl.prototype.SelectTab = function(tab_id)
 {
@@ -2380,7 +2373,7 @@ BX.adminTabControl.prototype.SelectTab = function(tab_id)
 
 		var oldHeight = 0;
 		var newHeight = 0;
-		var contentBlockPaddings = 52;
+		var contentBlockPaddings = 40;
 		for (var i = 0, cnt = this.aTabs.length; i < cnt; i++)
 		{
 			var tab = BX(this.aTabs[i]["DIV"]);
@@ -2399,7 +2392,7 @@ BX.adminTabControl.prototype.SelectTab = function(tab_id)
 		BX(this.name+'_active_tab').value = tab_id;
 
 		var currentTab = null;
-		for (var i = 0, cnt = this.aTabs.length; i < cnt; i++)
+		for (i = 0, cnt = this.aTabs.length; i < cnt; i++)
 		{
 			if(this.aTabs[i]["DIV"] == tab_id)
 			{
@@ -2463,7 +2456,7 @@ BX.adminTabControl.prototype.SelectTab = function(tab_id)
 		else
 			BX.onCustomEvent('onAdminTabsChange');
 	}
-}
+};
 
 BX.adminTabControl.prototype.ShowTab = function(tab_id, bShow)
 {
@@ -2471,7 +2464,7 @@ BX.adminTabControl.prototype.ShowTab = function(tab_id, bShow)
 		BX.addClass(BX('tab_cont_' + tab_id), 'adm-detail-tab-active');
 	else
 		BX.removeClass(BX('tab_cont_' + tab_id), 'adm-detail-tab-active');
-}
+};
 
 BX.adminTabControl.prototype.ShowDisabledTab = function(tab_id, disabled)
 {
@@ -2484,7 +2477,7 @@ BX.adminTabControl.prototype.ShowDisabledTab = function(tab_id, disabled)
 	{
 		BX.removeClass(tab, 'adm-detail-tab-disable');
 	}
-}
+};
 
 // TODO: rewrite
 BX.adminTabControl.prototype.NextTab = function()
@@ -2505,7 +2498,7 @@ BX.adminTabControl.prototype.NextTab = function()
 
 	if(NextTab["DIV"])
 		this.SelectTab(NextTab["DIV"]);
-}
+};
 
 BX.adminTabControl.prototype.ToggleTabs = function()
 {
@@ -2538,7 +2531,7 @@ BX.adminTabControl.prototype.ToggleTabs = function()
 	if(!this.bExpandTabs)
 	{
 		this.ShowTab(this.aTabs[0]["DIV"], true);
-		var div = document.getElementById(this.aTabs[0]["DIV"]);
+		div = document.getElementById(this.aTabs[0]["DIV"]);
 		div.style.display = 'block';
 	}
 
@@ -2546,7 +2539,7 @@ BX.adminTabControl.prototype.ToggleTabs = function()
 
 	BX.onCustomEvent('OnToggleTabs');
 	BX.onCustomEvent('onAdminTabsChange');
-}
+};
 
 
 BX.adminTabControl.prototype.DisableTab = function(tab_id)
@@ -2558,7 +2551,7 @@ BX.adminTabControl.prototype.DisableTab = function(tab_id)
 		var div = BX(tab_id);
 		div.style.display = 'none';
 	}
-}
+};
 
 BX.adminTabControl.prototype.EnableTab = function(tab_id)
 {
@@ -2569,7 +2562,7 @@ BX.adminTabControl.prototype.EnableTab = function(tab_id)
 		var div = BX(tab_id);
 		div.style.display = 'block';
 	}
-}
+};
 
 BX.adminTabControl.prototype.ShowWarnings = function(form_name, warnings)
 {
@@ -2611,7 +2604,7 @@ BX.adminTabControl.prototype.ShowWarnings = function(form_name, warnings)
 		img.src = '/bitrix/panel/main/images_old/icon_warn.gif';
 		img.title = warnings[i]['title'];
 	}
-}
+};
 
 BX.adminTabControl.prototype.ShowSettings = function(url)
 {
@@ -2621,12 +2614,12 @@ BX.adminTabControl.prototype.ShowSettings = function(url)
 			height: 605,
 			width: 560
 	})).Show();
-}
+};
 
 BX.adminTabControl.prototype.CloseSettings =  function()
 {
 	BX.WindowManager.Get().Close();
-}
+};
 
 BX.adminTabControl.prototype.SaveSettings =  function(el)
 {
@@ -2671,13 +2664,13 @@ BX.adminTabControl.prototype.SaveSettings =  function(el)
 		BX.WindowManager.Get().Close();
 		BX.reload();
 	});
-}
+};
 
 BX.adminTabControl.prototype.DeleteSettings = function(bCommon)
 {
 	BX.showWait();
 	BX.userOptions.del('form', this.name, bCommon, function () {BX.reload()});
-}
+};
 
 BX.adminTabControl.prototype.DisableSettings = function()
 {
@@ -2688,7 +2681,7 @@ BX.adminTabControl.prototype.DisableSettings = function()
 	sParam += '&p[0][n]='+encodeURIComponent(this.name+'_disabled');
 	sParam += '&p[0][v][disabled]=Y';
 	request.Send('/bitrix/admin/user_options.php?lang=' + phpVars.LANGUAGE_ID + sParam + '&sessid='+phpVars.bitrix_sessid);
-}
+};
 
 BX.adminTabControl.prototype.EnableSettings = function()
 {
@@ -2699,19 +2692,19 @@ BX.adminTabControl.prototype.EnableSettings = function()
 	sParam += '&n='+encodeURIComponent(this.name)+'_disabled';
 	sParam += '&action=delete';
 	request.Send('/bitrix/admin/user_options.php?lang=' + phpVars.LANGUAGE_ID + sParam + '&sessid='+phpVars.bitrix_sessid);
-}
+};
 
 BX.adminViewTabControl = function(aTabs)
 {
 	this.aTabs = aTabs;
 	this.bPublicMode = false;
 	BX.ready(BX.delegate(this.Init, this));
-}
+};
 
 BX.adminViewTabControl.prototype.setPublicMode = function(v)
 {
 	this.bPublicMode = !!v;
-}
+};
 
 BX.adminViewTabControl.prototype.SelectTab = function(tab_id)
 {
@@ -2758,7 +2751,7 @@ BX.adminViewTabControl.prototype.SelectTab = function(tab_id)
 		}
 	}
 
-	for(var i in this.aTabs)
+	for(i in this.aTabs)
 	{
 		if(this.aTabs[i]["DIV"] == tab_id)
 		{
@@ -2797,30 +2790,30 @@ BX.adminViewTabControl.prototype.SelectTab = function(tab_id)
 	}
 	else
 		BX.onCustomEvent('onAdminTabsChange');
-}
+};
 
 BX.adminViewTabControl.prototype.DisableTab = function(tab_id)
 {
-}
+};
 
 BX.adminViewTabControl.prototype.EnableTab = function(tab_id)
 {
-}
+};
 
 BX.adminViewTabControl.prototype.ReplaceAnchor = function(tab)
 {
-}
+};
 
 BX.adminViewTabControl.prototype.RebuildTabs = function()
 {
 
-}
+};
 
 BX.adminViewTabControl.prototype.Init = function()
 {
 	if(this.aTabs.length == 0)
 		return;
-}
+};
 
 /***************************** simple history listener **********************/
 
@@ -2834,7 +2827,7 @@ BX.adminHistory = function()
 	this.state = {};
 
 	this.disabled = false;
-}
+};
 
 BX.adminHistory.pushSupported = false;
 
@@ -2861,7 +2854,7 @@ BX.adminHistory.put = function(url, callback, arIgnoreParams)
 		else
 			BX.removeClass(link, 'navchain-link-visible');
 	}
-}
+};
 
 BX.adminHistory.prototype.put = function(url, callback, arIgnoreParams)
 {
@@ -2877,7 +2870,7 @@ BX.adminHistory.prototype.put = function(url, callback, arIgnoreParams)
 
 	var state = {url: url, callback: callback};
 
-	var k = Math.random()
+	var k = Math.random();
 	this.state[k] = state;
 
 	if (this.bStart)
@@ -2889,7 +2882,7 @@ BX.adminHistory.prototype.put = function(url, callback, arIgnoreParams)
 	{
 		history.pushState(k, '', url);
 	}
-}
+};
 
 BX.adminHistory.prototype._get = function(e)
 {
@@ -2905,7 +2898,7 @@ BX.adminHistory.prototype._get = function(e)
 			window.location.href = this.state[e.state].url;
 		}
 	}
-}
+};
 
 /*************************** fixed elements *********************************/
 
@@ -2920,13 +2913,13 @@ BX.Fix = function(el, params)
 	}
 
 	el.BXFIXER.Start()
-}
+};
 
 BX.UnFix = function(el)
 {
 	if (!!el && !!el.BXFIXER)
 		el.BXFIXER.Stop()
-}
+};
 
 BX.CFixer = function(node, params)
 {
@@ -2944,7 +2937,7 @@ BX.CFixer = function(node, params)
 	this.bFixed = false;
 
 	this.gutter = null;
-}
+};
 
 BX.CFixer.prototype.Start = function()
 {
@@ -2968,7 +2961,7 @@ BX.CFixer.prototype.Start = function()
 	this._scroll_listener();
 
 	this.bStarted = true;
-}
+};
 
 BX.CFixer.prototype.Stop = function()
 {
@@ -2990,7 +2983,7 @@ BX.CFixer.prototype.Stop = function()
 	BX.removeCustomEvent(BX.adminMenu, 'onAdminMenuResize', BX.proxy(this._recalc_pos, this));
 
 	this.bStarted = false;
-}
+};
 
 BX.CFixer.prototype._recalc_pos = function()
 {
@@ -3002,11 +2995,12 @@ BX.CFixer.prototype._recalc_pos = function()
 		if (this.params.type == 'top' || this.params.type == 'bottom')
 		{
 			this.node.style.width = this.pos.width + 'px';
+			this.gutter.style.height = node_pos.height + 'px';
 		}
 	}
 
 	this._scroll_listener();
-}
+};
 
 BX.CFixer.prototype._Fix = function()
 {
@@ -3032,13 +3026,13 @@ BX.CFixer.prototype._Fix = function()
 
 		this.bFixed = true;
 	}
-}
+};
 
 BX.CFixer.prototype._UnFix = function(bRefix)
 {
 	if (this.bFixed)
 	{
-		this.node.style.width = this._w
+		this.node.style.width = this._w;
 		BX.removeClass(this.node, 'bx-fixed-' + this.params.type);
 
 		this.node.style[this.params.type] = null;
@@ -3055,7 +3049,7 @@ BX.CFixer.prototype._UnFix = function(bRefix)
 			this._check_scroll(this.pos.left, this.pos.top);
 		}
 	}
-}
+};
 
 BX.CFixer.prototype._ReFix = function()
 {
@@ -3063,11 +3057,11 @@ BX.CFixer.prototype._ReFix = function()
 	{
 		this._UnFix(true); BX.defer(this._Fix, this)();
 	}
-}
+};
 
 BX.CFixer.prototype._scroll_listener = function()
 {
-	var wndScroll = BX.GetWindowScrollPos(), bFixed = this.bFixed;
+	var wndScroll = BX.GetWindowScrollPos(), bFixed = this.bFixed, wndSize;
 
 	if (!BX.isNodeInDom(this.node))
 		return this.Stop();
@@ -3108,7 +3102,7 @@ BX.CFixer.prototype._scroll_listener = function()
 
 			break;
 			case 'bottom':
-				var wndSize = BX.GetWindowInnerSize();
+				wndSize = BX.GetWindowInnerSize();
 
 				wndScroll.scrollBottom = wndScroll.scrollTop + wndSize.innerHeight;
 
@@ -3120,7 +3114,7 @@ BX.CFixer.prototype._scroll_listener = function()
 					this._UnFix();
 			break;
 			case 'right':
-				var wndSize = BX.GetWindowInnerSize();
+				wndSize = BX.GetWindowInnerSize();
 
 				// 15 is a browser scrollbar fix
 				wndScroll.scrollRight = wndScroll.scrollLeft + wndSize.innerWidth - 15;
@@ -3153,20 +3147,20 @@ BX.CFixer.prototype._scroll_listener = function()
 	{
 		BX.onCustomEvent(this.node, 'onFixedNodeChangeState', [this.bFixed]);
 	}
-}
+};
 
 BX.CFixer.prototype._check_scroll = function(scrollLeft, scrollTop)
 {
 	if (this.params.type == 'top' || this.params.type == 'bottom')
 		this.node.style.left = (this.pos.left - scrollLeft) + 'px';
 	else
-		this.node.style.top = (this.pos.top - scrollTop) + 'px'
+		this.node.style.top = (this.pos.top - scrollTop) + 'px';
 
 	if (this.bFixed && this['position_' + this.params.type] !== null)
 	{
 		this.node.style[this.params.type] = this['position_' + this.params.type] + 'px';
 	}
-}
+};
 
 BX.CFixerTHead = function()
 {
@@ -3174,7 +3168,7 @@ BX.CFixerTHead = function()
 
 	this.mirror = null;
 	this.mirror_thead = null;
-}
+};
 BX.extend(BX.CFixerTHead, BX.CFixer);
 
 BX.CFixerTHead.prototype._Fix = function()
@@ -3185,7 +3179,7 @@ BX.CFixerTHead.prototype._Fix = function()
 		{
 			this.pos = BX.pos(this.node);
 
-			var wndScroll = BX.GetWindowScrollPos()
+			var wndScroll = BX.GetWindowScrollPos();
 
 			this.mirror_thead = BX.clone(this.node);
 
@@ -3224,7 +3218,7 @@ BX.CFixerTHead.prototype._Fix = function()
 		this.mirror.style.top = (this.position_top !== null ? this.position_top : 0) + 'px';
 		this.bFixed = true;
 	}
-}
+};
 
 BX.CFixerTHead.prototype._UnFix = function()
 {
@@ -3237,7 +3231,7 @@ BX.CFixerTHead.prototype._UnFix = function()
 
 		this.bFixed = false;
 	}
-}
+};
 
 BX.CFixerTHead.prototype._recalc_pos = function()
 {
@@ -3249,7 +3243,7 @@ BX.CFixerTHead.prototype._recalc_pos = function()
 	}
 
 	this._scroll_listener();
-}
+};
 
 
 BX.CFixerTHead.prototype._clear_mirror = function()
@@ -3259,7 +3253,7 @@ BX.CFixerTHead.prototype._clear_mirror = function()
 
 	this.mirror = null;
 	this.mirror_thead = null;
-}
+};
 
 BX.CFixerTHead.prototype._check_scroll = function(scrollLeft)
 {
@@ -3269,7 +3263,7 @@ BX.CFixerTHead.prototype._check_scroll = function(scrollLeft)
 		if (this.bFixed && this['position_' + this.params.type] !== null)
 			this.mirror.style[this.params.type] = this['position_' + this.params.type] + 'px'
 	}
-}
+};
 
 /******************************** admin menu unification ********************/
 
@@ -3317,7 +3311,7 @@ BX.adminShowMenu = function(el, menu, params)
 		}
 
 		bindElement = null;
-	}
+	};
 
 	BX.addCustomEvent(bindElement.OPENER, 'onOpenerMenuClose', f);
 	BX.addCustomEvent(bindElement.OPENER, 'onOpenerMenuOpen', function() {
@@ -3325,7 +3319,7 @@ BX.adminShowMenu = function(el, menu, params)
 	});
 
 	bindElement.OPENER.Toggle();
-}
+};
 
 /****************Admin Filter********************************/
 
@@ -3347,12 +3341,14 @@ BX.AdminFilter = function(filter_id, aRows)
 	this.table_id = false;
 	this.url = false;
 	this.currentLoadedTab = null;
+	this.presetsDeleted = [];
 
 	this.state = {
 		init: false,
 		requesting: false,
 		clearing: false,
-		folded: false
+		folded: false,
+		saving: false
 	};
 
 	//saving in session or cookie
@@ -3367,7 +3363,7 @@ BX.AdminFilter = function(filter_id, aRows)
 		this.state.folded = !this.state.folded;
 		BX.userOptions.save('filter', this.filter_id, 'styleFolded', this.state.folded ? "Y" : "N");
 		this.SetSwitcherTitle();
-	}
+	};
 
 	this.SetSwitcherTitle = function()
 	{
@@ -3375,7 +3371,7 @@ BX.AdminFilter = function(filter_id, aRows)
 		var wrap = BX("adm-filter-tab-wrap-"+this.filter_id);
 
 		switcher.title = BX.hasClass(wrap,"adm-filter-folded") ? BX.message('JSADM_FLT_UNFOLD') : BX.message('JSADM_FLT_FOLD');
-	}
+	};
 
 	this.InitFilter = function(oVisRows)
 	{
@@ -3432,7 +3428,7 @@ BX.AdminFilter = function(filter_id, aRows)
 				tr.style.display = 'none';
 			tr.id = this.filter_id+'_row_'+this.aRows[i]+'_delim';
 
-			var td = tr.insertCell(-1);
+			td = tr.insertCell(-1);
 			td.colSpan = 3;
 			td.className = 'delimiter';
 			td.innerHTML = '<div class="empty"></div>';
@@ -3449,18 +3445,18 @@ BX.AdminFilter = function(filter_id, aRows)
 		this.ChangeViewDependVisible();
 
 		BX.addCustomEvent(window, "onAdminListLoaded", BX.proxy(this.onAdminListLoaded, this));
-	}
+	};
 
 	this.InitFirst = function()
 	{
 		this.oOptions["0"] = {
-						FIELDS: {},
-						EDITABLE: false
-					};
+			FIELDS: {},
+			EDITABLE: false
+		};
 
-	for(var i in this.oOptions)
-		this.oOptions[i]["tab"] = new BX.admFltTab(i,this);
-	}
+		for(var i in this.oOptions)
+			this.oOptions[i]["tab"] = new BX.admFltTab(i,this);
+	};
 
 	this.InitFilteredTab = function(tabId)
 	{
@@ -3521,15 +3517,14 @@ BX.AdminFilter = function(filter_id, aRows)
 
 			return false;
 		}
-	}
+	};
 
 	this.InitOpenedTab = function(tabIdUri, tabIdSes)
 	{
 
 		var tabIds = [tabIdUri, tabIdSes];
 
-		var openedTabObj = false;
-		var openedTabId = false;
+		var openedTabObj, openedTabId;
 
 		for(var i in tabIds)
 		{
@@ -3565,7 +3560,7 @@ BX.AdminFilter = function(filter_id, aRows)
 			this.SaveFilterParams();
 
 		return true;
-	}
+	};
 
 	this.GetByPresetId = function(presetId)
 	{
@@ -3574,7 +3569,7 @@ BX.AdminFilter = function(filter_id, aRows)
 				return i;
 
 		return false;
-	}
+	};
 
 	this.isObjectEmpty = function( obj )
 	{
@@ -3582,7 +3577,7 @@ BX.AdminFilter = function(filter_id, aRows)
 			return false;
 
 		return true;
-	}
+	};
 
 	this.ChangeViewDependVisible = function()
 	{
@@ -3598,7 +3593,7 @@ BX.AdminFilter = function(filter_id, aRows)
 			this.ToggleButtonsShowAll();
 
 		this.SetBottomStyle();
-	}
+	};
 
 	this.UrlAddParams = function(url, sParams)
 	{
@@ -3618,7 +3613,7 @@ BX.AdminFilter = function(filter_id, aRows)
 		retUrl+=sParams;
 
 		return retUrl;
-	}
+	};
 
 	this.OnSet = function(table_id, url, oButt)
 	{
@@ -3632,6 +3627,10 @@ BX.AdminFilter = function(filter_id, aRows)
 			this.url = url;
 
 		BX.onCustomEvent(window, 'onBeforeAdminFilterSet');
+
+		if(this.curID != "0" && !this.state.init)
+			this.Save();
+
 		var filterUrl = this.UrlAddParams(url,'set_filter=Y&adm_filter_applied='+encodeURIComponent(this.curID));
 
 		if(this.oOptions[this.curID]["PRESET_ID"])
@@ -3653,14 +3652,24 @@ BX.AdminFilter = function(filter_id, aRows)
 				BX.adminPanel.showWait(oButt);
 			}
 
-			window[table_id].GetAdminList(filterUrl+params);
+			//wait until filter ajax-saving
+			var waiter =
+				{
+					func: function()
+					{
+						if (!_this.state.saving)
+						{
+							window[table_id].GetAdminList(filterUrl+params);
+							_this.oOptions[_this.curID]["tab"].SetFiltered(_this.state.init);
+							clearInterval(intervalID);
+						}
+					}
+				};
+
+			var intervalID = window.setInterval(function(){ waiter.func.call(waiter) }, 200);
+
 		})();
-
-		if(this.curID != "0" && !this.state.init)
-			this.Save();
-
-		this.oOptions[this.curID]["tab"].SetFiltered(this.state.init);
-	}
+	};
 
 	this.OnClear = function(table_id, url, oButt)
 	{
@@ -3678,21 +3687,18 @@ BX.AdminFilter = function(filter_id, aRows)
 			{
 				_this.currentLoadedTab = _this.oOptions[_this.curID]["tab"].GetObj();
 				_this.oOptions[_this.curID]["tab"].ShowWheel();
-
 			}
 			else
 			{
 				BX.adminPanel.showWait(oButt);
 			}
 
+			if(_this.params.filteredId && _this.oOptions[_this.params.filteredId] && !_this.state.folded)
+				_this.oOptions[_this.params.filteredId]["tab"].UnSetFiltered();
+
 			window[table_id].GetAdminList(filterUrl);
 		})();
-
-		if(this.params.filteredId && this.oOptions[this.params.filteredId] && !this.state.folded)
-		{
-			this.oOptions[this.params.filteredId]["tab"].UnSetFiltered();
-		}
-	}
+	};
 
 	//when window[table_id].GetAdminList(...) executed
 	this.onAdminListLoaded = function()
@@ -3708,7 +3714,7 @@ BX.AdminFilter = function(filter_id, aRows)
 		this.currentLoadedTab = null;
 		this.state.clearing = false;
 		this.state.requesting = false;
-	}
+	};
 
 	this.GetFormButton = function(name)
 	{
@@ -3720,10 +3726,8 @@ BX.AdminFilter = function(filter_id, aRows)
 		if(button)
 			return button;
 
-		var button = this.form[name];
-
-		return button;
-	}
+		return this.form[name];
+	};
 
 	this.ApplyFilter = function(id)
 	{
@@ -3790,7 +3794,7 @@ BX.AdminFilter = function(filter_id, aRows)
 		}
 
 		return true;
-	}
+	};
 
 	this.Save = function(saveAs)
 	{
@@ -3806,20 +3810,23 @@ BX.AdminFilter = function(filter_id, aRows)
 			this.ShowSaveOptsWnd(fields, false);
 		else
 		{
-			var common = this.oOptions[this.curID]["COMMON"] == 'Y' ? true : false;
+			var common = (this.oOptions[this.curID]["COMMON"] == 'Y');
 			this.SaveToBase(this.oOptions[this.curID]["NAME"], common, fields, false, false);
 		}
-	}
+	};
 
 	this.SaveAs = function()
 	{
 		this.Save(true);
-	}
+	};
 
 	this.Delete = function()
 	{
-		this.DeleteFromBase(this.curID);
-	}
+		if(!this.oOptions[this.curID].EDITABLE)
+			this.MarkPresetAsDeleted(this.curID);
+		else
+			this.DeleteFromBase(this.curID);
+	};
 
 	this.GetClearFields = function()
 	{
@@ -3829,14 +3836,14 @@ BX.AdminFilter = function(filter_id, aRows)
 			fields[key]["value"] = "";
 
 		return fields;
-	}
+	};
 
 	this.ReplaceFilterTab = function(oldId, newId)
 	{
 		if(!oldId || !newId)
 			return false;
 
-		tab = BX("adm-filter-tab-"+this.filter_id+"-"+oldId);
+		var tab = BX("adm-filter-tab-"+this.filter_id+"-"+oldId);
 
 		if(!tab)
 			return false;
@@ -3852,8 +3859,10 @@ BX.AdminFilter = function(filter_id, aRows)
 
 		tab.onclick = function(){ _this.SetActiveTab(this); _this.ApplyFilter(newId); };
 
+		this.MarkPresetAsDeleted(oldId,newId);
+
 		return true;
-	}
+	};
 
 	this.SetFilteredBG = function(id)
 	{
@@ -3863,8 +3872,10 @@ BX.AdminFilter = function(filter_id, aRows)
 		if(id == this.params.filteredId && id !== false)
 			BX.addClass(BX("adm-filter-tab-wrap-"+this.filter_id),"adm-current-filter");
 		else
+		{
 			BX.removeClass(BX("adm-filter-tab-wrap-"+this.filter_id),"adm-current-filter");
-	}
+		}
+	};
 
 	this.SetActiveTab = function(tabObj)
 	{
@@ -3887,7 +3898,7 @@ BX.AdminFilter = function(filter_id, aRows)
 		this.params.activeTabId = tabId;
 
 		return true;
-	}
+	};
 
 	this.ShowSaveOptsWnd = function(fields, empty)
 	{
@@ -3918,6 +3929,7 @@ BX.AdminFilter = function(filter_id, aRows)
 				'title': BX.message('JSADM_FLT_SAVE'),
 				'action': function(){
 
+					var common;
 					if(formOpts.common)
 						common = formOpts.common.checked;
 					else
@@ -3945,7 +3957,7 @@ BX.AdminFilter = function(filter_id, aRows)
 			formOpts.filter_name.value = (this.oOptions[this.curID]["NAME"] ? this.oOptions[this.curID]["NAME"] : '');
 
 			if(formOpts.common)
-				formOpts.common.checked = (this.oOptions[this.curID]["COMMON"] =='Y' ? true : false);
+				formOpts.common.checked = (this.oOptions[this.curID]["COMMON"] == 'Y');
 		}
 		else
 		{
@@ -3956,7 +3968,7 @@ BX.AdminFilter = function(filter_id, aRows)
 		}
 
 		formOpts.filter_name.focus();
-	}
+	};
 
 	this.SaveOptsWndKeyPress = function(event)
 	{
@@ -3979,20 +3991,59 @@ BX.AdminFilter = function(filter_id, aRows)
 		}
 
 		return true;
-	}
+	};
+
+	this.MarkPresetAsDeleted = function(oldId, newId)
+	{
+		if(!newId && !confirm(BX.message('JSADM_FLT_DEL_CONFIRM')))
+			return;
+
+		this.presetsDeleted[this.presetsDeleted.length] = oldId;
+
+		var strOpt = '';
+
+		for(var key in this.presetsDeleted)
+				strOpt += (strOpt != ''? ',':'')+this.presetsDeleted[key];
+
+		var bCurrentFiltered = false;
+
+		if(this.params.filteredId == this.curID)
+			bCurrentFiltered = true;
+
+		var tabId = "0";
+
+		if(newId)
+		{
+			this.oOptions[this.curID]["tab"].id = this.curID = tabId = newId;
+		}
+		else
+		{
+			this.oOptions[oldId]["tab"].DeleteHtml();
+			delete this.oOptions[oldId];
+		}
+
+		var newActiveTab = this.oOptions[tabId]["tab"].GetObj();
+
+		if(newActiveTab)
+			newActiveTab.click();
+
+		BX.userOptions.save('filter', this.filter_id, 'presetsDeleted', strOpt);
+
+		if(bCurrentFiltered && this.table_id && !newId)
+			this.OnClear(this.table_id,this.url);
+	};
 
 	this.DeleteFromBase = function(id)
 	{
+		this.state.saving = true;
 		if(!confirm(BX.message('JSADM_FLT_DEL_CONFIRM')))
 			return;
-
-		if(this.table_id)
-			this.OnClear(this.table_id,this.url);
 
 		var data = {
 			'id': id,
 			'action': 'del_filter',
-			'sessid': phpVars.bitrix_sessid
+			'sessid': phpVars.bitrix_sessid,
+			'lang': BX.message.LANGUAGE_ID
 		};
 
 		var callback = function(result)
@@ -4002,21 +4053,32 @@ BX.AdminFilter = function(filter_id, aRows)
 				_this.oOptions[id]["tab"].DeleteHtml();
 				delete _this.oOptions[id];
 
+				var bCurrentFiltered = false;
+
+				if(_this.params.filteredId == _this.curID)
+					bCurrentFiltered = true;
+
 				var defaultTab = _this.oOptions["0"]["tab"].GetObj();
 
 				if(defaultTab)
 					defaultTab.click();
+
+				_this.state.saving = false;
+
+				if(_this.table_id && bCurrentFiltered)
+					_this.OnClear(_this.table_id,_this.url);
 			}
 			else
 				alert(BX.message('JSADM_FLT_DEL_ERROR'));
-		}
+		};
 
 		BX.ajax.post('/bitrix/admin/filter_act.php', data, callback);
 
-	}
+	};
 
 	this.SaveInsteadPreset = function()
 	{
+		this.state.saving = true;
 		var data = {
 			'filter_id': this.filter_id,
 			'preset_id': this.curID,
@@ -4024,11 +4086,15 @@ BX.AdminFilter = function(filter_id, aRows)
 			'sessid': phpVars.bitrix_sessid,
 			'name': this.oOptions[this.curID]["NAME"],
 			'common': 'N',
-			'fields': _this.GetFilterFields()
+			'fields': _this.GetFilterFields(),
+			'lang': BX.message.LANGUAGE_ID
 		};
 
 		if(this.oOptions[this.curID]["SORT_FIELD"])
 			data['sort_field'] = this.oOptions[this.curID]["SORT_FIELD"];
+
+		if(this.oOptions[this.curID]["SORT"])
+			data['sort'] = this.oOptions[this.curID]["SORT"];
 
 		var callback = function(resultId)
 		{
@@ -4040,27 +4106,31 @@ BX.AdminFilter = function(filter_id, aRows)
 					FIELDS: _this.GetFilterFields(),
 					EDITABLE: true,
 					PRESET_ID: _this.curID,
-					COMMON: false,
-					tab: _this.oOptions[resultId]["tab"]
+					COMMON: false
 				};
+
+				_this.oOptions[resultId]["tab"] = new BX.admFltTab(resultId,_this);
 
 				if(data['sort_field'])
 					_this.oOptions[resultId]["SORT_FIELD"] = data['sort_field'];
 
+				if(data['sort'])
+					_this.oOptions[resultId]["SORT"] = data['sort'];
+
 				_this.ReplaceFilterTab(_this.curID, resultId);
-				delete(_this.oOptions[_this.curID]);
-				_this.curID = resultId;
+				_this.state.saving = false;
 			}
 			else
 				alert(BX.message('JSADM_FLT_SAVE_ERROR'));
-		}
+		};
 
 		BX.ajax.post('/bitrix/admin/filter_act.php', data, callback);
-	}
+	};
 
 
 	this.SaveToBase = function(name, common, fields, saveAs, empty)
 	{
+		this.state.saving = true;
 		if(name=="")
 			name = BX.message('JSADM_FLT_NO_NAME');
 
@@ -4070,7 +4140,8 @@ BX.AdminFilter = function(filter_id, aRows)
 			'sessid': phpVars.bitrix_sessid,
 			'name': name,
 			'common': common ? 'Y' : 'N',
-			'fields': fields
+			'fields': fields,
+			'lang': BX.message.LANGUAGE_ID
 		};
 
 		if(!saveAs && this.curID != "0")
@@ -4081,6 +4152,9 @@ BX.AdminFilter = function(filter_id, aRows)
 
 		if(this.oOptions[this.curID]["SORT_FIELD"])
 			data['sort_field'] = this.oOptions[this.curID]["SORT_FIELD"];
+
+		if(this.oOptions[this.curID]["SORT"])
+			data['sort'] = this.oOptions[this.curID]["SORT"];
 
 		var callback = function(resultId)
 		{
@@ -4097,6 +4171,9 @@ BX.AdminFilter = function(filter_id, aRows)
 				if(data['sort_field'])
 					_this.oOptions[resultId]["SORT_FIELD"] = data['sort_field'];
 
+				if(data['sort'])
+					_this.oOptions[resultId]["SORT"] = data['sort'];
+
 				_this.oOptions[resultId]["tab"] = new BX.admFltTab(resultId,_this);
 
 				if(saveAs || data['id'] == undefined)
@@ -4104,15 +4181,17 @@ BX.AdminFilter = function(filter_id, aRows)
 
 				if(empty)
 					_this.ClearParameters();
+
+				_this.state.saving = false;
 			}
 			else
 				alert(BX.message('JSADM_FLT_SAVE_ERROR'));
-		}
+		};
 
 		BX.ajax.post('/bitrix/admin/filter_act.php', data, callback);
 
 		return data;
-	}
+	};
 
 	this.ClearParameters = function()
 	{
@@ -4151,17 +4230,18 @@ BX.AdminFilter = function(filter_id, aRows)
 					break;
 			}
 		}
-	}
+	};
 
 	this.GetRowByElement = function(element)
 	{
 		return jsUtils.FindParentObject(element, "tr");
-	}
+	};
 
 	this.SetFilterFields = function(fields)
 	{
 		this.ClearParameters();
 		var checkboxesIdx = [];
+		var elName;
 
 		for(var i=0, n = this.form.elements.length; i<n; i++)
 		{
@@ -4171,22 +4251,26 @@ BX.AdminFilter = function(filter_id, aRows)
 				continue;
 
 			if(el.type == 'select-multiple')
-				var elName = el.name.substr(0, el.name.length - 2);
+			{
+				elName = el.name.substr(0, el.name.length - 2);
+			}
 			else if(el.type == 'checkbox' && el.name.search(/[\[\]]/))
-				{
-					var elName = el.name.substr(0, el.name.length - 2);
+			{
+				elName = el.name.substr(0, el.name.length - 2);
 
-					if(checkboxesIdx[elName] == undefined)
-						checkboxesIdx[elName] = 0;
-					else
-						checkboxesIdx[elName]++;
+				if(checkboxesIdx[elName] == undefined)
+					checkboxesIdx[elName] = 0;
+				else
+					checkboxesIdx[elName]++;
 
-					elName +="_cbxIdx_"+checkboxesIdx[elName];
+				elName +="_cbxIdx_"+checkboxesIdx[elName];
 
-					el.checked = false;
-				}
+				el.checked = false;
+			}
 			else
-				var elName = el.name;
+			{
+				elName = el.name;
+			}
 
 			if(!fields[elName])
 			{
@@ -4232,7 +4316,7 @@ BX.AdminFilter = function(filter_id, aRows)
 						{
 							if(el.options[j].value == fields[elName]['value'][option])
 							{
-								el.options[j].selected = true
+								el.options[j].selected = true;
 								bWasSelected = true;
 							}
 						}
@@ -4260,7 +4344,7 @@ BX.AdminFilter = function(filter_id, aRows)
 			this.ToggleFilterRow(this.filter_id+'_row_'+this.aRows[0], true, false);
 
 		//this.SaveRowsOption();
-	}
+	};
 
 	this.IsFormElementHidden = function (el)
 	{
@@ -4269,7 +4353,7 @@ BX.AdminFilter = function(filter_id, aRows)
 			return !el.offsetWidth && !el.offsetHeight && !el.clientHeight && !el.clientWidth;
 
 		return !el.offsetWidth && !el.offsetHeight;
-	}
+	};
 
 	this.IsAllRowElementsHidden = function (rowId, fields)
 	{
@@ -4293,32 +4377,37 @@ BX.AdminFilter = function(filter_id, aRows)
 		}
 
 		return bAllHidden;
-	}
+	};
 
 	this.GetFilterFields = function(bSetVisibilityByRow)
 	{
 		var fields = {};
 		var checkboxesIdx = [];
+		var elName;
 
 		for(var i=0, n = this.form.elements.length; i<n; i++)
 		{
 			var el = this.form.elements[i];
 
 			if(el.type == 'select-multiple')
-				var elName = el.name.substr(0, el.name.length - 2);
+			{
+				elName = el.name.substr(0, el.name.length - 2);
+			}
 			else if(el.type == 'checkbox' && el.name.search(/[\[\]]/))
-				{
-					var elName = el.name.substr(0, el.name.length - 2);
+			{
+				elName = el.name.substr(0, el.name.length - 2);
 
-					if(checkboxesIdx[elName] == undefined)
-						checkboxesIdx[elName] = 0;
-					else
-						checkboxesIdx[elName]++;
+				if(checkboxesIdx[elName] == undefined)
+					checkboxesIdx[elName] = 0;
+				else
+					checkboxesIdx[elName]++;
 
-					elName +="_cbxIdx_"+checkboxesIdx[elName];
-				}
+				elName += "_cbxIdx_"+checkboxesIdx[elName];
+			}
 			else
-				var elName = el.name;
+			{
+				elName = el.name;
+			}
 
 			switch(el.type.toLowerCase())
 			{
@@ -4365,7 +4454,7 @@ BX.AdminFilter = function(filter_id, aRows)
 		}
 
 		return fields;
-	}
+	};
 
 	this.IsFilterFill = function()
 	{
@@ -4410,7 +4499,7 @@ BX.AdminFilter = function(filter_id, aRows)
 			}
 		}
 		return false;
-	}
+	};
 
 	this.GetParameters = function()
 	{
@@ -4509,12 +4598,12 @@ BX.AdminFilter = function(filter_id, aRows)
 		{
 			for(var idx in this.oOptions[this.curID]["SORT_FIELD"])
 			{
-				s+= '&by=' +encodeURIComponent(idx)+'&order='+this.oOptions[this.curID]["SORT_FIELD"][idx];
+				s += '&by=' +encodeURIComponent(idx)+'&order='+this.oOptions[this.curID]["SORT_FIELD"][idx];
 				break;
 			}
 		}
 		return s;
-	}
+	};
 
 	this.CheckActive = function()
 	{
@@ -4555,7 +4644,7 @@ BX.AdminFilter = function(filter_id, aRows)
 			}
 		}
 		return false;
-	}
+	};
 
 	this.DisplayNonEmptyRows = function()
 	{
@@ -4610,7 +4699,7 @@ BX.AdminFilter = function(filter_id, aRows)
 					this.ToggleFilterRow(tr.id, true, false);
 			}
 		}
-	}
+	};
 
 	this.CountVisibleRows = function()
 	{
@@ -4620,7 +4709,7 @@ BX.AdminFilter = function(filter_id, aRows)
 				counter++;
 
 		return counter;
-	}
+	};
 
 	this.SetBottomStyle = function()
 	{
@@ -4637,7 +4726,7 @@ BX.AdminFilter = function(filter_id, aRows)
 			contentDiv.className = "adm-filter-content adm-filter-content-first";
 			bottomSeparator.style.display = "none";
 		}
-	}
+	};
 
 	this.ToggleButtonShow = function(rowId)
 	{
@@ -4647,7 +4736,7 @@ BX.AdminFilter = function(filter_id, aRows)
 			return;
 
 		row.cells[2].children[0].style.display = 'block';
-	}
+	};
 
 	this.ToggleButtonHide = function(rowId)
 	{
@@ -4657,19 +4746,19 @@ BX.AdminFilter = function(filter_id, aRows)
 			return;
 
 		row.cells[2].children[0].style.display = 'none';
-	}
+	};
 
 	this.ToggleButtonsShowAll = function()
 	{
 		for(var key in this.aRows)
 			this.ToggleButtonShow(this.filter_id+'_row_'+this.aRows[key]);
-	}
+	};
 
 	this.ToggleButtonsHideAll = function()
 	{
 		for(var key in this.aRows)
 			this.ToggleButtonHide(this.filter_id+'_row_'+this.aRows[key]);
-	}
+	};
 
 	this.ToggleFilterRow = function(rowId, on, bSave, skipControl)
 	{
@@ -4728,14 +4817,14 @@ BX.AdminFilter = function(filter_id, aRows)
 			this.SaveRowsOption();
 
 		return ret;
-	}
+	};
 
 	this.DeleteFilterRow = function(rowId)
 	{
 		this.StartAnimation();
 		this.ToggleFilterRow(rowId);
 		this.EndAnimation();
-	}
+	};
 
 	this.StartAnimation = function()
 	{
@@ -4748,7 +4837,7 @@ BX.AdminFilter = function(filter_id, aRows)
 		this.startContentHeight = this.tableWrap.offsetHeight;
 		this.tableWrap.style.height = this.startContentHeight + "px";
 		this.tableWrap.style.overflowY = "hidden";
-	}
+	};
 
 	this.EndAnimation = function()
 	{
@@ -4787,7 +4876,7 @@ BX.AdminFilter = function(filter_id, aRows)
 		});
 		this.easing.animate();
 
-	}
+	};
 
 	this.SaveFilterParams = function()
 	{
@@ -4800,7 +4889,7 @@ BX.AdminFilter = function(filter_id, aRows)
 		sParams = sParams.substr(0,sParams.length-1);
 
 		document.cookie = BX.message('COOKIE_PREFIX')+"_ADM_FLT_PARAMS=" + sParams;
-	}
+	};
 
 	this.SaveRowsOption = function()
 	{
@@ -4818,7 +4907,7 @@ BX.AdminFilter = function(filter_id, aRows)
 				sRows += (sRows != ''? ',':'')+key;
 
 		jsUserOptions.SaveOption('filter', this.filter_id, 'rows', sRows);
-	}
+	};
 
 	this.SaveOpenTab = function(id)
 	{
@@ -4826,11 +4915,12 @@ BX.AdminFilter = function(filter_id, aRows)
 			'id': id,
 			'filter_id': this.filter_id,
 			'action': 'open_tab_save',
-			'sessid': phpVars.bitrix_sessid
+			'sessid': phpVars.bitrix_sessid,
+			'lang': BX.message.LANGUAGE_ID
 		};
 
 		BX.ajax.post('/bitrix/admin/filter_act.php', data);
-	}
+	};
 
 	this.SaveFilteredId = function(id)
 	{
@@ -4838,11 +4928,12 @@ BX.AdminFilter = function(filter_id, aRows)
 			'id': id,
 			'filter_id': this.filter_id,
 			'action': 'filtered_tab_save',
-			'sessid': phpVars.bitrix_sessid
+			'sessid': phpVars.bitrix_sessid,
+			'lang': BX.message.LANGUAGE_ID
 		};
 
 		BX.ajax.post('/bitrix/admin/filter_act.php', data);
-	}
+	};
 
 	this.ToggleAllFilterRows = function(on)
 	{
@@ -4868,7 +4959,7 @@ BX.AdminFilter = function(filter_id, aRows)
 		this.SaveRowsOption();
 
 		this.EndAnimation();
-	}
+	};
 
 	this.SaveMenuShow = function(el)
 	{
@@ -4879,7 +4970,7 @@ BX.AdminFilter = function(filter_id, aRows)
 
 		menuItems.push({TEXT: BX.message('JSADM_FLT_SAVE_AS'), ONCLICK: 'setTimeout(function(){'+filter_id+'.SaveAs();},10);'});
 
-		if(this.curID != "0" && this.oOptions[this.curID].EDITABLE)
+		if(this.curID != "0") //&& this.oOptions[this.curID].EDITABLE)
 			menuItems.push({TEXT: BX.message('JSADM_FLT_DELETE'), ONCLICK: filter_id+".Delete();"});
 
 		if (!el.OPENER)
@@ -4887,9 +4978,9 @@ BX.AdminFilter = function(filter_id, aRows)
 		else
 			el.OPENER.SetMenu(menuItems);
 
-	}
+	};
 
-	this.SettMenuItemClick = function(rowId,objItem)
+	this.SettMenuItemClick = function(rowId, objItem)
 	{
 
 		var menu = BX.WindowManager.Get();
@@ -4901,7 +4992,7 @@ BX.AdminFilter = function(filter_id, aRows)
 		var scrollOffset = this.ToggleFilterRow(rowId);
 
 		this.EndAnimation();
-	}
+	};
 
 	this.SettMenuShow = function(el)
 	{
@@ -4932,7 +5023,7 @@ BX.AdminFilter = function(filter_id, aRows)
 				ONCLICK: filter_id+".SettMenuItemClick('"+row.id+"',this);",
 				CLOSE_ON_CLICK: false,
 				ADJUST_ON_CLICK: false,
-				CHECKED: (row.style.display == 'none') ? false : true
+				CHECKED: (row.style.display != 'none')
 			});
 
 			itemsIdx--;
@@ -4959,7 +5050,7 @@ BX.AdminFilter = function(filter_id, aRows)
 				menu.toggleArrow(true);
 		}
 	}
-}
+};
 
 //********** admin filter tab object begin****************
 BX.admFltTab = function(id, fltObj)
@@ -4993,8 +5084,7 @@ BX.admFltTab.prototype = {
 
 	SetFiltered: function(init)
 	{
-
-		if(this.filter.params.filteredId !== false && !init)
+		if(this.filter.params.filteredId !== false && this.filter.oOptions[this.filter.params.filteredId] !==undefined && !init)
 			this.filter.oOptions[this.filter.params.filteredId]["tab"].UnSetFiltered();
 
 		BX.addClass(this.GetObj(),"adm-current-filter-tab");
@@ -5048,7 +5138,9 @@ BX.admFltTab.prototype = {
 	DeleteHtml: function()
 	{
 		var delTab = this.GetObj();
-		delTab.parentNode.removeChild(delTab);
+
+		if(delTab)
+			delTab.parentNode.removeChild(delTab);
 	},
 
 	ShowWheel: function()
@@ -5079,7 +5171,7 @@ BX.admFltWrap = {
 		if(elClass)
 			el.className = elClass;
 
-		elChildren = BX.findChildren(el);
+		var elChildren = BX.findChildren(el);
 
 		for(var i in elChildren)
 			wrap.appendChild(elChildren[i]);
@@ -5153,6 +5245,7 @@ BX.admFltWrap = {
 	Cell: function(cell)
 	{
 		var newCell = cell.cloneNode(true);
+		var wrap;
 		newCell.innerHTML = "";
 
 		while(cell.childNodes.length)
@@ -5186,7 +5279,7 @@ BX.admFltWrap = {
 					var input = BX.findChild(cell.childNodes[0],{tag: "input"});
 
 					if(input)
-						var wrap = BX.admFltWrap.Input(input);
+						wrap = BX.admFltWrap.Input(input);
 
 					break;
 
@@ -5199,7 +5292,7 @@ BX.admFltWrap = {
 					if(cell.childNodes[0].type == "text" && ( !nextInput || nextInput.type != "text"))
 						helpIcon = BX.findChild(cell.childNodes[0].parentNode, {className: "adm-input-help-icon"});
 
-					var wrap = BX.admFltWrap.Input(cell.childNodes[0]);
+					wrap = BX.admFltWrap.Input(cell.childNodes[0]);
 
 					if(helpIcon)
 					{
@@ -5243,9 +5336,9 @@ BX.admFltWrap = {
 
 		if(calendarInput)
 		{
-			calendarBlock = BX.admFltWrap.Inner(row.cells[1], "","DIV","adm-calendar-block adm-filter-alignment");
+			var calendarBlock = BX.admFltWrap.Inner(row.cells[1], "","DIV","adm-calendar-block adm-filter-alignment");
 			BX.admFltWrap.Inner(calendarBlock, "", "DIV", "adm-filter-box-sizing");
-			return;
+			return null;
 		}
 
 		if (row.cells[1].children[0] && !BX.hasClass(row.cells[1].children[0], 'adm-filter-alignment'))
@@ -5292,7 +5385,7 @@ BX.adminChain = {
 
 		this._addon = main_chain.appendChild(BX.create('span', {html: '<span class="adm-navchain-delimiter"></span>' + div.innerHTML}));
 	}
-}
+};
 
 /************************* singletons construction **************************/
 
@@ -5311,10 +5404,9 @@ BX.InitializeAdmin = function()
 		if (workarea)
 			workarea.style.opacity = 1;
 	});
-}
+};
 
 BX.adminPanel.modifyFormElements = BX.adminFormTools.modifyFormElements;
 BX.adminPanel.modifyFormElement = BX.adminFormTools.modifyFormElement;
 
-BX.browser.addGlobalClass();
 })();

@@ -117,7 +117,7 @@ abstract class CBXAllShortUri
 
 	public static function Delete($id)
 	{
-		global $DB;
+		global $DB, $APPLICATION;
 
 		self::ClearErrors();
 
@@ -126,6 +126,19 @@ abstract class CBXAllShortUri
 		{
 			self::AddError(GetMessage("MN_SU_NO_ID"));
 			return false;
+		}
+
+		foreach(GetModuleEvents("main", "OnBeforeShortUriDelete", true) as $arEvent)
+		{
+			if(ExecuteModuleEventEx($arEvent, array($id)) === false)
+			{
+				if(($ex = $APPLICATION->GetException()))
+					$err = $ex->GetString();
+				else
+					$err = GetMessage("MN_SU_DELETE_ERROR");
+				self::AddError($err);
+				return false;
+			}
 		}
 
 		$fl = $DB->Query("DELETE FROM b_short_uri WHERE ID = ".$id, true);

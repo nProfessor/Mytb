@@ -1,3 +1,3 @@
 <?
-require_once(dirname(__FILE__)."/../modules/main/tools/imagepg.php");
+require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/tools/imagepg.php");
 ?>

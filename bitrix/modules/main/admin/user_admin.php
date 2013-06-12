@@ -40,17 +40,13 @@ if($_REQUEST["action"] == "authorize" && check_bitrix_sessid() && $USER->CanDoOp
 	LocalRedirect("user_admin.php?lang=".LANGUAGE_ID);
 }
 
-// идентификатор таблицы
 $sTableID = "tbl_user";
 
-// инициализация сортировки
 $oSort = new CAdminSorting($sTableID, "TIMESTAMP_X", "desc");
-// инициализация списка
 $lAdmin = new CAdminList($sTableID, $oSort);
 
 $bIntranetEdition = IsModuleInstalled("intranet");//(defined("INTRANET_EDITION") && INTRANET_EDITION == "Y");
 
-// инициализация параметров списка - фильтры
 $arFilterFields = Array(
 	"find",
 	"find_type",
@@ -72,8 +68,7 @@ $USER_FIELD_MANAGER->AdminListAddFilterFields($entity_id, $arFilterFields);
 
 $lAdmin->InitFilter($arFilterFields);
 
-//инициализация массива фильтра для GetList
-function CheckFilter($FilterArr) // проверка введенных полей
+function CheckFilter($FilterArr)
 {
 	global $strError;
 	foreach($FilterArr as $f)
@@ -153,7 +148,6 @@ if (!$USER->CanDoOperation('edit_php'))
 	$arFilter["NOT_ADMIN"] = true;
 }
 
-// обработка редактирования (права доступа!)
 if($lAdmin->EditAction())
 {
 	foreach($FIELDS as $ID=>$arFields)
@@ -199,7 +193,6 @@ if($lAdmin->EditAction())
 	}
 }
 
-// обработка действий групповых и одиночных
 if(($arID = $lAdmin->GroupAction()) && ($USER->CanDoOperation('edit_all_users') || $USER->CanDoOperation('edit_subordinate_users')))
 {
 	if($_REQUEST['action_target']=='selected')
@@ -294,7 +287,6 @@ if(($arID = $lAdmin->GroupAction()) && ($USER->CanDoOperation('edit_all_users') 
 	}
 }
 
-// заголовок списка
 $arHeaders = array(
 	array("id"=>"LOGIN", 			"content"=>GetMessage("LOGIN"), "sort"=>"login", "default"=>true),
 	array("id"=>"ACTIVE", 			"content"=>GetMessage('ACTIVE'),	"sort"=>"active", "default"=>true, "align" => "center"),
@@ -332,7 +324,6 @@ while ($arRatingsTmp = $rsRatings->GetNext())
 $USER_FIELD_MANAGER->AdminListAddHeaders($entity_id, $arHeaders);
 $lAdmin->AddHeaders($arHeaders);
 
-// инициализация списка - выборка данных
 $rsData = CUser::GetList($by, $order, $arFilter, array(
 	"SELECT" => $lAdmin->GetVisibleHeaderColumns(),
 	"NAV_PARAMS"=> array("nPageSize"=>CAdminResult::GetNavSize($sTableID)),
@@ -341,7 +332,6 @@ $rsData = CUser::GetList($by, $order, $arFilter, array(
 $rsData = new CAdminResult($rsData, $sTableID);
 $rsData->NavStart();
 
-// установке параметров списка
 $lAdmin->NavText($rsData->GetNavPrint(GetMessage("PAGES")));
 while($arRes = $rsData->NavNext(true, "f_"))
 {
@@ -358,7 +348,7 @@ while($arRes = $rsData->NavNext(true, "f_"))
 
 	if ($can_edit && $edit)
 	{
-		$row->AddInputField("LOGIN");
+		$row->AddField("LOGIN", "<a href='user_edit.php?lang=".LANGUAGE_ID."&ID=".$f_ID."' title='".GetMessage("MAIN_EDIT_TITLE")."'>".$f_LOGIN."</a>", true);
 		$row->AddInputField("NAME");
 		$row->AddInputField("LAST_NAME");
 		$row->AddInputField("SECOND_NAME");
@@ -383,6 +373,7 @@ while($arRes = $rsData->NavNext(true, "f_"))
 	}
 	else
 	{
+		$row->AddViewField("LOGIN", "<a href='user_edit.php?lang=".LANGUAGE_ID."&ID=".$f_ID."' title='".GetMessage("MAIN_EDIT_TITLE")."'>".$f_LOGIN."</a>");
 		$row->AddViewField("EMAIL", TxtToHtml($arRes["EMAIL"]));
 		$row->AddViewField("PERSONAL_WWW", TxtToHtml($arRes["PERSONAL_WWW"]));
 		$row->AddViewField("WORK_WWW", TxtToHtml($arRes["WORK_WWW"]));
@@ -405,7 +396,6 @@ while($arRes = $rsData->NavNext(true, "f_"))
 	$row->AddActions($arActions);
 }
 
-// "подвал" списка
 $lAdmin->AddFooter(
 	array(
 		array("title"=>GetMessage("MAIN_ADMIN_LIST_SELECTED"), "value"=>$rsData->SelectedRowsCount()),
@@ -414,7 +404,6 @@ $lAdmin->AddFooter(
 );
 
 $aContext = Array();
-// показ формы с кнопками добавления, ...
 
 if ($USER->CanDoOperation('edit_subordinate_users') || $USER->CanDoOperation('edit_all_users'))
 {
@@ -480,7 +469,6 @@ if ($USER->CanDoOperation('edit_subordinate_users') || $USER->CanDoOperation('ed
 }
 $lAdmin->AddAdminContextMenu($aContext);
 
-// проверка на вывод только списка (в случае списка, скрипт дальше выполняться не будет)
 $lAdmin->CheckListMode();
 
 $APPLICATION->SetTitle(GetMessage("TITLE"));
@@ -587,7 +575,6 @@ $oFilter->End();
 ?>
 </form>
 <?
-// место для вывода списка
 $lAdmin->DisplayList();
 
 require($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/include/epilog_admin.php");

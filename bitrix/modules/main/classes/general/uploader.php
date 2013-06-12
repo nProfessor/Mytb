@@ -26,6 +26,9 @@ class CImageUploader
 		if (!isset($Params['uploadViewMode']) || !in_array($Params['uploadViewMode'], array('Thumbnails', 'Tiles', 'Details', ' List')))
 			$Params['uploadViewMode'] = 'Thumbnails';
 
+		if (!isset($Params['thumbnailJpegQuality']) || $Params['thumbnailJpegQuality'] > 100 || $Params['thumbnailJpegQuality'] <= 0)
+			$Params['thumbnailJpegQuality'] = 90;
+
 		$Params['showAddFileButton'] = $Params['showAddFileButton'] === true;
 		$Params['showAddFolderButton'] = $Params['showAddFolderButton'] === true;
 
@@ -147,13 +150,13 @@ class CImageUploader
 			bxp.metadata.additionalFormName = '<?= CUtil::JSEscape($Params['appendFormName'])?>';
 		<?endif;?>
 
-		<?for ($i = 0; $i < count($Params['converters']); $i++):?>
-			<?$bSource = (!$Params['converters'][$i]['width'] || !$Params['converters'][$i]['height']);?>
+		<?foreach ($Params['converters'] as $converter):?>
+			<?$bSource = (!$converter['width'] || !$converter['height']);?>
 			bxp.converters.push({
 					mode: '*.*=Thumbnail',
 					thumbnailApplyCrop: true,
 					thumbnailKeepColorSpace: true,
-					thumbnailJpegQuality: 100,
+					thumbnailJpegQuality: <?= $Params['thumbnailJpegQuality']?>,
 					thumbnailResizeQuality: "High", // High | Medium | Low,
 					thumbnailCopyIptc: true,
 					thumbnailCopyExif: true,
@@ -161,12 +164,12 @@ class CImageUploader
 					thumbnailFitMode: "ActualSize", // Fit | OrientationalFit | Width | Height | ActualSize
 				<?else:?>
 					thumbnailFitMode: "Fit", // Fit | OrientationalFit | Width | Height | ActualSize
-					thumbnailHeight: <?= intval($Params['converters'][$i]['height'])?>,
-					thumbnailWidth: <?= intval($Params['converters'][$i]['width'])?>,
+					thumbnailHeight: <?= intval($converter['height'])?>,
+					thumbnailWidth: <?= intval($converter['width'])?>,
 				<?endif;?>
 					thumbnailCompressOversizedOnly: true
 			});
-		<?endfor;?>
+		<?endforeach;?>
 
 		<?if ($Params['layout'] == 'ThreePanes'):?>
 			bxp.folderPane = {
@@ -662,6 +665,9 @@ class CFlashUploader extends CImageUploader
 		if (!isset($Params['chunkSize']) || $Params['chunkSize'] <= 0)
 			$Params['chunkSize'] = self::GetChunkSize();
 
+		if (!isset($Params['thumbnailJpegQuality']) || $Params['thumbnailJpegQuality'] > 100 || $Params['thumbnailJpegQuality'] <= 0)
+			$Params['thumbnailJpegQuality'] = 90;
+
 		// Check and create tmp dir
 		self::CheckDirPath($Params["pathToTmp"]);
 
@@ -727,27 +733,27 @@ class CFlashUploader extends CImageUploader
 			bxp.restrictions.maxImageHeight = '<?= CUtil::JSEscape($Params['maxImageHeight'])?>';
 		<?endif;?>
 
-		<?for ($i = 0; $i < count($Params['converters']); $i++):?>
-			<?$bSource = (!$Params['converters'][$i]['width'] || !$Params['converters'][$i]['height']);?>
+		<?foreach ($Params['converters'] as $converter):?>
+			<?$bSource = (!$converter['width'] || !$converter['height']);?>
 			bxp.converters.push({
 				<?if ($bSource):?>
 					mode: '*.*=Thumbnail',
 					thumbnailFitMode: "ActualSize", // Fit | OrientationalFit | Width | Height | ActualSize
 					thumbnailCopyIptc: true,
 					thumbnailCopyExif: true,
-					thumbnailJpegQuality: 100
+					thumbnailJpegQuality: <?= $Params['thumbnailJpegQuality']?>,
 				<?else:?>
 					mode: '*.*=Thumbnail',
 					thumbnailFitMode: "Fit", // Fit | OrientationalFit | Width | Height | ActualSize
 					thumbnailCopyIptc: true,
 					thumbnailCopyExif: true,
 
-					thumbnailHeight: <?= intval($Params['converters'][$i]['height'])?>,
-					thumbnailWidth: <?= intval($Params['converters'][$i]['width'])?>,
-					thumbnailJpegQuality: 100
+					thumbnailHeight: <?= intval($converter['height'])?>,
+					thumbnailWidth: <?= intval($converter['width'])?>,
+					thumbnailJpegQuality: <?= $Params['thumbnailJpegQuality']?>
 				<?endif;?>
 			});
-		<?endfor;?>
+		<?endforeach;?>
 
 		BXFIU_<?= CUtil::JSEscape($id)?>.set(bxp);
 		// Apply localization

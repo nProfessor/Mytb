@@ -260,7 +260,7 @@ $MESS["SUP_ACT_F_USER_PASSWORD_CONFIRM"] = "Confirm Password";
 $MESS["SUP_NO_KEY_PROMT_SRC"] = "Please type the license key in the respective text field. The license key can be found on your CD jewel case, or in your purchase confirmation email. A good license key looks like SMX-XX-XXXXXXXXXXXXXXX, here X is an arbitrary alphanumeric character.";
 $MESS["SUPN_NO_FOLDER_EX"] = "The folder \"#FILE#\" does not exist.";
 $MESS["SUPN_CU_RD_TMP_CAT"] = "The folder \"#FILE#\" cannot be read.";
-$MESS["SUP_MYSQL_L4"] = "As of version 5.0 and later, Bitrix Site Manager requires MySQL 4.0.18 or higher. An installation of MySQL #VERS# has been detected. Should you have any questions regarding minimum system requirements, please contact the <a href=\"http://www.bitrixsoft.com/support/\" target=\"_blank\">Helpdesk service</a>.";
+$MESS["SUP_MYSQL_L4"] = "As of version 5.0 and later, Bitrix Site Manager requires MySQL 5.0.0 or higher. An installation of MySQL #VERS# has been detected. Should you have any questions regarding minimum system requirements, please contact the <a href=\"http://www.bitrixsoft.com/support/\" target=\"_blank\">Helpdesk service</a>.";
 $MESS["SUP_STABLE_OFF"] = "Beta versions of updates are allowed on your site.";
 $MESS["SUP_STABLE_OFF_PROMT"] = "Beta versions of updates are allowed to be installed on your site. If you prefer to install only stable updates, please disable beta versions on this page or in the Kernel module settings.";
 $MESS["SUP_STABLE_ON_PROMT"] = "Only stable updates are allowed to be installed on your site. If you want to download and install beta updates, please enable this feature on this page or in the Kernel module settings.";

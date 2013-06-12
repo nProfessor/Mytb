@@ -54,9 +54,23 @@ Rating = function(voteId, entityTypeId, entityId, available, userId, localize, t
 
 Rating.Set = function(voteId, entityTypeId, entityId, available, userId, localize, template, pathToUserProfile)
 {
-	BXRS[voteId] = new Rating(voteId, entityTypeId, entityId, available, userId, localize, template, pathToUserProfile);
-	if (BXRS[voteId].enabled)
-		Rating.Init(voteId);	
+	if (template === undefined)
+		template = 'standart';
+
+	if (!BXRS[voteId] || BXRS[voteId].tryToSet <= 5)
+	{
+		var tryToSend = BXRS[voteId] && BXRS[voteId].tryToSet? BXRS[voteId].tryToSet: 1;
+		BXRS[voteId] = new Rating(voteId, entityTypeId, entityId, available, userId, localize, template, pathToUserProfile);
+		if (BXRS[voteId].enabled)
+			Rating.Init(voteId);
+		else
+		{
+			setTimeout(function(){
+				BXRS[voteId].tryToSet = tryToSend+1;
+				Rating.Set(voteId, entityTypeId, entityId, available, userId, localize, template, pathToUserProfile);
+			}, 500);
+		}
+	}
 };
 
 Rating.Init = function(voteId)

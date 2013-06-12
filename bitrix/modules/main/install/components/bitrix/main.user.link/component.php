@@ -26,40 +26,49 @@ $arParams['AJAX_CALL'] = $_GET["MUL_MODE"];
 
 if ($bSocialNetwork)
 {
-	if ($bIntranet)
+	if (!array_key_exists("SHOW_FIELDS", $arParams) || !$arParams["SHOW_FIELDS"])
 	{
-		$arTooltipFieldsDefault	= serialize(array(
-			"EMAIL",
-			"WORK_PHONE",
-			"PERSONAL_PHOTO",
-			"PERSONAL_CITY",
-			"WORK_COMPANY",
-			"WORK_POSITION",
-			"MANAGERS",
-		));
-		$arTooltipPropertiesDefault = serialize(array(
-			"UF_DEPARTMENT",
-			"UF_PHONE_INNER",
-			"UF_SKYPE",
-		));
-	}
-	else
-	{
-		$arTooltipFieldsDefault = serialize(array(
-			"PERSONAL_ICQ",
-			"PERSONAL_BIRTHDAY",
-			"PERSONAL_PHOTO",
-			"PERSONAL_CITY",
-			"WORK_COMPANY",
-			"WORK_POSITION"
-		));
-		$arTooltipPropertiesDefault = serialize(array());
+		$arParams["SHOW_FIELDS"] = unserialize(COption::GetOptionString("socialnetwork", "tooltip_fields", 's:0:"";'));
+		if (!is_array($arParams["SHOW_FIELDS"]))
+		{
+			if ($bIntranet)
+				$arParams["SHOW_FIELDS"] = array(
+					"EMAIL",
+					"WORK_PHONE",
+					"PERSONAL_PHOTO",
+					"PERSONAL_CITY",
+					"WORK_COMPANY",
+					"WORK_POSITION",
+					"MANAGERS",
+				);
+			else
+				$arParams["SHOW_FIELDS"] = array(
+					"PERSONAL_ICQ",
+					"PERSONAL_BIRTHDAY",
+					"PERSONAL_PHOTO",
+					"PERSONAL_CITY",
+					"WORK_COMPANY",
+					"WORK_POSITION"
+				);
+		}
 	}
 
-	if (!array_key_exists("SHOW_FIELDS", $arParams) || !$arParams["SHOW_FIELDS"])
-		$arParams["SHOW_FIELDS"] = unserialize(COption::GetOptionString("socialnetwork", "tooltip_fields", $arTooltipFieldsDefault));
 	if (!array_key_exists("USER_PROPERTY", $arParams) || !$arParams["USER_PROPERTY"])
-		$arParams["USER_PROPERTY"] = unserialize(COption::GetOptionString("socialnetwork", "tooltip_properties", $arTooltipPropertiesDefault));
+	{
+		$arParams["USER_PROPERTY"] = unserialize(COption::GetOptionString("socialnetwork", "tooltip_properties", 's:0:"";'));
+		if (!is_array($arParams["USER_PROPERTY"]))
+		{
+			if ($bIntranet)
+				$arParams["USER_PROPERTY"] = array(
+					"UF_DEPARTMENT",
+					"UF_PHONE_INNER",
+					"UF_SKYPE",
+				);
+			else
+				$arParams["USER_PROPERTY"] = array(
+				);
+		}
+	}
 
 	if (COption::GetOptionString("socialnetwork", "tooltip_show_rating", "N") == "Y")
 		$arParams["USER_RATING"] = unserialize(COption::GetOptionString("socialnetwork", "tooltip_rating_id", serialize(array())));
@@ -265,6 +274,12 @@ if (strlen($arResult["FatalError"]) <= 0)
 
 			if (!$arResult["User"])
 				$arResult["FatalError"] = GetMessage("MAIN_UL_NO_ID").". ";
+			elseif(
+				$arParams['AJAX_CALL'] == 'INFO' 
+				&& CModule::IncludeModule("extranet")
+				&& !CExtranet::IsProfileViewable($arResult["User"], SITE_ID)
+			)
+				$arResult["FatalError"] = GetMessage("MAIN_UL_NO_ID").". ";
 
 			if (strlen($arResult["FatalError"]) <= 0 && $arParams["USE_THUMBNAIL_LIST"] == "Y" && $arParams['AJAX_CALL'] != 'INFO')
 			{
@@ -324,7 +339,7 @@ if (strlen($arResult["FatalError"]) <= 0)
 				$arResult["User"]['MANAGERS'] = CIntranetUtils::GetDepartmentManager($arResult["User"]["UF_DEPARTMENT"], $arResult["User"]["ID"], true);
 				foreach($arResult["User"]['MANAGERS'] as $key=>$manager)
 				{
-					$arResult["User"]['MANAGERS'][$key]["NAME_FORMATTED"] = CUser::FormatName($arParams['NAME_TEMPLATE'], $manager, $bUseLogin);
+					$arResult["User"]['MANAGERS'][$key]["NAME_FORMATTED"] = CUser::FormatName($arParams['NAME_TEMPLATE'], $manager, $bUseLogin, false);
 					$arResult["User"]['MANAGERS'][$key]["URL"] = CComponentEngine::MakePathFromTemplate($arParams["PATH_TO_SONET_USER_PROFILE"], array("user_id" => $manager["ID"], "USER_ID" => $manager["ID"], "ID" => $manager["ID"]));
 				}
 			}
@@ -412,7 +427,7 @@ if (strlen($arResult["FatalError"]) <= 0)
 				&& $arResult["CurrentUserPerms"]["Operations"]["message"]
 			)
 			{
-				$strOnclick = "if (typeof(BX) != 'undefined' && BX.IM) { BXIM.openMessenger(".$arResult["User"]["ID"]."); return false; } else { window.open('".$arResult["Urls"]["SonetMessageChat"]."', '', 'location=yes,status=no,scrollbars=yes,resizable=yes,width=700,height=550,top='+Math.floor((screen.height - 550)/2-14)+',left='+Math.floor((screen.width - 700)/2-5)); return false; }";			
+				$strOnclick = "if (typeof(BX) != 'undefined' && BX.IM) { BXIM.openMessenger(".$arResult["User"]["ID"]."); return false; } else { window.open('".$arResult["Urls"]["SonetMessageChat"]."', '', 'location=yes,status=no,scrollbars=yes,resizable=yes,width=700,height=550,top='+Math.floor((screen.height - 550)/2-14)+',left='+Math.floor((screen.width - 700)/2-5)); return false; }";
 				$strToolbar2 .= '<li class="bx-icon bx-icon-message"><span onmouseover="'.$strOnmouseover.'" onmouseout="'.$strOnmouseout.'" onclick="'.$strOnclick.'">'.GetMessage("MAIN_UL_TOOLBAR_MESSAGES_CHAT").'</span></li>';
 			}
 
@@ -460,11 +475,12 @@ if (strlen($arResult["FatalError"]) <= 0)
 			);
 
 			$APPLICATION->RestartBuffer();
-			while (@ob_end_clean());
 
 			Header('Content-Type: application/x-javascript; charset='.LANG_CHARSET);
 
 			echo CUtil::PhpToJsObject(array('RESULT' => $arResult));
+
+			require($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/include/epilog_after.php");
 			die();
 
 		}

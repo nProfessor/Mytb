@@ -11,19 +11,27 @@ class CIBlockXMLFile
 	var $element_stack = false;
 	var $file_position = 0;
 
-	var $read_size = 1024;
+	var $read_size = 10240;
 	var $buf = "";
 	var $buf_position = 0;
 	var $buf_len = 0;
 
+	private $_get_xml_chunk_function = "_get_xml_chunk";
+
 	function __construct($table_name = "b_xml_tree")
 	{
-		return $this->CIBlockXMLFile($table_name);
-	}
-
-	function CIBlockXMLFile($table_name = "b_xml_tree")
-	{
 		$this->_table_name = strtolower($table_name);
+		if (defined("BX_UTF"))
+		{
+			if (function_exists("mb_orig_strpos") && function_exists("mb_orig_strlen") && function_exists("mb_orig_substr"))
+				$this->_get_xml_chunk_function = "_get_xml_chunk_mb_orig";
+			else
+				$this->_get_xml_chunk_function = "_get_xml_chunk_mb";
+		}
+		else
+		{
+			$this->_get_xml_chunk_function = "_get_xml_chunk";
+		}
 	}
 
 	function StartSession($sess_id)
@@ -94,7 +102,7 @@ class CIBlockXMLFile
 	*/
 	function DropTemporaryTables()
 	{
-		if(!is_object($this) || strlen($this->_table_name) <= 0)
+		if(!isset($this) || !is_object($this) || strlen($this->_table_name) <= 0)
 		{
 			$ob = new CIBlockXMLFile;
 			return $ob->DropTemporaryTables();
@@ -259,9 +267,9 @@ class CIBlockXMLFile
 			$end_time = time() + 365*24*3600; // One year
 
 		$cs = $this->charset;
-		$bMB = defined("BX_UTF");
+		$_get_xml_chunk = array($this, $this->_get_xml_chunk_function);
 		fseek($fp, $this->file_position);
-		while(($xmlChunk = $this->_get_xml_chunk($fp, $bMB)) !== false)
+		while(($xmlChunk = call_user_func_array($_get_xml_chunk, array($fp))) !== false)
 		{
 			if($cs)
 			{
@@ -301,7 +309,7 @@ class CIBlockXMLFile
 	Internal function.
 	Used to read an xml by chunks started with "<" and endex with "<"
 	*/
-	function _get_xml_chunk($fp, $bMB = false)
+	function _get_xml_chunk($fp)
 	{
 		if($this->buf_position >= $this->buf_len)
 		{
@@ -309,14 +317,14 @@ class CIBlockXMLFile
 			{
 				$this->buf = fread($fp, $this->read_size);
 				$this->buf_position = 0;
-				$this->buf_len = $bMB? mb_strlen($this->buf, 'latin1'): strlen($this->buf);
+				$this->buf_len = strlen($this->buf);
 			}
 			else
 				return false;
 		}
 
 		//Skip line delimiters (ltrim)
-		$xml_position = $bMB? mb_strpos($this->buf, "<", $this->buf_position, 'latin1'): strpos($this->buf, "<", $this->buf_position);
+		$xml_position = strpos($this->buf, "<", $this->buf_position);
 		while($xml_position === $this->buf_position)
 		{
 			$this->buf_position++;
@@ -328,12 +336,12 @@ class CIBlockXMLFile
 				{
 					$this->buf = fread($fp, $this->read_size);
 					$this->buf_position = 0;
-					$this->buf_len = $bMB? mb_strlen($this->buf, 'latin1'): strlen($this->buf);
+					$this->buf_len = strlen($this->buf);
 				}
 				else
 					return false;
 			}
-			$xml_position = $bMB? mb_strpos($this->buf, "<", $this->buf_position, 'latin1'): strpos($this->buf, "<", $this->buf_position);
+			$xml_position = strpos($this->buf, "<", $this->buf_position);
 		}
 
 		//Let's find next line delimiter
@@ -344,20 +352,152 @@ class CIBlockXMLFile
 			if(!feof($fp))
 			{
 				$this->buf .= fread($fp, $this->read_size);
-				$this->buf_len = $bMB? mb_strlen($this->buf, 'latin1'): strlen($this->buf);
+				$this->buf_len = strlen($this->buf);
 			}
 			else
 				break;
 
 			//Let's find xml tag start
-			$xml_position = $bMB? mb_strpos($this->buf, "<", $next_search, 'latin1'): strpos($this->buf, "<", $next_search);
+			$xml_position = strpos($this->buf, "<", $next_search);
 		}
 		if($xml_position===false)
 			$xml_position = $this->buf_len+1;
 
 		$len = $xml_position-$this->buf_position;
 		$this->file_position += $len;
-		$result = $bMB? mb_substr($this->buf, $this->buf_position, $len, 'latin1'): substr($this->buf, $this->buf_position, $len);
+		$result = substr($this->buf, $this->buf_position, $len);
+		$this->buf_position = $xml_position;
+
+		return $result;
+	}
+
+	/*
+	Internal function.
+	Used to read an xml by chunks started with "<" and endex with "<"
+	*/
+	function _get_xml_chunk_mb_orig($fp)
+	{
+		if($this->buf_position >= $this->buf_len)
+		{
+			if(!feof($fp))
+			{
+				$this->buf = fread($fp, $this->read_size);
+				$this->buf_position = 0;
+				$this->buf_len = mb_orig_strlen($this->buf);
+			}
+			else
+				return false;
+		}
+
+		//Skip line delimiters (ltrim)
+		$xml_position = mb_orig_strpos($this->buf, "<", $this->buf_position);
+		while($xml_position === $this->buf_position)
+		{
+			$this->buf_position++;
+			$this->file_position++;
+			//Buffer ended with white space so we can refill it
+			if($this->buf_position >= $this->buf_len)
+			{
+				if(!feof($fp))
+				{
+					$this->buf = fread($fp, $this->read_size);
+					$this->buf_position = 0;
+					$this->buf_len = mb_orig_strlen($this->buf);
+				}
+				else
+					return false;
+			}
+			$xml_position = mb_orig_strpos($this->buf, "<", $this->buf_position);
+		}
+
+		//Let's find next line delimiter
+		while($xml_position===false)
+		{
+			$next_search = $this->buf_len;
+			//Delimiter not in buffer so try to add more data to it
+			if(!feof($fp))
+			{
+				$this->buf .= fread($fp, $this->read_size);
+				$this->buf_len = mb_orig_strlen($this->buf);
+			}
+			else
+				break;
+
+			//Let's find xml tag start
+			$xml_position = mb_orig_strpos($this->buf, "<", $next_search);
+		}
+		if($xml_position===false)
+			$xml_position = $this->buf_len+1;
+
+		$len = $xml_position-$this->buf_position;
+		$this->file_position += $len;
+		$result = mb_orig_substr($this->buf, $this->buf_position, $len);
+		$this->buf_position = $xml_position;
+
+		return $result;
+	}
+
+	/*
+	Internal function.
+	Used to read an xml by chunks started with "<" and endex with "<"
+	*/
+	function _get_xml_chunk_mb($fp)
+	{
+		if($this->buf_position >= $this->buf_len)
+		{
+			if(!feof($fp))
+			{
+				$this->buf = fread($fp, $this->read_size);
+				$this->buf_position = 0;
+				$this->buf_len = mb_strlen($this->buf);
+			}
+			else
+				return false;
+		}
+
+		//Skip line delimiters (ltrim)
+		$xml_position = mb_strpos($this->buf, "<", $this->buf_position);
+		while($xml_position === $this->buf_position)
+		{
+			$this->buf_position++;
+			$this->file_position++;
+			//Buffer ended with white space so we can refill it
+			if($this->buf_position >= $this->buf_len)
+			{
+				if(!feof($fp))
+				{
+					$this->buf = fread($fp, $this->read_size);
+					$this->buf_position = 0;
+					$this->buf_len = mb_strlen($this->buf);
+				}
+				else
+					return false;
+			}
+			$xml_position = mb_strpos($this->buf, "<", $this->buf_position);
+		}
+
+		//Let's find next line delimiter
+		while($xml_position===false)
+		{
+			$next_search = $this->buf_len;
+			//Delimiter not in buffer so try to add more data to it
+			if(!feof($fp))
+			{
+				$this->buf .= fread($fp, $this->read_size);
+				$this->buf_len = mb_strlen($this->buf);
+			}
+			else
+				break;
+
+			//Let's find xml tag start
+			$xml_position = mb_strpos($this->buf, "<", $next_search);
+		}
+		if($xml_position===false)
+			$xml_position = $this->buf_len+1;
+
+		$len = $xml_position-$this->buf_position;
+		$this->file_position += $len;
+		$result = mb_substr($this->buf, $this->buf_position, $len);
 		$this->buf_position = $xml_position;
 
 		return $result;
@@ -512,6 +652,7 @@ class CIBlockXMLFile
 		}
 
 		//Array of the references to the arResult array members with xml_id as index.
+		$arSalt = array();
 		$arIndex = array();
 		$rs = $this->GetList(
 			array("ID" => "asc"),
@@ -521,15 +662,19 @@ class CIBlockXMLFile
 		{
 			if(isset($ar["VALUE_CLOB"]))
 				$ar["VALUE"] = $ar["VALUE_CLOB"];
+
+			if(isset($arSalt[$ar["PARENT_ID"]][$ar["NAME"]]))
+			{
+				$salt = ++$arSalt[$ar["PARENT_ID"]][$ar["NAME"]];
+				$ar["NAME"] .= $salt;
+			}
+			else
+			{
+				$arSalt[$ar["PARENT_ID"]][$ar["NAME"]] = 0;
+			}
+
 			if($ar["PARENT_ID"] == $arParent["ID"])
 			{
-				if(array_key_exists($ar["NAME"], $arResult))
-				{
-					$salt = 1;
-					while(array_key_exists($ar["NAME"].$salt, $arResult))
-						$salt++;
-					$ar["NAME"].=$salt;
-				}
 				$arResult[$ar["NAME"]] = $ar["VALUE"];
 				$arIndex[$ar["ID"]] = &$arResult[$ar["NAME"]];
 			}
@@ -538,13 +683,6 @@ class CIBlockXMLFile
 				$parent_id = $ar["PARENT_ID"];
 				if(!is_array($arIndex[$parent_id]))
 					$arIndex[$parent_id] = array();
-				if(array_key_exists($ar["NAME"], $arIndex[$parent_id]))
-				{
-					$salt = 1;
-					while(array_key_exists($ar["NAME"].$salt, $arIndex[$parent_id]))
-						$salt++;
-					$ar["NAME"].=$salt;
-				}
 				$arIndex[$parent_id][$ar["NAME"]] = $ar["VALUE"];
 				$arIndex[$ar["ID"]] = &$arIndex[$parent_id][$ar["NAME"]];
 			}

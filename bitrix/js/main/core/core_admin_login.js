@@ -226,6 +226,7 @@ BX.adminLogin.prototype.setAuthResult = function(result)
 			url: this.url,
 			method: !!this.post_data ? 'POST' : 'GET',
 			data: this.post_data,
+			processScriptsConsecutive: true,
 			onsuccess:  BX.delegate(this._loadAdmin, this),
 			onfailure: function() {
 				BX.debug(arguments);
@@ -259,6 +260,14 @@ BX.adminLogin.prototype.showError = function(field, error, callback, bSkipCount)
 	BX.defer(function(){
 		this.style.width = BX.firstChild(this).offsetWidth + 'px';
 	}, this.error_block)();
+
+	this.error_block._bxresizehandler = BX.defer(function(){
+		var pos = BX.pos(field);
+		this.style.top = pos.top + 'px';
+		this.style.left = pos.right + 'px';
+	}, this.error_block);
+
+	BX.bind(window, 'resize', this.error_block._bxresizehandler);
 }
 
 BX.adminLogin.prototype.hideError = function()
@@ -267,7 +276,12 @@ BX.adminLogin.prototype.hideError = function()
 		BX.removeClass(this.current_form.container, 'login-popup-error');
 
 	if (this.error_block && !!this.error_block.parentNode)
+	{
 		this.error_block.parentNode.removeChild(this.error_block)
+
+		BX.unbind(window, 'resize', this.error_block._bxresizehandler);
+		this.error_block._bxresizehandler = null;
+	}
 
 	BX.defer(this.enableFields, this)();
 }
@@ -311,11 +325,27 @@ BX.IAdminAuthForm.prototype.fix = function()
 {
 	var pos = BX.pos(this.container);
 
-	BX.adjust(this.container, {style:{
-		position: 'absolute',
-		top: pos.top + 'px',
-		left: pos.left + 'px'
-	}});
+	this.form.style.marginTop = (pos.top-60) + 'px'; // form
+	this.form.style.marginLeft = pos.left + 'px';
+
+	BX('popup_alignment', true).style.textAlign='left';
+	BX('popup_alignment', true).style.verticalAlign='top';
+
+	BX.bind(window, 'resize', BX.delegate(function(){
+		var wndSize = BX.GetWindowSize(),
+			margin_top = ((wndSize.innerHeight - this.offsetHeight) / 2) - 60,
+			margin_left = ((wndSize.innerWidth - this.offsetWidth) / 2);
+
+		if(margin_top >= 54 && wndSize.innerHeight >= 768)
+			this.style.marginTop = margin_top +'px';
+		else
+			this.style.marginTop = 54 +'px';
+
+		if(margin_left >= 115 && wndSize.innerWidth >= 716)
+			this.style.marginLeft = margin_left +'px';
+		else
+			this.style.marginLeft = 115 +'px';
+	}, this.form));
 }
 
 /* all forms handlers */

@@ -64,12 +64,19 @@ $arParams["SHOW_PRICE_COUNT"] = intval($arParams["SHOW_PRICE_COUNT"]);
 if($arParams["SHOW_PRICE_COUNT"]<=0)
 	$arParams["SHOW_PRICE_COUNT"]=1;
 $arParams["USE_PRODUCT_QUANTITY"] = $arParams["USE_PRODUCT_QUANTITY"]==="Y";
+$arParams['QUANTITY_FLOAT'] = (isset($arParams['QUANTITY_FLOAT']) && 'Y' == $arParams['QUANTITY_FLOAT'] ? 'Y' : 'N');
 
 if(!is_array($arParams["PRODUCT_PROPERTIES"]))
 	$arParams["PRODUCT_PROPERTIES"] = array();
 foreach($arParams["PRODUCT_PROPERTIES"] as $k=>$v)
 	if($v==="")
 		unset($arParams["PRODUCT_PROPERTIES"][$k]);
+
+if (!is_array($arParams["OFFERS_CART_PROPERTIES"]))
+	$arParams["OFFERS_CART_PROPERTIES"] = array();
+foreach($arParams["OFFERS_CART_PROPERTIES"] as $i => $pid)
+	if ($pid === "")
+		unset($arParams["OFFERS_CART_PROPERTIES"][$i]);
 
 $arParams["PRICE_VAT_INCLUDE"] = $arParams["PRICE_VAT_INCLUDE"] !== "N";
 
@@ -118,45 +125,68 @@ if(array_key_exists($arParams["ACTION_VARIABLE"], $_REQUEST) && array_key_exists
 	{
 		if (CModule::IncludeModule("sale") && CModule::IncludeModule("catalog") && CModule::IncludeModule('iblock'))
 		{
+			$QUANTITY = 0;
 			if($arParams["USE_PRODUCT_QUANTITY"])
-				$QUANTITY = intval($_REQUEST[$arParams["PRODUCT_QUANTITY_VARIABLE"]]);
-			if($QUANTITY <= 1)
-				$QUANTITY = 1;
-
-			$product_properties = array();
-			if(count($arParams["PRODUCT_PROPERTIES"]))
 			{
-				if(is_array($_REQUEST[$arParams["PRODUCT_PROPS_VARIABLE"]]))
+				if ('Y' == $arParams['QUANTITY_FLOAT'])
 				{
-					$product_properties = CIBlockPriceTools::CheckProductProperties(
-						$arParams["IBLOCK_ID"],
-						$productID,
-						$arParams["PRODUCT_PROPERTIES"],
-						$_REQUEST[$arParams["PRODUCT_PROPS_VARIABLE"]]
-					);
-					if(!is_array($product_properties))
-						$strError = GetMessage("CATALOG_ERROR2BASKET").".";
+					$QUANTITY = doubleval($_REQUEST[$arParams["PRODUCT_QUANTITY_VARIABLE"]]);
+					if ($QUANTITY <= 0)
+						$QUANTITY = 1;
 				}
 				else
 				{
-					$strError = GetMessage("CATALOG_ERROR2BASKET").".";
+					$QUANTITY = intval($_REQUEST[$arParams["PRODUCT_QUANTITY_VARIABLE"]]);
+					if($QUANTITY <= 1)
+						$QUANTITY = 1;
 				}
 			}
 
-			if(is_array($arParams["OFFERS_CART_PROPERTIES"]))
-			{
-				foreach($arParams["OFFERS_CART_PROPERTIES"] as $i => $pid)
-					if($pid === "")
-						unset($arParams["OFFERS_CART_PROPERTIES"][$i]);
+			$product_properties = array();
 
-				if(!empty($arParams["OFFERS_CART_PROPERTIES"]))
+		$rsItems = CIBlockElement::GetList(array(), array('ID' => $productID), false, false, array('ID', 'IBLOCK_ID'));
+			if ($arItem = $rsItems->Fetch())
+			{
+				$arItem['IBLOCK_ID'] = intval($arItem['IBLOCK_ID']);
+				if ($arItem['IBLOCK_ID'] == $arParams["IBLOCK_ID"])
 				{
-					$product_properties = CIBlockPriceTools::GetOfferProperties(
-						$productID,
-						$arParams["IBLOCK_ID"],
-						$arParams["OFFERS_CART_PROPERTIES"]
-					);
+					if (!empty($arParams["PRODUCT_PROPERTIES"]))
+					{
+						if (
+							array_key_exists($arParams["PRODUCT_PROPS_VARIABLE"], $_REQUEST)
+							&& is_array($_REQUEST[$arParams["PRODUCT_PROPS_VARIABLE"]])
+						)
+						{
+							$product_properties = CIBlockPriceTools::CheckProductProperties(
+								$arParams["IBLOCK_ID"],
+								$productID,
+								$arParams["PRODUCT_PROPERTIES"],
+								$_REQUEST[$arParams["PRODUCT_PROPS_VARIABLE"]]
+							);
+							if (!is_array($product_properties))
+								$strError = GetMessage("CATALOG_ERROR2BASKET").".";
+						}
+						else
+						{
+							$strError = GetMessage("CATALOG_ERROR2BASKET").".";
+						}
+					}
 				}
+				else
+				{
+					if (!empty($arParams["OFFERS_CART_PROPERTIES"]))
+					{
+						$product_properties = CIBlockPriceTools::GetOfferProperties(
+							$productID,
+							$arParams["IBLOCK_ID"],
+							$arParams["OFFERS_CART_PROPERTIES"]
+						);
+					}
+				}
+			}
+			else
+			{
+				$strError = GetMessage('CATALOG_PRODUCT_NOT_FOUND').".";
 			}
 
 			if(!$strError && Add2BasketByProductID($productID, $QUANTITY, $product_properties))
@@ -229,19 +259,27 @@ if($this->StartResultCache(false, array($arrFilter, ($arParams["CACHE_GROUPS"]==
 	//SELECT
 	$arSelect = array(
 		"ID",
-		"NAME",
-		"CODE",
-		"ACTIVE_FROM",
-		"ACTIVE_TO",
-		"DATE_CREATE",
-		"CREATED_BY",
 		"IBLOCK_ID",
-		"IBLOCK_SECTION_ID",
-		"DETAIL_PAGE_URL",
-		"PREVIEW_PICTURE",
+		"CODE",
+		"XML_ID",
+		"NAME",
+		"ACTIVE",
+		"DATE_ACTIVE_FROM",
+		"DATE_ACTIVE_TO",
+		"SORT",
 		"PREVIEW_TEXT",
 		"PREVIEW_TEXT_TYPE",
+		"DETAIL_TEXT",
+		"DETAIL_TEXT_TYPE",
+		"DATE_CREATE",
+		"CREATED_BY",
+		"TIMESTAMP_X",
+		"MODIFIED_BY",
 		"TAGS",
+		"IBLOCK_SECTION_ID",
+		"DETAIL_PAGE_URL",
+		"DETAIL_PICTURE",
+		"PREVIEW_PICTURE",
 		"PROPERTY_*",
 	);
 	//WHERE
@@ -291,6 +329,9 @@ if($this->StartResultCache(false, array($arrFilter, ($arParams["CACHE_GROUPS"]==
 	{
 		$arItem = $obElement->GetFields();
 
+		$arItem['ACTIVE_FROM'] = $arItem['DATE_ACTIVE_FROM'];
+		$arItem['ACTIVE_TO'] = $arItem['DATE_ACTIVE_TO'];
+
 		$arButtons = CIBlock::GetPanelButtons(
 			$arItem["IBLOCK_ID"],
 			$arItem["ID"],
@@ -301,6 +342,7 @@ if($this->StartResultCache(false, array($arrFilter, ($arParams["CACHE_GROUPS"]==
 		$arItem["DELETE_LINK"] = $arButtons["edit"]["delete_element"]["ACTION_URL"];
 
 		$arItem["PREVIEW_PICTURE"] = CFile::GetFileArray($arItem["PREVIEW_PICTURE"]);
+		$arItem["DETAIL_PICTURE"] = CFile::GetFileArray($arItem["DETAIL_PICTURE"]);
 
 		if(count($arParams["PROPERTY_CODE"]))
 			$arItem["PROPERTIES"] = $obElement->GetProperties();

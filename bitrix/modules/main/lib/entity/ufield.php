@@ -25,7 +25,7 @@ class UField extends Field
 	{
 		global $USER_FIELD_MANAGER;
 
-		$user_type = $USER_FIELD_MANAGER->GetUserType($info['USER_TYPE_ID']);
+		$user_type = $USER_FIELD_MANAGER->getUserType($info['USER_TYPE_ID']);
 
 		$this->base_type = $user_type['BASE_TYPE'];
 
@@ -57,7 +57,7 @@ class UField extends Field
 		$this->field_id = $info['ID'];
 	}
 
-	public function validateValue($value)
+	public function validateValue($value, $row, Result $result)
 	{
 		return true;
 	}
@@ -88,15 +88,15 @@ class UField extends Field
 		{
 			$utm_fname = 'VALUE';
 
-			if ($this->GetDataType() == 'integer')
+			if ($this->getDataType() == 'integer')
 			{
 				$utm_fname .= '_INT';
 			}
-			elseif ($this->GetDataType() == 'float')
+			elseif ($this->getDataType() == 'float')
 			{
 				$utm_fname .= '_DOUBLE';
 			}
-			elseif ($this->GetDataType() == 'datetime')
+			elseif ($this->getDataType() == 'datetime')
 			{
 				$utm_fname .= '_DATE';
 			}

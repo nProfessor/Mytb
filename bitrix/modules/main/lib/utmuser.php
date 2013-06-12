@@ -1,32 +1,53 @@
 <?php
-
+/**
+ * Bitrix Framework
+ * @package bitrix
+ * @subpackage main
+ * @copyright 2001-2012 Bitrix
+ */
 namespace Bitrix\Main;
 
 use Bitrix\Main\Entity;
 
-class UtmUserEntity extends Entity\Base
+class UtmUserTable extends Entity\DataManager
 {
-	protected function __construct() {}
-
-	public function initialize()
+	public static function getFilePath()
 	{
-		$this->className = __CLASS__;
-		$this->filePath = __FILE__;
+		return __FILE__;
+	}
 
-		// get ufields
+	public static function getTableName()
+	{
+		return 'b_utm_user';
+	}
+
+	public static function getUfId()
+	{
+		return 'USER';
+	}
+
+	public static function isUtm()
+	{
+		return true;
+	}
+
+	public static function getMap()
+	{
+		/** @global CUserTypeManager $USER_FIELD_MANAGER */
 		global $USER_FIELD_MANAGER;
 
-		$this->fieldsMap = $USER_FIELD_MANAGER->GetUserFields($this->uf_id);
+		// get ufields
+		$fieldsMap = $USER_FIELD_MANAGER->getUserFields(static::getUfId());
 
-		foreach ($this->fieldsMap as $k => $v)
+		foreach ($fieldsMap as $k => $v)
 		{
 			if ($v['MULTIPLE'] == 'N')
 			{
-				unset($this->fieldsMap[$k]);
+				unset($fieldsMap[$k]);
 			}
 		}
 
-		$this->fieldsMap = array_merge(array(
+		return array_merge(array(
 			'ID' => array(
 				'data_type' => 'integer',
 				'primary' => true
@@ -53,12 +74,6 @@ class UtmUserEntity extends Entity\Base
 			'VALUE_DATE' => array(
 				'data_type' => 'datetime'
 			)
-		), $this->fieldsMap);
-
-	}
-
-	public function isUtm()
-	{
-		return true;
+		), $fieldsMap);
 	}
 }

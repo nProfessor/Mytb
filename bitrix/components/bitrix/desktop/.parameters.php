@@ -1,31 +1,43 @@
-<?
-if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
+<?php
+if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)
+	die();
+
+/**
+ * Bitrix Framework
+ * @package bitrix
+ * @subpackage main
+ * @copyright 2001-2013 Bitrix
+ */
+
+/**
+ * Bitrix vars
+ * @param array $arCurrentValues
+ */
 
 include_once($_SERVER['DOCUMENT_ROOT'].'/bitrix/components/bitrix/desktop/include.php');
 
-$arComponentParameters = Array(
-	"GROUPS" => array(
-	),
-	"PARAMETERS" => Array(
-		"ID" => Array(
-				"NAME" => GetMessage("CMDESKTOP_PARAMS_ID"),
-				"TYPE" => "STRING",
-				"DEFAULT" => "holder1".(strlen($_REQUEST["src_site"]) > 0 ? $_REQUEST["src_site"] : ""),
-				"PARENT" => "DATA_SOURCE",
-			),
-		"CAN_EDIT" => Array(
-				"NAME" => GetMessage("CMDESKTOP_PARAMS_CAN_EDIT"),
-				"TYPE" => "CHECKBOX",
-				"DEFAULT" => "Y",
-				"PARENT" => "DATA_SOURCE",
-			),
-		"COLUMNS" => Array(
-				"NAME" => GetMessage("CMDESKTOP_PARAMS_COLUMNS"),
-				"TYPE" => "STRING",
-				"DEFAULT" => "3",
-				"PARENT" => "DATA_SOURCE",
-				"REFRESH"=> "Y"
-			),
+$arComponentParameters = array(
+	"GROUPS" => array(),
+	"PARAMETERS" => array(
+		"ID" => array(
+			"NAME" => GetMessage("CMDESKTOP_PARAMS_ID"),
+			"TYPE" => "STRING",
+			"DEFAULT" => "holder1".(strlen($_REQUEST["src_site"]) > 0 ? $_REQUEST["src_site"] : ""),
+			"PARENT" => "DATA_SOURCE",
+		),
+		"CAN_EDIT" => array(
+			"NAME" => GetMessage("CMDESKTOP_PARAMS_CAN_EDIT"),
+			"TYPE" => "CHECKBOX",
+			"DEFAULT" => "Y",
+			"PARENT" => "DATA_SOURCE",
+		),
+		"COLUMNS" => array(
+			"NAME" => GetMessage("CMDESKTOP_PARAMS_COLUMNS"),
+			"TYPE" => "STRING",
+			"DEFAULT" => "3",
+			"PARENT" => "DATA_SOURCE",
+			"REFRESH"=> "Y"
+		),
 	)
 );
 
@@ -33,14 +45,14 @@ if (IsModuleInstalled('intranet'))
 {
 	CModule::IncludeModule('socialnetwork');
 	
-	$arComponentParameters["PARAMETERS"]["PM_URL"] = Array(
+	$arComponentParameters["PARAMETERS"]["PM_URL"] = array(
 		'TYPE' => 'STRING',
 		'DEFAULT' => '/company/personal/messages/chat/#USER_ID#/',
 		'NAME' => GetMessage('CMDESKTOP_PARAMS_PM_URL'),
 		'PARENT' => 'ADDITIONAL_SETTINGS',
 	);
 
-	$arComponentParameters["PARAMETERS"]["PATH_TO_CONPANY_DEPARTMENT"] = Array(
+	$arComponentParameters["PARAMETERS"]["PATH_TO_CONPANY_DEPARTMENT"] = array(
 		'TYPE' => 'STRING',
 		'DEFAULT' => '/company/structure.php?set_filter_structure=Y&structure_UF_DEPARTMENT=#ID#',
 		'NAME' => GetMessage('CMDESKTOP_PARAMS_PATH_TO_CONPANY_DEPARTMENT'),
@@ -49,7 +61,7 @@ if (IsModuleInstalled('intranet'))
 
 	if (IsModuleInstalled("video"))
 	{
-		$arComponentParameters["PARAMETERS"]["PATH_TO_VIDEO_CALL"] = Array(
+		$arComponentParameters["PARAMETERS"]["PATH_TO_VIDEO_CALL"] = array(
 			'TYPE' => 'STRING',
 			'DEFAULT' => '/company/personal/video/#USER_ID#/',
 			'NAME' => GetMessage('CMDESKTOP_PARAMS_PATH_TO_VIDEO_CALL'),
@@ -57,7 +69,7 @@ if (IsModuleInstalled('intranet'))
 		);
 	}
 
-	$arComponentParameters["PARAMETERS"]["NAME_TEMPLATE"] = Array(
+	$arComponentParameters["PARAMETERS"]["NAME_TEMPLATE"] = array(
 		'TYPE' => 'LIST',
 		'NAME' => GetMessage('CMDESKTOP_PARAMS_NAME_TEMPLATE'),
 		'VALUES' => CComponentUtil::GetDefaultNameTemplates(),
@@ -67,7 +79,7 @@ if (IsModuleInstalled('intranet'))
 		'PARENT' => 'ADDITIONAL_SETTINGS',
 	);
 
-	$arComponentParameters["PARAMETERS"]["SHOW_LOGIN"] = Array(
+	$arComponentParameters["PARAMETERS"]["SHOW_LOGIN"] = array(
 		"NAME" => GetMessage("CMDESKTOP_PARAMS_SHOW_LOGIN"),
 		"TYPE" => "CHECKBOX",
 		"MULTIPLE" => "N",
@@ -80,7 +92,7 @@ if (IsModuleInstalled('intranet'))
 	$arComponentParameters["PARAMETERS"]["DATE_FORMAT"] = CComponentUtil::GetDateFormatField(GetMessage("CMDESKTOP_PARAMS_DATE_FORMAT"), 'ADDITIONAL_SETTINGS');
 	$arComponentParameters["PARAMETERS"]["DATE_FORMAT_NO_YEAR"] = CComponentUtil::GetDateFormatField(GetMessage("CMDESKTOP_PARAMS_DATE_FORMAT_NO_YEAR"), 'ADDITIONAL_SETTINGS', true);
 
-	$arComponentParameters["PARAMETERS"]["SHOW_YEAR"] = Array(
+	$arComponentParameters["PARAMETERS"]["SHOW_YEAR"] = array(
 		"PARENT" => "ADDITIONAL_SETTINGS",
 		"NAME" => GetMessage("CMDESKTOP_PARAMS_SHOW_YEAR"),
 		"TYPE" => "LIST",
@@ -101,7 +113,7 @@ if($arCurrentValues["COLUMNS"]>0)
 	$d = intval(100/$arCurrentValues["COLUMNS"])."%";
 
 	for($i=0; $i<$arCurrentValues["COLUMNS"]; $i++)
-		$arComponentParameters["PARAMETERS"]["COLUMN_WIDTH_".$i] = Array(
+		$arComponentParameters["PARAMETERS"]["COLUMN_WIDTH_".$i] = array(
 				"NAME"=>GetMessage("CMDESKTOP_PARAMS_COLUMN_WITH")." #".($i+1),
 				"PARENT" => "DATA_SOURCE",
 				"TYPE"=>"STRING",
@@ -109,7 +121,7 @@ if($arCurrentValues["COLUMNS"]>0)
 			);
 }
 
-$arComponentParameters["PARAMETERS"]["GADGETS"] = Array(
+$arComponentParameters["PARAMETERS"]["GADGETS"] = array(
 		"NAME" => GetMessage("CMDESKTOP_PARAMS_GADGETS"),
 		"TYPE" => "LIST",
 		"DEFAULT" => "ALL",
@@ -117,7 +129,7 @@ $arComponentParameters["PARAMETERS"]["GADGETS"] = Array(
 		"MULTIPLE" => "Y",
 		"SIZE"=>"10",
 		"REFRESH" => "Y",
-		"VALUES" => Array("ALL"=>GetMessage("CMDESKTOP_PARAMS_GADGETS_ALL")),
+		"VALUES" => array("ALL"=>GetMessage("CMDESKTOP_PARAMS_GADGETS_ALL")),
 	);
 
 $arGadgets = BXGadget::GetList(true, $arCurrentValues);
@@ -173,7 +185,7 @@ foreach($arGadgets as $gd)
 	{
 		if(is_array($gd["PARAMETERS"]) && count($gd["PARAMETERS"])>0)
 		{
-			$arComponentParameters["GROUPS"]["G_".$gd["ID"]] = Array("NAME" => GetMessage("CMDESKTOP_PARAMS_GADGET_SET")." \"".$gd["NAME"]."\"");
+			$arComponentParameters["GROUPS"]["G_".$gd["ID"]] = array("NAME" => GetMessage("CMDESKTOP_PARAMS_GADGET_SET")." \"".$gd["NAME"]."\"");
 			foreach($gd["PARAMETERS"] as $id=>$p)
 			{
 				$p["PARENT"] = "G_".$gd["ID"];
@@ -183,7 +195,7 @@ foreach($arGadgets as $gd)
 
 		if(is_array($gd["USER_PARAMETERS"]) && count($gd["USER_PARAMETERS"])>0)
 		{
-			$arComponentParameters["GROUPS"]["GU_".$gd["ID"]] = Array("NAME" => GetMessage("CMDESKTOP_PARAMS_GADGET_PAR")." \"".$gd["NAME"]."\"");
+			$arComponentParameters["GROUPS"]["GU_".$gd["ID"]] = array("NAME" => GetMessage("CMDESKTOP_PARAMS_GADGET_PAR")." \"".$gd["NAME"]."\"");
 			foreach($gd["USER_PARAMETERS"] as $id=>$p)
 			{
 				$p["PARENT"] = "GU_".$gd["ID"];
@@ -192,4 +204,3 @@ foreach($arGadgets as $gd)
 		}
 	}
 }
-?>

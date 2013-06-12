@@ -24,6 +24,8 @@ $aTabs = array(
 		"OPTIONS" => Array(
 			"use_stemming" => Array(GetMessage("SEARCH_OPTIONS_USE_STEMMING"), Array("checkbox", "N")),
 			"letters" => Array(GetMessage("SEARCH_OPTIONS_LETTERS"), Array("text", 45)),
+			"agent_stemming" => Array(GetMessage("SEARCH_OPTIONS_AGENT_STEMMING"), Array("checkbox", "N")),
+			"agent_duration" => Array(GetMessage("SEARCH_OPTIONS_AGENT_DURATION"), Array("text", 6)),
 		)
 	),
 	array(

@@ -1,16 +1,37 @@
 <?
+/**
+ * Bitrix Framework
+ * @package bitrix
+ * @subpackage main
+ * @copyright 2001-2013 Bitrix
+ */
+
+/**
+ * Bitrix vars
+ *
+ * @var array $arParams
+ * @var array $arResult
+ * @var CBitrixComponentTemplate $this
+ * @var CBitrixComponent $component
+ * @global CMain $APPLICATION
+ * @global CUser $USER
+ */
+
 if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== true)
 	die();
 
 //color schemes
-$arThemes = CGridOptions::GetThemes($this->GetFolder());
+if($arParams["USE_THEMES"])
+	$arThemes = CGridOptions::GetThemes($this->GetFolder());
+else
+	$arThemes = array();
 ?>
 
 <?if(!empty($arParams["FILTER"])):?>
 
 <?$APPLICATION->IncludeComponent(
 	"bitrix:main.interface.filter",
-	"",
+	$arParams["FILTER_TEMPLATE_NAME"],
 	array(
 		"GRID_ID"=>$arParams["~GRID_ID"],
 		"FILTER"=>$arParams["~FILTER"],
@@ -39,7 +60,7 @@ $arThemes = CGridOptions::GetThemes($this->GetFolder());
 		<td<?=($header["sort_state"] <> ''? ' class="bx-sorted"':'')?>><div class="empty"></div></td>
 <?endforeach?>
 	</tr>
-	<tr class="bx-grid-head" oncontextmenu="return bxGrid_<?=$arParams["GRID_ID"]?>.settingsMenu"<?if($GLOBALS['USER']->IsAuthorized()):?> ondblclick="bxGrid_<?=$arParams["GRID_ID"]?>.EditCurrentView()"<?endif?>>
+	<tr class="bx-grid-head" oncontextmenu="return bxGrid_<?=$arParams["GRID_ID"]?>.settingsMenu"<?if($USER->IsAuthorized()):?> ondblclick="bxGrid_<?=$arParams["GRID_ID"]?>.EditCurrentView()"<?endif?>>
 <?if($arResult["ALLOW_EDIT"]):?>
 		<td class="bx-checkbox-col" width="1%"><input type="checkbox" name="" id="<?=$arParams["GRID_ID"]?>_check_all" value="" title="<?echo GetMessage("interface_grid_check_all")?>" onclick="bxGrid_<?=$arParams["GRID_ID"]?>.SelectAllRows(this);"></td>
 <?endif?>
@@ -92,13 +113,13 @@ if(!empty($arParams["ROWS"])):
 foreach($arParams["ROWS"] as $index=>$aRow):
 
 	$jsActions[$index] = array();
+	$sDefAction = '';
+	$sDefTitle = '';
 	if(is_array($aRow["actions"]))
 	{
 		$jsActions[$index] = $aRow["actions"];
 
 		//find default action
-		$sDefAction = '';
-		$sDefTitle = '';
 		foreach($aRow["actions"] as $action)
 		{
 			if($action["DEFAULT"] == true)
@@ -275,7 +296,7 @@ if($arParams["~ACTIONS"]["custom_html"] <> ''):
 );?>
 <?endif;?>
 
-<?if($GLOBALS['USER']->IsAuthorized()):?>
+<?if($USER->IsAuthorized()):?>
 <div style="display:none">
 
 <div id="view_settings_<?=$arParams["GRID_ID"]?>">
@@ -607,7 +628,7 @@ $variables = array(
 	"template_path"=>$this->GetFolder(),
 	"sessid"=>bitrix_sessid(),
 	"current_url"=>$arResult["CURRENT_URL"],
-	"user_authorized"=>$GLOBALS['USER']->IsAuthorized(),
+	"user_authorized"=>$USER->IsAuthorized(),
 );
 ?>
 
@@ -651,8 +672,9 @@ foreach($arResult["OPTIONS"]["views"] as $view_id=>$view):
 endforeach;
 ?>
 	{'SEPARATOR': true},
-	{'TEXT': '<?=CUtil::JSEscape(GetMessage("interface_grid_views"))?>', 'TITLE': '<?=CUtil::JSEscape(GetMessage("interface_grid_views_mnu_title"))?>', 'ONCLICK':'bxGrid_<?=$arParams["GRID_ID"]?>.ShowViews()', 'DISABLED':<?=($USER->IsAuthorized()? 'false':'true')?>, 'ICONCLASS':'grid-views'},
-	{'TEXT': '<?=CUtil::JSEscape(GetMessage("interface_grid_colors"))?>', 'TITLE': '<?=CUtil::JSEscape(GetMessage("interface_grid_colors_title"))?>', 'CLASS': 'bx-grid-themes-menu-item', 'MENU':[
+	{'TEXT': '<?=CUtil::JSEscape(GetMessage("interface_grid_views"))?>', 'TITLE': '<?=CUtil::JSEscape(GetMessage("interface_grid_views_mnu_title"))?>', 'ONCLICK':'bxGrid_<?=$arParams["GRID_ID"]?>.ShowViews()', 'DISABLED':<?=($USER->IsAuthorized()? 'false':'true')?>, 'ICONCLASS':'grid-views'}
+<?if(!empty($arThemes)):?>
+	, {'TEXT': '<?=CUtil::JSEscape(GetMessage("interface_grid_colors"))?>', 'TITLE': '<?=CUtil::JSEscape(GetMessage("interface_grid_colors_title"))?>', 'CLASS': 'bx-grid-themes-menu-item', 'MENU':[
 <?
 $i = 0;
 foreach($arThemes as $theme):
@@ -663,6 +685,7 @@ foreach($arThemes as $theme):
 endforeach;
 ?>
 	], 'DISABLED':<?=($USER->IsAuthorized()? 'false':'true')?>, 'ICONCLASS':'grid-themes'}
+<?endif?>
 ];
 
 BX.ready(function(){bxGrid_<?=$arParams["GRID_ID"]?>.InitTable()});

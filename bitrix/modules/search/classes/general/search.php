@@ -119,8 +119,7 @@ class CAllSearch extends CDBResult
 			return;
 		}
 
-		$db_events = GetModuleEvents("search", "OnSearch");
-		while($arEvent = $db_events->Fetch())
+		foreach(GetModuleEvents("search", "OnSearch", true) as $arEvent)
 		{
 			$r = "";
 			if($bTagsSearch)
@@ -427,123 +426,172 @@ class CAllSearch extends CDBResult
 
 	function PrepareSearchResult($str)
 	{
-		$w = array();
-		foreach($this->Query->m_words as $k=>$v)
+		//$words - contains what we will highlight
+		$words = array();
+		foreach ($this->Query->m_words as $v)
 		{
 			$v = ToUpper($v);
-			$w[$v] = "KAV";
+			$words[$v] = "KAV";
 			if(strpos($v, "\"")!==false)
-				$w[str_replace("\"", "&QUOT;", $v)] = "KAV";
+				$words[str_replace("\"", "&QUOT;", $v)] = "KAV";
 		}
 
-		foreach($this->Query->m_stemmed_words as $k=>$v)
-			$w[ToUpper($v)]="STEM";
+		foreach ($this->Query->m_stemmed_words as $v)
+			$words[ToUpper($v)]="STEM";
 
-		if($this->Query->bStemming)
+		//Prepare upper case version of the string
+		if ($this->Query->bStemming)
 		{
+			//And add missing stemming words
 			$arStemInfo = stemming_init($this->Query->m_lang);
 			$a = stemming($this->Query->m_query, $this->Query->m_lang, true);
-			foreach($a as $stem => $cnt)
-				if(!preg_match("/cut[56]/i", $stem))
-					$w[$stem]="STEM";
-
-			$letters = $arStemInfo["letters"];
+			foreach ($a as $stem => $cnt)
+			{
+				if (!preg_match("/cut[56]/i", $stem))
+					$words[$stem] = "STEM";
+			}
+			$pcreLettersClass = "[".$arStemInfo["pcre_letters"]."]";
 			$strUpp = stemming_upper($str, $this->Query->m_lang);
 		}
 		else
 		{
 			$strUpp = ToUpper($str);
+			$pcreLettersClass = "";
 		}
 
-		$arPos = Array();
-		foreach($w as $search=>$type)
+		$wordsCount = count($words);
+
+		//We'll use regexp to find positions of the words in the text
+		$pregMask = "";
+		foreach ($words as $search => $type)
 		{
-			$p = strpos($strUpp, $search);
+			if ($type == "STEM")
+				$pregMask = "(?<!".$pcreLettersClass.")".preg_quote($search, "/").$pcreLettersClass."*|".$pregMask;
+			else
+				$pregMask = $pregMask."|".preg_quote($search, "/");
+		}
+		$pregMask = trim($pregMask, "|");
 
-			while($p!==false)
+		$arPos = array(); //This will contain positions of the first occurrence
+		$arPosW = array(); //This is "running" words array
+		$arPosP = array(); //and their positions
+		$arPosLast = false; //Best found combination of the positions
+		if (preg_match_all("/(".$pregMask.")/i".BX_UTF_PCRE_MODIFIER, $strUpp, $matches, PREG_SET_ORDER|PREG_OFFSET_CAPTURE))
+		{
+			foreach ($matches as $oneCase)
 			{
-				//Check if we are in the middle of the numeric entity
-				if(
-					preg_match("/^[0-9]+;/", substr($str, $p)) &&
-					preg_match("/^[0-9]+#&/", strrev(substr($str, 0, $p+strlen($search))))
-				)
+				$search = null;
+				if (isset($words[$oneCase[0][0]]))
 				{
-					$p = strpos($strUpp, $search, $p+1);
-				}
-				elseif($type=="STEM")
-				{
-					$l = strlen($strUpp);
-					for($s=$p; $s>=0 && strpos($letters, substr($strUpp, $s, 1))!==false;$s--){}
-					$s++;
-					for($e=$p; $e<$l && strpos($letters, substr($strUpp, $e, 1))!==false;$e++){}
-					$e--;
-					$a = stemming(substr($strUpp,$s,$e-$s+1), $this->Query->m_lang, true);
-
-					foreach($a as $stem => $cnt)
-					{
-						if($stem == $search)
-						{
-							$arPos[] = $p;
-							$p = false;
-							break;
-						}
-					}
-					if($p !== false)
-						$p = strpos($strUpp, $search, $p+1);
+					$search = $oneCase[0][0];
 				}
 				else
 				{
-					$arPos[] = $p;
-					$p=false;
+					$a = stemming($oneCase[0][0], $this->Query->m_lang, true);
+					foreach ($a as $stem => $cnt)
+					{
+						if (isset($words[$stem]))
+						{
+							$search = $stem;
+							break;
+						}
+					}
+				}
+
+				if (isset($search))
+				{
+					$p = $oneCase[0][1];
+					if (!isset($arPos[$search]))
+						$arPos[$search] = $p;
+					//Add to the tail of the running window
+					$arPosP[] = $p;
+					$arPosW[] = $search;
+					$cc = count($arPosW);
+					if ($cc >= $wordsCount)
+					{
+						//This cuts the tail of the running window
+						while ($cc > $wordsCount)
+						{
+							array_shift($arPosW);
+							array_shift($arPosP);
+							$cc--;
+						}
+						//Check if all the words present in the current window
+						if (count(array_unique($arPosW)) == $wordsCount)
+						{
+							//And check if positions is the best
+							if (
+								!$arPosLast
+								|| (
+									(max($arPosP) - min($arPosP)) < (max($arPosLast) - min($arPosLast))
+								))
+								$arPosLast = $arPosP;
+						}
+					}
 				}
 			}
 		}
 
-		if(count($arPos)<=0)
+		if ($arPosLast)
+			$arPos = $arPosLast;
+
+		//Nothing found just cut some text
+		if (empty($arPos))
 		{
 			$str_len = strlen($str);
 			$pos_end = 500;
-			while(($pos_end < $str_len) && (strpos(" ,.\n\r", substr($str, $pos_end, 1)) === false))
+			while (($pos_end < $str_len) && (strpos(" ,.\n\r", substr($str, $pos_end, 1)) === false))
 				$pos_end++;
 			return substr($str, 0, $pos_end).($pos_end < $str_len? "...": "");
 		}
 
 		sort($arPos);
 
-		$str_result = "";
-		$last_pos = -1;
+		$str_len = CUtil::BinStrlen($str);
 		$delta = 250/count($arPos);
-		$str_len = strlen($str);
-		foreach($arPos as $pos_mid)
+		$arOtr = array();
+		//Have to do it two times because Positions eat each other
+		for ($i = 0; $i < 2; $i++)
 		{
-			//Find where word begins
-			$pos_beg = $pos_mid - $delta;
-			if($pos_beg <= 0)
-				$pos_beg = 0;
-			while(($pos_beg > 0) && (strpos(" ,.\n\r", substr($str, $pos_beg, 1)) === false))
-				$pos_beg--;
+			$arOtr = array();
+			$last_pos = -1;
+			foreach ($arPos as $pos_mid)
+			{
+				//Find where sentence begins
+				$pos_beg = $pos_mid - $delta;
+				if($pos_beg <= 0)
+					$pos_beg = 0;
+				while(($pos_beg > 0) && (strpos(" ,.!?\n\r", CUtil::BinSubstr($str, $pos_beg, 1)) === false))
+					$pos_beg--;
 
-			//Find where word ends
-			$pos_end = $pos_mid + $delta;
-			if($pos_end > $str_len)
-				$pos_end = $str_len;
-			while(($pos_end < $str_len) && (strpos(" ,.\n\r", substr($str, $pos_end, 1)) === false))
-				$pos_end++;
+				//Find where sentence ends
+				$pos_end = $pos_mid + $delta;
+				if($pos_end > $str_len)
+					$pos_end = $str_len;
+				while(($pos_end < $str_len) && (strpos(" ,.!?\n\r", CUtil::BinSubstr($str, $pos_end, 1)) === false))
+					$pos_end++;
 
-			if($pos_beg <= $last_pos)
-				$arOtr[count($arOtr)-1][1] = $pos_end;
-			else
-				$arOtr[] = Array($pos_beg, $pos_end);
+				if($pos_beg <= $last_pos)
+					$arOtr[count($arOtr)-1][1] = $pos_end;
+				else
+					$arOtr[] = array($pos_beg, $pos_end);
 
-			$last_pos = $pos_end;
+				$last_pos = $pos_end;
+			}
+			//Adjust length of the text
+			$delta = 250/count($arOtr);
 		}
 
-		for($i=0; $i<count($arOtr); $i++)
-			$str_result .= ($arOtr[$i][0]<=0?"":" ...").
-					substr($str, $arOtr[$i][0], $arOtr[$i][1]-$arOtr[$i][0]).
-					($arOtr[$i][1]>=strlen($str)?"":"... ");
+		$str_result = "";
+		foreach ($arOtr as $borders)
+		{
+			$str_result .= ($borders[0]<=0? "": " ...")
+				.CUtil::BinSubstr($str, $borders[0], $borders[1] - $borders[0] + 1)
+				.($borders[1] >= $str_len? "": "... ")
+			;
+		}
 
-		foreach($w as $search => $type)
+		foreach ($words as $search => $type)
 			$str_result = $this->repl($search, $type, $str_result);
 
 		$str_result = str_replace("%/^%", "</b>", str_replace("%^%","<b>", $str_result));
@@ -585,8 +633,7 @@ class CAllSearch extends CDBResult
 
 			if(substr($r["URL"], 0, 1)=="=")
 			{
-				$events = GetModuleEvents("search", "OnSearchGetURL");
-				while ($arEvent = $events->Fetch())
+				foreach (GetModuleEvents("search", "OnSearchGetURL", true) as $arEvent)
 					$r["URL"] = ExecuteModuleEventEx($arEvent, array($r));
 			}
 
@@ -783,8 +830,7 @@ class CAllSearch extends CDBResult
 		{
 			if($bFull)
 			{
-				$db_events = GetModuleEvents("search", "OnBeforeFullReindexClear");
-				while($arEvent = $db_events->Fetch())
+				foreach(GetModuleEvents("search", "OnBeforeFullReindexClear", true) as $arEvent)
 					ExecuteModuleEventEx($arEvent);
 
 				CSearchTags::CleanCache();
@@ -879,8 +925,7 @@ class CAllSearch extends CDBResult
 		//for every who wants to reindex
 		$oCallBack = new CSearchCallback;
 		$oCallBack->max_execution_time = $max_execution_time;
-		$db_events = GetModuleEvents("search", "OnReindex");
-		while($arEvent = $db_events->Fetch())
+		foreach(GetModuleEvents("search", "OnReindex", true) as $arEvent)
 		{
 			if($NS["MODULE_ID"]!="" && $NS["MODULE_ID"]!=$arEvent["TO_MODULE_ID"]) continue;
 			if($max_execution_time>0 && strlen($NS["MODULE"])>0 && $NS["MODULE"]!= "main" && $NS["MODULE"]!=$arEvent["TO_MODULE_ID"]) continue;
@@ -892,13 +937,11 @@ class CAllSearch extends CDBResult
 			$arResult = ExecuteModuleEventEx($arEvent, array($NS, $r, "Index"));
 			if(is_array($arResult)) //old way
 			{
-				if(count($arResult)>0)
+				foreach($arResult as $arFields)
 				{
-					for($i=0; $i<count($arResult); $i++)
+					$ID = $arFields["ID"];
+					if(strlen($ID) > 0)
 					{
-						$arFields = $arResult[$i];
-						$ID = $arFields["ID"];
-						if(strlen($ID)<=0) continue;
 						unset($arFields["ID"]);
 						$NS["CNT"]++;
 						CSearch::Index($arEvent["TO_MODULE_ID"], $ID, $arFields, false, $NS["SESS_ID"]);
@@ -944,8 +987,7 @@ class CAllSearch extends CDBResult
 
 		$NS=Array("CLEAR"=>"N", "MODULE"=>"", "ID"=>"", "SESS_ID"=>md5(uniqid("")));
 		//for every who wants to be reindexed
-		$db_events = GetModuleEvents("search", "OnReindex");
-		while($arEvent = $db_events->Fetch())
+		foreach(GetModuleEvents("search", "OnReindex", true) as $arEvent)
 		{
 			if($arEvent["TO_MODULE_ID"]!=$MODULE_ID) continue;
 
@@ -958,13 +1000,11 @@ class CAllSearch extends CDBResult
 			$arResult = ExecuteModuleEventEx($arEvent, array($NS, $r, "Index"));
 			if(is_array($arResult)) //old way
 			{
-				if(count($arResult)>0)
+				foreach($arResult as $arFields)
 				{
-					for($i=0; $i<count($arResult); $i++)
+					$ID = $arFields["ID"];
+					if(strlen($ID) > 0)
 					{
-						$arFields = $arResult[$i];
-						$ID = $arFields["ID"];
-						if(strlen($ID)<=0) continue;
 						unset($arFields["ID"]);
 						$NS["CNT"]++;
 						CSearch::Index($arEvent["TO_MODULE_ID"], $ID, $arFields, false, $NS["SESS_ID"]);
@@ -988,8 +1028,7 @@ class CAllSearch extends CDBResult
 
 		$arFields["MODULE_ID"] = $MODULE_ID;
 		$arFields["ITEM_ID"] = $ITEM_ID;
-		$db_events = GetModuleEvents("search", "BeforeIndex");
-		while($arEvent = $db_events->Fetch())
+		foreach(GetModuleEvents("search", "BeforeIndex", true) as $arEvent)
 		{
 			$arEventResult = ExecuteModuleEventEx($arEvent, array($arFields));
 			if(is_array($arEventResult))
@@ -1100,8 +1139,7 @@ class CAllSearch extends CDBResult
 
 			if($bTitle && $bBody && strlen($arFields["BODY"])<=0 && strlen($arFields["TITLE"])<=0)
 			{
-				$db_events = GetModuleEvents("search", "OnBeforeIndexDelete");
-				while($arEvent = $db_events->Fetch())
+				foreach(GetModuleEvents("search", "OnBeforeIndexDelete", true) as $arEvent)
 					ExecuteModuleEventEx($arEvent, array("SEARCH_CONTENT_ID = ".$ID));
 
 				CSearchTags::CleanCache("", $ID);
@@ -1109,21 +1147,21 @@ class CAllSearch extends CDBResult
 				$DB->Query("DELETE FROM b_search_content_param WHERE SEARCH_CONTENT_ID = ".$ID, false, "File: ".__FILE__."<br>Line: ".__LINE__);
 				$DB->Query("DELETE FROM b_search_content_right WHERE SEARCH_CONTENT_ID = ".$ID, false, "File: ".__FILE__."<br>Line: ".__LINE__);
 				$DB->Query("DELETE FROM b_search_content_site WHERE SEARCH_CONTENT_ID = ".$ID, false, "File: ".__FILE__."<br>Line: ".__LINE__);
-				$DB->Query("DELETE FROM b_search_content_stem WHERE SEARCH_CONTENT_ID = ".$ID, false, "File: ".__FILE__."<br>Line: ".__LINE__);
 				$DB->Query("DELETE FROM b_search_content_title WHERE SEARCH_CONTENT_ID = ".$ID, false, "File: ".__FILE__."<br>Line: ".__LINE__);
-				$DB->Query("DELETE FROM b_search_tags WHERE SEARCH_CONTENT_ID = ".$ID, false, "File: ".__FILE__."<br>Line: ".__LINE__);
+				$DB->Query("DELETE FROM b_search_content_stem WHERE SEARCH_CONTENT_ID = ".$ID, false, "File: ".__FILE__."<br>Line: ".__LINE__);
 				if(BX_SEARCH_VERSION > 1)
 					$DB->Query("DELETE FROM b_search_content_text WHERE SEARCH_CONTENT_ID = ".$ID, false, "File: ".__FILE__."<br>Line: ".__LINE__);
+				$DB->Query("DELETE FROM b_search_tags WHERE SEARCH_CONTENT_ID = ".$ID, false, "File: ".__FILE__."<br>Line: ".__LINE__);
 				$DB->Query("DELETE FROM b_search_content WHERE ID = ".$ID, false, "File: ".__FILE__."<br>Line: ".__LINE__);
 
 				return 0;
 			}
 
-			if(count($arGroups) > 0)
-				CAllSearch::SetContentItemGroups($ID, $arGroups);
-
 			if(is_set($arFields, "PARAMS"))
 				CAllSearch::SetContentItemParams($ID, $arFields["PARAMS"]);
+
+			if(count($arGroups) > 0)
+				CAllSearch::SetContentItemGroups($ID, $arGroups);
 
 			if(is_set($arFields, "SITE_ID"))
 			{
@@ -1223,12 +1261,15 @@ class CAllSearch extends CDBResult
 			if(strlen($SEARCH_SESS_ID)>0)
 				$arFields["UPD"] = $SEARCH_SESS_ID;
 
-
-			$db_events = GetModuleEvents("search", "OnBeforeIndexUpdate");
-			while($arEvent = $db_events->Fetch())
-				ExecuteModuleEventEx($arEvent, array($ID, $arFields));
-
-			CSearch::Update($ID, $arFields);
+			if(array_key_exists("TITLE", $arFields))
+			{
+				$DB->Query("DELETE FROM b_search_content_title WHERE SEARCH_CONTENT_ID = ".$ID, false, "File: ".__FILE__."<br>Line: ".__LINE__);
+				if(
+					!array_key_exists("INDEX_TITLE", $arFields)
+					|| $arFields["INDEX_TITLE"] !== false
+				)
+					CSearch::IndexTitle($arFields["SITE_ID"], $ID, $arFields["TITLE"]);
+			}
 
 			if(is_set($arFields, "SEARCHABLE_CONTENT"))
 			{
@@ -1241,7 +1282,10 @@ class CAllSearch extends CDBResult
 					{
 						CSearch::CleanFreqCache($ID);
 						$DB->Query("DELETE FROM b_search_content_stem WHERE SEARCH_CONTENT_ID = ".$ID, false, "File: ".__FILE__."<br>Line: ".__LINE__);
-						CSearch::StemIndex($arFields["SITE_ID"], $ID, $arFields["SEARCHABLE_CONTENT"]);
+						if (COption::GetOptionString("search", "agent_stemming") === "Y")
+							CSearch::DelayStemIndex($ID);
+						else
+							CSearch::StemIndex($arFields["SITE_ID"], $ID, $arFields["SEARCHABLE_CONTENT"]);
 						$DB->Query("DELETE FROM b_search_content_text WHERE SEARCH_CONTENT_ID = ".$ID, false, "File: ".__FILE__."<br>Line: ".__LINE__);
 						$arText = array(
 							"ID" => 1,
@@ -1256,18 +1300,11 @@ class CAllSearch extends CDBResult
 				{
 					CSearch::CleanFreqCache($ID);
 					$DB->Query("DELETE FROM b_search_content_stem WHERE SEARCH_CONTENT_ID = ".$ID, false, "File: ".__FILE__."<br>Line: ".__LINE__);
-					CSearch::StemIndex($arFields["SITE_ID"], $ID, $arFields["SEARCHABLE_CONTENT"]);
+					if (COption::GetOptionString("search", "agent_stemming") === "Y")
+						CSearch::DelayStemIndex($ID);
+					else
+						CSearch::StemIndex($arFields["SITE_ID"], $ID, $arFields["SEARCHABLE_CONTENT"]);
 				}
-			}
-
-			if(array_key_exists("TITLE", $arFields))
-			{
-				$DB->Query("DELETE FROM b_search_content_title WHERE SEARCH_CONTENT_ID = ".$ID, false, "File: ".__FILE__."<br>Line: ".__LINE__);
-				if(
-					!array_key_exists("INDEX_TITLE", $arFields)
-					|| $arFields["INDEX_TITLE"] !== false
-				)
-					CSearch::IndexTitle($arFields["SITE_ID"], $ID, $arFields["TITLE"]);
 			}
 
 			if($bTags && ($arResult["TAGS"] != $arFields["TAGS"]))
@@ -1276,6 +1313,11 @@ class CAllSearch extends CDBResult
 				$DB->Query("DELETE FROM b_search_tags WHERE SEARCH_CONTENT_ID = ".$ID, false, "File: ".__FILE__."<br>Line: ".__LINE__);
 				CSearch::TagsIndex($arFields["SITE_ID"], $ID, $arFields["TAGS"]);
 			}
+
+			foreach(GetModuleEvents("search", "OnBeforeIndexUpdate", true) as $arEvent)
+				ExecuteModuleEventEx($arEvent, array($ID, $arFields));
+
+			CSearch::Update($ID, $arFields);
 		}
 		else
 		{
@@ -1301,13 +1343,13 @@ class CAllSearch extends CDBResult
 
 			$ID = CSearch::Add($arFields);
 
-			$db_events = GetModuleEvents("search", "OnAfterIndexAdd");
-			while($arEvent = $db_events->Fetch())
+			foreach(GetModuleEvents("search", "OnAfterIndexAdd", true) as $arEvent)
 				ExecuteModuleEventEx($arEvent, array($ID, $arFields));
 
-			CAllSearch::SetContentItemGroups($ID, $arGroups);
 			if(is_set($arFields, "PARAMS"))
 				CAllSearch::SetContentItemParams($ID, $arFields["PARAMS"]);
+
+			CAllSearch::SetContentItemGroups($ID, $arGroups);
 
 			foreach($arFields["SITE_ID"] as $site=>$url)
 			{
@@ -1316,6 +1358,17 @@ class CAllSearch extends CDBResult
 					VALUES(".$ID.", '".$DB->ForSql($site, 2)."', '".$DB->ForSql($url, 2000)."')";
 				$DB->Query($strSql, false, "File: ".__FILE__."<br>Line: ".__LINE__);
 			}
+
+			if(
+				!array_key_exists("INDEX_TITLE", $arFields)
+				|| $arFields["INDEX_TITLE"] !== false
+			)
+				CSearch::IndexTitle($arFields["SITE_ID"], $ID, $arFields["TITLE"]);
+
+			if (COption::GetOptionString("search", "agent_stemming") === "Y")
+				CSearch::DelayStemIndex($ID);
+			else
+				CSearch::StemIndex($arFields["SITE_ID"], $ID, $arFields["SEARCHABLE_CONTENT"]);
 
 			if(BX_SEARCH_VERSION > 1)
 			{
@@ -1329,20 +1382,101 @@ class CAllSearch extends CDBResult
 				$DB->Add("b_search_content_text", $arText, Array("SEARCHABLE_CONTENT"));
 			}
 
-			CSearch::StemIndex($arFields["SITE_ID"], $ID, $arFields["SEARCHABLE_CONTENT"]);
 			CSearch::TagsIndex($arFields["SITE_ID"], $ID, $arFields["TAGS"]);
-
-			if(
-				!array_key_exists("INDEX_TITLE", $arFields)
-				|| $arFields["INDEX_TITLE"] !== false
-			)
-				CSearch::IndexTitle($arFields["SITE_ID"], $ID, $arFields["TITLE"]);
 
 			CSearch::CleanFreqCache($ID);
 		}
 		//$DB->Commit();
 
 		return $ID;
+	}
+
+	function DelayStemIndex($ID)
+	{
+		$DB = CDatabase::GetModuleConnection('search');
+		$ID = intval($ID);
+
+		$DB->Query("
+			delete from b_search_content_stem
+			where SEARCH_CONTENT_ID = -$ID
+		");
+		$DB->Query("
+			insert into b_search_content_stem
+			(SEARCH_CONTENT_ID, LANGUAGE_ID, STEM, TF".(BX_SEARCH_VERSION > 1? ",PS": "").")
+			values
+			(-$ID, 'en', 0, 0".(BX_SEARCH_VERSION > 1? ",0": "").")
+		");
+
+		CSearch::_addAgent();
+	}
+
+	private static function _addAgent()
+	{
+		global $APPLICATION;
+
+		static $bAgentAdded = false;
+		if(!$bAgentAdded)
+		{
+			$bAgentAdded = true;
+			$rsAgents = CAgent::GetList(array("ID"=>"DESC"), array("NAME" => "CSearch::DelayedStemIndex(%"));
+			if(!$rsAgents->Fetch())
+			{
+				$res = CAgent::AddAgent(
+					"CSearch::DelayedStemIndex();",
+					"search", //module
+					"N", //period
+					1 //interval
+				);
+
+				if(!$res)
+					$APPLICATION->ResetException();
+			}
+		}
+	}
+
+	function DelayedStemIndex()
+	{
+		$DB = CDatabase::GetModuleConnection('search');
+		$etime = time() + intval(COption::GetOptionString("search", "agent_duration"));
+		do {
+			$stemQueue = $DB->Query($DB->TopSql("
+				SELECT SEARCH_CONTENT_ID ID
+				FROM b_search_content_stem
+				WHERE SEARCH_CONTENT_ID < 0
+			", 1));
+			if($stemTask = $stemQueue->Fetch())
+			{
+				$ID = -$stemTask["ID"];
+
+				$sites = array();
+				$rsSite = $DB->Query("
+					SELECT SITE_ID, URL
+					FROM b_search_content_site
+					WHERE SEARCH_CONTENT_ID = ".$ID."
+				");
+				while($arSite = $rsSite->Fetch())
+					$sites[$arSite["SITE_ID"]] = $arSite["URL"];
+
+				if(BX_SEARCH_VERSION > 1)
+					$sql = "SELECT SEARCHABLE_CONTENT from b_search_content_text WHERE SEARCH_CONTENT_ID = $ID";
+				else
+					$sql = "SELECT SEARCHABLE_CONTENT from b_search_content WHERE ID = $ID";
+				$rsContent = $DB->Query($sql);
+				if ($arContent = $rsContent->Fetch())
+				{
+					$DB->Query("DELETE FROM b_search_content_stem WHERE SEARCH_CONTENT_ID = ".$ID);
+					CSearch::StemIndex($sites, $ID, $arContent["SEARCHABLE_CONTENT"]);
+				}
+				$DB->Query("DELETE FROM b_search_content_stem WHERE SEARCH_CONTENT_ID = ".$stemTask["ID"]);
+			}
+			else
+			{
+				//Cancel the agent
+				return "";
+			}
+
+		} while ($etime >= time());
+		return "CSearch::DelayedStemIndex();";
 	}
 
 	function KillEntities($str)
@@ -1424,8 +1558,7 @@ class CAllSearch extends CDBResult
 		}
 
 		$arrFile = false;
-		$events = GetModuleEvents("search", "OnSearchGetFileContent");
-		while($arEvent = $events->Fetch())
+		foreach(GetModuleEvents("search", "OnSearchGetFileContent", true) as $arEvent)
 		{
 			if($arrFile = ExecuteModuleEventEx($arEvent, array($file_abs_path, $SEARCH_SESS_ID)))
 				break;
@@ -1780,8 +1913,7 @@ class CAllSearch extends CDBResult
 				if(!is_array($arFilterEvents))
 				{
 					$arFilterEvents = array();
-					$events = GetModuleEvents("search", "OnSearchPrepareFilter");
-					while($arEvent = $events->Fetch())
+					foreach(GetModuleEvents("search", "OnSearchPrepareFilter", true) as $arEvent)
 						$arFilterEvents[] = $arEvent;
 				}
 				//Try to get someone to make the filter sql
@@ -2417,7 +2549,7 @@ class CAllSearchQuery
 
 		//Assume query does not have any word which can be stemmed
 		$this->bStemming = false;
-		if(!$this->bTagsSearch && $bUseStemming && COption::GetOptionString("search", "use_stemming", "N")=="Y")
+		if(!$this->bTagsSearch && $bUseStemming && COption::GetOptionString("search", "use_stemming")=="Y")
 		{
 			//In case when at least one word found: $this->bStemming = true
 			$stem_query = $this->StemQuery($query, $this->m_lang);

@@ -45,8 +45,13 @@
 		protected $arHtmlTags = array();
 		protected $bHtmlSpecChars = true;
 		protected $bDelSanitizedTags = true;
+		protected $bDoubleEncode = true;
 		protected $secLevel = self::SECURE_LEVEL_HIGH;
-		protected $arNoClose = array('br','hr','img','area','base','basefont','col','frame','input','isindex','link','meta','param');
+		protected $arNoClose = array(
+								'br','hr','img','area','base',
+								'basefont','col','frame','input',
+								'isindex','link','meta','param'
+								);
 		protected $localAlph;
 
 		protected $arTableTags = array(
@@ -62,16 +67,24 @@
 
 		public function __construct()
 		{
-			if(LANGUAGE_ID!="en")
-				$this->localAlph=GetMessage("SNT_SYMB");	//TODO: GetMessage("SNT_SYMB") -> {L} depend on php ver >= 5.1 Debug
+			if(SITE_CHARSET == "UTF-8")
+			{
+				$this->localAlph="\p{L}".GetMessage("SNT_SYMB_NONE_LETTERS");
+			}
+			elseif(LANGUAGE_ID != "en")
+			{
+				$this->localAlph=GetMessage("SNT_SYMB");
+			}
 			else
+			{
 				$this->localAlph="";
+			}
 		}
 
 		/**
-		 * Adds HTML tags and attributies to white list
+		 * Adds HTML tags and attributes to white list
 		 * @param mixed $arTags array('tagName1' = > array('attribute1','attribute2',...), 'tagName2' => ........)
-		 * @return count of added tags
+		 * @return int count of added tags
 		 */
 		public function AddTags($arTags)
 		{
@@ -84,7 +97,7 @@
 			foreach($arTags as $tagName => $arAttrs)
 			{
 				$tagName = strtolower($tagName);
-				$arAttrs = array_change_key_case($arAttrs,CASE_LOWER);
+				$arAttrs = array_change_key_case($arAttrs, CASE_LOWER);
 				$this->arHtmlTags[$tagName] = $arAttrs;
 				$counter++;
 			}
@@ -103,7 +116,7 @@
 		/**
 		 * Deletes tags from white list
 		 * @param mixed $arTagNames array('tagName1','tagname2',...)
-		 * @return int the count of deleted tags
+		 * @return int count of deleted tags
 		 */
 		public function DelTags($arTagNames)
 		{
@@ -132,6 +145,21 @@
 		{
 			$this->secLevel = self::SECURE_LEVEL_CUSTOM;
 			$this->arHtmlTags = array();
+		}
+
+		/**
+		 *  If is turned off Sanitizer will not encode existing html entities,
+		 *  in text blocks.
+		 *  The default is to convert everything.
+		 *	http://php.net/manual/ru/function.htmlspecialchars.php (double_encode)
+		 * @param bool $bApply true|false
+		 */
+		public function ApplyDoubleEncode($bApply=true)
+		{
+			if($bApply)
+				$this->bDoubleEncode = true;
+			else
+				$this->bDoubleEncode = false;
 		}
 
 		/**
@@ -164,7 +192,9 @@
 
 		/**
 		 * Sets security level from predefined
-		 * @param int $secLevel { CBXSanitizer::SECURE_LEVEL_HIGH | CBXSanitizer::SECURE_LEVEL_MIDDLE | CBXSanitizer::SECURE_LEVEL_LOW }
+		 * @param int $secLevel { 	CBXSanitizer::SECURE_LEVEL_HIGH
+		 *							| CBXSanitizer::SECURE_LEVEL_MIDDLE
+		 *							| CBXSanitizer::SECURE_LEVEL_LOW }
 		 */
 		public function SetLevel($secLevel)
 		{
@@ -175,9 +205,10 @@
 			{
 				case self::SECURE_LEVEL_HIGH:
 					$arTags = array(
-						'b'			=> array(),
+						'b'		=> array(),
 						'br'		=> array(),
 						'big'		=> array(),
+						'blockquote'	=> array(),
 						'code'		=> array(),
 						'del'		=> array(),
 						'dt'		=> array(),
@@ -190,18 +221,18 @@
 						'h5'		=> array(),
 						'h6'		=> array(),
 						'hr'		=> array(),
-						'i'			=> array(),
+						'i'		=> array(),
 						'ins'		=> array(),
 						'li'		=> array(),
 						'ol'		=> array(),
-						'p'			=> array(),
+						'p'		=> array(),
 						'small'		=> array(),
-						's'			=> array(),
+						's'		=> array(),
 						'sub'		=> array(),
 						'sup'		=> array(),
 						'strong'	=> array(),
 						'pre'		=> array(),
-						'u'			=> array(),
+						'u'		=> array(),
 						'ul'		=> array()
 					);
 
@@ -209,10 +240,11 @@
 
 				case self::SECURE_LEVEL_MIDDLE:
 					$arTags = array(
-						'a'			=> array('href', 'title','name','alt'),
-						'b'			=> array(),
+						'a'		=> array('href', 'title','name','alt'),
+						'b'		=> array(),
 						'br'		=> array(),
 						'big'		=> array(),
+						'blockquote'	=> array('title'),
 						'code'		=> array(),
 						'caption'	=> array(),
 						'del'		=> array('title'),
@@ -227,14 +259,14 @@
 						'h5'		=> array(),
 						'h6'		=> array(),
 						'hr'		=> array(),
-						'i'			=> array(),
+						'i'		=> array(),
 						'img'		=> array('src','alt','height','width','title'),
 						'ins'		=> array('title'),
 						'li'		=> array(),
 						'ol'		=> array(),
-						'p'			=> array(),
+						'p'		=> array(),
 						'pre'		=> array(),
-						's'			=> array(),
+						's'		=> array(),
 						'small'		=> array(),
 						'strong'	=> array(),
 						'sub'		=> array(),
@@ -246,17 +278,18 @@
 						'th'		=> array('width','height'),
 						'thead'		=> array('align','valign'),
 						'tr'		=> array('align','valign'),
-						'u'			=> array(),
+						'u'		=> array(),
 						'ul'		=> array()
 					);
 					break;
 
 				case self::SECURE_LEVEL_LOW:
 					$arTags = array(
-						'a'			=> array('href', 'title','name','style','id','class','shape','coords','alt','target'),
-						'b'			=> array('style','id','class'),
+						'a'		=> array('href', 'title','name','style','id','class','shape','coords','alt','target'),
+						'b'		=> array('style','id','class'),
 						'br'		=> array('style','id','class'),
 						'big'		=> array('style','id','class'),
+						'blockquote'	=> array('title','style','id','class'),
 						'caption'	=> array('style','id','class'),
 						'code'		=> array('style','id','class'),
 						'del'		=> array('title','style','id','class'),
@@ -271,20 +304,20 @@
 						'h5'		=> array('style','id','class','align'),
 						'h6'		=> array('style','id','class','align'),
 						'hr'		=> array('style','id','class'),
-						'i'			=> array('style','id','class'),
+						'i'		=> array('style','id','class'),
 						'img'		=> array('src','alt','height','width','title'),
 						'ins'		=> array('title','style','id','class'),
 						'li'		=> array('style','id','class'),
 						'map'		=> array('shape','coords','href','alt','title','style','id','class','name'),
 						'ol'		=> array('style','id','class'),
-						'p'			=> array('style','id','class','align'),
+						'p'		=> array('style','id','class','align'),
 						'pre'		=> array('style','id','class'),
-						's'			=> array('style','id','class'),
+						's'		=> array('style','id','class'),
 						'small'		=> array('style','id','class'),
 						'strong'	=> array('style','id','class'),
 						'span'		=> array('title','style','id','class','align'),
-						'sub'		=>array('style','id','class'),
-						'sup'		=>array('style','id','class'),
+						'sub'		=> array('style','id','class'),
+						'sup'		=> array('style','id','class'),
 						'table'		=> array('border','width','style','id','class','cellspacing','cellpadding'),
 						'tbody'		=> array('align','valign','style','id','class'),
 						'td'		=> array('width','height','style','id','class','align','valign','colspan','rowspan'),
@@ -292,10 +325,12 @@
 						'th'		=> array('width','height','style','id','class','colspan','rowspan'),
 						'thead'		=> array('align','valign','style','id','class'),
 						'tr'		=> array('align','valign','style','id','class'),
-						'u'			=> array('style','id','class'),
+						'u'		=> array('style','id','class'),
 						'ul'		=> array('style','id','class')
 					);
-
+					break;
+				default:
+					$arTags = array();
 					break;
 			}
 
@@ -316,34 +351,34 @@
 			{
 				case 'src':
 				case 'href':
-					if(!preg_match("#^(http://|https://|ftp://|file://|mailto:|callto:|\#|/)#i".BX_UTF_PCRE_MODIFIER,$attrValue))
+					if(!preg_match("#^(http://|https://|ftp://|file://|mailto:|callto:|\\#|/)#i".BX_UTF_PCRE_MODIFIER, $attrValue))
 						$arAttr[3] = "http://".$arAttr[3];
 
-					$valid = (!preg_match("#javascript:|data:|[^\w".$this->localAlph.":/\.=@;,!~\*\&\#\)(%\s\+\$\?\-]#i".BX_UTF_PCRE_MODIFIER,$attrValue)) ? true : false;
+					$valid = (!preg_match("#javascript:|data:|[^\\w".$this->localAlph.":/\\.=@;,!~\\*\\&\\#\\)(%\\s\\+\$\\?\\-]#i".BX_UTF_PCRE_MODIFIER, $attrValue)) ? true : false;
 					break;
 
 				case 'height':
 				case 'width':
 				case 'cellpadding':
 				case 'cellspacing':
-					$valid = !preg_match("#^[^0-9\-]+(px|%|\*)*#i".BX_UTF_PCRE_MODIFIER,$attrValue) ? true : false;
+					$valid = !preg_match("#^[^0-9\\-]+(px|%|\\*)*#i".BX_UTF_PCRE_MODIFIER, $attrValue) ? true : false;
 					break;
 
 				case 'title':
 				case 'alt':
-					$valid = !preg_match("#[^\w".$this->localAlph."\.\?!,:;\s\-]#i".BX_UTF_PCRE_MODIFIER,$attrValue) ? true : false;
+					$valid = !preg_match("#[^\\w".$this->localAlph."\\.\\?!,:;\\s\\-]#i".BX_UTF_PCRE_MODIFIER, $attrValue) ? true : false;
 					break;
 
 				case 'style':
-					$valid = !preg_match("#(behavior|expression|position|javascript)#i".BX_UTF_PCRE_MODIFIER,$attrValue) && !preg_match("#[^\w\s)(,:\.;\-]#i".BX_UTF_PCRE_MODIFIER,$attrValue) ? true : false;
+					$valid = !preg_match("#(behavior|expression|position|javascript)#i".BX_UTF_PCRE_MODIFIER, $attrValue) && !preg_match("#[^\\w\\s)(,:\\.;\\-]#i".BX_UTF_PCRE_MODIFIER, $attrValue) ? true : false;
 					break;
 
 				case 'coords':
-					$valid = !preg_match("#[^0-9\s,\-]#i".BX_UTF_PCRE_MODIFIER,$attrValue) ? true : false;
+					$valid = !preg_match("#[^0-9\\s,\\-]#i".BX_UTF_PCRE_MODIFIER, $attrValue) ? true : false;
 					break;
 
 				default:
-					$valid = !preg_match("#[^\#\w".$this->localAlph."\-\#\.]#i".BX_UTF_PCRE_MODIFIER,$attrValue) ? true : false;
+					$valid = !preg_match("#[^\\#\\w".$this->localAlph."\\-\\#\\.]#i".BX_UTF_PCRE_MODIFIER, $attrValue) ? true : false;
 					break;
 			}
 
@@ -404,6 +439,7 @@
 
 			$Sanitizer->ApplyHtmlSpecChars($htmlspecialchars);
 			$Sanitizer->DeleteSanitizedTags($delTags);
+			$Sanitizer->ApplyDoubleEncode();
 
 			return $Sanitizer->SanitizeHtml($html);
 		}
@@ -424,33 +460,21 @@
 
 			//split html to tag and simple text
 			$seg = array();
-			$offset = 0;
-			preg_match_all('/<[^<>]+>/si'.BX_UTF_PCRE_MODIFIER,$html,$matches);
-
-			foreach ($matches[0] as $match)
+			$arData = preg_split('/(<[^<>]+>)/si'.BX_UTF_PCRE_MODIFIER, $html, -1, PREG_SPLIT_DELIM_CAPTURE);
+			foreach($arData as $i => $chunk)
 			{
-				$matchPos = strpos($html, $match, $offset);
-
-				if($matchPos>0)
-				{
-					$text = substr($html, $offset, $matchPos-$offset);
-					$offset += strlen($text);
-					$seg[]=array('segType'=>'text', 'value'=> $text);
-				}
-
-				$seg[] = array('segType'=>'tag', 'value'=>$match);
-
-				$offset += strlen($match);
+				if ($i % 2)
+					$seg[] = array('segType'=>'tag', 'value'=>$chunk);
+				elseif ($chunk != "")
+					$seg[]=array('segType'=>'text', 'value'=> $chunk);
 			}
 
-			if($offset<strlen($html))
-				$seg[]=array('segType'=>'text', 'value'=> substr($html, $offset, strlen($html)));
-
 			//process segments
-			for($i=0; $i<count($seg); $i++)
+			$segCount = count($seg);
+			for($i=0; $i<$segCount; $i++)
 			{
 				if($seg[$i]['segType'] == 'text' && $this->bHtmlSpecChars)
-					$seg[$i]['value'] = htmlspecialcharsbx($seg[$i]['value'],ENT_QUOTES,LANG_CHARSET);
+					$seg[$i]['value'] = htmlspecialchars($seg[$i]['value'], ENT_QUOTES, LANG_CHARSET, $this->bDoubleEncode);
 				elseif($seg[$i]['segType'] == 'tag')
 				{
 					//find tag type (open/close), tag name, attributies
@@ -487,9 +511,9 @@
 						{
 							//Processing valid tables
 							//if find 'tr','td', etc...
-							if(array_key_exists($seg[$i]['tagName'],$this->arTableTags))
+							if(array_key_exists($seg[$i]['tagName'], $this->arTableTags))
 							{
-								$this->CleanTable($seg,$openTagsStack,$i,false);
+								$this->CleanTable($seg, $openTagsStack, $i, false);
 
 								if($seg[$i]['action'] == 'del')
 									continue;
@@ -502,7 +526,7 @@
 								if(in_array(strtolower($arTagAttr[1]), $this->arHtmlTags[$seg[$i]['tagName']]))
 									if($this->IsValidAttr($arTagAttr))
 										if($this->bHtmlSpecChars)
-											$attr[strtolower($arTagAttr[1])] = htmlspecialcharsbx($arTagAttr[3], ENT_QUOTES,LANG_CHARSET);
+											$attr[strtolower($arTagAttr[1])] = htmlspecialchars($arTagAttr[3], ENT_QUOTES, LANG_CHARSET, $this->bDoubleEncode);
 										else
 											$attr[strtolower($arTagAttr[1])] = $arTagAttr[3];
 
@@ -528,7 +552,7 @@
 							//if open tags stack is empty, or not include it's name lets screen/erase it
 							if((count($openTagsStack) == 0) || (!in_array($seg[$i]['tagName'], $openTagsStack)))
 							{
-								if($this->bDelSanitizedTags)
+								if($this->bDelSanitizedTags || $this->arNoClose)
 									$seg[$i]['action'] = 'del';
 								else
 								{
@@ -601,7 +625,7 @@
 		 * deletes all text and tags between diferent table tags if $delTextBetweenTags=true.
 		 * Checks if where are open tags from upper level if not - self-distructs.
 		 */
-		protected function CleanTable(&$seg,&$openTagsStack,$segIndex,$delTextBetweenTags=true)
+		protected function CleanTable(&$seg, &$openTagsStack, $segIndex, $delTextBetweenTags=true)
 		{
 			//if we found up level or not
 			$bFindUp = false;
@@ -616,7 +640,7 @@
 				//find back upper level
 				for($j=$segIndex-1;$j>=0;$j--)
 				{
-					if ($seg[$j]['segType'] != 'tag' || !array_key_exists($seg[$j]['tagName'],$this->arTableTags))
+					if ($seg[$j]['segType'] != 'tag' || !array_key_exists($seg[$j]['tagName'], $this->arTableTags))
 						continue;
 
 					if($seg[$j]['action'] == 'del')
@@ -727,7 +751,7 @@
 		{
 			$str = preg_replace_callback("/\&\#(\d+)([^\d])/is", array("CBXSanitizer", "_decode_cb"), $str);
 			$str = preg_replace_callback("/\&\#x([\da-f]+)([^\da-f])/is", array("CBXSanitizer", "_decode_cb_hex"), $str);
-			return str_replace('&colon;', ':', $str);
+			return str_replace(array("&colon;","&tab;","&newline;"), array(":","\t","\n"), $str);
 		}
 
 	};

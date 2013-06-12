@@ -55,12 +55,12 @@ if($arParams["~FOR_SPLIT"] == 'Y'):?>
 <?endforeach?>
 		</div>
 <?foreach($arParams["~POST"] as $key => $value):?>
+		<?if(!preg_match("|OPENID_IDENTITY|", $key)):?>
 		<input type="hidden" name="<?=$key?>" value="<?=$value?>" />
+		<?endif;?>
 <?endforeach?>
 		<input type="hidden" name="auth_service_id" value="" />
-		<?if(!$arParams["FORIE"]):?>
 	</form>
-	<?endif;?>
 </div>
 
 <?if($arParams["POPUP"]):?>

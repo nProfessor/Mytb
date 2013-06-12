@@ -4,21 +4,21 @@ if (!window.LHEButtons)
 LHEButtons['Source'] = {
 	id : 'Source',
 	width: 44,
-	name : LHE_MESS.Source,
+	name : BX.message.Source,
 	OnBeforeCreate: function(pLEditor, pBut)
 	{
 		if (pLEditor.bBBCode && !pLEditor.arConfig.bConvertContentFromBBCodes)
 		{
 			pBut.id = 'SourceBB';
-			pBut.name = pBut.title = LHE_MESS.BBSource;
+			pBut.name = pBut.title = BX.message.BBSource;
 		}
-		pBut.title += ": " + LHE_MESS.Off;
+		pBut.title += ": " + BX.message.Off;
 		return pBut;
 	},
 	handler : function(pBut)
 	{
 		var bHtml = pBut.pLEditor.sEditorMode == 'html';
-		pBut.pWnd.title = pBut.oBut.name + ": " + (bHtml ? LHE_MESS.On : LHE_MESS.Off);
+		pBut.pWnd.title = pBut.oBut.name + ": " + (bHtml ? BX.message.On : BX.message.Off);
 		pBut.pLEditor.SetView(bHtml ? 'code' : 'html');
 		pBut.Check(bHtml);
 	}
@@ -27,8 +27,14 @@ LHEButtons['Source'] = {
 // BASE
 LHEButtons['Anchor'] = {
 	id: 'Anchor',
-	name: LHE_MESS.Anchor,
+	name: BX.message.Anchor,
 	bBBHide: true,
+	OnBeforeCreate: function(pLEditor, pBut)
+	{
+		if (pLEditor.bBBCode)
+			return false;
+		return pBut;
+	},
 	handler: function(pBut)
 	{
 		pBut.pLEditor.OpenDialog({ id: 'Anchor'});
@@ -58,8 +64,8 @@ LHEButtons['Anchor'] = {
 
 LHEButtons['CreateLink'] = {
 	id : 'CreateLink',
-	name : LHE_MESS.CreateLink,
-	name_edit : LHE_MESS.EditLink,
+	name : BX.message.CreateLink,
+	name_edit : BX.message.EditLink,
 	OnBeforeCreate: function(pLEditor, pBut)
 	{
 		// Disable in non BBCode mode in html
@@ -146,7 +152,7 @@ LHEButtons['CreateLink'] = {
 
 LHEButtons['DeleteLink'] = {
 	id : 'DeleteLink',
-	name : LHE_MESS.DeleteLink,
+	name : BX.message.DeleteLink,
 	cmd : 'Unlink',
 	disableOnCodeView: true,
 	handler : function(pBut)
@@ -181,8 +187,8 @@ LHEButtons['DeleteLink'] = {
 
 LHEButtons['Image'] = {
 	id : 'Image',
-	name : LHE_MESS.Image,
-	name_edit : LHE_MESS.EditImage,
+	name : BX.message.Image,
+	name_edit : BX.message.EditImage,
 	OnBeforeCreate: function(pLEditor, pBut)
 	{
 		// Disable in non BBCode mode in html
@@ -263,14 +269,14 @@ LHEButtons['Image'] = {
 
 // LHEButtons['SpecialChar'] = {
 	// id : 'SpecialChar',
-	// name : LHE_MESS.SpecialChar,
+	// name : BX.message.SpecialChar,
 	// handler : function (pBut) {pBut.pLEditor.OpenDialog({id : 'SpecialChar'});}
 // };
 
 LHEButtons['Bold'] =
 {
 	id : 'Bold',
-	name : LHE_MESS.Bold + " (Ctrl + B)",
+	name : BX.message.Bold + " (Ctrl + B)",
 	OnBeforeCreate: function(pLEditor, pBut)
 	{
 		// Disable in non BBCode mode in html
@@ -287,7 +293,7 @@ LHEButtons['Bold'] =
 LHEButtons['Italic'] =
 {
 	id : 'Italic',
-	name : LHE_MESS.Italic + " (Ctrl + I)",
+	name : BX.message.Italic + " (Ctrl + I)",
 	cmd : 'Italic',
 	OnBeforeCreate: function(pLEditor, pBut)
 	{
@@ -304,7 +310,7 @@ LHEButtons['Italic'] =
 LHEButtons['Underline'] =
 {
 	id : 'Underline',
-	name : LHE_MESS.Underline + " (Ctrl + U)",
+	name : BX.message.Underline + " (Ctrl + U)",
 	cmd : 'Underline',
 	OnBeforeCreate: function(pLEditor, pBut)
 	{
@@ -320,7 +326,7 @@ LHEButtons['Underline'] =
 LHEButtons['RemoveFormat'] =
 {
 	id : 'RemoveFormat',
-	name : LHE_MESS.RemoveFormat,
+	name : BX.message.RemoveFormat,
 	//cmd : 'RemoveFormat',
 	OnBeforeCreate: function(pLEditor, pBut)
 	{
@@ -367,7 +373,7 @@ LHEButtons['RemoveFormat'] =
 
 LHEButtons['Strike'] = {
 	id : 'Strike',
-	name : LHE_MESS.Strike,
+	name : BX.message.Strike,
 	OnBeforeCreate: function(pLEditor, pBut)
 	{
 		// Disable in non BBCode mode in html
@@ -446,7 +452,7 @@ LHEButtons['Strike'] = {
 
 LHEButtons['Quote'] = {
 	id : 'Quote',
-	name : LHE_MESS.Quote + " (Ctrl + Q)",
+	name : BX.message.Quote + " (Ctrl + Q)",
 	OnBeforeCreate: function(pLEditor, pBut)
 	{
 		// Disable in non BBCode mode in html
@@ -559,7 +565,7 @@ LHEButtons['Quote'] = {
 
 LHEButtons['Code'] = {
 	id : 'Code',
-	name : LHE_MESS.InsertCode,
+	name : BX.message.InsertCode,
 	OnBeforeCreate: function(pLEditor, pBut)
 	{
 		// Disable in non BBCode mode in html
@@ -570,7 +576,7 @@ LHEButtons['Code'] = {
 	},
 	handler : function(pBut)
 	{
-		var arProps = {className: "lhe-code", title: LHE_MESS.CodeDel};
+		var arProps = {className: "lhe-code", title: BX.message.CodeDel};
 		if (!pBut.pLEditor.bBBCode)
 			arProps.id = pBut.pLEditor.SetBxTag(false, {tag: "code"});
 
@@ -600,7 +606,7 @@ LHEButtons['Code'] = {
 			if (!pBut.pLEditor.bBBCode)
 				strId = "id=\"" + pBut.pLEditor.SetBxTag(false, {tag: "code"}) + "\" ";
 
-			pBut.pLEditor.InsertHTML('<br/><pre ' + strId + 'class="lhe-code" title="' + LHE_MESS.CodeDel + '"><br id="lhe_bogus_code_br"/> </pre><br/>');
+			pBut.pLEditor.InsertHTML('<br/><pre ' + strId + 'class="lhe-code" title="' + BX.message.CodeDel + '"><br id="lhe_bogus_code_br"/> </pre><br/>');
 			setTimeout(
 				function()
 				{
@@ -632,7 +638,7 @@ LHEButtons['Code'] = {
 LHEButtons['InsertCut'] =
 {
 	id : 'InsertCut',
-	name : LHE_MESS.InsertCut,
+	name : BX.message.InsertCut,
 	OnBeforeCreate: function(pLEditor, pBut)
 	{
 		// Disable in non BBCode mode in html
@@ -666,23 +672,23 @@ LHEButtons['InsertCut'] =
 		}
 	}
 };
-LHEButtons['Translit'] = {id : 'Translit', name : LHE_MESS.Translit, cmd : 'none'};
+LHEButtons['Translit'] = {id : 'Translit', name : BX.message.Translit, cmd : 'none'};
 
 // Grouped buttons
 LHEButtons['JustifyLeft'] =
 LHEButtons['Justify'] =
 {
 	id : 'JustifyLeft_L',
-	name : LHE_MESS.ImgAlign + ": " + LHE_MESS.JustifyLeft,
+	name : BX.message.ImgAlign + ": " + BX.message.JustifyLeft,
 	type: 'List',
 	OnAfterCreate: function(pLEditor, pList)
 	{
 		pList.arJustifyInd = {justifyleft: 0, justifycenter: 1, justifyright: 2, justifyfull: 3};
 		pList.arJustify = [
-			{id : 'JustifyLeft', name : LHE_MESS.JustifyLeft, cmd : 'JustifyLeft', bb: 'LEFT'},
-			{id : 'JustifyCenter', name : LHE_MESS.JustifyCenter, cmd : 'JustifyCenter', bb: 'CENTER'},
-			{id : 'JustifyRight', name : LHE_MESS.JustifyRight, cmd : 'JustifyRight', bb: 'RIGHT'},
-			{id : 'JustifyFull', name : LHE_MESS.JustifyFull, cmd : 'JustifyFull', bb: 'JUSTIFY'}
+			{id : 'JustifyLeft', name : BX.message.JustifyLeft, cmd : 'JustifyLeft', bb: 'LEFT'},
+			{id : 'JustifyCenter', name : BX.message.JustifyCenter, cmd : 'JustifyCenter', bb: 'CENTER'},
+			{id : 'JustifyRight', name : BX.message.JustifyRight, cmd : 'JustifyRight', bb: 'RIGHT'},
+			{id : 'JustifyFull', name : BX.message.JustifyFull, cmd : 'JustifyFull', bb: 'JUSTIFY'}
 		];
 
 		var l = pList.arJustify.length, i;
@@ -716,7 +722,7 @@ LHEButtons['Justify'] =
 	{
 		// 1. Set icon
 		pList.pWnd.id = "lhe_btn_" + Justify.id.toLowerCase() + "_l";
-		pList.pWnd.title = LHE_MESS.ImgAlign + ": " + Justify.name;
+		pList.pWnd.title = BX.message.ImgAlign + ": " + Justify.name;
 
 		// 2. Set selected
 		pList.selected = Justify;
@@ -799,7 +805,7 @@ LHEButtons['Justify'] =
 LHEButtons['InsertOrderedList'] =
 {
 	id : 'InsertOrderedList',
-	name : LHE_MESS.OrderedList,
+	name : BX.message.OrderedList,
 	cmd : 'InsertOrderedList',
 	OnBeforeCreate: function(pLEditor, pBut)
 	{
@@ -815,7 +821,7 @@ LHEButtons['InsertOrderedList'] =
 LHEButtons['InsertUnorderedList'] =
 {
 	id : 'InsertUnorderedList',
-	name : LHE_MESS.UnorderedList,
+	name : BX.message.UnorderedList,
 	cmd : 'InsertUnorderedList',
 	OnBeforeCreate: function(pLEditor, pBut)
 	{
@@ -829,13 +835,13 @@ LHEButtons['InsertUnorderedList'] =
 	}
 };
 
-LHEButtons['Outdent'] = {id : 'Outdent', name : LHE_MESS.Outdent, cmd : 'Outdent', bBBHide: true};
-LHEButtons['Indent'] = {id : 'Indent', name : LHE_MESS.Indent, cmd : 'Indent', bBBHide: true};
+LHEButtons['Outdent'] = {id : 'Outdent', name : BX.message.Outdent, cmd : 'Outdent', bBBHide: true};
+LHEButtons['Indent'] = {id : 'Indent', name : BX.message.Indent, cmd : 'Indent', bBBHide: true};
 
 LHEButtons['Video'] = {
 	id: 'Video',
-	name: LHE_MESS.InsertVideo,
-	name_edit: LHE_MESS.EditVideo,
+	name: BX.message.InsertVideo,
+	name_edit: BX.message.EditVideo,
 	handler: function(pBut)
 	{
 		pBut.pLEditor.OpenDialog({ id: 'Video', obj: false});
@@ -867,7 +873,7 @@ LHEButtons['Video'] = {
 					if (JSConfig.image)
 						bgimg = 'background-image: url(' + JSConfig.image + ')!important; ';
 
-					return '<img class="bxed-video" id="' + pLEditor.SetBxTag(false, {tag: 'video', params: {id: id, JSConfig: JSConfig}}) + '" src="' + pLEditor.oneGif + '" style="' + bgimg + ' width: ' + w + '; height: ' + h + ';" title="' + LHE_MESS.Video + ': ' + JSConfig.file + '"/>';
+					return '<img class="bxed-video" id="' + pLEditor.SetBxTag(false, {tag: 'video', params: {id: id, JSConfig: JSConfig}}) + '" src="' + pLEditor.oneGif + '" style="' + bgimg + ' width: ' + w + '; height: ' + h + ';" title="' + BX.message.Video + ': ' + JSConfig.file + '"/>';
 				}
 				sContent = sContent.replace(/<script.*?silverlight\.js.*?<\/script>\s*?<script.*?wmvplayer\.js.*?<\/script>\s*?<div.*?id\s*?=\s*?("|\')(.*?)\1.*?<\/div>\s*?<script.*?jeroenwijering\.Player\(document\.getElementById\(("|\')\2\3.*?wmvplayer\.xaml.*?({.*?})\).*?<\/script>/ig, ReplaceWMV);
 
@@ -902,7 +908,7 @@ LHEButtons['Video'] = {
 					if (arFlashvars.image)
 						bgimg = 'background-image: url(' + arFlashvars.image + ')!important; ';
 
-					return '<img class="bxed-video" id="' + pLEditor.SetBxTag(false, {tag: 'video', params: arParams}) + '" src="' + pLEditor.oneGif + '" style="' + bgimg + ' width: ' + w + '; height: ' + h + ';" title="' + LHE_MESS.Video + ': ' + arParams.flashvars.file + '"/>';
+					return '<img class="bxed-video" id="' + pLEditor.SetBxTag(false, {tag: 'video', params: arParams}) + '" src="' + pLEditor.oneGif + '" style="' + bgimg + ' width: ' + w + '; height: ' + h + ';" title="' + BX.message.Video + ': ' + arParams.flashvars.file + '"/>';
 				}
 
 				sContent = sContent.replace(/<embed((?:\s|\S)*?player\/mediaplayer\/player\.swf(?:\s|\S)*?)(?:>\s*?<\/embed)?(?:\/?)?>/ig, ReplaceFLV);
@@ -981,7 +987,7 @@ LHEButtons['Video'] = {
 
 LHEButtons['SmileList'] = {
 	id : 'SmileList',
-	name : LHE_MESS.SmileList,
+	name : BX.message.SmileList,
 	bBBShow: true,
 	type: 'List',
 	OnBeforeCreate: function(pLEditor, pBut)
@@ -1206,7 +1212,7 @@ LHEButtons['SmileList'] = {
 
 LHEButtons['HeaderList'] = {
 	id : 'HeaderList',
-	name : LHE_MESS.HeaderList,
+	name : BX.message.HeaderList,
 	bBBHide: true,
 	type: 'List',
 	handler: function() {},
@@ -1216,14 +1222,14 @@ LHEButtons['HeaderList'] = {
 			pIt, pItem, i, oItem;
 
 		pList.arItems = [
-			{value: 'p', name: LHE_MESS.Normal},
-			{value: 'h1', name: LHE_MESS.Heading + ' 1'},
-			{value: 'h2', name: LHE_MESS.Heading + ' 2'},
-			{value: 'h3', name: LHE_MESS.Heading + ' 3'},
-			{value: 'h4', name: LHE_MESS.Heading + ' 4'},
-			{value: 'h5', name: LHE_MESS.Heading + ' 5'},
-			{value: 'h6', name: LHE_MESS.Heading + ' 6'},
-			{value: 'pre', name: LHE_MESS.Preformatted}
+			{value: 'p', name: BX.message.Normal},
+			{value: 'h1', name: BX.message.Heading + ' 1'},
+			{value: 'h2', name: BX.message.Heading + ' 2'},
+			{value: 'h3', name: BX.message.Heading + ' 3'},
+			{value: 'h4', name: BX.message.Heading + ' 4'},
+			{value: 'h5', name: BX.message.Heading + ' 5'},
+			{value: 'h6', name: BX.message.Heading + ' 6'},
+			{value: 'pre', name: BX.message.Preformatted}
 		];
 
 		var innerCont = BX.create("DIV", {props: {className: 'lhe-header-innercont'}});
@@ -1276,7 +1282,7 @@ LHEButtons['HeaderList'] = {
 
 LHEButtons['FontList'] = {
 	id : 'FontList',
-	name : LHE_MESS.FontList,
+	name : BX.message.FontList,
 	//bBBHide: true,
 	type: 'List',
 	handler: function() {},
@@ -1355,7 +1361,7 @@ LHEButtons['FontList'] = {
 
 LHEButtons['FontSizeList'] = {
 	id : 'FontSizeList',
-	name : LHE_MESS.FontSizeList,
+	name : BX.message.FontSizeList,
 	type: 'List',
 	handler: function() {},
 	OnBeforeCreate: function(pLEditor, pBut)
@@ -1436,7 +1442,7 @@ LHEButtons['FontSizeList'] = {
 
 LHEButtons['BackColor'] = {
 	id : 'BackColor',
-	name : LHE_MESS.BackColor,
+	name : BX.message.BackColor,
 	bBBHide: true,
 	type: 'Colorpicker',
 	OnSelect: function(color, pCol)
@@ -1462,7 +1468,7 @@ LHEButtons['BackColor'] = {
 
 LHEButtons['ForeColor'] = {
 	id : 'ForeColor',
-	name : LHE_MESS.ForeColor,
+	name : BX.message.ForeColor,
 	type: 'Colorpicker',
 	OnBeforeCreate: function(pLEditor, pBut)
 	{
@@ -1489,7 +1495,7 @@ LHEButtons['ForeColor'] = {
 
 LHEButtons['Table'] = {
 	id : 'table',
-	name : LHE_MESS.InsertTable,
+	name : BX.message.InsertTable,
 	OnBeforeCreate: function(pLEditor, pBut)
 	{
 		// Disable in non BBCode mode in html

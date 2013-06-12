@@ -21,4 +21,6 @@ $MESS["MPF_INSERT_FILE"] = "Klicken Sie, um eine Datei einzufügen";
 $MESS["MPF_SPOILER"] = "Spoiler einfügen";
 $MESS["MPF_FILES"] = "Dateien:";
 $MESS["MPF_ADD_TAG1"] = "Hinzufügen";
+$MESS["MPF_FILE_INSERT_IN_TEXT"] = "In den Text<br /> einfügen";
+$MESS["MPF_FILE_IN_TEXT"] = "Im Text";
 ?>

@@ -138,53 +138,61 @@ class CIBlockElement extends CAllIBlockElement
 		$err_mess = "FILE: ".__FILE__."<br>LINE: ";
 		global $DB;
 		$ELEMENT_ID = intval($ELEMENT_ID);
-		$arSqlSearch = Array();
 		$strSqlSearch = "";
 		if(is_array($arFilter))
 		{
-			$filter_keys = array_keys($arFilter);
-			for ($i=0; $i<count($filter_keys); $i++)
+			foreach ($arFilter as $key => $val)
 			{
-				$val = $DB->ForSql($arFilter[$filter_keys[$i]]);
-				if (strlen($val)<=0 || $val=="NOT_REF") continue;
-				switch(strtoupper($filter_keys[$i]))
+				if (strlen($val) <= 0 || $val == "NOT_REF")
+					continue;
+				$val = $DB->ForSql($val);
+				$key = strtoupper($key);
+				switch($key)
 				{
 				case "ID":
-					$arr = explode(",",$val); $str = "";
-					foreach ($arr as $a) $str .= intval($a).",";
-					$arSqlSearch[] = "E.ID in (".$DB->ForSQL($str)."0)";
+					$arr = explode(",", $val);
+					if (!empty($arr))
+					{
+						$arr = array_map("intval", $arr);
+						$str = implode(", ", $arr);
+						$strSqlSearch .= " and E.ID in (".$str.")";
+					}
 					break;
 				case "TIMESTAMP_FROM":
-					$arSqlSearch[] = "E.TIMESTAMP_X>=FROM_UNIXTIME('".MkDateTime(FmtDate($val,"D.M.Y"),"d.m.Y")."')";
+					$strSqlSearch .= " and E.TIMESTAMP_X>=FROM_UNIXTIME('".MkDateTime(FmtDate($val,"D.M.Y"),"d.m.Y")."')";
 					break;
 				case "TIMESTAMP_TO":
-					$arSqlSearch[] = "E.TIMESTAMP_X<=FROM_UNIXTIME('".MkDateTime(FmtDate($val,"D.M.Y")." 23:59:59","d.m.Y H:i:s")."')";
+					$strSqlSearch .= " and E.TIMESTAMP_X<=FROM_UNIXTIME('".MkDateTime(FmtDate($val,"D.M.Y")." 23:59:59","d.m.Y H:i:s")."')";
 					break;
 				case "MODIFIED_BY":
 				case "MODIFIED_USER_ID":
-					$arSqlSearch[] = "E.MODIFIED_BY='".intval($val)."'";
+					$strSqlSearch .= " and E.MODIFIED_BY='".intval($val)."'";
 					break;
 				case "IBLOCK_ID":
-					$arSqlSearch[] = "E.IBLOCK_ID='".intval($val)."'";
+					$strSqlSearch .= " and E.IBLOCK_ID='".intval($val)."'";
 					break;
 				case "NAME":
 					if($val!="%%")
-						$arSqlSearch[] = "upper(E.NAME) like upper('".$DB->ForSQL($val,255)."')";
+						$strSqlSearch .= " and upper(E.NAME) like upper('".$DB->ForSQL($val,255)."')";
 					break;
 				case "STATUS":
 				case "STATUS_ID":
-					$arSqlSearch[] = "E.WF_STATUS_ID='".intval($val)."'";
+					$strSqlSearch .= " and E.WF_STATUS_ID='".intval($val)."'";
 					break;
 				}
 			}
-			for($i=0; $i<count($arSqlSearch); $i++) $strSqlSearch .= " and (".$arSqlSearch[$i].") ";
 		}
 
-		if($by == "s_id")		$strSqlOrder = "ORDER BY E.ID";
-		elseif($by == "s_timestamp")	$strSqlOrder = "ORDER BY E.TIMESTAMP_X";
-		elseif($by == "s_modified_by")	$strSqlOrder = "ORDER BY E.MODIFIED_BY";
-		elseif($by == "s_name")		$strSqlOrder = "ORDER BY E.NAME";
-		elseif($by == "s_status")	$strSqlOrder = "ORDER BY E.WF_STATUS_ID";
+		if($by == "s_id")
+			$strSqlOrder = "ORDER BY E.ID";
+		elseif($by == "s_timestamp")
+			$strSqlOrder = "ORDER BY E.TIMESTAMP_X";
+		elseif($by == "s_modified_by")
+			$strSqlOrder = "ORDER BY E.MODIFIED_BY";
+		elseif($by == "s_name")
+			$strSqlOrder = "ORDER BY E.NAME";
+		elseif($by == "s_status")
+			$strSqlOrder = "ORDER BY E.WF_STATUS_ID";
 		else
 		{
 			$by = "s_id";
@@ -209,8 +217,9 @@ class CIBlockElement extends CAllIBlockElement
 				LEFT JOIN b_user U ON U.ID = E.MODIFIED_BY
 			WHERE
 				E.WF_PARENT_ELEMENT_ID = ".$ELEMENT_ID."
-				".$strSqlSearch.$strSqlOrder
-		;
+				".$strSqlSearch."
+			".$strSqlOrder."
+		";
 		$res = $DB->Query($strSql, false, $err_mess.__LINE__);
 		$is_filtered = (strlen($strSqlSearch)>0);
 		return $res;
@@ -560,6 +569,24 @@ class CIBlockElement extends CAllIBlockElement
 			}
 		}
 
+		$i = array_search("CREATED_BY_FORMATTED", $arSelectFields);
+		if ($i !== false)
+		{
+			if (
+				$sSelect
+				&& $sGroupBy==""
+				&& !$bOnlyCount
+				&& !(is_object($this) && isset($this->strField))
+			)
+			{
+				$sSelect .= ",UC.NAME UC_NAME, UC.LAST_NAME UC_LAST_NAME, UC.SECOND_NAME UC_SECOND_NAME, UC.EMAIL UC_EMAIL, UC.ID UC_ID, UC.LOGIN UC_LOGIN";
+			}
+			else
+			{
+				unset($arSelectFields[$i]);
+			}
+		}
+
 		$sOrderBy = "";
 		foreach($arSqlOrder as $i=>$val)
 		{
@@ -584,21 +611,29 @@ class CIBlockElement extends CAllIBlockElement
 		else
 			$sSelect = str_replace("%%_DISTINCT_%%", "", $sSelect);
 
-		$strSql = "
-			FROM b_iblock B
+		$sFrom = "
+			b_iblock B
 			INNER JOIN b_lang L ON B.LID=L.LID
 			INNER JOIN b_iblock_element BE ON BE.IBLOCK_ID = B.ID
 			".ltrim($sFrom, "\t\n")
 			.(in_array("USER_NAME", $arSelectFields)? "\t\t\tLEFT JOIN b_user U ON U.ID=BE.MODIFIED_BY\n": "")
 			.(in_array("LOCKED_USER_NAME", $arSelectFields)? "\t\t\tLEFT JOIN b_user UL ON UL.ID=BE.WF_LOCKED_BY\n": "")
-			.(in_array("CREATED_USER_NAME", $arSelectFields)? "\t\t\tLEFT JOIN b_user UC ON UC.ID=BE.CREATED_BY\n": "")."
+			.(in_array("CREATED_USER_NAME", $arSelectFields) || in_array("CREATED_BY_FORMATTED", $arSelectFields)? "\t\t\tLEFT JOIN b_user UC ON UC.ID=BE.CREATED_BY\n": "")."
+		";
+
+		$strSql = "
+			FROM ".$sFrom."
 			WHERE 1=1 "
 			.$sWhere."
 			".$sGroupBy."
 		";
 
 		if(isset($this) && is_object($this) && isset($this->strField))
+		{
+			$this->sFrom = $sFrom;
+			$this->sWhere = $sWhere;
 			return "SELECT ".$sSelect.$strSql;
+		}
 
 		if($bOnlyCount)
 		{
@@ -962,12 +997,17 @@ class CIBlockElement extends CAllIBlockElement
 			{
 				if(
 					strlen($arFields["PREVIEW_PICTURE"]["tmp_name"]) > 0
-					&& $arFields["PREVIEW_PICTURE"]["tmp_name"] === $arFields["DETAIL_PICTURE"]["tmp_name"]
+					&& (
+						$arFields["PREVIEW_PICTURE"]["tmp_name"] === $arFields["DETAIL_PICTURE"]["tmp_name"]
+						|| ($arFields["PREVIEW_PICTURE"]["COPY_FILE"] == "Y" && !$arFields["PREVIEW_PICTURE"]["copy"])
+					)
 				)
 				{
-					$arFields["PREVIEW_PICTURE"]["tmp_name"] = CTempFile::GetFileName(basename($arFields["PREVIEW_PICTURE"]["tmp_name"]));
-					CheckDirPath($arFields["PREVIEW_PICTURE"]["tmp_name"]);
-					copy($arFields["DETAIL_PICTURE"]["tmp_name"], $arFields["PREVIEW_PICTURE"]["tmp_name"]);
+					$tmp_name = CTempFile::GetFileName(basename($arFields["PREVIEW_PICTURE"]["tmp_name"]));
+					CheckDirPath($tmp_name);
+					copy($arFields["PREVIEW_PICTURE"]["tmp_name"], $tmp_name);
+					$arFields["PREVIEW_PICTURE"]["copy"] = true;
+					$arFields["PREVIEW_PICTURE"]["tmp_name"] = $tmp_name;
 				}
 
 				CIBLock::FilterPicture($arFields["PREVIEW_PICTURE"]["tmp_name"], array(
@@ -988,12 +1028,17 @@ class CIBlockElement extends CAllIBlockElement
 			{
 				if(
 					strlen($arFields["PREVIEW_PICTURE"]["tmp_name"]) > 0
-					&& $arFields["PREVIEW_PICTURE"]["tmp_name"] === $arFields["DETAIL_PICTURE"]["tmp_name"]
+					&& (
+						$arFields["PREVIEW_PICTURE"]["tmp_name"] === $arFields["DETAIL_PICTURE"]["tmp_name"]
+						|| ($arFields["PREVIEW_PICTURE"]["COPY_FILE"] == "Y" && !$arFields["PREVIEW_PICTURE"]["copy"])
+					)
 				)
 				{
-					$arFields["PREVIEW_PICTURE"]["tmp_name"] = CTempFile::GetFileName(basename($arFields["PREVIEW_PICTURE"]["tmp_name"]));
-					CheckDirPath($arFields["PREVIEW_PICTURE"]["tmp_name"]);
-					copy($arFields["DETAIL_PICTURE"]["tmp_name"], $arFields["PREVIEW_PICTURE"]["tmp_name"]);
+					$tmp_name = CTempFile::GetFileName(basename($arFields["PREVIEW_PICTURE"]["tmp_name"]));
+					CheckDirPath($tmp_name);
+					copy($arFields["PREVIEW_PICTURE"]["tmp_name"], $tmp_name);
+					$arFields["PREVIEW_PICTURE"]["copy"] = true;
+					$arFields["PREVIEW_PICTURE"]["tmp_name"] = $tmp_name;
 				}
 
 				CIBLock::FilterPicture($arFields["PREVIEW_PICTURE"]["tmp_name"], array(
@@ -1036,12 +1081,17 @@ class CIBlockElement extends CAllIBlockElement
 			{
 				if(
 					strlen($arFields["DETAIL_PICTURE"]["tmp_name"]) > 0
-					&& $arFields["DETAIL_PICTURE"]["tmp_name"] === $arFields["PREVIEW_PICTURE"]["tmp_name"]
+					&& (
+						$arFields["DETAIL_PICTURE"]["tmp_name"] === $arFields["PREVIEW_PICTURE"]["tmp_name"]
+						|| ($arFields["DETAIL_PICTURE"]["COPY_FILE"] == "Y" && !$arFields["DETAIL_PICTURE"]["copy"])
+					)
 				)
 				{
-					$arFields["DETAIL_PICTURE"]["tmp_name"] = CTempFile::GetFileName(basename($arFields["DETAIL_PICTURE"]["tmp_name"]));
-					CheckDirPath($arFields["DETAIL_PICTURE"]["tmp_name"]);
-					copy($arFields["PREVIEW_PICTURE"]["tmp_name"], $arFields["DETAIL_PICTURE"]["tmp_name"]);
+					$tmp_name = CTempFile::GetFileName(basename($arFields["DETAIL_PICTURE"]["tmp_name"]));
+					CheckDirPath($tmp_name);
+					copy($arFields["DETAIL_PICTURE"]["tmp_name"], $tmp_name);
+					$arFields["DETAIL_PICTURE"]["copy"] = true;
+					$arFields["DETAIL_PICTURE"]["tmp_name"] = $tmp_name;
 				}
 
 				CIBLock::FilterPicture($arFields["DETAIL_PICTURE"]["tmp_name"], array(
@@ -1062,12 +1112,17 @@ class CIBlockElement extends CAllIBlockElement
 			{
 				if(
 					strlen($arFields["DETAIL_PICTURE"]["tmp_name"]) > 0
-					&& $arFields["DETAIL_PICTURE"]["tmp_name"] === $arFields["PREVIEW_PICTURE"]["tmp_name"]
+					&& (
+						$arFields["DETAIL_PICTURE"]["tmp_name"] === $arFields["PREVIEW_PICTURE"]["tmp_name"]
+						|| ($arFields["DETAIL_PICTURE"]["COPY_FILE"] == "Y" && !$arFields["DETAIL_PICTURE"]["copy"])
+					)
 				)
 				{
-					$arFields["DETAIL_PICTURE"]["tmp_name"] = CTempFile::GetFileName(basename($arFields["DETAIL_PICTURE"]["tmp_name"]));
-					CheckDirPath($arFields["DETAIL_PICTURE"]["tmp_name"]);
-					copy($arFields["PREVIEW_PICTURE"]["tmp_name"], $arFields["DETAIL_PICTURE"]["tmp_name"]);
+					$tmp_name = CTempFile::GetFileName(basename($arFields["DETAIL_PICTURE"]["tmp_name"]));
+					CheckDirPath($tmp_name);
+					copy($arFields["DETAIL_PICTURE"]["tmp_name"], $tmp_name);
+					$arFields["DETAIL_PICTURE"]["copy"] = true;
+					$arFields["DETAIL_PICTURE"]["tmp_name"] = $tmp_name;
 				}
 
 				CIBLock::FilterPicture($arFields["DETAIL_PICTURE"]["tmp_name"], array(
@@ -1405,22 +1460,31 @@ class CIBlockElement extends CAllIBlockElement
 				CIBlockElement::WF_CleanUpHistoryCopies($ID);
 
 			//Restore saved values
-			if($SAVED_PREVIEW_PICTURE!==false)
+			if($SAVED_PREVIEW_PICTURE !== false)
+			{
+				$arFields["PREVIEW_PICTURE_ID"] = $arFields["PREVIEW_PICTURE"];
 				$arFields["PREVIEW_PICTURE"] = $SAVED_PREVIEW_PICTURE;
+			}
 			else
+			{
 				unset($arFields["PREVIEW_PICTURE"]);
+			}
 
-			if($SAVED_DETAIL_PICTURE!==false)
+			if($SAVED_DETAIL_PICTURE !== false)
+			{
+				$arFields["DETAIL_PICTURE_ID"] = $arFields["DETAIL_PICTURE"];
 				$arFields["DETAIL_PICTURE"] = $SAVED_DETAIL_PICTURE;
+			}
 			else
+			{
 				unset($arFields["DETAIL_PICTURE"]);
+			}
 
 			if($arIBlock["FIELDS"]["LOG_ELEMENT_EDIT"]["IS_REQUIRED"] == "Y")
 			{
 				$USER_ID = is_object($USER)? intval($USER->GetID()) : 0;
-				$db_events = GetModuleEvents("main", "OnBeforeEventLog");
-				$arEvent = $db_events->Fetch();
-				if(!$arEvent || ExecuteModuleEventEx($arEvent, array($USER_ID))===false)
+				$arEvents = GetModuleEvents("main", "OnBeforeEventLog", true);
+				if(empty($arEvents) || ExecuteModuleEventEx($arEvents[0], array($USER_ID))===false)
 				{
 					$rsElement = CIBlockElement::GetList(
 						array(),
@@ -1477,8 +1541,7 @@ class CIBlockElement extends CAllIBlockElement
 			@rmdir(dirname($arFields["DETAIL_PICTURE"]["tmp_name"]));
 		}
 
-		$events = GetModuleEvents("iblock", "OnAfterIBlockElementUpdate");
-		while ($arEvent = $events->Fetch())
+		foreach (GetModuleEvents("iblock", "OnAfterIBlockElementUpdate", true) as $arEvent)
 			ExecuteModuleEventEx($arEvent, array(&$arFields));
 
 		if(defined("BX_COMP_MANAGED_CACHE"))
@@ -1754,9 +1817,8 @@ class CIBlockElement extends CAllIBlockElement
 					$arV = $cacheValues[$prop["ID"]];
 
 				$arWas = Array();
-				for($i=0; $i<count($arV); $i++)
+				foreach($arV as $res)
 				{
-					$res = $arV[$i];
 					$val = $PROP[$res["ID"]];
 					if(is_array($val) && !is_set($val, "tmp_name")&& !is_set($val, "del"))
 					{
@@ -1961,7 +2023,7 @@ class CIBlockElement extends CAllIBlockElement
 					}
 					$ids .= ",".$res["ID"];
 					unset($PROP[$res["ID"]]);
-				} //while($res = $db_res->Fetch())
+				} //foreach($arV as $res)
 
 				foreach($PROP as $key=>$val)
 				{
@@ -2097,6 +2159,29 @@ class CIBlockElement extends CAllIBlockElement
 	function GetShowedFunction()
 	{
 		return " IfNULL(BE.SHOW_COUNTER/((UNIX_TIMESTAMP(now())-UNIX_TIMESTAMP(BE.SHOW_COUNTER_START)+0.1)/60/60),0) ";
+	}
+
+	///////////////////////////////////////////////////////////////////
+	// Update list of elements w/o any events
+	///////////////////////////////////////////////////////////////////
+	protected function UpdateList($arFields, $arFilter = array())
+	{
+		global $DB, $USER, $USER_FIELD_MANAGER;
+
+		$strUpdate = $DB->PrepareUpdate("b_iblock_element", $arFields, "iblock", false, "BE");
+		if ($strUpdate == "")
+			return false;
+
+		$element = new CIBlockElement;
+		$element->strField = "ID";
+		$element->GetList(array(), $arFilter, false, false, array("ID"));
+
+		$strSql = "
+			UPDATE ".$element->sFrom." SET ".$strUpdate."
+			WHERE 1=1 ".$element->sWhere."
+		";
+
+		return $DB->Query($strSql, false, "FILE: ".__FILE__."<br> LINE: ".__LINE__);
 	}
 }
 ?>

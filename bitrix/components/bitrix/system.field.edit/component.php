@@ -1,14 +1,26 @@
-<?if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
-// *****************************************************************************************
-//Входные параметры
-// $bVarsFromForm -
-// arUserField USER_TYPE - тип свойства
-// arUserField VALUE- значение пользовательского свойства
-// *****************************************************************************************
-$arParams["bVarsFromForm"] = $arParams["bVarsFromForm"] ? true:false;
+<?php
+/**
+ * Bitrix Framework
+ * @package bitrix
+ * @subpackage main
+ * @copyright 2001-2013 Bitrix
+ */
+
+if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
+
+/**
+ * Bitrix vars
+ *
+ * @var array $arParams
+ * @var array $arResult
+ * @var CBitrixComponent $this
+ * @global CMain $APPLICATION
+ * @global CUser $USER
+ */
+
+$arParams["bVarsFromForm"] = ($arParams["bVarsFromForm"] ? true:false);
 $arResult["VALUE"] = false;
 $arUserField = &$arParams["arUserField"];
-// *****************************************************************************************
 
 if($arUserField["USER_TYPE"])
 {
@@ -56,7 +68,6 @@ if($arUserField["USER_TYPE"])
 	$arUserField["~FIELD_NAME"] = $arUserField["FIELD_NAME"];
 	if ($arUserField["MULTIPLE"]=="Y")
 	{
-		$arUserField["~FIELD_NAME"] = $arUserField["FIELD_NAME"];
 		$arUserField["FIELD_NAME"] .= "[]";
 
 		if (!empty($arResult["VALUE"]) && (!empty($arResult["VALUE"][count($arResult["VALUE"])-1])))
@@ -100,4 +111,4 @@ if($arUserField["USER_TYPE"])
 
 	$arParams["form_name"] = !empty($arParams["form_name"]) ? $arParams["form_name"] : "form1";
 	$this->IncludeComponentTemplate();
-}?>
+}

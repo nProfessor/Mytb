@@ -155,7 +155,8 @@ $MESS["MAIN_OPT_HTTP_DIGEST"] = "Allow HTTP Digest authentication";
 $MESS["MAIN_OPT_REGISTER_PAGE"] = "Registration page for use by the \"Authentication\" component:";
 $MESS["MAIN_OPTIMIZE_CSS_SETTINGS"] = "CSS Optimization";
 $MESS["MAIN_OPTIMIZE_CSS"] = "Merge all CSS file to one file";
-$MESS["MAIN_COMPRES_CSS"] = "Compress merged CSS file";
+$MESS["MAIN_OPTIMIZE_JS"] = "Merge JS files:";
+$MESS["MAIN_COMPRES_CSS_JS"] = "Compress merged CSS and JS files:";
 $MESS["MAIN_OPT_TIME_ZONES"] = "Time Zones";
 $MESS["MAIN_OPT_TIME_ZONES_LOCAL"] = "Local Server Time:";
 $MESS["MAIN_OPT_TIME_ZONES_DIFF"] = "GMT Deviation:";
@@ -186,4 +187,6 @@ $MESS["MAIN_TRANSLATE_KEY_BING"] = "Bing application key:";
 $MESS["MAIN_TRANSLATE_KEY_BING_HINT"] = "To get a Bing application key, register at <a href=\"http://www.bing.com/toolbox/bingdeveloper/\" target=\"_blank\">Bing Developer</a>.";
 $MESS["main_options_use_hot_keys"] = "Use keyboard shortcuts";
 $MESS["MAIN_OPTION_TRANSLIT"] = "Transliterate filenames:";
+$MESS["MAIN_OPTION_SOCSERV_AUTH"] = "Allow logging in using external services:";
+$MESS["main_options_smile_set_id"] = "Smileys for use by parser";
 ?>

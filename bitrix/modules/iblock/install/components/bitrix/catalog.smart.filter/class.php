@@ -8,6 +8,10 @@ class CBitrixCatalogSmartFilter extends CBitrixNewsBase
 class CBitrixCatalogSmartFilter extends CBitrixComponent
 {
 	var $IBLOCK_ID = 0;
+	var $PROPERTY_COUNT = 0;
+	var $SKU_IBLOCK_ID = 0;
+	var $SKU_PROPERTY_COUNT = 0;
+	var $SKU_PROPERTY_ID = 0;
 	var $SECTION_ID = 0;
 	var $FILTER_NAME = "";
 
@@ -21,6 +25,7 @@ class CBitrixCatalogSmartFilter extends CBitrixComponent
 			"PRICE_CODE" => is_array($arParams["PRICE_CODE"])? $arParams["PRICE_CODE"]: array(),
 			"SAVE_IN_SESSION" => $arParams["SAVE_IN_SESSION"] == "Y",
 			"CACHE_GROUPS" => $arParams["CACHE_GROUPS"] !== "N",
+			"INSTANT_RELOAD" => $arParams["INSTANT_RELOAD"] === "Y",
 		);
 
 		if(strlen($arParams["FILTER_NAME"])<=0|| !preg_match("/^[A-Za-z_][A-Za-z01-9_]*$/", $arParams["FILTER_NAME"]))
@@ -37,6 +42,16 @@ class CBitrixCatalogSmartFilter extends CBitrixComponent
 		$this->SECTION_ID = $this->arParams["SECTION_ID"];
 		$this->FILTER_NAME = $this->arParams["FILTER_NAME"];
 
+		if(CModule::IncludeModule("catalog"))
+		{
+			$arCatalog = CCatalog::GetSkuInfoByProductID($this->IBLOCK_ID);
+			if (is_array($arCatalog))
+			{
+				$this->SKU_IBLOCK_ID = $arCatalog["IBLOCK_ID"];
+				$this->SKU_PROPERTY_ID = $arCatalog["SKU_PROPERTY_ID"];
+			}
+		}
+
 		/*DEMO CODE for "pure" class.php component
 		$this->arResult["FFF"] = "ggg";
 		$this->includeComponentTemplate();
@@ -46,10 +61,10 @@ class CBitrixCatalogSmartFilter extends CBitrixComponent
 		return parent::executeComponent();
 	}
 
-	public function getResultItems()
+	public function getIBlockItems($IBLOCK_ID)
 	{
 		$items = array();
-		foreach(CIBlockSectionPropertyLink::GetArray($this->IBLOCK_ID, $this->SECTION_ID) as $PID => $arLink)
+		foreach(CIBlockSectionPropertyLink::GetArray($IBLOCK_ID, $this->SECTION_ID) as $PID => $arLink)
 		{
 			if($arLink["SMART_FILTER"] !== "Y")
 				continue;
@@ -60,6 +75,7 @@ class CBitrixCatalogSmartFilter extends CBitrixComponent
 			{
 				$items[$arProperty["ID"]] = array(
 					"ID" => $arProperty["ID"],
+					"IBLOCK_ID" => $arProperty["IBLOCK_ID"],
 					"CODE" => $arProperty["CODE"],
 					"NAME" => $arProperty["NAME"],
 					"PROPERTY_TYPE" => $arProperty["PROPERTY_TYPE"],
@@ -81,10 +97,15 @@ class CBitrixCatalogSmartFilter extends CBitrixComponent
 				}
 			}
 		}
+		return $items;
+	}
 
+	public function getPriceItems()
+	{
+		$items = array();
 		if(CModule::IncludeModule("catalog"))
 		{
-			$rsPrice = CCatalogGroup::GetList($v1, $v2);
+			$rsPrice = CCatalogGroup::GetList();
 			while($arPrice = $rsPrice->Fetch())
 			{
 				if(
@@ -111,6 +132,30 @@ class CBitrixCatalogSmartFilter extends CBitrixComponent
 				}
 			}
 		}
+		return $items;
+	}
+
+	public function getResultItems()
+	{
+		$items = $this->getIBlockItems($this->IBLOCK_ID);
+		$this->PROPERTY_COUNT = count($items);
+
+		if($this->SKU_IBLOCK_ID)
+		{
+			foreach($this->getIBlockItems($this->SKU_IBLOCK_ID) as $PID => $arItem)
+			{
+				$items[$PID] = $arItem;
+				$this->SKU_PROPERTY_COUNT++;
+			}
+		}
+
+		if (!empty($this->arParams["PRICE_CODE"]))
+		{
+			foreach($this->getPriceItems() as $PID => $arItem)
+			{
+				$items[$PID] = $arItem;
+			}
+		}
 
 		return $items;
 	}
@@ -130,19 +175,32 @@ class CBitrixCatalogSmartFilter extends CBitrixComponent
 
 	public function fillItemValues(&$resultItem, $arProperty)
 	{
+		static $cacheL = array();
 		static $cacheE = array();
 		static $cacheG = array();
-		$key = $arProperty["VALUE"];
 
-		if(isset($arProperty["PRICE"]))
+		if(is_array($arProperty))
 		{
-			return;
+			if(isset($arProperty["PRICE"]))
+			{
+				return null;
+			}
+			$key = $arProperty["VALUE"];
+			$PROPERTY_TYPE = $arProperty["PROPERTY_TYPE"];
+			$PROPERTY_ID = $arProperty["ID"];
 		}
-		elseif($arProperty["PROPERTY_TYPE"] == "F")
+		else
 		{
-			return;
+			$key = $arProperty;
+			$PROPERTY_TYPE = $resultItem["PROPERTY_TYPE"];
+			$PROPERTY_ID = $resultItem["ID"];
 		}
-		elseif($arProperty["PROPERTY_TYPE"] == "N")
+
+		if($PROPERTY_TYPE == "F")
+		{
+			return null;
+		}
+		elseif($PROPERTY_TYPE == "N")
 		{
 			if(!isset($resultItem["VALUES"]["MIN"]) || !array_key_exists("VALUE", $resultItem["VALUES"]["MIN"]) || doubleval($resultItem["VALUES"]["MIN"]["VALUE"]) > doubleval($key))
 				$resultItem["VALUES"]["MIN"]["VALUE"] = $key;
@@ -150,14 +208,33 @@ class CBitrixCatalogSmartFilter extends CBitrixComponent
 			if(!isset($resultItem["VALUES"]["MAX"]) || !array_key_exists("VALUE", $resultItem["VALUES"]["MAX"]) || doubleval($resultItem["VALUES"]["MAX"]["VALUE"]) < doubleval($key))
 				$resultItem["VALUES"]["MAX"]["VALUE"] = $key;
 
-			return;
+			return null;
+		}
+		elseif($PROPERTY_TYPE == "E" && $key <= 0)
+		{
+			return null;
+		}
+		elseif($PROPERTY_TYPE == "G" && $key <= 0)
+		{
+			return null;
+		}
+		elseif(strlen($key) <= 0)
+		{
+			return null;
 		}
 
-		switch($arProperty["PROPERTY_TYPE"])
+		switch($PROPERTY_TYPE)
 		{
 		case "L":
-			$value = $arProperty["VALUE_ENUM"];
-			$sort = $arProperty["VALUE_SORT"];
+			if(!isset($cacheL[$PROPERTY_ID]))
+			{
+				$cacheL[$PROPERTY_ID] = array();
+				$rsEnum = CIBlockPropertyEnum::GetList(array("SORT"=>"ASC", "VALUE"=>"ASC"), array("PROPERTY_ID" => $PROPERTY_ID));
+				while ($enum = $rsEnum->Fetch())
+					$cacheL[$PROPERTY_ID][$enum["ID"]] = $enum;
+			}
+			$sort = $cacheL[$PROPERTY_ID][$key]["SORT"];
+			$value = $cacheL[$PROPERTY_ID][$key]["VALUE"];
 			break;
 		case "E":
 			if(!isset($cacheE[$key]))
@@ -189,7 +266,7 @@ class CBitrixCatalogSmartFilter extends CBitrixComponent
 			$sort = $cacheG[$key]["LEFT_MARGIN"];
 			break;
 		default:
-			$value = $arProperty["VALUE"];
+			$value = $key;
 			$sort = 0;
 			break;
 		}
@@ -199,8 +276,8 @@ class CBitrixCatalogSmartFilter extends CBitrixComponent
 		$sort = intval($sort);
 
 		$resultItem["VALUES"][$key] = array(
-			"CONTROL_ID" => htmlspecialcharsbx($this->FILTER_NAME."_".$arProperty["ID"]."_".abs(crc32($key))),
-			"CONTROL_NAME" => htmlspecialcharsbx($this->FILTER_NAME."_".$arProperty["ID"]."_".abs(crc32($key))),
+			"CONTROL_ID" => htmlspecialcharsbx($this->FILTER_NAME."_".$PROPERTY_ID."_".abs(crc32($key))),
+			"CONTROL_NAME" => htmlspecialcharsbx($this->FILTER_NAME."_".$PROPERTY_ID."_".abs(crc32($key))),
 			"HTML_VALUE" => "Y",
 			"VALUE" => $value,
 			"SORT" => $sort,
@@ -213,7 +290,7 @@ class CBitrixCatalogSmartFilter extends CBitrixComponent
 	function combineCombinations(&$arCombinations)
 	{
 		$result = array();
-		foreach($arCombinations as $key => $arCombination)
+		foreach($arCombinations as $arCombination)
 		{
 			foreach($arCombination as $PID => $value)
 			{
@@ -281,6 +358,8 @@ class CBitrixCatalogSmartFilter extends CBitrixComponent
 			return 1;
 		elseif ($v1["UPPER"] < $v2["UPPER"])
 			return -1;
+		else
+			return 0;
 	}
 
 	/*
@@ -302,7 +381,7 @@ class CBitrixCatalogSmartFilter extends CBitrixComponent
 			$arResult[] = $arTemp;
 		else
 		{
-			$key = reset($arTuple);
+			reset($arTuple);
 			list($key, $head) = each($arTuple);
 			unset($arTuple[$key]);
 			$arTemp[$key] = false;
@@ -327,6 +406,62 @@ class CBitrixCatalogSmartFilter extends CBitrixComponent
 				$this->ArrayMultiply($arResult, $arTuple, $arTemp);
 			}
 		}
+	}
+
+	function makeFilter($FILTER_NAME)
+	{
+		$gFilter = $GLOBALS[$FILTER_NAME];
+
+		$arFilter = array(
+			"IBLOCK_ID" => $this->IBLOCK_ID,
+			"IBLOCK_LID" => SITE_ID,
+			"IBLOCK_ACTIVE" => "Y",
+			"ACTIVE_DATE" => "Y",
+			"ACTIVE" => "Y",
+			"CHECK_PERMISSIONS" => "Y",
+			"MIN_PERMISSION" => "R",
+			"INCLUDE_SUBSECTIONS" => "Y", //($arParams["INCLUDE_SUBSECTIONS"] != 'N' ? 'Y' : 'N'),
+			"SECTION_ID" => $this->SECTION_ID,
+		);
+
+		if(is_array($gFilter["OFFERS"]))
+		{
+			if(!empty($gFilter["OFFERS"]))
+			{
+				$arSubFilter = $gFilter["OFFERS"];
+				$arSubFilter["IBLOCK_ID"] = $this->SKU_IBLOCK_ID;
+				$arSubFilter["ACTIVE_DATE"] = "Y";
+				$arSubFilter["ACTIVE"] = "Y";
+				$arFilter["=ID"] = CIBlockElement::SubQuery("PROPERTY_".$this->SKU_PROPERTY_ID, $arSubFilter);
+			}
+
+			$arPriceFilter = array();
+			foreach($gFilter as $key => $value)
+			{
+				if(preg_match('/^(>=|<=|><)CATALOG_PRICE_/', $key))
+				{
+					$arPriceFilter[$key] = $value;
+					unset($gFilter[$key]);
+				}
+			}
+
+			if(!empty($arPriceFilter))
+			{
+				$arSubFilter = $arPriceFilter;
+				$arSubFilter["IBLOCK_ID"] = $this->SKU_IBLOCK_ID;
+				$arSubFilter["ACTIVE_DATE"] = "Y";
+				$arSubFilter["ACTIVE"] = "Y";
+				$arFilter[] = array(
+					"LOGIC" => "OR",
+					array($arPriceFilter),
+					"=ID" => CIBlockElement::SubQuery("PROPERTY_".$this->SKU_PROPERTY_ID, $arSubFilter),
+				);
+			}
+
+			unset($gFilter["OFFERS"]);
+		}
+
+		return array_merge($gFilter, $arFilter);
 	}
 }
 ?>

@@ -3,7 +3,7 @@ if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
 
 if (!function_exists("__bx_share_get_handlers"))
 {
-	function __bx_share_get_handlers($template = false)
+	function __bx_share_get_handlers($template = false, $siteTemplate = false)
 	{
 		if (trim($template) == ".default")
 			$template = "";
@@ -13,7 +13,7 @@ if (!function_exists("__bx_share_get_handlers"))
 	
 		$shareComponent = new CBitrixComponent;
 		$shareComponent->InitComponent("bitrix:main.share", $template);
-		$shareComponent->InitComponentTemplate($template);
+		$shareComponent->InitComponentTemplate("", $siteTemplate);
 
 		if (strlen($shareComponent->__template->__folder) > 0)
 		{
@@ -50,8 +50,8 @@ if (!function_exists("__bx_share_get_handlers"))
 					$arBookmarkHandlerDropdown[$name] = $arSystem["TITLE"];
 
 			$arBookmarkHandlerDropdownTmp = $arBookmarkHandlerDropdown;
-			if (LANGUAGE != 'ru')
-			{			
+			if (LANGUAGE_ID != 'ru')
+			{
 				if (array_key_exists("vk", $arBookmarkHandlerDropdownTmp))
 					unset($arBookmarkHandlerDropdownTmp["vk"]);
 				if (array_key_exists("mailru", $arBookmarkHandlerDropdownTmp))
@@ -63,7 +63,7 @@ if (!function_exists("__bx_share_get_handlers"))
 		return array(
 			"HANDLERS" => $arBookmarkHandlerDropdown,
 			"HANDLERS_DEFAULT" => $arBookmarkHandlerDropdownDefault
-			);
+		);
 	}
 }
 ?>

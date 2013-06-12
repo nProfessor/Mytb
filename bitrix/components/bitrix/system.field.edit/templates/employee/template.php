@@ -1,20 +1,5 @@
 <?if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
 
-$arResult['CAN_EDIT_USER'] = false;
-if ($USER->CanDoOperation('edit_all_users'))
-{
-	$arResult['CAN_EDIT_USER'] = true;
-}
-if (!$arResult['CAN_EDIT_USER'])
-{
-	$APPLICATION->IncludeComponent(
-		"bitrix:system.field.view",
-		$arParams["arUserField"]["USER_TYPE"]["USER_TYPE_ID"],
-		array("arUserField" => $arParams["arUserField"]), null, array("HIDE_ICONS"=>"Y")
-	);
-	return;
-}
-
 $name = $arParams["arUserField"]["~FIELD_NAME"];
 $namex = preg_replace("/([^a-z0-9])/is", "x", $name);
 ?>
@@ -110,4 +95,3 @@ endif; //multiple
 	})
 </script>
 </table>
-

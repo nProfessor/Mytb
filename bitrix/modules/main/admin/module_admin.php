@@ -154,7 +154,7 @@ function DoAction(oEvent, action, module_id)
 }
 </script>
 <table border="0" cellspacing="0" cellpadding="0" width="100%" class="list-table">
-	<tr class="head" valign="middle" align="center">
+	<tr class="heading">
 		<td width="60%"><b><?echo GetMessage("MOD_NAME")?></b></td>
 		<td><b><?echo GetMessage("MOD_VERSION")?></b></td>
 		<td><b><?echo GetMessage("MOD_DATE_UPDATE")?></b></td>
@@ -178,7 +178,7 @@ foreach($arModules as $info) :
 		<td><b><?echo htmlspecialcharsex($info["MODULE_NAME"])?></b> <?echo htmlspecialcharsex(strlen($info["MODULE_PARTNER"]) > 0? " <b><i>(".str_replace(array("#NAME#", "#URI#"), array($info["MODULE_PARTNER"], $info["MODULE_PARTNER_URI"]), GetMessage("MOD_PARTNER_NAME")).")</i></b>" : "(".$info["MODULE_ID"].")") ?><br><?echo $info["MODULE_DESCRIPTION"]?></td>
 		<td ondblclick="<?echo htmlspecialcharsbx("DoAction(event, 'version_down', '".CUtil::AddSlashes($info["MODULE_ID"])."')")?>" id="version_for_<?echo htmlspecialcharsbx($info["MODULE_ID"])?>"><?echo $info["MODULE_VERSION"]?></td>
 		<td nowrap><?echo CDatabase::FormatDate($info["MODULE_VERSION_DATE"], "YYYY-MM-DD HH:MI:SS", CLang::GetDateFormat("SHORT"));?></td>
-		<td><?if($info["IsInstalled"]):?><?echo GetMessage("MOD_INSTALLED")?><?else:?><span class="required"><?echo GetMessage("MOD_NOT_INSTALLED")?></span><?endif?></td>
+		<td nowrap><?if($info["IsInstalled"]):?><?echo GetMessage("MOD_INSTALLED")?><?else:?><span class="required"><?echo GetMessage("MOD_NOT_INSTALLED")?></span><?endif?></td>
 		<td>
 			<form action="<?echo $APPLICATION->GetCurPage()?>" method="GET" id="form_for_<?echo htmlspecialcharsbx($info["MODULE_ID"])?>">
 				<input type="hidden" name="action" value="" id="action_for_<?echo htmlspecialcharsbx($info["MODULE_ID"])?>">
@@ -188,7 +188,7 @@ foreach($arModules as $info) :
 				<?if($info["IsInstalled"]):?>
 					<input <?if (!$isAdmin || $info["MODULE_ID"] == 'fileman' || $info["MODULE_ID"] == 'intranet') echo "disabled" ?> type="submit" name="uninstall" value="<?echo GetMessage("MOD_DELETE")?>">
 				<?else:?>
-					<input <?if (!$isAdmin) echo "disabled" ?> type="submit" name="install" value="<?echo GetMessage("MOD_INSTALL_BUTTON")?>">
+					<input <?if (!$isAdmin) echo "disabled" ?> type="submit" class="adm-btn-green" name="install" value="<?echo GetMessage("MOD_INSTALL_BUTTON")?>">
 				<?endif?>
 			</form>
 		</td>

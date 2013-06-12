@@ -48,7 +48,10 @@ if(count($arRowPK))
 			foreach($arRowPK as $column => $value)
 			{
 				$arFilter["=".$column] = $value;
-				$strWhere .= " AND ".$column." = '".$DB->ForSQL($value)."'";
+				if($value != "")
+					$strWhere .= " AND ".$column." = '".$DB->ForSQL($value)."'";
+				else
+					$strWhere .= " AND (".$column." = '' OR ".$column." IS NULL)";
 			}
 			break;
 		}
@@ -249,6 +252,14 @@ $tabControl->BeginNextTab();
 			<tr>
 				<td width="40%"><?echo htmlspecialcharsbx($Field)?>:</td>
 				<td width="60%"><?echo CAdminCalendar::CalendarDate($Field, $arRecord["FULL_".$Field], 20, true)?>
+		<?
+		}
+		elseif($arField["type"] === "date")
+		{
+		?>
+			<tr>
+				<td width="40%"><?echo htmlspecialcharsbx($Field)?>:</td>
+				<td width="60%"><?echo CAdminCalendar::CalendarDate($Field, $arRecord["SHORT_".$Field], 10, false)?>
 		<?
 		}
 		elseif(

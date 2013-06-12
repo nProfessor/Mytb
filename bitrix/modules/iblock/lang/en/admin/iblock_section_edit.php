@@ -1,6 +1,8 @@
 <?
 $MESS["IBSEC_E_TAB2"] = "More";
 $MESS["IBSEC_E_TAB2_TITLE"] = "More parameters";
+$MESS["IBSEC_E_PROPERTY_TAB"] = "Element properties";
+$MESS["IBSEC_E_PROPERTY_TAB_TITLE"] = "Element property view parameters";
 $MESS["IBLOCK_SECTION"] = "Section";
 $MESS["IBSEC_E_IBLOCK_MANAGE_HINT"] = "You can edit the Information Block access permissions and properties on the";
 $MESS["IBSEC_E_IBLOCK_MANAGE_HINT_HREF"] = "Information Block settings page.";
@@ -26,8 +28,6 @@ $MESS["IBSEC_E_RIGHTS_SECTION_TITLE"] = "Section access permissions";
 $MESS["IBSEC_E_RIGHTS_FIELD"] = "Section access permissions";
 $MESS["IBSEC_E_WARNING"] = "Warning.";
 $MESS["IBSEC_E_TRANSLATION_SERVICE_NOT_CONFIGURED"] = "No external translation engine exist. Add a translation engine in the <a href=\"settings.php?mid=main\">Kernel module settings</a>.";
-$MESS["IBSEC_E_PROPERTY_TAB"] = "Element properties";
-$MESS["IBSEC_E_PROPERTY_TAB_TITLE"] = "Element property view parameters";
 $MESS["IBSEC_E_SECTION_PROPERTY_FIELD"] = "Element properties";
 $MESS["IBSEC_E_PROP_TABLE_NAME"] = "Name";
 $MESS["IBSEC_E_PROP_TABLE_TYPE"] = "Type";
@@ -35,9 +35,9 @@ $MESS["IBSEC_E_PROP_TABLE_SMART_FILTER"] = "Show in smart filter";
 $MESS["IBSEC_E_PROP_TABLE_ACTION"] = "Actions";
 $MESS["IBSEC_E_PROP_SELECT_CHOOSE"] = "<Select>";
 $MESS["IBSEC_E_PROP_SELECT_CREATE"] = "[Create]";
-$MESS["IBSEC_E_PROP_TABLE_ACTION_DELETE"] = "Delete";
 $MESS["IBSEC_E_PROP_TABLE_ACTION_ADD"] = "Add";
 $MESS["IBSEC_E_PROP_TABLE_EMPTY"] = "-no data-";
 $MESS["IBSEC_E_PROP_SKU_SECTION"] = "SKU Properties";
 $MESS["IBSEC_E_SAVE_AND_ADD"] = "Save and add";
+$MESS["IBSEC_E_PROP_TABLE_ACTION_HIDE"] = "Hide";
 ?>

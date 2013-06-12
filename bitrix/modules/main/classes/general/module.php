@@ -1,102 +1,117 @@
-<?
-##############################################
-# Bitrix Site Manager                        #
-# Copyright (c) 2002-2007 Bitrix             #
-# http://www.bitrixsoft.com                  #
-# mailto:admin@bitrixsoft.com                #
-##############################################
-
-global $MAIN_MODULE_EVENTS, $MAIN_MODULE_INCLUDED, $MAIN_MODULE_INCLUDED_EX, $MAIN_MODULE_EVENTS_INIT;
-$MAIN_MODULE_INCLUDED = Array("main" => true);
-$MAIN_MODULE_INCLUDED_EX = Array();
-$MAIN_MODULE_EVENTS = Array();
-$MAIN_MODULE_EVENTS_INIT = false;
-
-$GLOBALS["arBitrixModuleClasses"] = array();
+<?php
+/**
+ * Bitrix Framework
+ * @package bitrix
+ * @subpackage main
+ * @copyright 2001-2013 Bitrix
+ */
 
 define("MODULE_NOT_FOUND", 0);
 define("MODULE_INSTALLED", 1);
 define("MODULE_DEMO", 2);
 define("MODULE_DEMO_EXPIRED", 3);
 
-
-Class CModule
+class CModule
 {
+	private static $includedModules = array("main" => true);
+	private static $includedModulesEx = array();
+	private static $classes = array();
+	public static $installedModules = false;
+
+	public static $events = array();
+
 	var $MODULE_NAME;
 	var $MODULE_DESCRIPTION;
 	var $MODULE_VERSION;
 	var $MODULE_ID;
-	var $MODULE_SORT=10000;
+	var $MODULE_SORT = 10000;
 	var $SHOW_SUPER_ADMIN_GROUP_RIGHTS;
+	var $MODULE_GROUP_RIGHTS;
 
-	function AddAutoloadClasses($module, $arParams = array())
+	public static function AddAutoloadClasses($module, $arParams = array())
 	{
-		if (!is_array($arParams) || count($arParams) <= 0)
-			return False;
+		if (!is_array($arParams) || empty($arParams))
+			return false;
 
-		$module = Trim($module);
+		$module = trim($module);
 
-		if (!minimumPHPVersion("5.0.0") || defined("NO_BITRIX_AUTOLOAD") && NO_BITRIX_AUTOLOAD)
+		if (defined("NO_BITRIX_AUTOLOAD") && NO_BITRIX_AUTOLOAD)
 		{
-			foreach ($arParams as $key => $value)
-				include_once($_SERVER["DOCUMENT_ROOT"].((StrLen($module) > 0) ? BX_ROOT."/modules/".$module."/" : "").$value);
+			foreach ($arParams as $value)
+				include_once($_SERVER["DOCUMENT_ROOT"].($module <> ''? BX_ROOT."/modules/".$module."/" : "").$value);
 		}
 		else
 		{
+			static $search  = 'QWERTYUIOPASDFGHJKLZXCVBNM';
+			static $replace = 'qwertyuiopasdfghjklzxcvbnm';
 			foreach ($arParams as $key => $value)
-				$GLOBALS["arBitrixModuleClasses"][strtolower($key)] = array(
+			{
+				self::$classes[strtr($key, $search, $replace)] = array(
 					"module" => $module,
 					"file" => $value
 				);
+			}
 		}
+
+		return true;
 	}
 
 	function AutoloadClassDefined($className)
 	{
-		$className = Trim($className);
-		if (StrLen($className) <= 0)
-			return False;
+		$className = trim($className);
+		if ($className == '')
+			return false;
 
 		$className = strtolower($className);
 
-		return array_key_exists($className, $GLOBALS["arBitrixModuleClasses"]);
+		return array_key_exists($className, self::$classes);
 	}
 
 	static function RequireAutoloadClass($className)
 	{
-		$className = Trim($className);
-		if (StrLen($className) <= 0)
-			return False;
+		$className = trim($className);
+		if ($className == '')
+			return false;
 
-		$className = strtolower($className);
+		static $search  = 'QWERTYUIOPASDFGHJKLZXCVBNM';
+		static $replace = 'qwertyuiopasdfghjklzxcvbnm';
 
-		if (array_key_exists($className, $GLOBALS["arBitrixModuleClasses"]))
+		$className = strtr($className, $search, $replace);
+
+		if (isset(self::$classes[$className]))
 		{
-			require_once($_SERVER["DOCUMENT_ROOT"].((StrLen($GLOBALS["arBitrixModuleClasses"][$className]["module"]) > 0) ? BX_ROOT."/modules/".$GLOBALS["arBitrixModuleClasses"][$className]["module"]."/" : "").$GLOBALS["arBitrixModuleClasses"][$className]["file"]);
-			return True;
+			if (self::$classes[$className]['module'] != '')
+				$dir = BX_ROOT.'/modules/'.self::$classes[$className]['module'].'/';
+			else
+				$dir = '';
+
+			require_once($_SERVER["DOCUMENT_ROOT"].$dir.self::$classes[$className]["file"]);
+			return true;
 		}
 
-		return False;
+		return false;
 	}
-
 
 	function _GetCache()
 	{
 		global $DB, $CACHE_MANAGER;
 
-		$arModules = false;
-		if($CACHE_MANAGER->Read(3600, "b_module"))
-			$arModules = $CACHE_MANAGER->Get("b_module");
-
-		if($arModules === false)
+		if (!self::$installedModules)
 		{
-			$arModules = array();
-			$rs = $DB->Query("SELECT m.* FROM b_module m ORDER BY m.ID");
-			while($ar = $rs->Fetch())
-				$arModules[$ar['ID']] = $ar;
-			$CACHE_MANAGER->Set("b_module", $arModules);
+			if($CACHE_MANAGER->Read(3600, "b_module"))
+				self::$installedModules = $CACHE_MANAGER->Get("b_module");
+
+			if(self::$installedModules === false)
+			{
+				self::$installedModules = array();
+				$rs = $DB->Query("SELECT m.* FROM b_module m ORDER BY m.ID");
+				while($ar = $rs->Fetch())
+					self::$installedModules[$ar['ID']] = $ar;
+				$CACHE_MANAGER->Set("b_module", self::$installedModules);
+			}
 		}
-		return $arModules;
+
+		return self::$installedModules;
 	}
 
 	function _GetName($arEvent)
@@ -110,8 +125,10 @@ Class CModule
 				$strName .= $arEvent["CALLBACK"];
 		}
 		else
+		{
 			$strName .= $arEvent["TO_CLASS"].'::'.$arEvent["TO_METHOD"];
-		if(isset($arEvent['TO_MODULE_ID']) && strlen($arEvent['TO_MODULE_ID']))
+		}
+		if(isset($arEvent['TO_MODULE_ID']) && $arEvent['TO_MODULE_ID'] <> '')
 			$strName .= ' ('.$arEvent['TO_MODULE_ID'].')';
 		return $strName;
 	}
@@ -164,6 +181,7 @@ Class CModule
 	function InstallTasks()
 	{
 		global $DB, $CACHE_MANAGER;
+
 		$sqlMODULE_ID = $DB->ForSQL($this->MODULE_ID, 50);
 
 		$arDBOperations = array();
@@ -179,7 +197,7 @@ Class CModule
 		$arModuleTasks = $this->GetModuleTasks();
 		foreach($arModuleTasks as $task_name => $arTask)
 		{
-			$sqlBINDING = isset($arTask["BINDING"]) && strlen($arTask["BINDING"]) > 0? $DB->ForSQL($arTask["BINDING"], 50): 'module';
+			$sqlBINDING = isset($arTask["BINDING"]) && $arTask["BINDING"] <> ''? $DB->ForSQL($arTask["BINDING"], 50): 'module';
 			$sqlTaskOperations = array();
 
 			if(isset($arTask["OPERATIONS"]) && is_array($arTask["OPERATIONS"]))
@@ -207,7 +225,7 @@ Class CModule
 			$task_name = substr($task_name, 0, 100);
 			$sqlTaskName = $DB->ForSQL($task_name);
 
-			if(!isset($arDBTasks[$task_name]))
+			if(!isset($arDBTasks[$task_name]) && $task_name <> '')
 			{
 				$DB->Query("
 					INSERT INTO b_task
@@ -217,7 +235,7 @@ Class CModule
 				", false, "FILE: ".__FILE__."<br> LINE: ".__LINE__);
 			}
 
-			if(!empty($sqlTaskOperations))
+			if(!empty($sqlTaskOperations) && $task_name <> '')
 			{
 				$DB->Query("
 					INSERT INTO b_task_operation
@@ -254,6 +272,7 @@ Class CModule
 	function UnInstallTasks()
 	{
 		global $DB, $CACHE_MANAGER;
+
 		$sqlMODULE_ID = $DB->ForSQL($this->MODULE_ID, 50);
 
 		$DB->Query("
@@ -292,8 +311,9 @@ Class CModule
 
 	function IsInstalled()
 	{
-		$arModules = CModule::_GetCache();
-		return array_key_exists($this->MODULE_ID, $arModules);
+		if (!self::$installedModules)
+			CModule::_GetCache();
+		return isset(self::$installedModules[$this->MODULE_ID]);
 	}
 
 	function DoUninstall()
@@ -303,20 +323,22 @@ Class CModule
 	function Remove()
 	{
 		global $DB,$CACHE_MANAGER;
-		$CACHE_MANAGER->Clean("b_module");
 		$DB->Query("DELETE FROM b_module WHERE ID='".$this->MODULE_ID."'");
+		$CACHE_MANAGER->Clean("b_module");
+		self::$installedModules = false;
 	}
 
 	function Add()
 	{
-		global $DB, $CACHE_MANAGER, $MAIN_MODULE_INCLUDED, $MAIN_MODULE_INCLUDED_EX;
-		$CACHE_MANAGER->Clean("b_module");
+		global $DB, $CACHE_MANAGER;
 		$DB->Query(
 			"INSERT INTO b_module(ID) ".
 			"VALUES('".$this->MODULE_ID."')"
-			);
-		unset($MAIN_MODULE_INCLUDED[$this->MODULE_ID]);
-		unset($MAIN_MODULE_INCLUDED_EX[$this->MODULE_ID]);
+		);
+		unset(self::$includedModules[$this->MODULE_ID]);
+		unset(self::$includedModulesEx[$this->MODULE_ID]);
+		$CACHE_MANAGER->Clean("b_module");
+		self::$installedModules = false;
 	}
 
 	function GetList()
@@ -326,69 +348,76 @@ Class CModule
 		return $result;
 	}
 
-	function IncludeModule($module_name)
+	/**
+	 * Makes module classes and function available. Returns true on success.
+	 *
+	 * @param string $module_name
+	 * @return bool
+	 */
+	public static function IncludeModule($module_name)
 	{
-		global $DB, $MAIN_MODULE_INCLUDED, $MESS;
+		/** @noinspection PhpUnusedLocalVariableInspection */
+		global $DB, $MESS;
 
 		if(defined("SM_SAFE_MODE") && SM_SAFE_MODE===true)
 		{
-			if(!in_array($module_name, Array("main", "fileman")))
+			if(!in_array($module_name, array("main", "fileman")))
 				return false;
 		}
 
-		if(is_set($MAIN_MODULE_INCLUDED, $module_name))
-			return $MAIN_MODULE_INCLUDED[$module_name];
+		if(isset(self::$includedModules[$module_name]))
+			return self::$includedModules[$module_name];
 
-		$arModules = CModule::_GetCache();
-		if(!array_key_exists($module_name, $arModules))
+		if (!self::$installedModules)
+			CModule::_GetCache();
+
+		if(!array_key_exists($module_name, self::$installedModules))
 		{
-			$MAIN_MODULE_INCLUDED[$module_name] = false;
+			self::$includedModules[$module_name] = false;
 			return false;
 		}
 
 		if(!file_exists($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/".$module_name."/include.php"))
 		{
-			$MAIN_MODULE_INCLUDED[$module_name] = false;
+			self::$includedModules[$module_name] = false;
 			return false;
 		}
 
 		$res = include_once($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/".$module_name."/include.php");
 		if($res === false)
 		{
-			$MAIN_MODULE_INCLUDED[$module_name] = false;
+			self::$includedModules[$module_name] = false;
 			return false;
 		}
 
-		$MAIN_MODULE_INCLUDED[$module_name] = true;
+		self::$includedModules[$module_name] = true;
 		return true;
 	}
 
 	function IncludeModuleEx($module_name)
 	{
-		global $MAIN_MODULE_INCLUDED_EX;
-
-		if (is_set($MAIN_MODULE_INCLUDED_EX, $module_name))
-			return $MAIN_MODULE_INCLUDED_EX[$module_name];
+		if (is_set(self::$includedModulesEx, $module_name))
+			return self::$includedModulesEx[$module_name];
 
 		$module_name_tmp = str_replace(".", "_", $module_name);
 
 		if (CModule::IncludeModule($module_name))
 		{
 			if (defined($module_name_tmp."_DEMO") && constant($module_name_tmp."_DEMO") == "Y")
-				$MAIN_MODULE_INCLUDED_EX[$module_name] = MODULE_DEMO;
+				self::$includedModulesEx[$module_name] = MODULE_DEMO;
 			else
-				$MAIN_MODULE_INCLUDED_EX[$module_name] = MODULE_INSTALLED;
+				self::$includedModulesEx[$module_name] = MODULE_INSTALLED;
 
-			return $MAIN_MODULE_INCLUDED_EX[$module_name];
+			return self::$includedModulesEx[$module_name];
 		}
 
 		if (defined($module_name_tmp."_DEMO") && constant($module_name_tmp."_DEMO") == "Y")
 		{
-			$MAIN_MODULE_INCLUDED_EX[$module_name] = MODULE_DEMO_EXPIRED;
+			self::$includedModulesEx[$module_name] = MODULE_DEMO_EXPIRED;
 			return MODULE_DEMO_EXPIRED;
 		}
 
-		$MAIN_MODULE_INCLUDED_EX[$module_name] = MODULE_NOT_FOUND;
+		self::$includedModulesEx[$module_name] = MODULE_NOT_FOUND;
 		return MODULE_NOT_FOUND;
 	}
 
@@ -417,7 +446,7 @@ Class CModule
 	{
 		$moduleId = trim($moduleId);
 		$moduleId = preg_replace("/[^a-zA-Z0-9_.]+/i", "", $moduleId);
-		if (strlen($moduleId) <= 0)
+		if ($moduleId == '')
 			return false;
 
 		$path = $_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/".$moduleId."/install/index.php";
@@ -450,11 +479,11 @@ if (!function_exists("__autoload"))
 		}
 	}
 
-	define("NO_BITRIX_AUTOLOAD", False);
+	define("NO_BITRIX_AUTOLOAD", false);
 }
 else
 {
-	define("NO_BITRIX_AUTOLOAD", True);
+	define("NO_BITRIX_AUTOLOAD", true);
 }
 
 function RegisterModule($id)
@@ -462,32 +491,38 @@ function RegisterModule($id)
 	$m = new CModule;
 	$m->MODULE_ID = $id;
 	$m->Add();
+
+	foreach(GetModuleEvents("main", "OnAfterRegisterModule", true) as $arEvent)
+		ExecuteModuleEventEx($arEvent, array($id));
 }
 
 function UnRegisterModule($id)
 {
 	global $DB;
+
 	$DB->Query("DELETE FROM b_agent WHERE MODULE_ID='".$DB->ForSQL($id)."'");
 	CMain::DelGroupRight($id);
+
 	$m = new CModule;
 	$m->MODULE_ID = $id;
 	$m->Remove();
+
+	foreach(GetModuleEvents("main", "OnAfterUnRegisterModule", true) as $arEvent)
+		ExecuteModuleEventEx($arEvent, array($id));
 }
 
 function AddEventHandler($FROM_MODULE_ID, $MESSAGE_ID, $CALLBACK, $SORT=100, $FULL_PATH = false)
 {
-	global $MAIN_MODULE_EVENTS;
-
 	$arEvent = array("FROM_MODULE_ID"=>$FROM_MODULE_ID, "MESSAGE_ID"=>$MESSAGE_ID, "CALLBACK"=>$CALLBACK, "SORT"=>$SORT, "FULL_PATH"=>$FULL_PATH, "VERSION" => 1);
 	$arEvent['TO_NAME'] = CModule::_GetName($arEvent);
 
 	$FROM_MODULE_ID = strtoupper($FROM_MODULE_ID);
 	$MESSAGE_ID = strtoupper($MESSAGE_ID);
 
-	if (!isset($MAIN_MODULE_EVENTS[$FROM_MODULE_ID]) || !is_array($MAIN_MODULE_EVENTS[$FROM_MODULE_ID]))
-		$MAIN_MODULE_EVENTS[$FROM_MODULE_ID] = array();
+	if (!isset(CModule::$events[$FROM_MODULE_ID]) || !is_array(CModule::$events[$FROM_MODULE_ID]))
+		CModule::$events[$FROM_MODULE_ID] = array();
 
-	$arEvents = &$MAIN_MODULE_EVENTS[$FROM_MODULE_ID];
+	$arEvents = &CModule::$events[$FROM_MODULE_ID];
 
 	if (!isset($arEvents[$MESSAGE_ID]) || !is_array($arEvents[$MESSAGE_ID]))
 		$arEvents[$MESSAGE_ID] = array();
@@ -501,6 +536,7 @@ function AddEventHandler($FROM_MODULE_ID, $MESSAGE_ID, $CALLBACK, $SORT=100, $FU
 	if (class_exists("\\Bitrix\\Main\\EventManager"))
 	{
 		$eventManager = \Bitrix\Main\EventManager::getInstance();
+		/** @noinspection PhpDeprecationInspection */
 		$eventManager->addEventHandlerOld($FROM_MODULE_ID, $MESSAGE_ID, $CALLBACK, $FULL_PATH, $SORT);
 	}
 
@@ -509,16 +545,14 @@ function AddEventHandler($FROM_MODULE_ID, $MESSAGE_ID, $CALLBACK, $SORT=100, $FU
 
 function RemoveEventHandler($FROM_MODULE_ID, $MESSAGE_ID, $iEventHandlerKey)
 {
-	global $MAIN_MODULE_EVENTS;
-
 	$FROM_MODULE_ID = strtoupper($FROM_MODULE_ID);
 	$MESSAGE_ID = strtoupper($MESSAGE_ID);
 
-	if(is_array($MAIN_MODULE_EVENTS[$FROM_MODULE_ID][$MESSAGE_ID]))
+	if(is_array(CModule::$events[$FROM_MODULE_ID][$MESSAGE_ID]))
 	{
-		if(isset($MAIN_MODULE_EVENTS[$FROM_MODULE_ID][$MESSAGE_ID][$iEventHandlerKey]))
+		if(isset(CModule::$events[$FROM_MODULE_ID][$MESSAGE_ID][$iEventHandlerKey]))
 		{
-			unset($MAIN_MODULE_EVENTS[$FROM_MODULE_ID][$MESSAGE_ID][$iEventHandlerKey]);
+			unset(CModule::$events[$FROM_MODULE_ID][$MESSAGE_ID][$iEventHandlerKey]);
 			return true;
 		}
 	}
@@ -528,12 +562,15 @@ function RemoveEventHandler($FROM_MODULE_ID, $MESSAGE_ID, $iEventHandlerKey)
 
 function GetModuleEvents($MODULE_ID, $MESSAGE_ID, $bReturnArray = false)
 {
-	global $DB, $MAIN_MODULE_EVENTS, $MAIN_MODULE_EVENTS_INIT;
-	if($MAIN_MODULE_EVENTS_INIT === false)
+	global $DB, $CACHE_MANAGER;
+	static $init = false;
+
+	if($init === false)
 	{
-		global $CACHE_MANAGER;
 		if($CACHE_MANAGER->Read(3600, "b_module_to_module"))
+		{
 			$arEvents = $CACHE_MANAGER->Get("b_module_to_module");
+		}
 		else
 		{
 			$arEvents = array();
@@ -548,9 +585,9 @@ function GetModuleEvents($MODULE_ID, $MESSAGE_ID, $bReturnArray = false)
 			while($ar = $rs->Fetch())
 			{
 				$ar['TO_NAME'] = CModule::_GetName($ar);
-				$ar["~FROM_MODULE_ID"]=strtoupper($ar["FROM_MODULE_ID"]);
-				$ar["~MESSAGE_ID"]=strtoupper($ar["MESSAGE_ID"]);
-				if (strlen($ar["TO_METHOD_ARG"]) > 0)
+				$ar["~FROM_MODULE_ID"] = strtoupper($ar["FROM_MODULE_ID"]);
+				$ar["~MESSAGE_ID"] = strtoupper($ar["MESSAGE_ID"]);
+				if ($ar["TO_METHOD_ARG"] <> '')
 					$ar["TO_METHOD_ARG"] = unserialize($ar["TO_METHOD_ARG"]);
 				else
 					$ar["TO_METHOD_ARG"] = array();
@@ -560,31 +597,30 @@ function GetModuleEvents($MODULE_ID, $MESSAGE_ID, $bReturnArray = false)
 		}
 
 		if(!is_array($arEvents))
-			$arEvents = Array();
+			$arEvents = array();
 
-		$copy_MAIN_MODULE_EVENTS = $MAIN_MODULE_EVENTS;
+		$copy_MAIN_MODULE_EVENTS = CModule::$events;
 
 		foreach($arEvents as $ar)
 		{
 			if (intval($ar["VERSION"]) < 2)
-				$MAIN_MODULE_EVENTS[$ar["~FROM_MODULE_ID"]][$ar["~MESSAGE_ID"]][] = $ar;
+				CModule::$events[$ar["~FROM_MODULE_ID"]][$ar["~MESSAGE_ID"]][] = $ar;
 		}
 
 		// need to re-sort because of AddEventHandler() calls
-		$funcSort = create_function('$a, $b', 'if($a["SORT"] == $b["SORT"]) return 0; return ($a["SORT"] < $b["SORT"])? -1 : 1;');
-		foreach(array_keys($copy_MAIN_MODULE_EVENTS) as $module)
-			foreach(array_keys($copy_MAIN_MODULE_EVENTS[$module]) as $message)
-				uasort($MAIN_MODULE_EVENTS[$module][$message], $funcSort);
+		foreach($copy_MAIN_MODULE_EVENTS as $module => $temp1)
+			foreach($copy_MAIN_MODULE_EVENTS[$module] as $message => $temp2)
+				sortByColumn(CModule::$events[$module][$message], "SORT");
 
-		$MAIN_MODULE_EVENTS_INIT = true;
+		$init = true;
 	}
 
 	$MODULE_ID = strtoupper($MODULE_ID);
 	$MESSAGE_ID = strtoupper($MESSAGE_ID);
-	if(array_key_exists($MODULE_ID, $MAIN_MODULE_EVENTS) && array_key_exists($MESSAGE_ID, $MAIN_MODULE_EVENTS[$MODULE_ID]))
-		$arrResult = $MAIN_MODULE_EVENTS[$MODULE_ID][$MESSAGE_ID];
+	if(array_key_exists($MODULE_ID, CModule::$events) && array_key_exists($MESSAGE_ID, CModule::$events[$MODULE_ID]))
+		$arrResult = CModule::$events[$MODULE_ID][$MESSAGE_ID];
 	else
-		$arrResult = Array();
+		$arrResult = array();
 
 	if($bReturnArray)
 	{
@@ -602,37 +638,40 @@ function ExecuteModuleEvent($arEvent, $param1=NULL, $param2=NULL, $param3=NULL, 
 {
 	$CNT_PREDEF = 10;
 	$r = true;
-	if($arEvent["TO_MODULE_ID"]<>"" && $arEvent["TO_MODULE_ID"]<>"main")
+	if($arEvent["TO_MODULE_ID"] <> '' && $arEvent["TO_MODULE_ID"] <> 'main')
 	{
 		if(!CModule::IncludeModule($arEvent["TO_MODULE_ID"]))
-			return;
+			return null;
 		$r = include_once($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/".$arEvent["TO_MODULE_ID"]."/include.php");
 	}
-	elseif($arEvent["TO_PATH"]<>"" && file_exists($_SERVER["DOCUMENT_ROOT"].BX_ROOT.$arEvent["TO_PATH"]))
+	elseif($arEvent["TO_PATH"] <> '' && file_exists($_SERVER["DOCUMENT_ROOT"].BX_ROOT.$arEvent["TO_PATH"]))
+	{
 		$r = include_once($_SERVER["DOCUMENT_ROOT"].BX_ROOT.$arEvent["TO_PATH"]);
+	}
 	elseif($arEvent["FULL_PATH"]<>"" && file_exists($arEvent["FULL_PATH"]))
+	{
 		$r = include_once($arEvent["FULL_PATH"]);
+	}
 
-	if((strlen($arEvent["TO_CLASS"])<=0 || strlen($arEvent["TO_METHOD"])<=0) && !is_set($arEvent, "CALLBACK"))
+	if(($arEvent["TO_CLASS"] == '' || $arEvent["TO_METHOD"] == '') && !is_set($arEvent, "CALLBACK"))
 		return $r;
 
-	UnSet($resmod);
-
-	$args = Array();
+	$args = array();
 	if (is_array($arEvent["TO_METHOD_ARG"]) && count($arEvent["TO_METHOD_ARG"]) > 0)
 	{
 		foreach ($arEvent["TO_METHOD_ARG"] as $v)
 			$args[] = $v;
 	}
 
-	for($i=1; $i<=$CNT_PREDEF; $i++)
+	$nArgs = func_num_args();
+	for($i = 1; $i <= $CNT_PREDEF; $i++)
 	{
-		if($i>func_num_args())
+		if($i > $nArgs)
 			break;
 		$args[] = &${"param".$i};
 	}
 
-	for($i=$CNT_PREDEF+1; $i<func_num_args(); $i++)
+	for($i = $CNT_PREDEF + 1; $i < $nArgs; $i++)
 		$args[] = func_get_arg($i);
 
 	if(is_set($arEvent, "CALLBACK"))
@@ -662,7 +701,7 @@ function ExecuteModuleEventEx($arEvent, $arParams = array())
 		if(CModule::IncludeModule($arEvent["TO_MODULE_ID"]))
 			$r = include_once($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/".$arEvent["TO_MODULE_ID"]."/include.php");
 		else
-			return;
+			return null;
 	}
 	elseif(
 		isset($arEvent["TO_PATH"])
@@ -690,7 +729,7 @@ function ExecuteModuleEventEx($arEvent, $arParams = array())
 
 		return call_user_func_array($arEvent["CALLBACK"], $args);
 	}
-	elseif(strlen($arEvent["TO_CLASS"]) && strlen($arEvent["TO_METHOD"]))
+	elseif($arEvent["TO_CLASS"] != "" && $arEvent["TO_METHOD"] != "")
 	{
 		if(is_array($arEvent["TO_METHOD_ARG"]) && count($arEvent["TO_METHOD_ARG"]))
 			$args = array_merge($arEvent["TO_METHOD_ARG"], $arParams);
@@ -709,7 +748,7 @@ function ExecuteModuleEventEx($arEvent, $arParams = array())
 
 function UnRegisterModuleDependences($FROM_MODULE_ID, $MESSAGE_ID, $TO_MODULE_ID, $TO_CLASS="", $TO_METHOD="", $TO_PATH="", $TO_METHOD_ARG = array())
 {
-	global $DB,$CACHE_MANAGER;
+	global $DB, $CACHE_MANAGER;
 
 	$TO_METHOD_ARG = ((!is_array($TO_METHOD_ARG) || is_array($TO_METHOD_ARG) && count($TO_METHOD_ARG) <= 0) ? "" : serialize($TO_METHOD_ARG));
 
@@ -717,16 +756,16 @@ function UnRegisterModuleDependences($FROM_MODULE_ID, $MESSAGE_ID, $TO_MODULE_ID
 			"WHERE FROM_MODULE_ID='".$DB->ForSql($FROM_MODULE_ID)."'".
 			"	AND MESSAGE_ID='".$DB->ForSql($MESSAGE_ID)."' ".
 			"	AND TO_MODULE_ID='".$DB->ForSql($TO_MODULE_ID)."' ".
-			(strlen($TO_CLASS)>0?
+			($TO_CLASS <> ''?
 				"	AND TO_CLASS='".$DB->ForSql($TO_CLASS)."' ":
 				"	AND (TO_CLASS='' OR TO_CLASS IS NULL) ").
-			(strlen($TO_METHOD)>0?
+			($TO_METHOD <> ''?
 				"	AND TO_METHOD='".$DB->ForSql($TO_METHOD)."'":
 				"	AND (TO_METHOD='' OR TO_METHOD IS NULL) ").
-			(strlen($TO_PATH)>0 && $TO_PATH !== 1/*controller disconnect correction*/?
+			($TO_PATH <> '' && $TO_PATH !== 1/*controller disconnect correction*/?
 				"	AND TO_PATH='".$DB->ForSql($TO_PATH)."'":
 				"	AND (TO_PATH='' OR TO_PATH IS NULL) ").
-			(strlen($TO_METHOD_ARG)>0?
+			($TO_METHOD_ARG <> ''?
 				"	AND TO_METHOD_ARG='".$DB->ForSql($TO_METHOD_ARG)."'":
 				"	AND (TO_METHOD_ARG='' OR TO_METHOD_ARG IS NULL) ");
 	$DB->Query($strSql, false, "FILE: ".__FILE__."<br> LINE: ".__LINE__);
@@ -735,7 +774,7 @@ function UnRegisterModuleDependences($FROM_MODULE_ID, $MESSAGE_ID, $TO_MODULE_ID
 
 function RegisterModuleDependences($FROM_MODULE_ID, $MESSAGE_ID, $TO_MODULE_ID, $TO_CLASS="", $TO_METHOD="", $SORT=100, $TO_PATH="", $TO_METHOD_ARG = array())
 {
-	global $DB,$CACHE_MANAGER;
+	global $DB, $CACHE_MANAGER;
 
 	$TO_METHOD_ARG = ((!is_array($TO_METHOD_ARG) || is_array($TO_METHOD_ARG) && count($TO_METHOD_ARG) <= 0) ? "" : serialize($TO_METHOD_ARG));
 
@@ -747,29 +786,29 @@ function RegisterModuleDependences($FROM_MODULE_ID, $MESSAGE_ID, $TO_MODULE_ID, 
 		"	AND TO_MODULE_ID='".$DB->ForSql($TO_MODULE_ID)."' ".
 		"	AND TO_CLASS='".$DB->ForSql($TO_CLASS)."' ".
 		"	AND TO_METHOD='".$DB->ForSql($TO_METHOD)."'".
-		(strlen($TO_PATH)<=0?
+		($TO_PATH == ''?
 			"	AND (TO_PATH='' OR TO_PATH IS NULL)"
 			:"	AND TO_PATH='".$DB->ForSql($TO_PATH)."'"
 		).
-		(strlen($TO_METHOD_ARG)<=0?
+		($TO_METHOD_ARG == ''?
 			"	AND (TO_METHOD_ARG='' OR TO_METHOD_ARG IS NULL)"
 			:"	AND TO_METHOD_ARG='".$DB->ForSql($TO_METHOD_ARG)."'"
-			)
+		)
 	);
 
 	if(!$r->Fetch())
 	{
 		$arFields = array(
-			"SORT"			=> intval($SORT),
-			"FROM_MODULE_ID"	=> "'".$DB->ForSql($FROM_MODULE_ID)."'",
-			"MESSAGE_ID"		=> "'".$DB->ForSql($MESSAGE_ID)."'",
-			"TO_MODULE_ID"		=> "'".$DB->ForSql($TO_MODULE_ID)."'",
-			"TO_CLASS"		=> "'".$DB->ForSql($TO_CLASS)."'",
-			"TO_METHOD"		=> "'".$DB->ForSql($TO_METHOD)."'",
-			"TO_PATH"		=> "'".$DB->ForSql($TO_PATH)."'",
-			"TO_METHOD_ARG"		=> "'".$DB->ForSql($TO_METHOD_ARG)."'",
-			"VERSION"		=> 1,
-			);
+			"SORT" => intval($SORT),
+			"FROM_MODULE_ID" => "'".$DB->ForSql($FROM_MODULE_ID)."'",
+			"MESSAGE_ID" => "'".$DB->ForSql($MESSAGE_ID)."'",
+			"TO_MODULE_ID" => "'".$DB->ForSql($TO_MODULE_ID)."'",
+			"TO_CLASS" => "'".$DB->ForSql($TO_CLASS)."'",
+			"TO_METHOD" => "'".$DB->ForSql($TO_METHOD)."'",
+			"TO_PATH" => "'".$DB->ForSql($TO_PATH)."'",
+			"TO_METHOD_ARG" => "'".$DB->ForSql($TO_METHOD_ARG)."'",
+			"VERSION" => 1,
+		);
 		$DB->Insert("b_module_to_module",$arFields, "FILE: ".__FILE__."<br>LINE: ".__LINE__);
 		$CACHE_MANAGER->Clean("b_module_to_module");
 	}
@@ -777,9 +816,9 @@ function RegisterModuleDependences($FROM_MODULE_ID, $MESSAGE_ID, $TO_MODULE_ID, 
 
 function IsModuleInstalled($module_id)
 {
-	$m = new CModule;
-	$m->MODULE_ID = $module_id;
-	return $m->IsInstalled();
+	if (!CModule::$installedModules)
+		CModule::_GetCache();
+	return isset(CModule::$installedModules[$module_id]);
 }
 
 function GetModuleID($str)
@@ -789,11 +828,11 @@ function GetModuleID($str)
 	return $arr[$i+1];
 }
 
-/************************************
-return TRUE if version1 >= version2
-version1 = "XX.XX.XX"
-version2 = "XX.XX.XX"
-************************************/
+/**
+ * Returns TRUE if version1 >= version2
+ * version1 = "XX.XX.XX"
+ * version2 = "XX.XX.XX"
+ */
 function CheckVersion($version1, $version2)
 {
 	$arr1 = explode(".",$version1);
@@ -811,4 +850,4 @@ function CheckVersion($version1, $version2)
 			else return true;
 		}
 	}
-}?>
+}

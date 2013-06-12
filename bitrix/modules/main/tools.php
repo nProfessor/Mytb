@@ -1,25 +1,19 @@
-<?
-/*
-##############################################
-# Bitrix Site Manager                        #
-# Copyright (c) 2002-2007 Bitrix             #
-# http://www.bitrixsoft.com                  #
-# mailto:admin@bitrixsoft.com                #
-##############################################
-*/
+<?php
+/**
+ * Bitrix Framework
+ * @package bitrix
+ * @subpackage main
+ * @copyright 2001-2013 Bitrix
+ */
 
-global $BX_DOC_ROOT;
-$BX_DOC_ROOT = rtrim(preg_replace("'[\\\\/]+'", "/", $_SERVER["DOCUMENT_ROOT"]), "/ ");
+/**
+ * HTML form elements
+ */
 
-/*********************************************************************
-HTML элементы
-*********************************************************************/
-
-/**************************************************************
-Возвращает HTML код элемента "input"
-***************************************************************/
-
-function InputType($strType, $strName, $strValue, $strCmp, $strPrintValue=false, $strPrint="", $field1="", $strId ="")
+/**
+ * Returns HTML "input"
+ */
+function InputType($strType, $strName, $strValue, $strCmp, $strPrintValue=false, $strPrint="", $field1="", $strId="")
 {
 	$bCheck = false;
 	if($strValue <> '')
@@ -32,91 +26,95 @@ function InputType($strType, $strName, $strValue, $strCmp, $strPrintValue=false,
 	$bLabel = false;
 	if ($strType == 'radio')
 		$bLabel = true;
-	return ($bLabel? '<label>': '').'<input type="'.$strType.'" '.$field1.' name="'.$strName.'" id="'.(strlen($strId)>0?$strId: $strName).'" value="'.$strValue.'"'.
+	return ($bLabel? '<label>': '').'<input type="'.$strType.'" '.$field1.' name="'.$strName.'" id="'.($strId <> ''? $strId : $strName).'" value="'.$strValue.'"'.
 		($bCheck? ' checked':'').'>'.($strPrintValue? $strValue:$strPrint).($bLabel? '</label>': '');
 }
 
-/**************************************************************
-Возвращает HTML код элемента "select" из выборки
-***************************************************************/
-
-function SelectBox(
-	$strBoxName,					// имя элемента
-	$a,								// выборка с полями REFERENCE, REFERENCE_ID
-	$strDetText = "",				// пустой элемент списка с value = NOT_REF
-	$strSelectedVal = "",			// выбранный элемент
-	$field1="class=\"typeselect\""	// дополнительное поле
-	)
+/**
+ * Returns HTML "select"
+ *
+ * @param string $strBoxName Input name
+ * @param CDBResult $a DB result with items
+ * @param string $strDetText Empty item text
+ * @param string $strSelectedVal Selected item value
+ * @param string $field1 Additional attributes
+ * @return string
+ */
+function SelectBox($strBoxName, $a,	$strDetText = "", $strSelectedVal = "", $field1="class=\"typeselect\"")
 {
-	if(!isset($strSelectedVal)) $strSelectedVal="";
-	$strReturnBox = "<select $field1 name=\"$strBoxName\" id=\"$strBoxName\">";
-	if (strlen($strDetText) > 0)
-		$strReturnBox = $strReturnBox."<option value=\"NOT_REF\">$strDetText</option>";
-	while ($ar = $a->Fetch())
+	$strReturnBox = "<select ".$field1." name=\"".$strBoxName."\" id=\"".$strBoxName."\">";
+	if ($strDetText <> '')
+		$strReturnBox = $strReturnBox."<option value=\"NOT_REF\">".$strDetText."</option>";
+	while (($ar = $a->Fetch()))
 	{
 		$reference_id = $ar["REFERENCE_ID"];
 		$reference = $ar["REFERENCE"];
-		if (strlen($reference_id)<=0) $reference_id = $ar["reference_id"];
-		if (strlen($reference)<=0) $reference = $ar["reference"];
+		if ($reference_id == '')
+			$reference_id = $ar["reference_id"];
+		if ($reference == '')
+			$reference = $ar["reference"];
 
 		$strReturnBox = $strReturnBox."<option ";
-		if (strcasecmp($reference_id,$strSelectedVal)== 0)
+		if (strcasecmp($reference_id, $strSelectedVal) == 0)
 			$strReturnBox = $strReturnBox." selected ";
 		$strReturnBox = $strReturnBox."value=\"".htmlspecialcharsbx($reference_id). "\">". htmlspecialcharsbx($reference)."</option>";
 	}
 	return $strReturnBox."</select>";
 }
 
-/**************************************************************
-Возвращает HTML код элемента "select multiple" из выборки
-***************************************************************/
-
-function SelectBoxM(
-	$strBoxName,					// имя элемента
-	$a,								// выборка для отображения с полями REFERENCE, REFERENCE_ID
-	$arr,							// массив значений которые необходимо выбрать
-	$strDetText = "",				// пустой элемент списка с value = NOT_REF
-	$strDetText_selected = false,	// выбрать ли пустой элемент
-	$size = 5,						// поле size элемента
-	$field1="class=\"typeselect\""	// стиль элемента
-	)
+/**
+ * Returns HTML multiple "select"
+ *
+ * @param string $strBoxName Input name
+ * @param CDBResult $a DB result with items
+ * @param array $arr Selected values
+ * @param string $strDetText Empty item text
+ * @param bool $strDetText_selected Allow to choose an empty item
+ * @param string $size Size attribute
+ * @param string $field1 Additional attributes
+ * @return string
+ */
+function SelectBoxM($strBoxName, $a, $arr, $strDetText = "", $strDetText_selected = false, $size = "5", $field1="class=\"typeselect\"")
 {
-	$strReturnBox = "<select $field1 multiple name=\"$strBoxName\" id=\"$strBoxName\" size=\"$size\">";
-	if (strlen($strDetText)>0)
+	$strReturnBox = "<select ".$field1." multiple name=\"".$strBoxName."\" id=\"".$strBoxName."\" size=\"".$size."\">";
+	if ($strDetText <> '')
 	{
 		$strReturnBox = $strReturnBox."<option ";
-		if ($strDetText_selected) $strReturnBox = $strReturnBox." selected ";
+		if ($strDetText_selected)
+			$strReturnBox = $strReturnBox." selected ";
 		$strReturnBox = $strReturnBox." value='NOT_REF'>".$strDetText."</option>";
 	}
-	while ($ar=$a->Fetch())
+	while ($ar = $a->Fetch())
 	{
 		$reference_id = $ar["REFERENCE_ID"];
 		$reference = $ar["REFERENCE"];
-		if (strlen($reference_id)<=0) $reference_id = $ar["reference_id"];
-		if (strlen($reference)<=0) $reference = $ar["reference"];
+		if ($reference_id == '')
+			$reference_id = $ar["reference_id"];
+		if ($reference == '')
+			$reference = $ar["reference"];
 
-		$sel = (is_array($arr) && in_array($reference_id, $arr))? "selected": "";
+		$sel = (is_array($arr) && in_array($reference_id, $arr)? "selected": "");
 		$strReturnBox = $strReturnBox."<option ".$sel;
 		$strReturnBox = $strReturnBox." value=\"".htmlspecialcharsbx($reference_id)."\">". htmlspecialcharsbx($reference)."</option>";
 	}
 	return $strReturnBox."</select>";
 }
 
-/**************************************************************
-Возвращает HTML код элемента "select multiple" из массива
-***************************************************************/
-
-function SelectBoxMFromArray(
-	$strBoxName,			// имя элемента
-	$a,				// ассоциированный массив с полями REFERENCE, REFERENCE_ID
-	$arr,				// массив значений которые необходимо выбрать
-	$strDetText = "",		// пустой элемент списка с value = NOT_REF
-	$strDetText_selected = false,	// выбрать ли пустой элемент
-	$size = 5,			// поле "size" элемента
-	$field1="class='typeselect'"	// стиль элемента
-	)
+/**
+ * Returns HTML multiple "select" from array
+ *
+ * @param string $strBoxName Input name
+ * @param array $a Array with items
+ * @param array $arr Selected values
+ * @param string $strDetText Empty item text
+ * @param bool $strDetText_selected Allow to choose an empty item
+ * @param string $size Size attribute
+ * @param string $field1 Additional attributes
+ * @return string
+ */
+function SelectBoxMFromArray($strBoxName, $a, $arr, $strDetText = "", $strDetText_selected = false, $size = "5", $field1="class='typeselect'")
 {
-	$strReturnBox = "<select $field1 multiple name=\"$strBoxName\" id=\"$strBoxName\" size=\"$size\">";
+	$strReturnBox = "<select ".$field1." multiple name=\"".$strBoxName."\" id=\"".$strBoxName."\" size=\"".$size."\">";
 
 	if(array_key_exists("REFERENCE_ID", $a))
 		$reference_id = $a["REFERENCE_ID"];
@@ -132,7 +130,7 @@ function SelectBoxMFromArray(
 	else
 		$reference = array();
 
-	if(strlen($strDetText) > 0)
+	if($strDetText <> '')
 	{
 		$strReturnBox .= "<option ";
 		if($strDetText_selected)
@@ -142,7 +140,7 @@ function SelectBoxMFromArray(
 
 	foreach($reference_id as $key => $value)
 	{
-		$sel = (is_array($arr) && in_array($value, $arr)) ? "selected" : "";
+		$sel = (is_array($arr) && in_array($value, $arr)? "selected" : "");
 		$strReturnBox .= "<option value=\"".htmlspecialcharsbx($value)."\" ".$sel.">". htmlspecialcharsbx($reference[$key])."</option>";
 	}
 
@@ -150,17 +148,16 @@ function SelectBoxMFromArray(
 	return $strReturnBox;
 }
 
-/***********************************************************
-Возвращает HTML код элемента "select" из массива
-************************************************************/
-
+/**
+ * Returns HTML "select" from array data
+ */
 function SelectBoxFromArray(
 	$strBoxName,
 	$db_array,
 	$strSelectedVal = "",
 	$strDetText = "",
 	$field1="class='typeselect'",
-	$go=false, // перейти сразу после выбора
+	$go = false,
 	$form="form1"
 	)
 {
@@ -182,29 +179,36 @@ function SelectBoxFromArray(
 		$strReturnBox = '<select '.$field1.' name="'.$strBoxName.'" id="'.$strBoxName.'">';
 	}
 
-	$ref = $db_array["reference"];
-	$ref_id = $db_array["reference_id"];
-	if(!is_array($ref))
+	if(isset($db_array["reference"]) && is_array($db_array["reference"]))
+		$ref = $db_array["reference"];
+	elseif(isset($db_array["REFERENCE"]) && is_array($db_array["REFERENCE"]))
 		$ref = $db_array["REFERENCE"];
-	if(!is_array($ref_id))
+	else
+		$ref = array();
+
+	if(isset($db_array["reference_id"]) && is_array($db_array["reference_id"]))
+		$ref_id = $db_array["reference_id"];
+	elseif(isset($db_array["REFERENCE_ID"]) && is_array($db_array["REFERENCE_ID"]))
 		$ref_id = $db_array["REFERENCE_ID"];
+	else
+		$ref_id = array();
 
 	if($strDetText <> '')
 		$strReturnBox .= '<option value="">'.$strDetText.'</option>';
 
-	for($i=0,$n=count($ref); $i<$n; $i++)
+	foreach($ref as $i => $val)
 	{
 		$strReturnBox .= '<option';
 		if(strcasecmp($ref_id[$i], $strSelectedVal) == 0)
 			$strReturnBox .= ' selected';
-		$strReturnBox .= ' value="'.htmlspecialcharsbx($ref_id[$i]).'">'.htmlspecialcharsbx($ref[$i]).'</option>';
+		$strReturnBox .= ' value="'.htmlspecialcharsbx($ref_id[$i]).'">'.htmlspecialcharsbx($val).'</option>';
 	}
 	return $strReturnBox.'</select>';
 }
 
-/*********************************************************************
-Даты
-*********************************************************************/
+/**
+ * Date functions
+ */
 
 function Calendar($sFieldName, $sFormName="skform", $sFromName="", $sToName="")
 {
@@ -256,6 +260,7 @@ function CalendarPeriod($sFromName, $sFromVal, $sToName, $sToVal, $sFormName="sk
 
 	$arr = array();
 	$str = "";
+	$ds = "";
 	if ($show_select=="Y")
 	{
 		$sname = $sFromName."_DAYS_TO_BACK";
@@ -275,9 +280,11 @@ function ".$sFromName."_SetDate()
 ";
 		global $$sname;
 		$value = $$sname;
-		if (strlen($value)>0 && $value!="NOT_REF") $ds="disabled";
+		if (strlen($value)>0 && $value!="NOT_REF")
+			$ds = "disabled";
+
 		?><script type="text/javascript">
-			var dates = new Array();
+			var dates = [];
 		<?
 		for ($i=0; $i<=90; $i++)
 		{
@@ -301,7 +308,9 @@ function ".$sFromName."_SetDate()
 	return '<span style="white-space: nowrap;">'.$str.'</span>';
 }
 
-// проверяет корректность ввода даты по заданному формату
+/**
+ * Checks date by format
+ */
 function CheckDateTime($datetime, $format=false)
 {
 	if ($format===false && defined("FORMAT_DATETIME"))
@@ -309,6 +318,8 @@ function CheckDateTime($datetime, $format=false)
 
 	$ar = ParseDateTime($datetime, $format);
 	$day = intval($ar["DD"]);
+	$hour = $month = 0;
+
 	if (isset($ar["MMMM"]))
 	{
 		if (is_numeric($ar["MMMM"]))
@@ -379,7 +390,7 @@ function CheckDateTime($datetime, $format=false)
 	if ($hour>24 || $hour<0 || $min<0 || $min>59 || $sec<0 || $sec>59)
 		return false;
 
-	$s1 = preg_replace("~([^:\\\\/\s.0-9-]+|[^:\\\\/\s.a-z-]+)[\n\r\t ]*~i".BX_UTF_PCRE_MODIFIER, "P", $datetime);
+	$s1 = preg_replace("~([^:\\\\/\\s.0-9-]+|[^:\\\\/\\s.a-z-]+)[\n\r\t ]*~i".BX_UTF_PCRE_MODIFIER, "P", $datetime);
 	$s2 = preg_replace("/(DD|MMMM|MM|MI|M|YYYY|HH|H|GG|G|SS|TT|T)[\n\r\t ]*/i".BX_UTF_PCRE_MODIFIER, "P", $format);
 
 	if(strlen($s1) <= strlen($s2))
@@ -388,7 +399,9 @@ function CheckDateTime($datetime, $format=false)
 		return $s2 == substr($s1, 0, strlen($s2));
 }
 
-// возвращае номер месяца
+/**
+ * Returns the number of a month
+ */
 function GetNumMonth ($month)
 {
 	global $MESS;
@@ -403,7 +416,9 @@ function GetNumMonth ($month)
 	return false;
 }
 
-// возвращает Unix-timestamp из строки даты
+/**
+ * Returns unix timestamp from date string
+ */
 function MakeTimeStamp($datetime, $format=false)
 {
 	if($format===false && defined("FORMAT_DATETIME"))
@@ -412,6 +427,8 @@ function MakeTimeStamp($datetime, $format=false)
 	$ar = ParseDateTime($datetime, $format);
 
 	$day = intval($ar["DD"]);
+	$hour = $month = 0;
+
 	if (isset($ar["MMMM"]))
 	{
 		if (is_numeric($ar["MMMM"]))
@@ -489,7 +506,9 @@ function MakeTimeStamp($datetime, $format=false)
 	return $ts;
 }
 
-// разбирает время в массив
+/**
+ * Parse a date into an array
+ */
 function ParseDateTime($datetime, $format=false)
 {
 	if ($format===false && defined("FORMAT_DATETIME"))
@@ -499,8 +518,9 @@ function ParseDateTime($datetime, $format=false)
 	if(preg_match_all("/(DD|MI|MMMM|MM|M|YYYY|HH|H|SS|TT|T|GG|G)/i", $format , $fm_args))
 	{
 		$dt_args = array();
-		if(preg_match_all("~([^:\\\\/\s.0-9-]+|[^:\\\\/\s.a-z-]+)~i".BX_UTF_PCRE_MODIFIER, $datetime, $dt_args))
+		if(preg_match_all("~([^:\\\\/\\s.0-9-]+|[^:\\\\/\\s.a-z-]+)~i".BX_UTF_PCRE_MODIFIER, $datetime, $dt_args))
 		{
+			$arrResult = array();
 			foreach($fm_args[0] as $i => $v)
 			{
 				if (is_numeric($dt_args[0][$i]))
@@ -518,10 +538,13 @@ function ParseDateTime($datetime, $format=false)
 	return false;
 }
 
-// прибавляет к Unix-timestamp заданный период времени
+/**
+ * Adds value to the date in timestamp
+ */
 function AddToTimeStamp($arrAdd, $stmp=false)
 {
-	if ($stmp===false) $stmp = time();
+	if ($stmp === false)
+		$stmp = time();
 	if (is_array($arrAdd) && count($arrAdd)>0)
 	{
 		while(list($key, $value) = each($arrAdd))
@@ -569,7 +592,9 @@ function ConvertTimeStamp($timestamp=false, $type="SHORT", $site=false, $bSearch
 	return GetTime($timestamp, $type, $site, $bSearchInSitesOnly);
 }
 
-// конвертирует дату из формата одного из сайтов в заданный формат
+/**
+ * Converts a date from site format to specified one
+ */
 function FmtDate($str_date, $format=false, $site=false, $bSearchInSitesOnly = false)
 {
 	global $DB;
@@ -766,7 +791,7 @@ function FormatDate($format="", $timestamp="", $now=false)
 		$format = substr($format, 1);
 	}
 
-	$arFormatParts = preg_split("/(sago|iago|isago|Hago|dago|mago|Yago|sdiff|idiff|Hdiff|ddiff|mdiff|Ydiff|yesterday|today|tommorow|X|x|F|f|Q|M|l|D)/", $format, 0, PREG_SPLIT_DELIM_CAPTURE);
+	$arFormatParts = preg_split("/(sago|iago|isago|Hago|dago|mago|Yago|sdiff|idiff|Hdiff|ddiff|mdiff|Ydiff|yesterday|today|tomorrow|tommorow|X|x|F|f|Q|M|l|D)/", $format, 0, PREG_SPLIT_DELIM_CAPTURE);
 
 	$result = "";
 	foreach($arFormatParts as $format_part)
@@ -870,7 +895,8 @@ function FormatDate($format="", $timestamp="", $now=false)
 		case "today":
 			$result .= GetMessage("FD_TODAY");
 			break;
-		case "tommorow":
+		case "tommorow": // grammar error :)
+		case "tomorrow":
 			$result .= GetMessage("FD_TOMORROW");
 			break;
 		case "dago":
@@ -1032,13 +1058,10 @@ function FormatDateEx($strDate, $format=false, $new_format=false)
 {
 	$strDate = trim($strDate);
 
-	if (false === $format) $format = CSite::GetDateFormat('FULL');
 	if (false === $new_format) $new_format = CSite::GetDateFormat('FULL');
 
 	$new_format = str_replace("MI","I", $new_format);
 	$new_format = preg_replace("/([DMYIHGST])\\1+/is".BX_UTF_PCRE_MODIFIER, "\\1", $new_format);
-	$arFormat = preg_split('/[^0-9A-Za-z]/', strtoupper($format));
-	$arDate = preg_split('/[^A-Za-z0-9]/', $strDate);
 
 	$arParsedDate = ParseDateTime($strDate);
 
@@ -1072,7 +1095,6 @@ function FormatDateEx($strDate, $format=false, $new_format=false)
 				$arParsedDate["MM"] = intval(date('m', strtotime($arParsedDate["M"])));
 		}
 	}
-
 
 	if (isset($arParsedDate["H"]))
 	{
@@ -1110,25 +1132,38 @@ function FormatDateEx($strDate, $format=false, $new_format=false)
 	if(intval($arParsedDate["YY"])>1970 && intval($arParsedDate["YY"])<2038)
 	{
 		$ux_time = mktime(
-				intval($arParsedDate["HH"]),
-				intval($arParsedDate["MI"]),
-				intval($arParsedDate["SS"]),
-				intval($arParsedDate["MM"]),
-				intval($arParsedDate["DD"]),
-				intval($arParsedDate["YY"])
-				);
+			intval($arParsedDate["HH"]),
+			intval($arParsedDate["MI"]),
+			intval($arParsedDate["SS"]),
+			intval($arParsedDate["MM"]),
+			intval($arParsedDate["DD"]),
+			intval($arParsedDate["YY"])
+		);
 
-		for ($i=0; $i<strlen($new_format); $i++)
+		$new_format_l = strlen($new_format);
+		for ($i = 0; $i < $new_format_l; $i++)
 		{
 			$simbol = substr($new_format, $i ,1);
 			switch ($simbol)
 			{
-				case "F":$match=GetMessage("MONTH_".date("n", $ux_time)."_S");break;
-				case "f":$match=GetMessage("MONTH_".date("n", $ux_time));break;
-				case "M":$match=GetMessage("MON_".date("n", $ux_time));break;
-				case "l":$match=GetMessage("DAY_OF_WEEK_".date("w", $ux_time));break;
-				case "D":$match=GetMessage("DOW_".date("w", $ux_time));break;
-				default: $match = date(substr($new_format, $i ,1), $ux_time); break;
+				case "F":
+					$match=GetMessage("MONTH_".date("n", $ux_time)."_S");
+					break;
+				case "f":
+					$match=GetMessage("MONTH_".date("n", $ux_time));
+					break;
+				case "M":
+					$match=GetMessage("MON_".date("n", $ux_time));
+					break;
+				case "l":
+					$match=GetMessage("DAY_OF_WEEK_".date("w", $ux_time));
+					break;
+				case "D":
+					$match=GetMessage("DOW_".date("w", $ux_time));
+					break;
+				default:
+					$match = date(substr($new_format, $i ,1), $ux_time);
+					break;
 			}
 			$strResult .= $match;
 		}
@@ -1137,7 +1172,8 @@ function FormatDateEx($strDate, $format=false, $new_format=false)
 	{
 		if($arParsedDate["MM"]<1 || $arParsedDate["MM"]>12)
 			$arParsedDate["MM"] = 1;
-		for ($i=0; $i<strLen($new_format); $i++)
+		$new_format_l = strlen($new_format);
+		for ($i = 0; $i < $new_format_l; $i++)
 		{
 			$simbol = substr($new_format, $i ,1);
 			switch ($simbol)
@@ -1145,48 +1181,67 @@ function FormatDateEx($strDate, $format=false, $new_format=false)
 				case "F":
 				case "f":
 					$match = str_pad($arParsedDate["MM"], 2, "0", STR_PAD_LEFT);
-					if (intVal($arParsedDate["MM"]) > 0)
-						$match=GetMessage("MONTH_".intVal($arParsedDate["MM"]).($simbol == 'F' ? '_S' : ''));
+					if (intval($arParsedDate["MM"]) > 0)
+						$match=GetMessage("MONTH_".intval($arParsedDate["MM"]).($simbol == 'F' ? '_S' : ''));
 					break;
 				case "M":
 					$match = str_pad($arParsedDate["MM"], 2, "0", STR_PAD_LEFT);
-					if (intVal($arParsedDate["MM"]) > 0)
-						$match=GetMessage("MON_".intVal($arParsedDate["MM"]));
+					if (intval($arParsedDate["MM"]) > 0)
+						$match=GetMessage("MON_".intval($arParsedDate["MM"]));
 					break;
 				case "l":
 					$match = str_pad($arParsedDate["DD"], 2, "0", STR_PAD_LEFT);
-					if (intVal($arParsedDate["DD"]) > 0)
-						$match = GetMessage("DAY_OF_WEEK_".intVal($arParsedDate["DD"]));
+					if (intval($arParsedDate["DD"]) > 0)
+						$match = GetMessage("DAY_OF_WEEK_".intval($arParsedDate["DD"]));
 					break;
 				case "D":
 					$match = str_pad($arParsedDate["DD"], 2, "0", STR_PAD_LEFT);
-					if (intVal($arParsedDate["DD"]) > 0)
-						$match = GetMessage("DOW_".intVal($arParsedDate["DD"]));
+					if (intval($arParsedDate["DD"]) > 0)
+						$match = GetMessage("DOW_".intval($arParsedDate["DD"]));
 					break;
-				case "d": $match = str_pad($arParsedDate["DD"], 2, "0", STR_PAD_LEFT); break;
-				case "m": $match = str_pad($arParsedDate["MM"], 2, "0", STR_PAD_LEFT); break;
-				case "j": $match = intVal($arParsedDate["DD"]); break;
-				case "Y": $match = str_pad($arParsedDate["YY"], 4, "0", STR_PAD_LEFT); break;
-				case "y": $match = substr($arParsedDate["YY"], 2);break;
-				case "H": $match = str_pad($arParsedDate["HH"], 2, "0", STR_PAD_LEFT); break;
-				case "i": $match = str_pad($arParsedDate["MI"], 2, "0", STR_PAD_LEFT); break;
-				case "s": $match = str_pad($arParsedDate["SS"], 2, "0", STR_PAD_LEFT); break;
+				case "d":
+					$match = str_pad($arParsedDate["DD"], 2, "0", STR_PAD_LEFT);
+					break;
+				case "m":
+					$match = str_pad($arParsedDate["MM"], 2, "0", STR_PAD_LEFT);
+					break;
+				case "j":
+					$match = intval($arParsedDate["DD"]);
+					break;
+				case "Y":
+					$match = str_pad($arParsedDate["YY"], 4, "0", STR_PAD_LEFT);
+					break;
+				case "y":
+					$match = substr($arParsedDate["YY"], 2);
+					break;
+				case "H":
+					$match = str_pad($arParsedDate["HH"], 2, "0", STR_PAD_LEFT);
+					break;
+				case "i":
+					$match = str_pad($arParsedDate["MI"], 2, "0", STR_PAD_LEFT);
+					break;
+				case "s":
+					$match = str_pad($arParsedDate["SS"], 2, "0", STR_PAD_LEFT);
+					break;
 				case "g":
-					$match = intVal($arParsedDate["HH"]);
+					$match = intval($arParsedDate["HH"]);
 					if ($match > 12)
 						$match = $match-12;
+					break;
 				case "a":
 				case "A":
-					$match = intVal($arParsedDate["HH"]);
+					$match = intval($arParsedDate["HH"]);
 					if ($match > 12)
 						$match = ($match-12)." PM";
 					else
 						$match .= " AM";
 
-					if (substr($new_format, $i ,1) == "a")
+					if (substr($new_format, $i, 1) == "a")
 						$match = strToLower($match);
-
-				default: $match = substr($new_format, $i ,1); break;
+					break;
+				default:
+					$match = substr($new_format, $i ,1);
+					break;
 			}
 			$strResult .= $match;
 		}
@@ -1196,10 +1251,12 @@ function FormatDateEx($strDate, $format=false, $new_format=false)
 
 function FormatDateFromDB ($date, $format = 'FULL', $phpFormat = false)
 {
+	global $DB;
+
 	if ($format == 'FULL' || $format == 'SHORT')
-		return FormatDate($GLOBALS['DB']->DateFormatToPHP(CSite::GetDateFormat($format)), MakeTimeStamp($date));
+		return FormatDate($DB->DateFormatToPHP(CSite::GetDateFormat($format)), MakeTimeStamp($date));
 	else
-		return FormatDate(($phpFormat ? $format : $GLOBALS['DB']->DateFormatToPHP($format)), MakeTimeStamp($date));
+		return FormatDate(($phpFormat ? $format : $DB->DateFormatToPHP($format)), MakeTimeStamp($date));
 }
 
 // возвращает время в формате текущего языка по заданному Unix Timestamp
@@ -1214,6 +1271,7 @@ function GetTime($timestamp, $type="SHORT", $site=false, $bSearchInSitesOnly = f
 // устаревшая функция
 function AddTime($stmp, $add, $type="D")
 {
+	$ret = $stmp;
 	switch ($type)
 	{
 		case "H":
@@ -1302,9 +1360,9 @@ function PHPFormatDateTime($strDateTime, $format="d.m.Y H:i:s")
 	return date($format, MkDateTime(FmtDate($strDateTime,"D.M.Y H:I:S"), "d.m.Y H:i:s"));
 }
 
-/*********************************************************************
-Массивы
-*********************************************************************/
+/**
+ * Array functions
+ */
 
 /*
 удаляет дубли в массиве сортировки
@@ -1511,7 +1569,10 @@ function TrimEx($str,$symbol,$side="both")
 
 function utf8win1251($s)
 {
-	return $GLOBALS["APPLICATION"]->ConvertCharset($s, "UTF-8", "Windows-1251");
+	/** @global CMain $APPLICATION */
+	global $APPLICATION;
+
+	return $APPLICATION->ConvertCharset($s, "UTF-8", "Windows-1251");
 }
 
 function ToUpper($str, $lang = false)
@@ -1579,7 +1640,8 @@ function ToLower($str, $lang = false)
 **********************************/
 function convert_code_tag_for_email($text="", $arMsg=array())
 {
-	if (strlen($text)<=0) return;
+	if ($text == '')
+		return '';
 
 	$text = stripslashes($text);
 	$text = preg_replace("#<#", "&lt;", $text);
@@ -1603,45 +1665,45 @@ function PrepareTxtForEmail($text, $lang=false, $convert_url_tag=true, $convert_
 
 	$arMsg = IncludeModuleLangFile(__FILE__, $lang, true);
 
-	$text = preg_replace("#<code(\s+[^>]*>|>)(.+?)</code(\s+[^>]*>|>)#is", "[code]\\2[/code]", $text);
-	$text = preg_replace("#\[code(\s+[^\]]*\]|\])(.+?)\[/code(\s+[^\]]*\]|\])#ies", "convert_code_tag_for_email('\\2', \$arMsg)", $text);
+	$text = preg_replace("#<code(\\s+[^>]*>|>)(.+?)</code(\\s+[^>]*>|>)#is", "[code]\\2[/code]", $text);
+	$text = preg_replace("#\\[code(\\s+[^\\]]*\\]|\\])(.+?)\\[/code(\\s+[^\\]]*\\]|\\])#ies", "convert_code_tag_for_email('\\2', \$arMsg)", $text);
 
 	$text = preg_replace("/^(\r|\n)+?(.*)$/", "\\2", $text);
 	$text = preg_replace("#<b>(.+?)</b>#is", "\\1", $text);
 	$text = preg_replace("#<i>(.+?)</i>#is", "\\1", $text);
 	$text = preg_replace("#<u>(.+?)</u>#is", "_\\1_", $text);
-	$text = preg_replace("#\[b\](.+?)\[/b\]#is", "\\1", $text);
-	$text = preg_replace("#\[i\](.+?)\[/i\]#is", "\\1", $text);
-	$text = preg_replace("#\[u\](.+?)\[/u\]#is", "_\\1_", $text);
+	$text = preg_replace("#\\[b\\](.+?)\\[/b\\]#is", "\\1", $text);
+	$text = preg_replace("#\\[i\\](.+?)\\[/i\\]#is", "\\1", $text);
+	$text = preg_replace("#\\[u\\](.+?)\\[/u\\]#is", "_\\1_", $text);
 
 	$text = preg_replace("#<(/?)quote(.*?)>#is", "[\\1quote]", $text);
 
 	$s = "-------------- ".$arMsg["MAIN_QUOTE_S"]." -----------------";
-	$text = preg_replace("#\[quote(.*?)\]#is", "\n>".$s."\n", $text);
-	$text = preg_replace("#\[/quote(.*?)\]#is", "\n>".str_repeat("-", strlen($s))."\n", $text);
+	$text = preg_replace("#\\[quote(.*?)\\]#is", "\n>".$s."\n", $text);
+	$text = preg_replace("#\\[/quote(.*?)\\]#is", "\n>".str_repeat("-", strlen($s))."\n", $text);
 
 	if($convert_url_tag)
 	{
 		$text = preg_replace("#<a[^>]*href=[\"']?([^>\"' ]+)[\"']?[^>]*>(.+?)</a>#is", "\\2 (URL: \\1)", $text);
-		$text = preg_replace("#\[url\](\S+?)\[/url\]#is", "(URL: \\1)", $text);
-		$text = preg_replace("#\[url\s*=\s*(\S+?)\s*\](.*?)\[\/url\]#is", "\\2 (URL: \\1)", $text);
+		$text = preg_replace("#\\[url\\](\\S+?)\\[/url\\]#is", "(URL: \\1)", $text);
+		$text = preg_replace("#\\[url\\s*=\\s*(\\S+?)\\s*\\](.*?)\\[\\/url\\]#is", "\\2 (URL: \\1)", $text);
 	}
 
 	if($convert_image_tag)
 	{
 		$text = preg_replace("#<img[^>]*src=[\"']?([^>\"' ]+)[\"']?[^>]*>#is", " (IMAGE: \\1) ", $text);
-		$text = preg_replace("#\[img\](.+?)\[/img\]#is", " (IMAGE: \\1) ", $text);
+		$text = preg_replace("#\\[img\\](.+?)\\[/img\\]#is", " (IMAGE: \\1) ", $text);
 	}
 
-	$text = preg_replace("#<ul(\s+[^>]*>|>)#is", "\n", $text);
-	$text = preg_replace("#<ol(\s+[^>]*>|>)#is", "\n", $text);
-	$text = preg_replace("#<li(\s+[^>]*>|>)#is", " [*] ", $text);
+	$text = preg_replace("#<ul(\\s+[^>]*>|>)#is", "\n", $text);
+	$text = preg_replace("#<ol(\\s+[^>]*>|>)#is", "\n", $text);
+	$text = preg_replace("#<li(\\s+[^>]*>|>)#is", " [*] ", $text);
 	$text = preg_replace("#</li>#is", "", $text);
 	$text = preg_replace("#</ul>#is", "\n\n", $text);
 	$text = preg_replace("#</ol>#is", "\n\n", $text);
 
-	$text = preg_replace("#\[list\]#is", "\n", $text);
-	$text = preg_replace("#\[/list\]#is", "\n", $text);
+	$text = preg_replace("#\\[list\\]#is", "\n", $text);
+	$text = preg_replace("#\\[/list\\]#is", "\n", $text);
 
 	$text = preg_replace("#<br>#is", "\n", $text);
 	$text = preg_replace("#<wbr>#is", "", $text);
@@ -1662,11 +1724,6 @@ function PrepareTxtForEmail($text, $lang=false, $convert_url_tag=true, $convert_
 	return $text;
 }
 
-/**********************************
-Конвертация текста в HTML
-**********************************/
-
-// используется как вспомогательная функция для TxtToHTML
 function delete_special_symbols($text, $replace="")
 {
 	static $arr = array(
@@ -1682,10 +1739,10 @@ function delete_special_symbols($text, $replace="")
 	return str_replace($arr, $replace, $text);
 }
 
-// используется как вспомогательная функция для TxtToHTML
 function convert_code_tag_for_html_before($text = "")
 {
-	if (strlen($text)<=0) return;
+	if ($text == '')
+		return '';
 	$text = stripslashes($text);
 	$text = str_replace(chr(2), "", $text);
 	$text = str_replace("\n", chr(4), $text);
@@ -1704,10 +1761,10 @@ function convert_code_tag_for_html_before($text = "")
 	return $return;
 }
 
-// используется как вспомогательная функция для TxtToHTML
 function convert_code_tag_for_html_after($text = "", $code_table_class, $code_head_class, $code_body_class, $code_textarea_class)
 {
-	if (strlen($text)<=0) return;
+	if ($text == '')
+		return '';
 	$text = stripslashes($text);
 	$code_mess = GetMessage("MAIN_CODE");
 	$text = str_replace("!http!", "http", $text);
@@ -1715,43 +1772,39 @@ function convert_code_tag_for_html_after($text = "", $code_table_class, $code_he
 	$text = str_replace("!ftp!", "ftp", $text);
 	$text = str_replace("!@!", "@", $text);
 
-	//$text = str_replace(Array(chr(9), chr(10)), Array("[","]")  , $text);
-
 	$return = "<table class='$code_table_class'><tr><td class='$code_head_class'>$code_mess</td></tr><tr><td class='$code_body_class'><textarea class='$code_textarea_class' contentEditable=false cols=60 rows=15 wrap=virtual>$text</textarea></td></tr></table>";
 
 	return $return;
 }
 
-// используется как вспомогательная функция для TxtToHTML
 function convert_open_quote_tag($quote_table_class, $quote_head_class, $quote_body_class)
 {
-	global $QUOTE_ERROR, $QUOTE_OPENED, $QUOTE_CLOSED, $MESS;
+	global $QUOTE_OPENED;
 	$QUOTE_OPENED++;
 	return "<table class='$quote_table_class' width='95%' border='0' cellpadding='3' cellspacing='1'><tr><td class='".$quote_head_class."'>".GetMessage("MAIN_QUOTE")."</td></tr><tr><td class='".$quote_body_class."'>";
 }
 
-// используется как вспомогательная функция для TxtToHTML
 function convert_close_quote_tag()
 {
 	global $QUOTE_ERROR, $QUOTE_OPENED, $QUOTE_CLOSED;
 	if ($QUOTE_OPENED == 0)
 	{
 		$QUOTE_ERROR++;
-		return;
+		return '';
 	}
 	$QUOTE_CLOSED++;
 	return "</td></tr></table>";
 }
 
-// используется как вспомогательная функция для TxtToHTML
 function convert_quote_tag($text="", $quote_table_class, $quote_head_class, $quote_body_class)
 {
 	global $QUOTE_ERROR, $QUOTE_OPENED, $QUOTE_CLOSED;
-	if (strlen($text)<=0) return;
+	if ($text == '')
+		return '';
 	$text = stripslashes($text);
 	$txt = $text;
-	$txt = preg_replace("#\[quote\]#ie", "convert_open_quote_tag('".CUtil::addslashes($quote_table_class)."', '".CUtil::addslashes($quote_head_class)."', '".CUtil::addslashes($quote_body_class)."')", $txt);
-	$txt = preg_replace("#\[/quote\]#ie", "convert_close_quote_tag()", $txt);
+	$txt = preg_replace("#\\[quote\\]#ie", "convert_open_quote_tag('".CUtil::addslashes($quote_table_class)."', '".CUtil::addslashes($quote_head_class)."', '".CUtil::addslashes($quote_body_class)."')", $txt);
+	$txt = preg_replace("#\\[/quote\\]#ie", "convert_close_quote_tag()", $txt);
 	if (($QUOTE_OPENED==$QUOTE_CLOSED) && ($QUOTE_ERROR==0))
 	{
 		return $txt;
@@ -1762,9 +1815,9 @@ function convert_quote_tag($text="", $quote_table_class, $quote_head_class, $quo
 	}
 }
 
-// используется как вспомогательная функция для TxtToHTML
 function extract_url($s)
 {
+	$s2 = '';
 	while(strpos(",}])>.", substr($s, -1, 1))!==false)
 	{
 		$s2 = substr($s, -1, 1);
@@ -1774,7 +1827,6 @@ function extract_url($s)
 	return $res;
 }
 
-// используется как вспомогательная функция для TxtToHTML
 function convert_to_href($url, $link_class="", $event1="", $event2="", $event3="", $script="", $link_target="_self")
 {
 	$url = stripslashes($url);
@@ -1839,15 +1891,15 @@ function TxtToHTML(
 
 	// <quote>...</quote> => [quote]...[/quote]
 	if ($QUOTE_ENABLED=="Y")
-		$str = preg_replace("#(?:<|\[)(/?)quote(.*?)(?:>|\])#is", " [\\1quote]", $str);
+		$str = preg_replace("#(?:<|\\[)(/?)quote(.*?)(?:>|\\])#is", " [\\1quote]", $str);
 
 	// <code>...</code> => [code]...[/code]
 	// \n => chr(4)
 	// \r => chr(5)
 	if ($CODE_ENABLED=="Y")
 	{
-		$str = preg_replace("#<code(\s+[^>]*>|>)(.+?)</code(\s+[^>]*>|>)#is", "[code]\\2[/code]", $str);
-		$str = preg_replace("#\[code(\s+[^\]]*\]|\])(.+?)\[/code(\s+[^\]]*\]|\])#ies", "convert_code_tag_for_html_before('\\2')", $str);
+		$str = preg_replace("#<code(\\s+[^>]*>|>)(.+?)</code(\\s+[^>]*>|>)#is", "[code]\\2[/code]", $str);
+		$str = preg_replace("#\\[code(\\s+[^\\]]*\\]|\\])(.+?)\\[/code(\\s+[^\\]]*\\]|\\])#ies", "convert_code_tag_for_html_before('\\2')", $str);
 	}
 
 	// <b>...</b> => [b]...[/b]
@@ -1855,9 +1907,9 @@ function TxtToHTML(
 	// <u>...</u> => [u]...[/u]
 	if ($BIU_ENABLED=="Y")
 	{
-		$str = preg_replace("#<b(\s+[^>]*>|>)(.+?)</b(\s+[^>]*>|>)#is", "[b]\\2[/b]", $str);
-		$str = preg_replace("#<i(\s+[^>]*>|>)(.+?)</i(\s+[^>]*>|>)#is", "[i]\\2[/i]", $str);
-		$str = preg_replace("#<u(\s+[^>]*>|>)(.+?)</u(\s+[^>]*>|>)#is", "[u]\\2[/u]", $str);
+		$str = preg_replace("#<b(\\s+[^>]*>|>)(.+?)</b(\\s+[^>]*>|>)#is", "[b]\\2[/b]", $str);
+		$str = preg_replace("#<i(\\s+[^>]*>|>)(.+?)</i(\\s+[^>]*>|>)#is", "[i]\\2[/i]", $str);
+		$str = preg_replace("#<u(\\s+[^>]*>|>)(.+?)</u(\\s+[^>]*>|>)#is", "[u]\\2[/u]", $str);
 	}
 
 	// URL => chr(1).URL."/".chr(1)
@@ -1865,8 +1917,8 @@ function TxtToHTML(
 	if($bMakeUrls)
 	{
 		//hide @ from next regexp with chr(11)
-		$str = preg_replace("#((http|https|ftp):\/\/[a-z:@,.'/\#\%=~\\&?*+\[\]_0-9\x01-\x08-]+)#ies", "extract_url(str_replace('@', chr(11), '\\1'))", $str);
-		$str = preg_replace("#(([=_\.'0-9a-z+~\x01-\x08-]+)@([_0-9a-z\x01-\x08-]+\.)+[a-z]{2,10})#is", chr(3)."\\1".chr(3), $str);
+		$str = preg_replace("#((http|https|ftp):\\/\\/[a-z:@,.'/\\#\\%=~\\&?*+\\[\\]_0-9\x01-\x08-]+)#ies", "extract_url(str_replace('@', chr(11), '\\1'))", $str);
+		$str = preg_replace("#(([=_\\.'0-9a-z+~\x01-\x08-]+)@[_0-9a-z\x01-\x08-.]+\\.[a-z]{2,10})#is", chr(3)."\\1".chr(3), $str);
 		//replace back to @
 		$str = str_replace(chr(11), '@', $str);
 	}
@@ -1900,14 +1952,14 @@ function TxtToHTML(
 
 	// [quote]...[/quote] => <table>...</table>
 	if ($QUOTE_ENABLED=="Y")
-		$str = preg_replace("#(\[quote(.*?)\](.*)\[/quote(.*?)\])#ies", "convert_quote_tag('\\1', '".CUtil::addslashes($quote_table_class)."', '".CUtil::addslashes($quote_head_class)."', '".CUtil::addslashes($quote_body_class)."')", $str);
+		$str = preg_replace("#(\\[quote(.*?)\\](.*)\\[/quote(.*?)\\])#ies", "convert_quote_tag('\\1', '".CUtil::addslashes($quote_table_class)."', '".CUtil::addslashes($quote_head_class)."', '".CUtil::addslashes($quote_body_class)."')", $str);
 
 	// [code]...[/code] => <textarea>...</textarea>
 	// chr(4) => \n
 	// chr(5) => \r
 	if ($CODE_ENABLED=="Y")
 	{
-		$str = preg_replace("#\[code\](.*?)\[/code\]#ies", "convert_code_tag_for_html_after('\\1', '".CUtil::addslashes($code_table_class)."', '".CUtil::addslashes($code_head_class)."', '".CUtil::addslashes($code_body_class)."', '".CUtil::addslashes($code_textarea_class)."')", $str);
+		$str = preg_replace("#\\[code\\](.*?)\\[/code\\]#ies", "convert_code_tag_for_html_after('\\1', '".CUtil::addslashes($code_table_class)."', '".CUtil::addslashes($code_head_class)."', '".CUtil::addslashes($code_body_class)."', '".CUtil::addslashes($code_textarea_class)."')", $str);
 		$str = str_replace(chr(4), "\n", $str);
 		$str = str_replace(chr(5), "\r", $str);
 		$str = str_replace(chr(6), " ", $str);
@@ -1921,9 +1973,9 @@ function TxtToHTML(
 	// [u]...[/u] => <u>...</u>
 	if ($BIU_ENABLED=="Y")
 	{
-		$str = preg_replace("#\[b\](.*?)\[/b\]#is", "<b>\\1</b>", $str);
-		$str = preg_replace("#\[i\](.*?)\[/i\]#is", "<i>\\1</i>", $str);
-		$str = preg_replace("#\[u\](.*?)\[/u\]#is", "<u>\\1</u>", $str);
+		$str = preg_replace("#\\[b\\](.*?)\\[/b\\]#is", "<b>\\1</b>", $str);
+		$str = preg_replace("#\\[i\\](.*?)\\[/i\\]#is", "<i>\\1</i>", $str);
+		$str = preg_replace("#\\[u\\](.*?)\\[/u\\]#is", "<u>\\1</u>", $str);
 	}
 
 	// chr(8) => \
@@ -1980,12 +2032,12 @@ function HTMLToTxt($str, $strSiteUrl="", $aDelete=array(), $maxlen=70)
 		$str = preg_replace($del_reg, "", $str);
 
 	//ищем картинки
-	$str = preg_replace("/(<img\s.*?src\s*=\s*)([\"']?)(\\/.*?)(\\2)(\s.+?>|\s*>)/is", "[".chr(1).$strSiteUrl."\\3".chr(1)."] ", $str);
-	$str = preg_replace("/(<img\s.*?src\s*=\s*)([\"']?)(.*?)(\\2)(\s.+?>|\s*>)/is", "[".chr(1)."\\3".chr(1)."] ", $str);
+	$str = preg_replace("/(<img\\s.*?src\\s*=\\s*)([\"']?)(\\/.*?)(\\2)(\\s.+?>|\\s*>)/is", "[".chr(1).$strSiteUrl."\\3".chr(1)."] ", $str);
+	$str = preg_replace("/(<img\\s.*?src\\s*=\\s*)([\"']?)(.*?)(\\2)(\\s.+?>|\\s*>)/is", "[".chr(1)."\\3".chr(1)."] ", $str);
 
 	//ищем ссылки
-	$str = preg_replace("/(<a\s.*?href\s*=\s*)([\"']?)(\\/.*?)(\\2)(.*?>)(.*?)<\\/a>/is", "\\6 [".chr(1).$strSiteUrl."\\3".chr(1)."] ", $str);
-	$str = preg_replace("/(<a\s.*?href\s*=\s*)([\"']?)(.*?)(\\2)(.*?>)(.*?)<\\/a>/is", "\\6 [".chr(1)."\\3".chr(1)."] ", $str);
+	$str = preg_replace("/(<a\\s.*?href\\s*=\\s*)([\"']?)(\\/.*?)(\\2)(.*?>)(.*?)<\\/a>/is", "\\6 [".chr(1).$strSiteUrl."\\3".chr(1)."] ", $str);
+	$str = preg_replace("/(<a\\s.*?href\\s*=\\s*)([\"']?)(.*?)(\\2)(.*?>)(.*?)<\\/a>/is", "\\6 [".chr(1)."\\3".chr(1)."] ", $str);
 
 	//ищем <br>
 	$str = preg_replace("#<br[^>]*>#i", "\r\n", $str);
@@ -2213,7 +2265,7 @@ function GetScriptFileExt()
 	if($FILEMAN_SCRIPT_EXT !== false)
 		return $FILEMAN_SCRIPT_EXT;
 
-	$script_files = COption::GetOptionString("fileman", "~script_files", "php,php3,php4,php5,php6,phtml,pl,asp,aspx,cgi,dll,exe,ico,shtm,shtml,fcg,fcgi,fpl,asmx,pht");
+	$script_files = COption::GetOptionString("fileman", "~script_files", "php,php3,php4,php5,php6,phtml,pl,asp,aspx,cgi,dll,exe,ico,shtm,shtml,fcg,fcgi,fpl,asmx,pht,py,psp");
 	$arScriptFiles = array();
 	foreach(explode(",", strtolower($script_files)) as $ext)
 		if(($e = trim($ext)) != "")
@@ -2396,8 +2448,8 @@ function GetPagePath($page=false, $get_index_page=null)
 	if(substr($sPath, -1, 1) == "/" && $get_index_page)
 		$sPath .= GetDirectoryIndex($sPath);
 
-	static $aSearch = array("<", ">", "\"", "'");
-	static $aReplace = array("&lt;", "&gt;", "&quot;", "&#039;");
+	static $aSearch = array("<", ">", "\"", "'", "%", "\r", "\n", "\t");
+	static $aReplace = array("&lt;", "&gt;", "&quot;", "&#039;", "%25", "%0d", "%0a", "%09");
 	$sPath = str_replace($aSearch, $aReplace, $sPath);
 
 	return Rel2Abs("/", $sPath);
@@ -2515,9 +2567,6 @@ function _normalizePath($strPath)
 	if($strPath <> '')
 	{
 		$strPath = str_replace("\\", "/", $strPath);
-
-		while(strpos($strPath, ".../") !== false)
-			$strPath = str_replace(".../", "../", $strPath);
 
 		$arPath = explode('/', $strPath);
 		$nPath = count($arPath);
@@ -2645,7 +2694,6 @@ function __IncludeLang($path, $bReturnArray=false, $bFileChecked=false)
 
 function IncludeTemplateLangFile($filepath, $lang=false)
 {
-	global $BX_DOC_ROOT;
 	$filepath = rtrim(preg_replace("'[\\\\/]+'", "/", $filepath), "/ ");
 	$module_path = "/bitrix/modules/";
 	$templ_path = BX_PERSONAL_ROOT."/templates/";
@@ -2656,7 +2704,7 @@ function IncludeTemplateLangFile($filepath, $lang=false)
 		$rel_path = substr($filepath, $templ_pos);
 		$p = strpos($rel_path, "/");
 		if(!$p)
-			return;
+			return null;
 		$template_name = substr($rel_path, 0, $p);
 		$file_name = substr($rel_path, $p+1);
 		$p = strpos($file_name, "/");
@@ -2669,7 +2717,7 @@ function IncludeTemplateLangFile($filepath, $lang=false)
 		$rel_path = substr($filepath, $templ_pos);
 		$p = strpos($rel_path, "/");
 		if(!$p)
-			return;
+			return null;
 		$module_name = substr($rel_path, 0, $p);
 		if(defined("SITE_TEMPLATE_ID"))
 			$template_name = SITE_TEMPLATE_ID;
@@ -2680,6 +2728,7 @@ function IncludeTemplateLangFile($filepath, $lang=false)
 	else
 		return false;
 
+	$BX_DOC_ROOT = rtrim(preg_replace("'[\\\\/]+'", "/", $_SERVER["DOCUMENT_ROOT"]), "/ ");
 	$templ_path = $BX_DOC_ROOT.$templ_path;
 	$module_path = $BX_DOC_ROOT.$module_path;
 
@@ -2715,11 +2764,11 @@ function IncludeTemplateLangFile($filepath, $lang=false)
 			__IncludeLang($module_path.$module_name."/install/templates/lang/".$subst_lang."/".$file_name);
 		__IncludeLang($fname, false, true);
 	}
+	return null;
 }
 
 function IncludeModuleLangFile($filepath, $lang=false, $bReturnArray=false)
 {
-	global $BX_DOC_ROOT;
 	$filepath = rtrim(preg_replace("'[\\\\/]+'", "/", $filepath), "/ ");
 	$module_path = "/modules/";
 	if(strpos($filepath, $module_path) !== false)
@@ -2732,6 +2781,7 @@ function IncludeModuleLangFile($filepath, $lang=false, $bReturnArray=false)
 
 		$module_name = substr($rel_path, 0, $p);
 		$rel_path = substr($rel_path, $p+1);
+		$BX_DOC_ROOT = rtrim(preg_replace("'[\\\\/]+'", "/", $_SERVER["DOCUMENT_ROOT"]), "/ ");
 		$module_path = $BX_DOC_ROOT.BX_ROOT.$module_path.$module_name;
 	}
 	elseif(strpos($filepath, "/.last_version/") !== false)
@@ -2864,7 +2914,7 @@ function AddMessage2Log($sText, $sModule = "", $traceDepth = 6, $bShowArgs = fal
 			{
 				if (flock($fp, LOCK_EX))
 				{
-					@fwrite($fp, date("Y-m-d H:i:s")." - ".$sModule." - ".$sText."\n");
+					@fwrite($fp, "Host: ".$_SERVER["HTTP_HOST"]."\nDate: ".date("Y-m-d H:i:s")."\nModule: ".$sModule."\n".$sText."\n");
 					if (function_exists("debug_backtrace"))
 					{
 						$arBacktrace = debug_backtrace();
@@ -2890,7 +2940,7 @@ function AddMessage2Log($sText, $sModule = "", $traceDepth = 6, $bShowArgs = fal
 									$strFilesStack .= $arBacktrace[$i]["class"]."::";
 								$strFilesStack .= $arBacktrace[$i]["function"];
 								$strFilesStack .= "(\n";
-								foreach($arBacktrace[$i]["args"] as $j=>$value)
+								foreach($arBacktrace[$i]["args"] as $value)
 									$strFilesStack .= "\t\t\t".$value."\n";
 								$strFilesStack .= "\t\t)\n";
 
@@ -2914,25 +2964,29 @@ function AddMessage2Log($sText, $sModule = "", $traceDepth = 6, $bShowArgs = fal
 }
 
 /*********************************************************************
-Квотирование
+	Quoting reverse (to be removed with 5.4.0)
 *********************************************************************/
 
 function UnQuote($str, $type, $preserve_nulls = false)
 {
+	UnQuoteEx($str, "", array("type" => $type, "preserve_nulls" => $preserve_nulls));
+	return $str;
+}
+
+function UnQuoteEx(&$str, $key, $params)
+{
 	static $search_gpc  = array("\\'", '\\"', "\\\\");
 	static $replace_gpc = array("'",   '"',   "\\");
 
-	if($preserve_nulls)
+	if($params["preserve_nulls"])
 		$str = str_replace("\\0", "\0", $str);
 	else
 		$str = str_replace("\0", "", $str);
 
-	if($type == "gpc")
+	if($params["type"] == "gpc")
 		$str = str_replace($search_gpc ,$replace_gpc, $str);
-	elseif($type == "syb")
+	elseif($params["type"] == "syb")
 		$str = str_replace("''", "'", $str);
-
-	return $str;
 }
 
 function __unquoteitem(&$item, $key, $param = Array())
@@ -2962,22 +3016,72 @@ function __unquoteitem(&$item, $key, $param = Array())
 		{
 			global $$key;
 			if(isset($$key) && $$key==$item)
-				$$key = UnQuote($$key, $param["type"], $param["preserve_nulls"]);
+				UnQuoteEx($$key, "", $param);
 		}
-		$item = UnQuote($item, $param["type"], $param["preserve_nulls"]);
+		UnQuoteEx($item, "", $param);
 	}
 }
 
 function UnQuoteArr(&$arr, $syb = false, $preserve_nulls = false)
 {
+	static $params = null;
+	if (!isset($params))
+	{
+		if (get_magic_quotes_gpc())
+		{
+			//Magic quotes sybase works only when magic_quotes_gpc is turned on
+			if (ini_get_bool("magic_quotes_sybase"))
+				$params = array("type" => "syb");
+			else
+				$params = array("type" => "gpc");
+		}
+		else
+		{
+			$params = array("type" => "nulls");
+		}
+	}
+
+	if ($preserve_nulls != false && $params["type"] == "nulls")
+		return;
+
+	static $register_globals = null;
+	if (!isset($register_globals))
+		$register_globals = ini_get_bool("register_globals");
+
 	if (is_array($arr))
 	{
-		if(ini_get_bool("magic_quotes_sybase"))
-			array_walk($arr, '__unquoteitem', Array("type"=>"syb", "preserve_nulls" => $preserve_nulls, "first_use"=>true));
-		elseif(ini_get_bool("magic_quotes_gpc"))
-			array_walk($arr, '__unquoteitem', Array("type"=>"gpc", "preserve_nulls" => $preserve_nulls, "first_use"=>true));
-		elseif($preserve_nulls == false)
-			array_walk($arr, '__unquoteitem', Array("type"=>"nulls", "preserve_nulls" => false, "first_use"=>true));
+		$params["preserve_nulls"] = $preserve_nulls;
+
+		foreach($arr as $key => $value)
+		{
+			if (is_array($value))
+				array_walk_recursive($arr[$key], "UnQuoteEx", $params);
+			else
+				UnQuoteEx($arr[$key], "", $params);
+		}
+
+		if ($register_globals)
+		{
+			foreach($arr as $key => $value)
+			{
+				if (isset($GLOBALS[$key]))
+				{
+					if (is_array($value))
+					{
+						if (is_array($GLOBALS[$key]))
+						{
+							foreach($GLOBALS[$key] as $k => $v)
+								array_walk_recursive($GLOBALS[$key], "UnQuoteEx", $params);
+						}
+					}
+					else
+					{
+						if($GLOBALS[$key] == $value)
+							UnQuoteEx($GLOBALS[$key], "", $params);
+					}
+				}
+			}
+		}
 	}
 }
 
@@ -3014,9 +3118,6 @@ function UnQuoteAll()
 	UnQuoteArr($_COOKIE);
 	UnQuoteArr($HTTP_GET_VARS);
 	UnQuoteArr($HTTP_COOKIE_VARS);
-
-	if(version_compare(phpversion(), "5.3.0", "<") && ini_get_bool("magic_quotes_runtime"))
-		set_magic_quotes_runtime(0);
 }
 
 /*********************************************************************
@@ -3024,7 +3125,10 @@ function UnQuoteAll()
 *********************************************************************/
 function LocalRedirect($url, $skip_security_check=false, $status="302 Found")
 {
-	if(defined("DEMO") && DEMO=="Y" && (!defined("SITEEXPIREDATE") || strlen(SITEEXPIREDATE) <= 0 || SITEEXPIREDATE != OLDSITEEXPIREDATE))
+	/** @global CMain $APPLICATION */
+	global $APPLICATION;
+
+	if(defined("DEMO") && DEMO=="Y" && (!defined("SITEEXPIREDATE") || !defined("OLDSITEEXPIREDATE") || strlen(SITEEXPIREDATE) <= 0 || SITEEXPIREDATE != OLDSITEEXPIREDATE))
 		die(GetMessage("TOOLS_TRIAL_EXP"));
 
 	//doubtful
@@ -3032,8 +3136,7 @@ function LocalRedirect($url, $skip_security_check=false, $status="302 Found")
 
 	if(function_exists("getmoduleevents"))
 	{
-		$db_events = GetModuleEvents("main", "OnBeforeLocalRedirect");
-		while($arEvent = $db_events->Fetch())
+		foreach(GetModuleEvents("main", "OnBeforeLocalRedirect", true) as $arEvent)
 			ExecuteModuleEventEx($arEvent, array(&$url, $skip_security_check));
 	}
 
@@ -3044,7 +3147,7 @@ function LocalRedirect($url, $skip_security_check=false, $status="302 Found")
 
 	if(preg_match("'^(http://|https://|ftp://)'i", $url))
 	{
-		if(!defined("BX_UTF"))
+		if(!defined("BX_UTF") && defined("LANG_CHARSET"))
 			$url = CharsetConverter::ConvertCharset($url, LANG_CHARSET, "UTF-8");
 
 		header("Request-URI: ".$url);
@@ -3054,12 +3157,12 @@ function LocalRedirect($url, $skip_security_check=false, $status="302 Found")
 	else
 	{
 		//store cookies for next hit (see CMain::GetSpreadCookieHTML())
-		$GLOBALS['APPLICATION']->StoreCookies();
+		$APPLICATION->StoreCookies();
 
 		if(strpos($url, "/") !== 0)
-			$url = str_replace(array("\r", "\n"), "", $GLOBALS['APPLICATION']->GetCurDir()).$url;
+			$url = str_replace(array("\r", "\n"), "", $APPLICATION->GetCurDir()).$url;
 
-		if(!defined("BX_UTF"))
+		if(!defined("BX_UTF") && defined("LANG_CHARSET"))
 			$url = CharsetConverter::ConvertCharset($url, LANG_CHARSET, "UTF-8");
 
 		$host = $_SERVER['HTTP_HOST'];
@@ -3075,8 +3178,7 @@ function LocalRedirect($url, $skip_security_check=false, $status="302 Found")
 
 	if(function_exists("getmoduleevents"))
 	{
-		$db_events = GetModuleEvents("main", "OnLocalRedirect");
-		while($arEvent = $db_events->Fetch())
+		foreach(GetModuleEvents("main", "OnLocalRedirect", true) as $arEvent)
 			ExecuteModuleEventEx($arEvent);
 	}
 
@@ -3092,8 +3194,10 @@ function WriteFinalMessage($message = "")
 
 function FindUserID($tag_name, $tag_value, $user_name="", $form_name = "form1", $tag_size = "3", $tag_maxlength="", $button_value = "...", $tag_class="typeinput", $button_class="tablebodybutton", $search_page="/bitrix/admin/user_search.php")
 {
+	/** @global CMain $APPLICATION */
 	global $APPLICATION;
-	$tag_name_x = preg_replace("/([^a-z0-9]|\[|\])/is", "x", $tag_name);
+
+	$tag_name_x = preg_replace("/([^a-z0-9]|\\[|\\])/is", "x", $tag_name);
 	if($APPLICATION->GetGroupRight("main") >= "R")
 	{
 		$strReturn = "
@@ -3169,11 +3273,11 @@ function IsIE()
 	global $HTTP_USER_AGENT;
 	if(
 		strpos($HTTP_USER_AGENT, "Opera") == false
-		&& preg_match('#(MSIE|Internet Explorer) ([0-9]).([0-9])+#', $HTTP_USER_AGENT, $version)
+		&& preg_match('#(MSIE|Internet Explorer) ([0-9]+)\\.([0-9]+)#', $HTTP_USER_AGENT, $version)
 	)
 	{
 		if(intval($version[2]) > 0)
-			return DoubleVal($version[2].".".$version[3]);
+			return doubleval($version[2].".".$version[3]);
 		else
 			return false;
 	}
@@ -3223,7 +3327,11 @@ function minimumPHPVersion($vercheck)
 function FormDecode()
 {
 	global $HTTP_ENV_VARS, $HTTP_GET_VARS, $HTTP_POST_VARS, $HTTP_POST_FILES, $HTTP_COOKIE_VARS, $HTTP_SERVER_VARS;
-	$superglobals = Array('_GET'=>1, '_SESSION'=>1, '_POST'=>1, '_COOKIE'=>1, '_REQUEST'=>1, '_FILES'=>1, '_SERVER'=>1, 'GLOBALS'=>1, '_ENV'=>1, 'DBSQLServerType'=>1);
+	$superglobals = array(
+		'_GET'=>1, '_SESSION'=>1, '_POST'=>1, '_COOKIE'=>1, '_REQUEST'=>1, '_FILES'=>1, '_SERVER'=>1, 'GLOBALS'=>1, '_ENV'=>1,
+		'DBSQLServerType'=>1, 'DBType'=>1,  'DBDebug'=>1, 'DBDebugToFile'=>1, 'DBHost'=>1, 'DBName'=>1, 'DBLogin'=>1, 'DBPassword'=>1,
+		'HTTP_ENV_VARS'=>1, 'HTTP_GET_VARS'=>1, 'HTTP_POST_VARS'=>1, 'HTTP_POST_FILES'=>1, 'HTTP_COOKIE_VARS'=>1, 'HTTP_SERVER_VARS'=>1,
+	);
 
 	foreach($superglobals as $gl=>$t)
 	{
@@ -3396,6 +3504,7 @@ function xml_depth_xmldata($vals, &$i)
 
 function Help($module="", $anchor="", $help_file="")
 {
+	/** @global CMain $APPLICATION */
 	global $APPLICATION, $IS_HELP;
 	if (strlen($help_file)<=0) $help_file = basename($APPLICATION->GetCurPage());
 	if (strlen($anchor)>0) $anchor = "#".$anchor;
@@ -3425,7 +3534,7 @@ function InitBVar(&$var)
 
 function init_get_params($url)
 {
-	return InitURLParam($url);
+	InitURLParam($url);
 }
 
 function InitURLParam($url=false)
@@ -3457,9 +3566,12 @@ function _ShowHtmlspec($str)
 
 function ShowNote($strNote, $cls="notetext")
 {
+	/** @global CMain $APPLICATION */
+	global $APPLICATION;
+
 	if($strNote <> "")
 	{
-		$GLOBALS["APPLICATION"]->IncludeComponent(
+		$APPLICATION->IncludeComponent(
 			"bitrix:system.show_message",
 			".default",
 			Array(
@@ -3476,9 +3588,12 @@ function ShowNote($strNote, $cls="notetext")
 
 function ShowError($strError, $cls="errortext")
 {
+	/** @global CMain $APPLICATION */
+	global $APPLICATION;
+
 	if($strError <> "")
 	{
-		$GLOBALS["APPLICATION"]->IncludeComponent(
+		$APPLICATION->IncludeComponent(
 			"bitrix:system.show_message",
 			".default",
 			Array(
@@ -3495,12 +3610,15 @@ function ShowError($strError, $cls="errortext")
 
 function ShowMessage($arMess)
 {
+	/** @global CMain $APPLICATION */
+	global $APPLICATION;
+
 	if(!is_array($arMess))
 		$arMess=Array("MESSAGE" => $arMess, "TYPE" => "ERROR");
 
 	if($arMess["MESSAGE"] <> "")
 	{
-		$GLOBALS["APPLICATION"]->IncludeComponent(
+		$APPLICATION->IncludeComponent(
 			"bitrix:system.show_message",
 			".default",
 			Array(
@@ -3533,7 +3651,7 @@ function DeleteParam($ParamNames)
 		}
 	}
 
-	return http_build_query($aParams);
+	return http_build_query($aParams, "", "&");
 }
 
 function check_email($email, $bStrict=false)
@@ -3541,7 +3659,7 @@ function check_email($email, $bStrict=false)
 	if(!$bStrict)
 	{
 		$email = trim($email);
-		if(preg_match("#.*?[<\[\(](.*?)[>\]\)].*#i", $email, $arr) && strlen($arr[1])>0)
+		if(preg_match("#.*?[<\\[\\(](.*?)[>\\]\\)].*#i", $email, $arr) && strlen($arr[1])>0)
 			$email = $arr[1];
 	}
 
@@ -3552,7 +3670,7 @@ function check_email($email, $bStrict=false)
 		return false;
 	}
 
-	if(preg_match("#^[=_.0-9a-z+~'!\$&*^`|\\#%/?{}-]+@(([-0-9a-z_]+\.)+)([a-z]{2,10})$#i", $email))
+	if(preg_match("#^[=_.0-9a-z+~'!\$&*^`|\\#%/?{}-]+@(([-0-9a-z_]+\\.)+)([a-z0-9-]{2,10})$#i", $email))
 	{
 		//http://tools.ietf.org/html/rfc2822#section-3.2.4
 		//3.2.4. Atom
@@ -3598,7 +3716,7 @@ function roundDB($value, $len=18, $dec=4)
 
 function bitrix_sessid()
 {
-	if(!is_array($_SESSION) || !array_key_exists("fixed_session_id", $_SESSION))
+	if(!is_array($_SESSION) || !isset($_SESSION['fixed_session_id']))
 		bitrix_sessid_set();
 	return $_SESSION["fixed_session_id"];
 }
@@ -3606,8 +3724,18 @@ function bitrix_sessid()
 function bitrix_sessid_set($val=false)
 {
 	if($val === false)
-		$val = md5(CMain::GetServerUniqID().session_id());
+		$val = bitrix_sessid_val();
 	$_SESSION["fixed_session_id"] = $val;
+}
+
+function bitrix_sessid_val()
+{
+	return md5(CMain::GetServerUniqID().session_id());
+}
+
+function bitrix_sess_sign()
+{
+	return md5("nobody".CMain::GetServerUniqID()."nowhere");
 }
 
 function check_bitrix_sessid($varname='sessid')
@@ -3636,9 +3764,11 @@ function print_url($strUrl, $strText, $sParams="")
 
 function IncludeAJAX()
 {
+	/** @global CMain $APPLICATION */
 	global $APPLICATION;
+
 	$APPLICATION->AddHeadString('<script type="text/javascript">var ajaxMessages = {wait:"'.CUtil::JSEscape(GetMessage('AJAX_WAIT')).'"}</script>', true);
-	$APPLICATION->AddHeadString('<script src="/bitrix/js/main/cphttprequest.js"></script>', true);
+	$APPLICATION->AddHeadScript('/bitrix/js/main/cphttprequest.js', true);
 }
 
 class CJSCore
@@ -3684,13 +3814,13 @@ class CJSCore
 
 	public static function Init($arExt = array(), $bReturn = false)
 	{
+		global $USER;
+
 		if (!self::$bInited)
 		{
 			self::_RegisterStandardExt();
 			self::$bInited = true;
 		}
-
-		$str = '';
 
 		if (!is_array($arExt) && strlen($arExt) > 0)
 			$arExt = array($arExt);
@@ -3702,7 +3832,13 @@ class CJSCore
 		{
 			foreach ($arExt as $ext)
 			{
-				if (self::$arRegisteredExt[$ext] && !self::$arRegisteredExt[$ext]['skip_core'])
+				if (
+					self::$arRegisteredExt[$ext]
+					&& (
+						!isset(self::$arRegisteredExt[$ext]['skip_core'])
+						|| !self::$arRegisteredExt[$ext]['skip_core']
+					)
+				)
 				{
 					$bNeedCore = true;
 					break;
@@ -3719,14 +3855,14 @@ class CJSCore
 		{
 			$autoTimeZone = "N";
 			if(is_object($GLOBALS["USER"]))
-				$autoTimeZone = trim($GLOBALS["USER"]->GetParam("AUTO_TIME_ZONE"));
+				$autoTimeZone = trim($USER->GetParam("AUTO_TIME_ZONE"));
 
 			$arLang = array(
 				'LANGUAGE_ID' => LANGUAGE_ID,
 				'FORMAT_DATE' => FORMAT_DATE,
 				'FORMAT_DATETIME' => FORMAT_DATETIME,
 				'COOKIE_PREFIX' => COption::GetOptionString("main", "cookie_name", "BITRIX_SM"),
-				'USER_ID' => $GLOBALS['USER']->GetID(),
+				'USER_ID' => $USER->GetID(),
 				'SERVER_TIME' => time(),
 				'SERVER_TZ_OFFSET' => date("Z"),
 				'USER_TZ_OFFSET' => CTimeZone::GetOffset(),
@@ -3748,7 +3884,7 @@ class CJSCore
 			$ret .= self::_loadExt($arExt[$i], $bReturn);
 		}
 
-		if (defined('BX_PUBLIC_MODE') && BX_PUBLIC_MODE == 1 && !$bOldReturn)
+		if (defined('BX_PUBLIC_MODE') && BX_PUBLIC_MODE == 1)
 			echo $ret;
 
 		return $bReturn ? $ret : true;
@@ -3763,12 +3899,29 @@ class CJSCore
 		return $res;
 	}
 
+	public static function GetScriptsList()
+	{
+		$scriptsList = array();
+		foreach(self::$arCurrentlyLoadedExt as $ext=>$q)
+		{
+			if($ext!='core')
+				$scriptsList[] = self::$arRegisteredExt[$ext]['js'];
+		}
+		return $scriptsList;
+	}
+
 	private function _loadExt($ext, $bReturn)
 	{
 		$ret = '';
 
 		$ext = preg_replace('/[^a-z0-9_]/i', '', $ext);
-		if (!self::_IsExtRegistered($ext) || self::$arCurrentlyLoadedExt[$ext])
+		if (
+			!self::IsExtRegistered($ext)
+			|| (
+				isset(self::$arCurrentlyLoadedExt[$ext])
+				&& self::$arCurrentlyLoadedExt[$ext]
+			)
+		)
 			return '';
 
 		self::$arCurrentlyLoadedExt[$ext] = true;
@@ -3777,7 +3930,7 @@ class CJSCore
 		{
 			foreach (self::$arRegisteredExt[$ext]['rel'] as $rel_ext)
 			{
-				if (self::_IsExtRegistered($rel_ext) && !self::$arCurrentlyLoadedExt[$rel_ext])
+				if (self::IsExtRegistered($rel_ext) && !self::$arCurrentlyLoadedExt[$rel_ext])
 				{
 					$ret .= self::_loadExt($rel_ext, $bReturn);
 				}
@@ -3789,7 +3942,11 @@ class CJSCore
 		if (self::$arRegisteredExt[$ext]['js'])
 			$ret .= self::_loadJS(self::$arRegisteredExt[$ext]['js'], $bReturn);
 		if (self::$arRegisteredExt[$ext]['lang'] || self::$arRegisteredExt[$ext]['lang_additional'])
-			$ret .= self::_loadLang(self::$arRegisteredExt[$ext]['lang'], $bReturn, self::$arRegisteredExt[$ext]['lang_additional']);
+			$ret .= self::_loadLang(
+				self::$arRegisteredExt[$ext]['lang'],
+				$bReturn,
+				isset(self::$arRegisteredExt[$ext]['lang_additional'])? self::$arRegisteredExt[$ext]['lang_additional']: false
+			);
 
 		return $ret;
 	}
@@ -3815,10 +3972,15 @@ class CJSCore
 		return $res;
 	}
 
-	private function _IsExtRegistered($ext)
+	public static function IsExtRegistered($ext)
 	{
 		$ext = preg_replace('/[^a-z0-9_]/i', '', $ext);
 		return is_array(self::$arRegisteredExt[$ext]);
+	}
+
+	public static function getExtInfo($ext)
+	{
+		return self::$arRegisteredExt[$ext];
 	}
 
 	private function _RegisterStandardExt()
@@ -3828,48 +3990,69 @@ class CJSCore
 
 	private static function _loadJS($js, $bReturn)
 	{
+		/** @global CMain $APPLICATION */
+		global $APPLICATION;
+
 		if ($bReturn)
+		{
 			return '<script type="text/javascript" src="'.CUtil::GetAdditionalFileURL($js).'"></script>'."\r\n";
+		}
 		else
-			$GLOBALS['APPLICATION']->AddHeadString('<script type="text/javascript" src="'.CUtil::GetAdditionalFileURL($js).'"></script>', true);
+		{
+			if($APPLICATION->IsJSOptimized())
+				$APPLICATION->AddHeadScript($js);
+			else
+				$APPLICATION->AddHeadString('<script type="text/javascript" src="'.CUtil::GetAdditionalFileURL($js).'"></script>', true);
+		}
 		return '';
 	}
 
 	private static function _loadLang($lang, $bReturn, $arAdditionalMess = false)
 	{
-		$mess_lang = array();
+		/** @global CMain $APPLICATION */
+		global $APPLICATION;
+		$jsMsg = '';
 
 		if ($lang)
 		{
 			$lang_filename = $_SERVER['DOCUMENT_ROOT'].$lang;
-
 			if (file_exists($lang_filename))
 			{
-				$mess_lang = __IncludeLang($lang_filename, true);
+				$mess_lang = __IncludeLang($lang_filename, true, true);
+				if (!empty($mess_lang))
+				{
+					$jsMsg = '(window.BX||top.BX).message('.CUtil::PhpToJSObject($mess_lang, false).');';
+				}
 			}
 		}
 
 		if (is_array($arAdditionalMess))
-			$mess_lang = array_merge($arAdditionalMess, $mess_lang);
+			$jsMsg = '(window.BX||top.BX).message('.CUtil::PhpToJSObject($arAdditionalMess, false).');'.$jsMsg;
 
-		if (count($mess_lang) > 0)
+		if ($jsMsg !== '')
 		{
+			$jsMsg = '<script type="text/javascript">'.$jsMsg.'</script>';
 			if ($bReturn)
-				return '<script type="text/javascript">BX.message('.CUtil::PhpToJSObject($mess_lang, false).');</script>'."\r\n";
+				return $jsMsg."\r\n";
+			elseif($APPLICATION->IsJSOptimized())
+				$APPLICATION->AddLangJS($jsMsg);
 			else
-				$GLOBALS['APPLICATION']->AddHeadString('<script type="text/javascript">BX.message('.CUtil::PhpToJSObject($mess_lang, false).')</script>', true);
+				$APPLICATION->AddHeadString($jsMsg, true);
 		}
 
-		return '';
+		return $jsMsg;
 	}
 
 	private static function _loadCSS($css, $bReturn)
 	{
+		/** @global CMain $APPLICATION */
+		global $APPLICATION;
+
 		if (is_array($css))
 		{
 			$ret = '';
 			foreach ($css as $css_file)
-				$res .= self::_loadCSS($css_file, $bReturn);
+				$ret .= self::_loadCSS($css_file, $bReturn);
 			return $ret;
 		}
 
@@ -3881,7 +4064,7 @@ class CJSCore
 		if ($bReturn)
 			return '<link href="'.CUtil::GetAdditionalFileURL($css).'" type="text/css" rel="stylesheet" />'."\r\n";
 		else
-			$GLOBALS['APPLICATION']->SetAdditionalCSS($css);
+			$APPLICATION->SetAdditionalCSS($css);
 
 		return '';
 	}
@@ -3889,14 +4072,14 @@ class CJSCore
 
 class CUtil
 {
-	function addslashes($s)
+	public static function addslashes($s)
 	{
 		static $aSearch = array("\\", "\"", "'");
 		static $aReplace = array("\\\\", '\\"', "\\'");
 		return str_replace($aSearch, $aReplace, $s);
 	}
 
-	function closetags($html)
+	public static function closetags($html)
 	{
 		preg_match_all("#<([a-z0-9]+)([^>]*)(?<!/)>#i".BX_UTF_PCRE_MODIFIER, $html, $result);
 		$openedtags = $result[1];
@@ -3921,33 +4104,49 @@ class CUtil
 		return $html;
 	}
 
-	function JSEscape($s)
+	public static function JSEscape($s)
 	{
-		static $aSearch = array("\\", "'", "\"", "\r\n", "\r", "\n");
-		static $aReplace = array("\\\\", "\\'", '\\"', "\n", "\n", "\\n'+\n'");
-		$val =  str_replace($aSearch, $aReplace, $s);
+		static $aSearch = array("\xe2\x80\xa9", "\\", "'", "\"", "\r\n", "\r", "\n", "\xe2\x80\xa8", "*/");
+		static $aReplace = array(" ", "\\\\", "\\'", '\\"', "\n", "\n", "\\n'+\n'", "\\n'+\n'", "*'+'/");
+		$val = str_replace($aSearch, $aReplace, $s);
 		return preg_replace("'</script'i", "</s'+'cript", $val);
 	}
 
-	function JSUrlEscape($s)
+	public static function JSUrlEscape($s)
 	{
 		static $aSearch = array("%27", "%5C", "%0A", "%0D", "%", "&#039;", "&#39;", "&#x27;", "&apos;");
 		static $aReplace = array("\\'", "\\\\", "\\n", "\\r", "%25", "\\'", "\\'", "\\'", "\\'");
 		return str_replace($aSearch, $aReplace, $s);
 	}
 
-	function PhpToJSObject($arData, $bWS = false, $bSkipTilda = false)
+	public static function PhpToJSObject($arData, $bWS = false, $bSkipTilda = false)
 	{
 		static $aSearch = array("\r", "\n");
+
 		if(is_array($arData))
 		{
-			if($arData == array_values($arData))
+			$i = -1;
+			$j = -1;
+			if (!empty($arData))
+			{
+				foreach($arData as $j => $temp)
+				{
+					$i++;
+					if ($j !== $i)
+						break;
+				}
+			}
+
+			if($j === $i)
 			{
 				foreach($arData as $key => $value)
 				{
-					if(is_array($value))
+					if(is_string($value))
 					{
-						$arData[$key] = CUtil::PhpToJSObject($value, $bWS, $bSkipTilda);
+						if(preg_match("#['\"\\n\\r<\\\\\x80]#", $value))
+							$arData[$key] = "'".CUtil::JSEscape($value)."'";
+						else
+							$arData[$key] = "'".$value."'";
 					}
 					elseif(is_bool($value))
 					{
@@ -3956,9 +4155,13 @@ class CUtil
 						else
 							$arData[$key] = 'false';
 					}
+					elseif(is_array($value))
+					{
+						$arData[$key] = CUtil::PhpToJSObject($value, $bWS, $bSkipTilda);
+					}
 					else
 					{
-						if(preg_match("#['\"\\n\\r<\\\\]#", $value))
+						if(preg_match("#['\"\\n\\r<\\\\\x80]#", $value))
 							$arData[$key] = "'".CUtil::JSEscape($value)."'";
 						else
 							$arData[$key] = "'".$value."'";
@@ -3980,14 +4183,17 @@ class CUtil
 				else
 					$res .= $sWS;
 
-				if(preg_match("#['\"\\n\\r<\\\\]#", $key))
+				if(preg_match("#['\"\\n\\r<\\\\\x80]#", $key))
 					$res .= "'".str_replace($aSearch, '', CUtil::JSEscape($key))."':";
 				else
 					$res .= "'".$key."':";
 
-				if(is_array($value))
+				if(is_string($value))
 				{
-					$res .= CUtil::PhpToJSObject($value, $bWS, $bSkipTilda);
+					if(preg_match("#['\"\\n\\r<\\\\\x80]#", $value))
+						$res .= "'".CUtil::JSEscape($value)."'";
+					else
+						$res .= "'".$value."'";
 				}
 				elseif(is_bool($value))
 				{
@@ -3996,9 +4202,13 @@ class CUtil
 					else
 						$res .= 'false';
 				}
+				elseif(is_array($value))
+				{
+					$res .= CUtil::PhpToJSObject($value, $bWS, $bSkipTilda);
+				}
 				else
 				{
-					if(preg_match("#['\"\\n\\r<\\\\]#", $value))
+					if(preg_match("#['\"\\n\\r<\\\\\x80]#", $value))
 						$res .= "'".CUtil::JSEscape($value)."'";
 					else
 						$res .= "'".$value."'";
@@ -4017,7 +4227,7 @@ class CUtil
 		}
 		else
 		{
-			if(preg_match("#['\"\\n\\r<\\\\]#", $arData))
+			if(preg_match("#['\"\\n\\r<\\\\\x80]#", $arData))
 				return "'".CUtil::JSEscape($arData)."'";
 			else
 				return "'".$arData."'";
@@ -4025,7 +4235,7 @@ class CUtil
 	}
 
 	//$data must be in LANG_CHARSET encoding
-	function JsObjectToPhp($data, $bSkipNative=false)
+	public static function JsObjectToPhp($data, $bSkipNative=false)
 	{
 		$arResult = array();
 
@@ -4034,6 +4244,7 @@ class CUtil
 		if(!$bSkipNative)
 		{
 			// php > 5.2.0 + php_json
+			/** @global CMain $APPLICATION */
 			global $APPLICATION;
 
 			$bUtf = defined("BX_UTF");
@@ -4204,12 +4415,20 @@ class CUtil
 						$arResult[] = CUtil::JsObjectToPhp(substr($token, $prev_index, $pos - $prev_index - 1), true);
 						$prev_index = $pos;
 					}
-					$arResult[] = CUtil::JsObjectToPhp(substr($token, $prev_index), true);
+					$r = CUtil::JsObjectToPhp(substr($token, $prev_index), true);
+					if (isset($r))
+						$arResult[] = $r;
 				}
 				else
 				{
-					$arResult[] = CUtil::JsObjectToPhp($token, true);
+					$r = CUtil::JsObjectToPhp($token, true);
+					if (isset($r))
+						$arResult[] = $r;
 				}
+			}
+			elseif ($data === "")
+			{
+				return null;
 			}
 			else // scalar
 			{
@@ -4228,32 +4447,38 @@ class CUtil
 		return $arResult;
 	}
 
-	function DecodeUtf16($ch)
+	public static function DecodeUtf16($ch)
 	{
 		$res = chr(hexdec($ch[2])).chr(hexdec($ch[1]));
 		return CharsetConverter::ConvertCharset($res, "UTF-16", LANG_CHARSET);
 	}
 
-	function JSPostUnescape()
+	public static function JSPostUnescape()
 	{
 		CUtil::decodeURIComponent($_POST);
 		CUtil::decodeURIComponent($_REQUEST);
 	}
 
-	function decodeURIComponent(&$item)
+	public static function decodeURIComponent(&$item)
 	{
+		if(defined("BX_UTF"))
+		{
+			return;
+		}
+		/** @global CMain $APPLICATION */
+		global $APPLICATION;
+
 		if(is_array($item))
 		{
 			array_walk($item, array('CUtil', 'decodeURIComponent'));
 		}
 		else
 		{
-			if(!defined("BX_UTF"))
-				$item = $GLOBALS["APPLICATION"]->ConvertCharset($item, "UTF-8", LANG_CHARSET);
+			$item = $APPLICATION->ConvertCharset($item, "UTF-8", LANG_CHARSET);
 		}
 	}
 
-	function DetectUTF8($string)
+	public static function DetectUTF8($string)
 	{
 		//http://mail.nl.linux.org/linux-utf8/1999-09/msg00110.html
 		$arBytes = array();
@@ -4264,7 +4489,7 @@ class CUtil
 		}
 		else
 		{
-			for($i=0, $n=strlen($string); $i<$n; $i++)
+			for($i=0, $n=CUtil::BinStrlen($string); $i<$n; $i++)
 				$arBytes[] = ord($string[$i]);
 		}
 
@@ -4286,11 +4511,11 @@ class CUtil
 		return $is_utf > 0;
 	}
 
-	function ConvertToLangCharset($string)
+	public static function ConvertToLangCharset($string)
 	{
 		$bUTF = CUtil::DetectUTF8($string);
 
-		$fromCP = false;
+		$fromCP = $toCP = false;
 		if(defined("BX_UTF") && !$bUTF)
 		{
 			$fromCP = (defined("BX_DEFAULT_CHARSET")? BX_DEFAULT_CHARSET : "Windows-1251");
@@ -4308,7 +4533,7 @@ class CUtil
 		return $string;
 	}
 
-	function GetAdditionalFileURL($file, $bSkipCheck=false)
+	public static function GetAdditionalFileURL($file, $bSkipCheck=false)
 	{
 		if($bSkipCheck || file_exists($_SERVER['DOCUMENT_ROOT'].$file))
 			return $file.'?'.filemtime($_SERVER['DOCUMENT_ROOT'].$file);
@@ -4316,26 +4541,29 @@ class CUtil
 			return $file;
 	}
 
-	function InitJSCore($arExt = array(), $bReturn = false)
+	public static function InitJSCore($arExt = array(), $bReturn = false)
 	{
 		return CJSCore::Init($arExt, $bReturn);
 	}
 
-	function GetPopupSize($resize_id, $arDefaults = array())
+	public static function GetPopupSize($resize_id, $arDefaults = array())
 	{
 		if ($resize_id)
 		{
 			return CUserOptions::GetOption(
 				'BX.WindowManager.9.5',
 				'size_'.$resize_id,
-				array('width' => $arDefaults['width'], 'height' => $arDefaults['height'])
+				array(
+					'width' => isset($arDefaults['width'])? $arDefaults['width']: null,
+					'height' => isset($arDefaults['height'])? $arDefaults['height']: null,
+				)
 			);
 		}
 		else
 			return false;
 	}
 
-	function GetPopupOptions($wnd_id)
+	public static function GetPopupOptions($wnd_id)
 	{
 		if ($wnd_id)
 		{
@@ -4348,7 +4576,7 @@ class CUtil
 			return false;
 	}
 
-	function SetPopupOptions($wnd_id, $arOptions)
+	public static function SetPopupOptions($wnd_id, $arOptions)
 	{
 		if ($wnd_id)
 		{
@@ -4360,7 +4588,7 @@ class CUtil
 		}
 	}
 
-	function translit($str, $lang, $params = array())
+	public static function translit($str, $lang, $params = array())
 	{
 		static $search = array();
 
@@ -4380,7 +4608,6 @@ class CUtil
 			"replace_other" => '_',
 			"delete_repeat_replace" => true,
 			"safe_chars" => '',
-			//"use_google" => false, //TODO
 		);
 		foreach($defaultParams as $key => $value)
 			if(!array_key_exists($key, $params))
@@ -4446,12 +4673,12 @@ class CUtil
 		return $str_new;
 	}
 
-	function BinStrlen($buf)
+	public static function BinStrlen($buf)
 	{
 		return (function_exists('mb_strlen')? mb_strlen($buf, 'latin1') : strlen($buf));
 	}
 
-	function BinSubstr($buf, $start)
+	public static function BinSubstr($buf, $start)
 	{
 		$length = (func_num_args() > 2? func_get_arg(2) : self::BinStrlen($buf));
 		return (function_exists('mb_substr')? mb_substr($buf, $start, $length, 'latin1') : substr($buf, $start, $length));
@@ -4463,7 +4690,7 @@ class CUtil
 	* @return int
 	*
 	*/
-	function Unformat($str)
+	public static function Unformat($str)
 	{
 		$str = strtolower($str);
 		$res = intval($str);
@@ -4485,11 +4712,11 @@ class CUtil
 	 * @return void
 	 *
 	 */
-	function AdjustPcreBacktrackLimit($val)
+	public static function AdjustPcreBacktrackLimit($val)
 	{
 		$val = intval($val);
 		if($val <=0 )
-			return false;
+			return;
 
 		$pcreBacktrackLimit = self::Unformat(ini_get("pcre.backtrack_limit"));
 		if($pcreBacktrackLimit < $val)
@@ -4505,16 +4732,15 @@ class CHTTP
 	var $fp = null;
 	var $headers = array();
 	var $cookies = array();
-
 	var $http_timeout = 120;
-
 	var $user_agent;
-
 	var $follow_redirect = false;
 	var $errno;
 	var $errstr;
-
 	var $additional_headers = array();
+
+	private $redirectMax = 20;
+	private $redirectsMade = 0;
 
 	function CHTTP()
 	{
@@ -4523,7 +4749,9 @@ class CHTTP
 
 	function URN2URI($urn, $server_name = '')
 	{
+		/** @global CMain $APPLICATION */
 		global $APPLICATION;
+
 		if(preg_match("/^[a-z]+:\\/\\//", $urn))
 		{
 			$uri = $urn;
@@ -4615,14 +4843,24 @@ class CHTTP
 			)
 			{
 				$url = $this->headers['Location'];
-				//When writing to file we have to discard
-				//redirect body
-				if(is_resource($this->fp))
+				if($this->redirectsMade < $this->redirectMax)
 				{
-					ftruncate($this->fp, $file_pos);
-					fseek($this->fp, $file_pos, SEEK_SET);
+					//When writing to file we have to discard
+					//redirect body
+					if(is_resource($this->fp))
+					{
+						/** @noinspection PhpUndefinedVariableInspection */
+						ftruncate($this->fp, $file_pos);
+						fseek($this->fp, $file_pos, SEEK_SET);
+					}
+					$this->redirectsMade++;
+					continue;
 				}
-				continue;
+				else
+				{
+					trigger_error("Maximum number of redirects (".$this->redirectMax.") has been reached at URL ".$url, E_USER_WARNING);
+					return false;
+				}
 			}
 			else
 			{
@@ -4682,7 +4920,7 @@ class CHTTP
 			while(!feof($fp))
 			{
 				$line = fgets($fp, 4096);
-				if($line == "\r\n")
+				if($line == "\r\n" || $line === false)
 				{
 					//$line = fgets($fp, 4096);
 					break;
@@ -4694,13 +4932,23 @@ class CHTTP
 			if(is_resource($this->fp))
 			{
 				while(!feof($fp))
-					fwrite($this->fp, fread($fp, 4096));
+				{
+					$buf = fread($fp, 4096);
+					if ($buf === false)
+						break;
+					fwrite($this->fp, $buf);
+				}
 			}
 			else
 			{
 				$this->result = "";
 				while(!feof($fp))
-					$this->result .= fread($fp, 4096);
+				{
+					$buf = fread($fp, 4096);
+					if ($buf === false)
+						break;
+					$this->result .= $buf;
+				}
 			}
 
 			fclose($fp);
@@ -4708,16 +4956,18 @@ class CHTTP
 			return true;
 		}
 
-		$GLOBALS['APPLICATION']->ThrowException(
-					GetMessage('HTTP_CLIENT_ERROR_CONNECT',
-					array(
-						'%ERRSTR%' => $this->errstr,
-						'%ERRNO%' => $this->errno,
-						'%HOST%' => $host,
-						'%PORT%' => $port,
-					)
+		/** @global CMain $APPLICATION */
+		global $APPLICATION;
+		$APPLICATION->ThrowException(
+			GetMessage('HTTP_CLIENT_ERROR_CONNECT',
+				array(
+					'%ERRSTR%' => $this->errstr,
+					'%ERRNO%' => $this->errno,
+					'%HOST%' => $host,
+					'%PORT%' => $port,
 				)
-			);
+			)
+		);
 		return false;
 	}
 
@@ -4825,6 +5075,11 @@ class CHTTP
 		$this->follow_redirect = $follow;
 	}
 
+	public function setRedirectMax($n)
+	{
+		$this->redirectMax = $n;
+	}
+
 	public static function sGet($url, $follow_redirect = false) //static get
 	{
 		$ob = new CHTTP();
@@ -4849,19 +5104,41 @@ class CHTTP
 		}
 	}
 
-	public static function sGetHeader($url, $arHeader = array())
+	/** Static Get with the ability to add headers and set the http timeout
+	 * @static
+	 * @param $url
+	 * @param array $arHeader
+	 * @param int $httpTimeout
+	 * @return bool|string
+	 */
+	public static function sGetHeader($url, $arHeader = array(), $httpTimeout = 0)
 	{
+		$httpTimeout = intval($httpTimeout);
 		$ob = new CHTTP();
 		if(!empty($arHeader))
 			$ob->SetAdditionalHeaders($arHeader);
+		if($httpTimeout > 0)
+			$ob->http_timeout = $httpTimeout;
+
 		return $ob->Get($url);
 	}
 
-	public static function sPostHeader($url, $arPostData, $arHeader = array())
+	/** Static Post with the ability to add headers and set the http timeout
+	 * @static
+	 * @param $url
+	 * @param $arPostData
+	 * @param array $arHeader
+	 * @param int $http_timeout
+	 * @return bool|string
+	 */
+	public static function sPostHeader($url, $arPostData, $arHeader = array(), $http_timeout = 0)
 	{
+		$http_timeout = intval($http_timeout);
 		$ob = new CHTTP();
 		if(!empty($arHeader))
 			$ob->SetAdditionalHeaders($arHeader);
+		if($http_timeout > 0)
+			$ob->http_timeout = $http_timeout;
 		return $ob->Post($url, $arPostData);
 	}
 
@@ -5049,6 +5326,7 @@ class CHTTP
 
 	public static function urnEncode($str, $charset = false)
 	{
+		/** @global CMain $APPLICATION */
 		global $APPLICATION;
 
 		$result = '';
@@ -5075,6 +5353,7 @@ class CHTTP
 
 	public static function urnDecode($str, $charset = false)
 	{
+		/** @global CMain $APPLICATION */
 		global $APPLICATION;
 
 		$result = '';
@@ -5097,6 +5376,16 @@ class CHTTP
 			}
 		}
 		return $result;
+	}
+
+	// search for /../ and ulrencoded /../
+	public static function isPathTraversalUri($uri)
+	{
+		if (($pos = strpos($uri, "?")) !== false)
+			$uri = substr($uri, 0, $pos);
+
+		$uri = trim($uri);
+		return preg_match("#(?:/|2f|^|\\\\|5c)(?:(?:%0*(25)*2e)|\.){2,}(?:/|%0*(25)*2f|\\\\|%0*(25)*5c|$)#", $uri) ? true : false;
 	}
 }
 
@@ -5142,12 +5431,13 @@ function SetMenuTypes($armt, $site = '', $description = false)
 	COption::SetOptionString('fileman', "menutypes", addslashes(serialize($armt)), $description, $site);
 }
 
-function ParseFileContent($filesrc)
+function ParseFileContent($filesrc, $params = array())
 {
 	/////////////////////////////////////
 	// Parse prolog, epilog, title
 	/////////////////////////////////////
 	$filesrc = trim($filesrc);
+	$prolog = $epilog = '';
 
 	$php_doubleq = false;
 	$php_singleq = false;
@@ -5158,7 +5448,16 @@ function ParseFileContent($filesrc)
 	$php_st = "<"."?";
 	$php_ed = "?".">";
 
-	if(substr($filesrc, 0, 2)==$php_st)
+	if($params["use_php_parser"] && substr($filesrc, 0, 2) == $php_st)
+	{
+		$phpChunks = PHPParser::getPhpChunks($filesrc);
+		if (!empty($phpChunks))
+		{
+			$prolog = $phpChunks[0];
+			$filesrc = substr($filesrc, strlen($prolog));
+		}
+	}
+	elseif(substr($filesrc, 0, 2)==$php_st)
 	{
 		$fl = strlen($filesrc);
 		$p = 2;
@@ -5230,50 +5529,43 @@ function ParseFileContent($filesrc)
 		$filesrc= $reg[2];
 	}
 
-	$title = false;
-	if(strlen($prolog))
-	{
-		if(preg_match("/\\\$APPLICATION->SetTitle\\s*\\(\\s*\"(.*?)(?<!\\\\)\"\\s*\\);/is", $prolog, $regs))
-			$title = UnEscapePHPString($regs[1]);
-		elseif(preg_match("/\\\$APPLICATION->SetTitle\\s*\\(\\s*'(.*?)(?<!\\\\)'\\s*\\);/is", $prolog, $regs))
-			$title = UnEscapePHPString($regs[1]);
-		elseif(preg_match("'<title[^>]*>([^>]+)</title[^>]*>'i", $prolog, $regs))
-			$title = $regs[1];
-	}
-
-	if(!$title && preg_match("'<title[^>]*>([^>]+)</title[^>]*>'i", $filesrc, $regs))
-		$title = $regs[1];
+	$title = PHPParser::getPageTitle($filesrc, $prolog);
 
 	$arPageProps = array();
-	if (strlen($prolog)>0)
+	if(strlen($prolog))
 	{
-		preg_match_all("'\\\$APPLICATION->SetPageProperty\(\"(.*?)(?<!\\\\)\" *, *\"(.*?)(?<!\\\\)\"\);'i", $prolog, $out);
-		if (count($out[0])>0)
+		if (preg_match_all("'\\\$APPLICATION->SetPageProperty\\(\"(.*?)(?<!\\\\)\" *, *\"(.*?)(?<!\\\\)\"\\);'i", $prolog, $out))
 		{
-			for ($i1 = 0; $i1 < count($out[0]); $i1++)
-			{
-				$arPageProps[UnEscapePHPString($out[1][$i1])] = UnEscapePHPString($out[2][$i1]);
-			}
+			foreach ($out[1] as $i => $m1)
+				$arPageProps[UnEscapePHPString($m1)] = UnEscapePHPString($out[2][$i]);
 		}
 	}
 
-	if(substr($filesrc, -2)=="?".">")
+	if(substr($filesrc, -2) == "?".">")
 	{
-		$p = strlen($filesrc) - 2;
-		$php_start = "<"."?";
-		while(($p > 0) && (substr($filesrc, $p, 2) != $php_start))
-			$p--;
-		$epilog = substr($filesrc, $p);
-		$filesrc = substr($filesrc, 0, $p);
+		if (isset($phpChunks) && count($phpChunks) > 1)
+		{
+			$epilog = $phpChunks[count($phpChunks)-1];
+			$filesrc = substr($filesrc, 0, -strlen($epilog));
+		}
+		else
+		{
+			$p = strlen($filesrc) - 2;
+			$php_start = "<"."?";
+			while(($p > 0) && (substr($filesrc, $p, 2) != $php_start))
+				$p--;
+			$epilog = substr($filesrc, $p);
+			$filesrc = substr($filesrc, 0, $p);
+		}
 	}
 
-	return Array(
-			"PROLOG"=>$prolog,
-			"TITLE"=>$title,
-			"PROPERTIES"=>$arPageProps,
-			"CONTENT"=>$filesrc,
-			"EPILOG"=>$epilog
-			);
+	return array(
+		"PROLOG" => $prolog,
+		"TITLE" => $title,
+		"PROPERTIES" => $arPageProps,
+		"CONTENT" => $filesrc,
+		"EPILOG" => $epilog,
+	);
 }
 
 function EscapePHPString($str)
@@ -5294,25 +5586,30 @@ function UnEscapePHPString($str)
 
 function CheckSerializedData($str, $max_depth = 200)
 {
-	if (preg_match('/O\\:\\d/', $str)) return false; // serialized objects
+	if(preg_match('/O\\:\\d/', $str)) // serialized objects
+		return false;
 
-	// check max depth
-	$str1 = preg_replace('/[^{}]+/'.BX_UTF_PCRE_MODIFIER, '', $str);
-	$cnt = 0;
-	for ($i=0,$len=strlen($str1);$i<$len;$i++)
+	// check max depth in PHP 5.3.0 and earlier
+	if(!version_compare(phpversion(),"5.3.0",">"))
 	{
-		// we've just cleared all possible utf-symbols, so we can use [] syntax
-		if ($str1[$i]=='}')
-			$cnt--;
-		else
+		$str1 = preg_replace('/[^{}]+/'.BX_UTF_PCRE_MODIFIER, '', $str);
+		$cnt = 0;
+		for ($i=0,$len=strlen($str1);$i<$len;$i++)
 		{
-			$cnt++;
-			if ($cnt > $max_depth)
-				break;
+			// we've just cleared all possible utf-symbols, so we can use [] syntax
+			if ($str1[$i]=='}')
+				$cnt--;
+			else
+			{
+				$cnt++;
+				if ($cnt > $max_depth)
+					break;
+			}
 		}
-	}
 
-	return $cnt <= $max_depth;
+		return $cnt <= $max_depth;
+	} else
+		return true;
 }
 
 function bxmail($to, $subject, $message, $additional_headers="", $additional_parameters="")
@@ -5340,6 +5637,8 @@ class UpdateTools
 {
 	function CheckUpdates()
 	{
+		global $USER;
+
 		if(LICENSE_KEY == "DEMO")
 			return;
 
@@ -5354,7 +5653,7 @@ class UpdateTools
 
 			if(time() > $update_res["check_date"]+$days_check*86400)
 			{
-				if($GLOBALS["USER"]->CanDoOperation('install_updates'))
+				if($USER->CanDoOperation('install_updates'))
 				{
 					require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/classes/general/update_client.php");
 
@@ -5453,4 +5752,112 @@ function ini_get_bool($param)
 	$val = ini_get($param);
 	return ($val == '1' || strtolower($val) == 'on');
 }
-?>
+
+/**
+ * Sorting array by column.
+ * You can use short mode: Collection::sortByColumn($arr, 'value'); This is equal Collection::sortByColumn($arr, array('value' => SORT_ASC))
+ *
+ * More example:
+ * Collection::sortByColumn($arr, array('value' => array(SORT_NUMERIC, SORT_ASC), 'attr' => SORT_DESC), array('attr' => 'strlen'), 'www');
+ *
+ * @param array        $array
+ * @param string|array $columns
+ * @param string|array $callbacks
+ * @param bool         $preserveKeys If false numeric keys will be re-indexed. If true - preserve.
+ * @param null         $defaultValueIfNotSetValue If value not set - use $defaultValueIfNotSetValue (any cols)
+ */
+function sortByColumn(array &$array, $columns, $callbacks = '', $defaultValueIfNotSetValue = null, $preserveKeys = false)
+{
+	//by default: sort by ASC
+	if (!is_array($columns))
+	{
+		$columns = array($columns => SORT_ASC);
+	}
+	$params = $preserveDataKeys = array();
+	$alreadyFillPreserveDataKeys = false;
+	foreach ($columns as $column => &$order)
+	{
+		$callback = false;
+		//this is an array of callbacks (callable string)
+		if (is_array($callbacks) && !is_callable($callbacks))
+		{
+			$callback = !empty($callbacks[$column]) && is_callable($callbacks[$column]) ? $callbacks[$column] : false;
+		}
+		//common callback
+		elseif (!empty($callbacks) && is_callable($callbacks))
+		{
+			$callback = $callbacks;
+		}
+
+		//this is similar to the index|slice
+		$valueColumn[$column] = array();
+		foreach ($array as $index => $row)
+		{
+			$value = isset($row[$column]) ? $row[$column] : $defaultValueIfNotSetValue;
+			if ($callback)
+			{
+				$value = $callback($value);
+			}
+			$valueColumn[$column][$index] = $value;
+			if($preserveKeys && !$alreadyFillPreserveDataKeys)
+			{
+				$preserveDataKeys[$index] = $index;
+			}
+		}
+		unset($row, $index);
+		$alreadyFillPreserveDataKeys = $preserveKeys && !empty($preserveDataKeys);
+		//bug in 5.3 call_user_func_array
+		$params[] = &$valueColumn[$column];
+		$order    = (array)$order;
+		foreach ($order as $i => $ord)
+		{
+			$params[] = &$columns[$column][$i];
+		}
+	}
+	unset($order, $column);
+	$params[] = &$array;
+	if($preserveKeys)
+	{
+		$params[] = &$preserveDataKeys;
+	}
+
+	call_user_func_array('array_multisort', $params);
+
+	if($preserveKeys)
+	{
+		$array = array_combine(array_values($preserveDataKeys), array_values($array));
+	}
+}
+
+function getLocalPath($path, $baseFolder = "/bitrix")
+{
+	$root = rtrim($_SERVER["DOCUMENT_ROOT"], "\\/");
+
+	if (file_exists($root."/local/".$path))
+	{
+		return "/local/".$path;
+	}
+	elseif (file_exists($root.$baseFolder."/".$path))
+	{
+		return $baseFolder."/".$path;
+	}
+	return false;
+}
+
+
+/**
+ * Set session expired, e.g. if you want to destroy session after this hit
+ * @param bool $pIsExpired
+ */
+function setSessionExpired($pIsExpired = true)
+{
+	$_SESSION["IS_EXPIRED"] = $pIsExpired;
+}
+
+/**
+ * @return bool
+ */
+function isSessionExpired()
+{
+	return isset($_SESSION["IS_EXPIRED"]) && $_SESSION["IS_EXPIRED"] === true;
+}

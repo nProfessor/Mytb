@@ -1,14 +1,24 @@
 <?
-##############################################
-# Bitrix Site Manager                        #
-# Copyright (c) 2002-2007 Bitrix             #
-# http://www.bitrixsoft.com                  #
-# mailto:admin@bitrixsoft.com                #
-##############################################
+/**
+ * Bitrix Framework
+ * @package bitrix
+ * @subpackage main
+ * @copyright 2001-2013 Bitrix
+ */
+
+/**
+ * Bitrix vars
+ * @global CUser $USER
+ * @global CMain $APPLICATION
+ */
 
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
 require_once($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/prolog.php");
 define("HELP_FILE", "settings/sites/template_edit.php");
+
+//Workaround for Chrome: http://code.google.com/p/chromium/issues/detail?id=79014
+//"If the XSS auditor is blocking script that you mean to execute, you can disable it by sending a 'X-XSS-Protection: 0' header."
+header("X-XSS-Protection: 0");
 
 ClearVars();
 
@@ -25,7 +35,7 @@ $strError="";
 $strOK="";
 $bVarsFromForm = false;
 
-$ID = _normalizePath($ID);
+$ID = _normalizePath($_REQUEST["ID"]);
 
 if($lpa && $_REQUEST['edit'] != "Y" && strlen($ID) <= 0) // In lpa mode users can only edit existent templates
 	$APPLICATION->AuthForm(GetMessage("ACCESS_DENIED"));
@@ -45,10 +55,10 @@ $aTabs = array(
 );
 if($bEdit)
 	$aTabs[] = 	array("DIV" => "edit4", "TAB" => GetMessage("MAIN_TAB3"), "ICON" => "template_edit", "TITLE" => GetMessage("MAIN_TAB3_TITLE"));
-	
+
 $tabControl = new CAdminTabControl("tabControl", $aTabs);
 
-if($REQUEST_METHOD == "POST" && (strlen($save) > 0 || strlen($apply) > 0) && check_bitrix_sessid() && ($edit_php || $lpa))
+if($_SERVER["REQUEST_METHOD"] == "POST" && ($_POST["save"] <> '' || $_POST["apply"] <> '') && check_bitrix_sessid() && ($edit_php || $lpa))
 {
 	$strError = "";
 	if ($lpa)
@@ -121,7 +131,7 @@ if($REQUEST_METHOD == "POST" && (strlen($save) > 0 || strlen($apply) > 0) && che
 			$styles_path = $_SERVER["DOCUMENT_ROOT"].BX_PERSONAL_ROOT."/templates/".$ID."/.styles.php";
 			$APPLICATION->SaveFileContent($styles_path, $str_CONTENT_for_save);
 			$useeditor_param = (isset($_REQUEST["CONTENT_editor"]) && $_REQUEST["CONTENT_editor"] == 'on') ? '&usehtmled=Y' : '';
-			if (strlen($save)>0)
+			if ($_POST["save"] <> '')
 				LocalRedirect(BX_ROOT."/admin/template_admin.php?lang=".LANGUAGE_ID.$useeditor_param);
 			else
 				LocalRedirect(BX_ROOT."/admin/template_edit.php?lang=".LANGUAGE_ID."&ID=".$ID."&".$tabControl->ActiveTabParam().$useeditor_param);
@@ -129,7 +139,7 @@ if($REQUEST_METHOD == "POST" && (strlen($save) > 0 || strlen($apply) > 0) && che
 	}
 }
 
-if($REQUEST_METHOD=="POST" && $action=="export" && $edit_php && check_bitrix_sessid())
+if($_SERVER["REQUEST_METHOD"]=="POST" && $_POST["action"]=="export" && $edit_php && check_bitrix_sessid())
 {
 	if (strlen($tpath)<=0)
 		$strError .= GetMessage("MAIN_T_EDIT_PATH_NA")."<br>";
@@ -179,7 +189,7 @@ if($REQUEST_METHOD=="POST" && $action=="export" && $edit_php && check_bitrix_ses
 }
 
 
-if($REQUEST_METHOD=="POST" && $action=="import" && $edit_php && check_bitrix_sessid())
+if($_SERVER["REQUEST_METHOD"]=="POST" && $_POST["action"]=="import" && $edit_php && check_bitrix_sessid())
 {
 	$DATA_FILE_NAME = "";
 
@@ -271,6 +281,8 @@ if ($lpa || $lpa_view)
 	$str_CONTENT = htmlspecialcharsex($new_content);
 }
 
+$APPLICATION->AddHeadScript("/bitrix/js/main/template_edit.js");
+
 if($bEdit)
 	$APPLICATION->SetTitle(GetMessage("MAIN_T_EDIT_TITLE_EDIT"));
 else
@@ -278,8 +290,8 @@ else
 
 require($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/include/prolog_admin_after.php");
 
-echo CAdminMessage::ShowMessage($strError);
-echo CAdminMessage::ShowNote($strOK);
+CAdminMessage::ShowMessage($strError);
+CAdminMessage::ShowNote($strOK);
 
 $aMenu = array(
 	array(
@@ -416,8 +428,6 @@ else:?>
 <?endif;?>
 		</td>
 	</tr>
-
-<script type="text/javascript" src="/bitrix/js/main/template_edit.js?v=<?=@filemtime($_SERVER['DOCUMENT_ROOT'].'/bitrix/js/main/template_edit.js')?>"></script>
 
 <script>
 var messErrorWA = '<?echo CUtil::JSEscape(GetMessage("templ_edit_error_wa"))?>';
@@ -581,7 +591,7 @@ $dis = (!$edit_php && !$lpa);
 <input <?echo ($dis ? "disabled":"")?> type="submit" name="save" value="<?=GetMessage("admin_lib_edit_save")?>" title="<?=GetMessage("admin_lib_edit_save_title")?>" class="adm-btn-save">
 <input <?echo ($dis ? "disabled":"")?> type="submit" name="apply" value="<?=GetMessage("admin_lib_edit_apply")?>" title="<?GetMessage("admin_lib_edit_apply_title")?>">
 <?if ($USER->CanDoOperation('edit_other_settings') || $USER->CanDoOperation('lpa_template_edit')):?>
-<input type="button" value="<?=GetMessage('FILEMAN_PREVIEW_TEMPLATE')?>" name="cancel" onClick="preview_template('<?=htmlspecialcharsbx(CUtil::JSEscape($ID))?>', '<?= bitrix_sessid()?>');" title="<?=GetMessage('FILEMAN_PREVIEW_TEMPLATE_TITLE')?>">
+<input type="button" value="<?=GetMessage('FILEMAN_PREVIEW_TEMPLATE')?>" name="template_preview" onclick="preview_template('<?=htmlspecialcharsbx(CUtil::JSEscape($ID))?>', '<?= bitrix_sessid()?>');" title="<?=GetMessage('FILEMAN_PREVIEW_TEMPLATE_TITLE')?>">
 <?endif;?>
 <input type="button" value="<?=GetMessage("admin_lib_edit_cancel")?>" name="cancel" onClick="window.location='<?=CUtil::JSEscape($aParams["back_url"])?>'" title="<?=GetMessage("admin_lib_edit_cancel_title")?>">
 <?$tabControl->End();?>

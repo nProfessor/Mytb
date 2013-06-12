@@ -162,7 +162,7 @@
 				"NOTIFY_URL" => htmlspecialcharsback($arResult["SUBSCRIBE_URL"]),
 				"NOTIFY_USE_CAPTHA" => "N"
 				),
-				false
+				$component
 			);?>
 		<?endif?>
 		<br />

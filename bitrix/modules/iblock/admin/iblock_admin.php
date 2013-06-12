@@ -228,9 +228,9 @@ while($dbrs = $rsIBlocks->NavNext(true, "f_"))
 	else
 	{
 		if($arIBTYPE["SECTIONS"]=="Y")
-			$row =& $lAdmin->AddRow($f_ID, $dbrs, CIBlock::GetAdminSectionListLink($f_ID, array('SECTION_ID'=>0)), GetMessage("IBLOCK_ADM_TO_EL_LIST"));
+			$row =& $lAdmin->AddRow($f_ID, $dbrs, CIBlock::GetAdminSectionListLink($f_ID, array('find_section_section'=>0)), GetMessage("IBLOCK_ADM_TO_EL_LIST"));
 		else
-			$row =& $lAdmin->AddRow($f_ID, $dbrs, CIBlock::GetAdminElementListLink($f_ID, array('filter_section'=>-1)), GetMessage("IBLOCK_ADM_TO_EL_LIST"));
+			$row =& $lAdmin->AddRow($f_ID, $dbrs, CIBlock::GetAdminElementListLink($f_ID, array('find_section_section'=>-1)), GetMessage("IBLOCK_ADM_TO_EL_LIST"));
 	}
 
 	if(!strlen($f_SECTIONS_NAME))
@@ -266,9 +266,9 @@ while($dbrs = $rsIBlocks->NavNext(true, "f_"))
 	else
 	{
 		if($arIBTYPE["SECTIONS"]=="Y")
-			$row->AddViewField("NAME", '<a href="'.htmlspecialcharsbx(CIBlock::GetAdminSectionListLink($f_ID , array('SECTION_ID'=>0))).'" title="'.GetMessage("IBLOCK_ADM_TO_SECTLIST").'">'.$f_NAME.'</a>');
+			$row->AddViewField("NAME", '<a href="'.htmlspecialcharsbx(CIBlock::GetAdminSectionListLink($f_ID , array('find_section_section'=>0))).'" title="'.GetMessage("IBLOCK_ADM_TO_SECTLIST").'">'.$f_NAME.'</a>');
 		else
-			$row->AddViewField("NAME", '<a href="'.htmlspecialcharsbx(CIBlock::GetAdminElementListLink($f_ID , array('filter_section'=>-1))).'" title="'.GetMessage("IBLOCK_ADM_TO_EL_LIST").'">'.$f_NAME.'</a>');
+			$row->AddViewField("NAME", '<a href="'.htmlspecialcharsbx(CIBlock::GetAdminElementListLink($f_ID , array('find_section_section'=>-1))).'" title="'.GetMessage("IBLOCK_ADM_TO_EL_LIST").'">'.$f_NAME.'</a>');
 		$row->AddCheckField("ACTIVE", false);
 		$row->AddCheckField("INDEX_ELEMENT", false);
 		if($bWorkflow)
@@ -278,7 +278,7 @@ while($dbrs = $rsIBlocks->NavNext(true, "f_"))
 	if(in_array("ELEMENT_CNT", $lAdmin->GetVisibleHeaderColumns()))
 	{
 		$f_ELEMENT_CNT = CIBlock::GetElementCount($f_ID);
-		$row->AddViewField("ELEMENT_CNT", '<a href="'.htmlspecialcharsbx(CIBlock::GetAdminElementListLink($f_ID, array('filter_section'=>-1))).'" title="'.GetMessage("IBLOCK_ADM_TO_ELLIST").'">'.$f_ELEMENT_CNT.'</a>');
+		$row->AddViewField("ELEMENT_CNT", '<a href="'.htmlspecialcharsbx(CIBlock::GetAdminElementListLink($f_ID, array('find_section_section'=>-1))).'" title="'.GetMessage("IBLOCK_ADM_TO_ELLIST").'">'.$f_ELEMENT_CNT.'</a>');
 	}
 
 	if($arIBTYPE["SECTIONS"]=="Y" && in_array("SECTION_CNT", $lAdmin->GetVisibleHeaderColumns()))
@@ -339,7 +339,7 @@ while($dbrs = $rsIBlocks->NavNext(true, "f_"))
 		$arActions[] = array(
 			"ICON"=>"delete",
 			"TEXT"=>GetMessage("MAIN_ADMIN_MENU_DELETE"),
-			"ACTION"=>"if(confirm('".GetMessage("IBLOCK_ADM_CONFIRM_DEL_MESSAGE")."')) ".$lAdmin->ActionDoGroup($f_ID, "delete", "&type=".htmlspecialcharsbx($type)."&lang=".LANG."&admin=".($_REQUEST["admin"]=="Y"? "Y": "N")),
+			"ACTION"=>"if(confirm('".GetMessageJS("IBLOCK_ADM_CONFIRM_DEL_MESSAGE")."')) ".$lAdmin->ActionDoGroup($f_ID, "delete", "&type=".htmlspecialcharsbx($type)."&lang=".LANG."&admin=".($_REQUEST["admin"]=="Y"? "Y": "N")),
 		);
 	}
 

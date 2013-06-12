@@ -11,23 +11,26 @@ if ($sRatingTemplate == "" || $sRatingTemplate == ".default")
 	$sRatingTemplate = COption::GetOptionString("main", "rating_vote_template", $sRatingVoteType == "like"? "like": "standart");
 	$this->SetTemplateName($sRatingTemplate);
 }
-$arResult['ENTITY_TYPE_ID']	= $arParams['ENTITY_TYPE_ID'];
-$arResult['ENTITY_ID'] 		= IntVal($arParams['ENTITY_ID']);
-$arResult['OWNER_ID'] 		= IntVal($arParams['OWNER_ID']);
+$arResult['ENTITY_TYPE_ID'] = $arParams['ENTITY_TYPE_ID'];
+$arResult['ENTITY_ID'] = IntVal($arParams['ENTITY_ID']);
+$arResult['OWNER_ID'] = IntVal($arParams['OWNER_ID']);
 $arResult['TOTAL_VALUE'] = floatval($arParams['TOTAL_VALUE']);
 $arResult['TOTAL_VOTES'] = IntVal($arParams['TOTAL_VOTES']);
 $arResult['TOTAL_POSITIVE_VOTES'] = IntVal($arParams['TOTAL_POSITIVE_VOTES']);
 $arResult['TOTAL_NEGATIVE_VOTES'] = IntVal($arParams['TOTAL_NEGATIVE_VOTES']);
-$arResult['USER_HAS_VOTED']	= in_array($arParams['USER_HAS_VOTED'], array('Y', 'N')) ? $arParams['USER_HAS_VOTED'] : 'N';
-$arResult['AJAX_MODE']	= in_array($arParams['AJAX_MODE'], array('Y', 'N')) ? $arParams['AJAX_MODE'] : 'N';
-$arResult['USER_VOTE'] = floatval($arParams['USER_VOTE']);
-$arResult['ALLOW_VOTE']	= $arAllowVote;
-$arResult['PATH_TO_USER_PROFILE']	= $arParams['PATH_TO_USER_PROFILE'];
+$arResult['USER_HAS_VOTED'] = $arParams['USER_HAS_VOTED'] != 'Y'? 'N': 'Y';
 
-if (in_array($sRatingTemplate, array("like", "like_graphic", "mobile_like")))
+$arResult['AJAX_MODE'] = $arParams['AJAX_MODE'] != 'Y'? 'N': 'Y';
+
+$arResult['USER_VOTE'] = floatval($arParams['USER_VOTE']);
+$arResult['ALLOW_VOTE'] = $arAllowVote;
+$arResult['PATH_TO_USER_PROFILE'] = $arParams['PATH_TO_USER_PROFILE'];
+
+$isLikeTemplate = in_array($sRatingTemplate, array("like", "like_graphic", "mobile_like"));
+if ($isLikeTemplate)
 	$arResult['TOTAL_VOTES'] = IntVal($arParams['TOTAL_POSITIVE_VOTES']);
 
-if (!array_key_exists('TOTAL_VALUE', $arParams) || 
+if (!array_key_exists('TOTAL_VALUE', $arParams) ||
 	!array_key_exists('TOTAL_VOTES', $arParams) ||
 	!array_key_exists('TOTAL_POSITIVE_VOTES', $arParams) ||
 	!array_key_exists('TOTAL_NEGATIVE_VOTES', $arParams) ||
@@ -43,25 +46,24 @@ if (!array_key_exists('TOTAL_VALUE', $arParams) ||
 		$arResult['TOTAL_NEGATIVE_VOTES'] = $arComponentVoteResult['TOTAL_NEGATIVE_VOTES'];
 		$arResult['USER_VOTE'] = $arComponentVoteResult['USER_VOTE'];
 		$arResult['USER_HAS_VOTED'] = $arComponentVoteResult['USER_HAS_VOTED'];
-		
+
 		if (in_array($sRatingTemplate, array("like", "like_graphic", "mobile_like")))
-			$arResult['TOTAL_VOTES'] = $arComponentVoteResult['TOTAL_POSITIVE_VOTES'];		
+			$arResult['TOTAL_VOTES'] = $arComponentVoteResult['TOTAL_POSITIVE_VOTES'];
 	}
 }
 
 $arResult['VOTE_BUTTON'] = $arResult['USER_HAS_VOTED'] == 'Y'? ($arResult['USER_VOTE'] > 0? 'PLUS': 'MINUS'): 'NONE';
-if (
-	in_array($sRatingTemplate, array("like", "like_graphic", "mobile_like"))
-	&& $arResult['VOTE_BUTTON'] == 'MINUS'
-)
+if ($isLikeTemplate && $arResult['VOTE_BUTTON'] == 'MINUS')
 	$arResult['USER_HAS_VOTED'] = 'N';
 
 if (!$arResult['ALLOW_VOTE']['RESULT'])
 	$arResult['VOTE_AVAILABLE'] = 'N';
 
-$arResult['VOTE_RAND']	= (intval($arParams["VOTE_RAND"]) > 0 ? intval($arParams["VOTE_RAND"]) : (time()+rand(0, 1000)));
+$arResult['VOTE_RAND'] = ($arParams["VOTE_RAND"] > 0 ? intval($arParams["VOTE_RAND"]) : (time()+rand(0, 1000)));
 $arResult['VOTE_TITLE'] = $arResult['TOTAL_VOTES'] == 0 ? GetMessage("RATING_COMPONENT_NO_VOTES") : sprintf(GetMessage("RATING_COMPONENT_DESC"), $arResult['TOTAL_VOTES'], $arResult['TOTAL_POSITIVE_VOTES'], $arResult['TOTAL_NEGATIVE_VOTES']);
-$arResult['VOTE_ID'] 	= $arResult['ENTITY_TYPE_ID'].'-'.$arResult['ENTITY_ID'].'-'.$arResult['VOTE_RAND'];	
+$arResult['VOTE_ID'] = $arResult['ENTITY_TYPE_ID'].'-'.$arResult['ENTITY_ID'].'-'.$arResult['VOTE_RAND'];
+
+$isMobileLog = defined("BX_MOBILE_LOG") && BX_MOBILE_LOG == true;
 
 if (!(isset($arParams['TEMPLATE_HIDE']) && $arParams['TEMPLATE_HIDE'] == 'Y'))
 {
@@ -69,24 +71,21 @@ if (!(isset($arParams['TEMPLATE_HIDE']) && $arParams['TEMPLATE_HIDE'] == 'Y'))
 	{
 		define("MAIN_RATING_VOTE_JS_INCLUDE", true);
 
-		if (
-			!defined("BX_MOBILE_LOG")
-			|| BX_MOBILE_LOG != true
-		)
+		if (!$isMobileLog)
 			echo CJSCore::Init(array('popup', 'ajax'), true);
 
-		if ($sRatingTemplate == "like" || $sRatingTemplate == "like_graphic")
-			echo '<script type="text/javascript" src="/bitrix/js/main/rating_like.js"></script>';
-		else
-			echo '<script type="text/javascript" src="/bitrix/js/main/rating.js"></script>';
+		if (!$isMobileLog)
+		{
+			if ($isLikeTemplate)
+				$APPLICATION->AddHeadScript("/bitrix/js/main/rating_like.js");
+			else
+				$APPLICATION->AddHeadScript("/bitrix/js/main/rating.js");
+		}
 	}
-	if (
-		!defined("BX_MOBILE_LOG")
-		|| BX_MOBILE_LOG != true
-	)
+	if (!$isMobileLog)
 		$APPLICATION->SetAdditionalCSS("/bitrix/components/bitrix/rating.vote/templates/like/popup.css");
 
-	if (in_array($sRatingTemplate, array("like", "like_graphic", "mobile_like")))
+	if ($isLikeTemplate)
 	{
 		$arResult['RATING_TEXT_LIKE_Y'] = COption::GetOptionString("main", "rating_text_like_y", GetMessage("RATING_TEXT_LIKE_Y"));
 		$arResult['RATING_TEXT_LIKE_N'] = COption::GetOptionString("main", "rating_text_like_n", GetMessage("RATING_TEXT_LIKE_N"));
@@ -103,5 +102,4 @@ if (!(isset($arParams['TEMPLATE_HIDE']) && $arParams['TEMPLATE_HIDE'] == 'Y'))
 }
 
 return $arResult;
-
 ?>

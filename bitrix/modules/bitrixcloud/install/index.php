@@ -1,5 +1,7 @@
 <?
 IncludeModuleLangFile(__FILE__);
+/** @global CMain $APPLICATION */
+/** @global CDatabase $DB */
 if (class_exists("bitrixcloud"))
 	return;
 
@@ -12,6 +14,7 @@ class bitrixcloud extends CModule
 	var $MODULE_DESCRIPTION;
 	var $MODULE_CSS;
 	var $MODULE_GROUP_RIGHTS = "N";
+	var $errors = false;
 
 	function bitrixcloud()
 	{
@@ -32,7 +35,7 @@ class bitrixcloud extends CModule
 
 	function InstallDB($arParams = array())
 	{
-		global $DB, $DBType, $APPLICATION;
+		global $DB, $APPLICATION;
 		$this->errors = false;
 		// Database tables creation
 		if (!$DB->Query("SELECT 'x' FROM b_bitrixcloud_option WHERE 1=0", true))
@@ -57,7 +60,7 @@ class bitrixcloud extends CModule
 
 	function UnInstallDB($arParams = array())
 	{
-		global $DB, $DBType, $APPLICATION;
+		global $DB, $APPLICATION;
 		$this->errors = false;
 		UnRegisterModuleDependences("main", "OnEndBufferContent", "bitrixcloud", "CBitrixCloudCDN", "OnEndBufferContent");
 		UnRegisterModuleDependences("main", "OnAdminInformerInsertItems", "bitrixcloud", "CBitrixCloudCDN", "OnAdminInformerInsertItems");
@@ -87,7 +90,10 @@ class bitrixcloud extends CModule
 
 	function InstallFiles($arParams = array())
 	{
-		CopyDirFiles($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/bitrixcloud/install/admin/", $_SERVER["DOCUMENT_ROOT"]."/bitrix/admin");
+		if($_ENV["COMPUTERNAME"]!='BX')
+		{
+			CopyDirFiles($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/bitrixcloud/install/admin/", $_SERVER["DOCUMENT_ROOT"]."/bitrix/admin");
+		}
 		return true;
 	}
 
@@ -99,7 +105,7 @@ class bitrixcloud extends CModule
 
 	function DoInstall()
 	{
-		global $DB, $USER, $DOCUMENT_ROOT, $APPLICATION, $step;
+		global $USER, $APPLICATION, $step;
 		if ($USER->IsAdmin())
 		{
 			$step = IntVal($step);
@@ -122,7 +128,7 @@ class bitrixcloud extends CModule
 
 	function DoUninstall()
 	{
-		global $DB, $USER, $DOCUMENT_ROOT, $APPLICATION, $step;
+		global $USER, $APPLICATION, $step;
 		if ($USER->IsAdmin())
 		{
 			$step = IntVal($step);

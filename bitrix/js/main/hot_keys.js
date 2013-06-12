@@ -55,30 +55,30 @@ if(!BXHotKeys)
 		this.UpdateKS = function(codeId, keysString)
 		{
 			for(var i=0; i<this.ArrHKCode.length; i++)
-	  			if(this.ArrHKCode[i][idxCodeId]==codeId)
-	  			{
-	  				this.ArrHKCode[i][idxKS]=keysString;
-	  				return true;
-	  			}
+				if(this.ArrHKCode[i][idxCodeId]==codeId)
+				{
+					this.ArrHKCode[i][idxKS]=keysString;
+					return true;
+				}
 		};
 
 		this.UpdateHk = function(codeId, hkId)
 		{
 			for(var i=0; i<this.ArrHKCode.length; i++)
-	  			if(this.ArrHKCode[i][idxCodeId]==codeId)
-	  			{
-	  				this.ArrHKCode[i][idxHKId]=hkId;
-	  				return i;
-	  			}
+				if(this.ArrHKCode[i][idxCodeId]==codeId)
+				{
+					this.ArrHKCode[i][idxHKId]=hkId;
+					return i;
+				}
 
-	  		return (-1);
+			return (-1);
 		};
 
 		this.Add = function(keysString, execCode, codeId, name, hkId)
 		{
 			for(var i=0; i<this.ArrHKCode.length; i++)
-	  			if(this.ArrHKCode[i][idxCodeId]==codeId)
-	  				return false;
+				if(this.ArrHKCode[i][idxCodeId]==codeId)
+					return false;
 
 			return this.ArrHKCode.push([String(keysString),String(execCode),codeId,String(name),hkId]);
 		};
@@ -89,13 +89,13 @@ if(!BXHotKeys)
 			var ret="";
 			if(keysString)
 				for(var i=0; i<this.ArrHKCode.length; i++)
-		  			if (this.ArrHKCode[i][idxKS]==keysString)
-		  			{
-		  				if(ret)
-		  					ret+=" ";
+					if (this.ArrHKCode[i][idxKS]==keysString)
+					{
+						if(ret)
+							ret+=" ";
 
-		  				ret+=this.ArrHKCode[i][idxCode];
-		  			}
+						ret+=this.ArrHKCode[i][idxCode];
+					}
 
 			return ret;
 		};
@@ -152,15 +152,15 @@ if(!BXHotKeys)
 
 				if(this.ArrHKCode[i][idxCode])
 					editStr = "<td width='30%' id='hotkeys-float-form-"+this.ArrHKCode[i][idxCodeId]+"'><a href='javascript:void(0)' onclick='BXHotKeys.SubstInput("+this.ArrHKCode[i][idxCodeId]+", "+
-	  						this.ArrHKCode[i][idxHKId]+", \""+this.ArrHKCode[i][idxKS]+"\");' title='"+this.MesClToChange+"' class='bx-hk-settings'>"+keyStr+"</a></td><td width='10%' align='right' id='hotkeys-float-form-del-"+this.ArrHKCode[i][idxCodeId]+"'><a href='javascript:void(0)' onclick='BXHotKeys.DeleteBase("+
-	  						this.ArrHKCode[i][idxCodeId]+","+this.ArrHKCode[i][idxHKId]+");' class='hk-delete-icon' title='"+this.MesDelete+"'></a></td>";
+							this.ArrHKCode[i][idxHKId]+", \""+this.ArrHKCode[i][idxKS]+"\");' title='"+this.MesClToChange+"' class='bx-hk-settings'>"+keyStr+"</a></td><td width='10%' align='right' id='hotkeys-float-form-del-"+this.ArrHKCode[i][idxCodeId]+"'><a href='javascript:void(0)' onclick='BXHotKeys.DeleteBase("+
+							this.ArrHKCode[i][idxCodeId]+","+this.ArrHKCode[i][idxHKId]+");' class='hk-delete-icon' title='"+this.MesDelete+"'></a></td>";
 				else
 					editStr ="<td width='30%'>&nbsp;</td><td width='10%'>&nbsp</td>";
 
-	  			formText+="<tr class = 'bx-hk-settings-row'><td width='60%'>"+this.ArrHKCode[i][idxName]+"</td>"+editStr+"</tr>";
-	  		}
+				formText+="<tr class = 'bx-hk-settings-row'><td width='60%'>"+this.ArrHKCode[i][idxName]+"</td>"+editStr+"</tr>";
+			}
 
-	  		formText+='</table>';
+			formText+='</table>';
 
 			var btnClose = new BX.CWindowButton({
 				'title': this.MesClose,
@@ -174,37 +174,30 @@ if(!BXHotKeys)
 							width: 500,
 							height: 400,
 							resizable: false
-
 						});
 
 			this.tblSettParent=BX("tbl_hk_settings").parentNode;
 			BX.addCustomEvent(obWnd, 'onWindowClose', function(obWnd) {
-																		var dialog = BX.findChild(document,{className:'bx-core-window bx-core-adm-dialog'},true);
-
-																		if(!dialog)
-																			dialog = _this.hk_getElementsByClass("bx-core-window bx-core-adm-dialog",document,"div")[0];
-
-																		dialog.parentNode.removeChild(dialog);
-																		//_this.tblSettParent.removeChild(BX("tbl_hk_settings"));
+																		obWnd.DIV.parentNode.removeChild(obWnd.DIV);
 																		_this.Register();
-																  	});
+																	});
 
-			//some customization to standart bx dialog
+			//some customization to standart BX.CDialog
 			var hk_menu_div = document.createElement("div");
 			hk_menu_div.className = "bx-hk-settings-toolbar";
 			hk_menu_div.innerHTML = this.ShowMenu();
 
-			var dialog_head = BX.findChild(document, {attribute: {'class': 'bx-core-adm-dialog-content'}}, true );
+			var dialog_head = BX.findChild(obWnd.DIV, {attribute: {'class': 'bx-core-adm-dialog-content'}}, true );
 
 			if(dialog_head)
 			{
 				dialog_head.appendChild(hk_menu_div);
-				BX.findChild(document, {attribute: {'class': 'bx-core-adm-dialog-content'}}, true ).style.marginTop="37px";
+				BX.findChild(obWnd.DIV, {attribute: {'class': 'bx-core-adm-dialog-content'}}, true ).style.marginTop="37px";
 			}
 			else // ie quirck mode
 			{
 				this.hk_getElementsByClass("bx-core-adm-dialog-head")[0].appendChild(hk_menu_div);
-				this.hk_getElementsByClass("bx-hk-settings-toolbar",document,"div")[0].style.width = "480px";
+				this.hk_getElementsByClass("bx-hk-settings-toolbar",obWnd.DIV,"div")[0].style.width = "480px";
 			}
 
 			obWnd.Show();
@@ -214,20 +207,20 @@ if(!BXHotKeys)
 
 		this.hk_getElementsByClass = function(className, node, tag)
 		{
-	        var node = node || document,
-	        tag = tag || '*',
-	        list = node.getElementsByTagName(tag),
-	        length = list.length,
-	        result = [], i,j;
-	        for(i = 0; i < length; i++)
-	        {
-	            if(list[i].className == className)
-	            {
-	                result.push(list[i])
-	                break;
-	            }
-	        }
-	        return result
+			var node = node || document,
+			tag = tag || '*',
+			list = node.getElementsByTagName(tag),
+			length = list.length,
+			result = [], i,j;
+			for(i = 0; i < length; i++)
+			{
+				if(list[i].className == className)
+				{
+					result.push(list[i])
+					break;
+				}
+			}
+			return result
 		}
 
 		this.DelAll = function()
@@ -306,14 +299,14 @@ if(!BXHotKeys)
 			//waiting while deleting hot-keys
 			waiter =
 				{
-		   			func: function()
-		   			{
-		   				if (!(this.deleting))
-		   				{
-		   					request.Post(options_url, sParam);
-		   					clearInterval(intervalID);
-		   				}
-		   			}
+					func: function()
+					{
+						if (!(this.deleting))
+						{
+							request.Post(options_url, sParam);
+							clearInterval(intervalID);
+						}
+					}
 				}
 			intervalID = window.setInterval(function(){ waiter.func.call(waiter) }, 1000);
 		}
@@ -322,7 +315,7 @@ if(!BXHotKeys)
 		{
 			for(var i=0; i<this.ArrHKCode.length; i++)
 				if (this.ArrHKCode[i][idxKS]==strKeyString && this.ArrHKCode[i][idxCodeId]!=code_id)
-			  		return true;
+					return true;
 
 			return false;
 		}
@@ -425,23 +418,23 @@ if(!BXHotKeys)
 
 		this.OnFileInputChange = function(ob)
 		{
-	 		fileName = ob.value;
-	 		fileName = fileName.replace(/\\/g, '/');
-	 		fileName = fileName.substr(fileName.lastIndexOf("/")+1);
+			fileName = ob.value;
+			fileName = fileName.replace(/\\/g, '/');
+			fileName = fileName.substr(fileName.lastIndexOf("/")+1);
 
-	 		if(ob.parentNode.childNodes[0].textContent)
-	 			ob.parentNode.childNodes[0].textContent = fileName;
-	 		else
-	 			ob.parentNode.childNodes[0].innerText = fileName;
+			if(ob.parentNode.childNodes[0].textContent)
+				ob.parentNode.childNodes[0].textContent = fileName;
+			else
+				ob.parentNode.childNodes[0].innerText = fileName;
 		}
 
 		this.Import = function()
 		{
 			var formText = 	'<form action="/bitrix/admin/hot_keys_act.php?hkaction=import" method="post" enctype="multipart/form-data" target="upload_iframe" id="hk_import_form" name="hk_import_form">'+
-	      					'<input type="hidden" name="sessid" value="'+BX.bitrix_sessid()+'">'+
-	      					'<span class="adm-input-file"><span>'+this.MesChooseFile+'</span><input type="file" name="bx_hk_filename" id="bx_hk_filename" class="adm-designed-file" onchange="BXHotKeys.OnFileInputChange(this);"></span>'+
-	      					'</form>'+
-	      					'<iframe id="upload_iframe" name="upload_iframe" style="display:none"></iframe>';
+							'<input type="hidden" name="sessid" value="'+BX.bitrix_sessid()+'">'+
+							'<span class="adm-input-file"><span>'+this.MesChooseFile+'</span><input type="file" name="bx_hk_filename" id="bx_hk_filename" class="adm-designed-file" onchange="BXHotKeys.OnFileInputChange(this);"></span>'+
+							'</form>'+
+							'<iframe id="upload_iframe" name="upload_iframe" style="display:none"></iframe>';
 
 			var btnClose = new BX.CWindowButton({
 				'title': this.MesClose,
@@ -566,20 +559,20 @@ if(!BXHotKeys)
 
 			if(e.charCode > 256)
 			{
-		   		var ExCode=_this.GetExCode(_this.MakeKeyString(e));
+				var ExCode=_this.GetExCode(_this.MakeKeyString(e));
 
-		   		if (ExCode)
+				if (ExCode)
 					eval(ExCode);
-		   	}
+			}
 		}
 
 		this.KeyDownHandler = function(e)
 		{
 			e = e || event;
 
-		   	var ExCode=_this.GetExCode(_this.MakeKeyString(e));
+			var ExCode=_this.GetExCode(_this.MakeKeyString(e));
 
-		   	if (ExCode)
+			if (ExCode)
 				eval(ExCode);
 		}
 	}

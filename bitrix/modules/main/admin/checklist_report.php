@@ -1,4 +1,17 @@
 <?
+/**
+ * Bitrix Framework
+ * @package bitrix
+ * @subpackage main
+ * @copyright 2001-2013 Bitrix
+ */
+
+/**
+ * Bitrix vars
+ * @global CUser $USER
+ * @global CMain $APPLICATION
+ */
+
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
 require_once($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/prolog.php");
 
@@ -37,14 +50,14 @@ if($_REQUEST["ACTION"] == "INFO" && $_REQUEST["TEST_ID"] && $arPoints[$_REQUEST[
 	else
 		$display="none";
 	$APPLICATION->RestartBuffer();
-	
+
 	$aTabs = array(
 			array("DIV" => "edit1", "TAB" => GetMessage("CL_TAB_TEST"), "ICON" => "checklist_detail", "TITLE" => GetMessage("CL_TEST_NAME").': '.$arPoints[$arTestID]["NAME"].'&nbsp;('.$arTestID.')'),
 			array("DIV" => "edit2", "TAB" => GetMessage("CL_TAB_DESC"), "ICON" => "checklist_detail", "TITLE" => GetMessage('CL_TAB_DESC')),
 		);
 		$tabControl = new CAdminTabControl("tabControl", $aTabs);
-		
-		
+
+
 	$tabControl->Begin();
 
 	$tabControl->BeginNextTab();
@@ -110,9 +123,9 @@ $tabControl->BeginNextTab();
 					<div class="checklist-popup-test">
 						<div class="checklist-popup-name-test"><?=GetMessage("CL_NOW_AUTOTEST_WORK");?></div>
 						<div class="checklist-popup-test-text">
-                            <div class="checklist-popup-result-form checklist-popup-code">
+							<div class="checklist-popup-result-form checklist-popup-code">
 								<?=$arPoints[$arTestID]["AUTOTEST_DESC"]?>
-                            </div>
+							</div>
 						</div>
 					</div>
 				<?endif;?>
@@ -141,14 +154,7 @@ $tabControl->BeginNextTab();
 	{
 		BX('performer_comment_area').style.color="#999";
 		BX('performer_comment_area').style.fontWeight="lighter";
-		BX('performer_comment_area').innerHTML = '<?=GetMessage("CL_NO_COMMENT");?>';
-	}
-
-	if (BX('customer_comment_area').innerHTML.length<=0)
-	{
-		BX('customer_comment_area').style.color="#999";
-		BX('customer_comment_area').style.fontWeight="lighter";
-		BX('customer_comment_area').innerHTML = '<?=GetMessage("CL_NO_COMMENT");?>';
+		BX('performer_comment_area').innerHTML = '<?=GetMessageJS("CL_NO_COMMENT");?>';
 	}
 
 	function popup_tabs(_this, id)
@@ -169,7 +175,7 @@ $tabControl->BeginNextTab();
 	{
 		var DetailWindow = new BX.CAdminDialog(
 				{
-					title: "<?=GetMessage("CL_MORE_DETAILS");?>",
+					title: '<?=GetMessageJS("CL_MORE_DETAILS");?>',
 					head: "",
 					content: BX("detail_system_comment_<?=$arTestID?>").parentNode.innerHTML,
 					icon: "head-block",
@@ -187,7 +193,7 @@ $tabControl->BeginNextTab();
 	</script>
 <?
 $tabControl->End();
-?>	
+?>
 	<?die();?>
 <?}?>
 
@@ -331,7 +337,7 @@ else:
 					BX.addClass(BX(el.ID+"_name"),"checklist-testlist-green");
 				BX(el.ID+"_stat").innerHTML = "(<span class=\"checklist-testlist-passed-test\">"+el.CHECK+"</span>/"+el.TOTAL+")";
 			}
-			for (var i=0;i<arStates["POINTS"].length;i++)
+			for (i=0;i<arStates["POINTS"].length;i++)
 			{
 				ChangeStatus(arStates["POINTS"][i]);
 			}
@@ -401,7 +407,7 @@ else:
 						draggable: true,
 						height: "530",
 						width: "700",
-						buttons: ['<input id="prev" type="button" onclick="Move(\'prev\');"name="prev" value="<?=GetMessage("CL_PREV_TEST");?>"><input id="next" type="button" name="next" onclick="Move(\'next\');" value="<?=GetMessage("CL_NEXT_TEST");?>">']
+						buttons: ['<input id="prev" type="button" onclick="Move(\'prev\');"name="prev" value="<?=GetMessageJS("CL_PREV_TEST");?>"><input id="next" type="button" name="next" onclick="Move(\'next\');" value="<?=GetMessageJS("CL_NEXT_TEST");?>">']
 					}
 				);
 
@@ -412,7 +418,7 @@ else:
 				if (arStates["POINTS"][i].TEST_ID == testID)
 				{
 					if (arStates["POINTS"][i].IS_REQUIRE == "Y")
-						Dialog.SetTitle(head_name+" - "+testID+" ("+"<?=GetMessage("CL_TEST_IS_REQUIRE");?>"+")");
+						Dialog.SetTitle(head_name+" - "+testID+" ("+'<?=GetMessageJS("CL_TEST_IS_REQUIRE");?>'+")");
 					current = i;
 					ReCalc(current);
 					break;
@@ -455,7 +461,7 @@ else:
 					Dialog.SetContent(data);
 					testtitle = arStates["POINTS"][current].NAME+" - "+arStates["POINTS"][current].TEST_ID;
 					if (arStates["POINTS"][current].IS_REQUIRE == "Y")
-						testtitle = testtitle+" ("+"<?=GetMessage("CL_TEST_IS_REQUIRE");?>"+")";
+						testtitle = testtitle+" ("+'<?=GetMessageJS("CL_TEST_IS_REQUIRE");?>'+")";
 					Dialog.SetTitle(testtitle);
 					CloseWaitWindow();
 				}
@@ -474,7 +480,7 @@ else:
 	{
 
 		var innerText = BX("detail_system_comment_"+id).parentNode.innerHTML;
-		content = BX.create("DIV",{
+		var content = BX.create("DIV",{
 			props:{},
 			html:innerText
 		});
@@ -483,7 +489,7 @@ else:
 
 			DetailWindow = new BX.CAdminDialog(
 			{
-				title: "<?=GetMessage("CL_MORE_DETAILS");?>",
+				title: '<?=GetMessageJS("CL_MORE_DETAILS");?>',
 				head: "",
 				content: content,
 				icon: "head-block",
@@ -520,9 +526,9 @@ else:
 				draggable: false,
 				closeIcon:true,
 				autoHide: false,
-				angle:{position:"right",offset:94},
+				angle:{position:"right"},
 				offsetLeft:-360,
-				offsetTop:-120,
+				offsetTop:-35,
 				zIndex:1500,
 				closeByEsc: false,
 				bindOptions: {
@@ -539,7 +545,7 @@ else:
 						text : "?",
 						events:{
 							click:BX.proxy(function(){
-								help = BX.findChild(this,{className:"checklist-vulnscan-helpbox"},true);
+								var help = BX.findChild(this,{className:"checklist-vulnscan-helpbox"},true);
 								var text = help.innerHTML;
 								_this = BX.proxy_context;
 								if(help)

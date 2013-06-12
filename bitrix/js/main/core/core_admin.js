@@ -131,8 +131,7 @@ BX.admin = {
 			{
 				if (comp.OPENER)
 				{
-					new_comp.OPENER = comp.OPENER;
-					new_comp.OPENER.PARAMS.parent = new_comp;
+					comp.OPENER.setParent(new_comp);
 				}
 
 				comp = new_comp;
@@ -235,12 +234,10 @@ BX.admin = {
 		{
 			if (this.bxtimer) clearTimeout(this.bxtimer);
 			this.bxtimer = setTimeout(BX.proxy(BX.admin.__borders_menu_show, this), this.OPENER.timeout || BX.admin.__border_menu_timeout);
-			if (!this.__opener_events_set)
-			{
-				BX.bind(this.OPENER.Get(), 'mouseover', BX.proxy(BX.admin.__borders_show, this));
-				BX.bind(this.OPENER.Get(), 'mouseout', BX.proxy(BX.admin.__borders_hide, this));
-				this.__opener_events_set = true;
-			}
+			this.OPENER.setHoverHoutEvents(
+				BX.proxy(BX.admin.__borders_show, this),
+				BX.proxy(BX.admin.__borders_hide, this)
+			);
 		}
 
 		//return BX.PreventDefault(e);

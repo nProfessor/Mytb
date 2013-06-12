@@ -57,7 +57,7 @@ if ($handle = opendir($path2Handlers))
 $arResult["HANDLERS_ALL"] = $arHandlers;
 if(!is_array($arParams["HANDLERS"]))
 {
-	if (LANGUAGE != 'ru')
+	if (LANGUAGE_ID != 'ru')
 	{
 		unset($arHandlers["vk"]);
 		unset($arHandlers["mailru"]);

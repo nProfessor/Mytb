@@ -162,7 +162,7 @@ class CIBlockPropertyMapGoogle extends CIBlockPropertyMapInterface
 ?>
 <script type="text/javascript">
 BX.ready(function(){
-	var tabArea = BX.findParent(BX("BX_GMAP_<?=$MAP_ID?>"),{className:/edit-tab-inner|adm-detail-content/});
+	var tabArea = BX.findParent(BX("BX_GMAP_<?=$MAP_ID?>"),{className:"adm-detail-content"});
 	var tabButton = BX("tab_cont_"+tabArea.id);
 	BX.bind(tabButton,"click", function() { BXMapGoogleAfterShow("<?=$MAP_ID?>"); });
 });
@@ -659,7 +659,7 @@ function saveYandexKey(domain, input)
 ?>
 <script type="text/javascript">
 BX.ready(function(){
-	var tabArea = BX.findParent(BX("BX_YMAP_<?=$MAP_ID?>"),{className:/edit-tab-inner|adm-detail-content/});
+	var tabArea = BX.findParent(BX("BX_YMAP_<?=$MAP_ID?>"),{className:"adm-detail-content"});
 	var tabButton = BX("tab_cont_"+tabArea.id);
 	BX.bind(tabButton,"click", function() { BXMapYandexAfterShow("<?=$MAP_ID?>"); });
 });
@@ -1085,7 +1085,7 @@ class CVideoProperty
 tr.bx-prop-sub-title td{background: #E2E1E0! important; color: #525355! important; font-weight: bold! important; text-align: left! important; padding-left: 10px;}
 </style>
 </td></tr>
-<tr class="bx-prop-sub-title"><td colSpan="2"><?= GetMessage('IBLOCK_PROP_VIDEO_BOTH_SET')?></td></tr>
+<tr class="heading"><td colSpan="2"><?= GetMessage('IBLOCK_PROP_VIDEO_BOTH_SET')?></td></tr>
 <tr>
 	<td><?= GetMessage('IBLOCK_PROP_VIDEO_SET_BUFFER')?>:</td>
 	<td>
@@ -1113,7 +1113,7 @@ tr.bx-prop-sub-title td{background: #E2E1E0! important; color: #525355! importan
 		<input type="text" name="<?= $name?>[VOLUME]" size="10" value="<?= $val["VOLUME"]?>"/>
 	</td>
 </tr>
-<tr class="bx-prop-sub-title"><td colSpan="2"><?= GetMessage('IBLOCK_PROP_VIDEO_FLV_SET')?></td></tr>
+<tr class="heading"><td colSpan="2"><?= GetMessage('IBLOCK_PROP_VIDEO_FLV_SET')?></td></tr>
 <tr>
 	<td><?= GetMessage('IBLOCK_PROP_VIDEO_SET_SKIN')?>:</td>
 	<td id="bx_player_skin_cell">
@@ -1153,7 +1153,7 @@ jsUtils.loadJSFile("/bitrix/components/bitrix/player/js/prop_skin_selector.js", 
 		</select>
 	</td>
 </tr>
-<tr class="bx-prop-sub-title"><td colSpan="2"><?= GetMessage('IBLOCK_PROP_VIDEO_WMV_SET')?></td></tr>
+<tr class="heading"><td colSpan="2"><?= GetMessage('IBLOCK_PROP_VIDEO_WMV_SET')?></td></tr>
 <tr>
 	<td><?= GetMessage('IBLOCK_PROP_VIDEO_SET_BGCOLOR')?>:</td>
 	<td><input type="text" name="<?= $name?>[BGCOLOR]" size="10" value="<?= $val["BGCOLOR"]?>"/></td>
@@ -1224,7 +1224,7 @@ table.bx-video-prop-tbl img.spacer{display:block;float:left;height:1px;margin-to
 	<tr class="bx-prop-main-title"><td colSpan="2"><?= GetMessage('IBLOCK_PROP_VIDEO_PARAMS_TITLE')?></td></tr>
 	<? if ($controlMode != "iblock_element_admin"): ?>
 		<? if(strlen($path) > 0):?>
-			<tr class="bx-prop-sub-title"><td colSpan="2"><?= GetMessage('IBLOCK_PROP_VIDEO_PARAMS_TITLE_VIEW')?></td></tr>
+			<tr class="heading"><td colSpan="2"><?= GetMessage('IBLOCK_PROP_VIDEO_PARAMS_TITLE_VIEW')?></td></tr>
 			<tr>
 				<td colSpan="2" style="text-align: center;">
 		<?$APPLICATION->IncludeComponent(
@@ -1267,7 +1267,7 @@ table.bx-video-prop-tbl img.spacer{display:block;float:left;height:1px;margin-to
 
 		<tr><td class="bx-pr-title" style="width: 300px;"></td><td style="width: 240px;"></td></tr>
 
-		<tr class="bx-prop-sub-title"><td colSpan="2"><?= GetMessage('IBLOCK_PROP_VIDEO_PARAMS_TITLE_MAIN')?></td></tr>
+		<tr class="heading"><td colSpan="2"><?= GetMessage('IBLOCK_PROP_VIDEO_PARAMS_TITLE_MAIN')?></td></tr>
 
 		<? if(strlen($path) > 0):?>
 			<tr>
@@ -1353,7 +1353,7 @@ table.bx-video-prop-tbl img.spacer{display:block;float:left;height:1px;margin-to
 			<input id="bx_video_height_<?= $id?>" type="text" size="10" style="width: 70px;" value="<?= $val['height']?>" name= "<?= $name?>[HEIGHT]" />
 		</td>
 	</tr>
-	<tr class="bx-prop-sub-title"><td colSpan="2"><?= GetMessage('IBLOCK_PROP_VIDEO_PARAMS_TITLE_INFO')?></td></tr>
+	<tr class="heading"><td colSpan="2"><?= GetMessage('IBLOCK_PROP_VIDEO_PARAMS_TITLE_INFO')?></td></tr>
 	<tr>
 		<td class="bx-pr-title"><?= GetMessage('IBLOCK_PROP_VIDEO_TITLE')?>:</td>
 		<td><input id="bx_video_title_<?= $id?>" type="text" size="30" value="<?= $val['title']?>" name="<?= $name?>[TITLE]" /></td>

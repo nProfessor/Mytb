@@ -1,4 +1,5 @@
-img.linked {
+img.linked
+{
 	position: relative;
 	left: 2px;
 	top: 6px;
@@ -7,4 +8,12 @@ img.linked {
 	border: none;
 	cursor: pointer;
 }
-.iblock-strike-out td {text-decoration: line-through;}
+.iblock-strike-out td
+{
+	text-decoration: line-through;
+}
+
+.iblock-section-icon
+{
+	background-position:  center -118px;
+}

@@ -23,4 +23,5 @@ $MESS["FILE_SIZE_Gb"] = "Gb";
 $MESS["FILE_SIZE_Tb"] = "Tb";
 $MESS["FILE_BAD_FILENAME"] = "The file name is not specified.";
 $MESS["MAIN_BAD_FILENAME_LEN"] = "Filename is too long.";
+$MESS["FILE_BAD_QUOTA"] = "Disk quota exceeded.";
 ?>

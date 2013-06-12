@@ -270,6 +270,7 @@ $arComponentParameters = array(
 			"NAME" => GetMessage("CP_BCST_USE_PRODUCT_QUANTITY"),
 			"TYPE" => "CHECKBOX",
 			"DEFAULT" => "N",
+			"REFRESH" => 'Y',
 		),
 		"CACHE_TIME"  =>  Array("DEFAULT"=>36000000),
 		"CACHE_FILTER" => array(
@@ -314,5 +315,15 @@ if (CModule::IncludeModule('catalog') && CModule::IncludeModule('currency'))
 			"ADDITIONAL_VALUES" => "Y",
 		);
 	}
+}
+
+if (isset($arCurrentValues["USE_PRODUCT_QUANTITY"]) && 'Y' == $arCurrentValues["USE_PRODUCT_QUANTITY"])
+{
+	$arComponentParameters["PARAMETERS"]['QUANTITY_FLOAT'] = array(
+		'PARENT' => 'PRICES',
+		'NAME' => GetMessage('CP_BCST_QUANTITY_FLOAT'),
+		'TYPE' => 'CHECKBOX',
+		'DEFAULT' => 'N',
+	);
 }
 ?>

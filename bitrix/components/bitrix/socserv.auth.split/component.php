@@ -29,7 +29,7 @@ if((isset($_REQUEST["code"]) && $_REQUEST["code"] <> '') || (isset($_REQUEST["au
 	}
 	elseif(!$oAuthManager->Authorize($_REQUEST["auth_service_id"]))
 	{
-		$ex = $APPLICATION->GetException();
+		$ex = $GLOBALS["APPLICATION"]->GetException();
 		if ($ex)
 			$arResult['ERROR_MESSAGE'] = $ex->GetString();
 	}
@@ -75,6 +75,8 @@ while($arUser = $dbSocservUser->Fetch())
 			break;
 			case 'www.liveinternet.ru' : $arUser["EXTERNAL_AUTH_ID"] = 'Liveinternet';
 			break;
+			case 'www.blogger.com' : $arUser["EXTERNAL_AUTH_ID"] = 'Blogger';
+			break;
 			default : $arUser["EXTERNAL_AUTH_ID"] = $result[1];
 		}
 
@@ -109,7 +111,7 @@ if(is_array($arResult["DB_SOCSERV_USER"]))
 	}
 
 $arParamsToDelete = array(
-	"auth_service_id",
+	//"auth_service_id",
 	"openid_assoc_handle",
 	"openid_identity",
 	"openid_sreg_email",
@@ -123,7 +125,7 @@ $arParamsToDelete = array(
 	"openid_sig",
 	"current_fieldset",
 );
-$add = (CModule::IncludeModule("socialnetwork") && $_REQUEST["auth_service_id"] <> '' && $componentTemplate == 'twitpost') ? "current_fieldset=SOCSERV#" : "";
+$add = (CModule::IncludeModule("socialnetwork") && $_REQUEST["auth_service_id"] <> '' && $componentTemplate == 'twitpost') ? "current_fieldset=SOCSERV" : "";
 if ($_SERVER["REQUEST_METHOD"] == "GET" && $_REQUEST["action"] == "delete" && isset($_REQUEST["user_id"]) && intval($_REQUEST["user_id"] > 0) && check_bitrix_sessid())
 {
 	$userId = intval($_REQUEST["user_id"]);
@@ -132,19 +134,16 @@ if ($_SERVER["REQUEST_METHOD"] == "GET" && $_REQUEST["action"] == "delete" && is
 		if (!CSocServAuthDB::Delete($userId))
 			$_SESSION["LAST_ERROR"] = GetMessage("DELETE_ERROR");
 	}
-	LocalRedirect($APPLICATION->GetCurPageParam(($componentTemplate == 'twitpost') ? "current_fieldset=SOCSERV#soc-serv-title-id" : "#soc-serv-title-id", array("sessid", "user_id", "action")));
+	LocalRedirect($APPLICATION->GetCurPageParam(($componentTemplate == 'twitpost') ? "current_fieldset=SOCSERV" : "", array("sessid", "user_id", "action")));
 }
 
 if($componentTemplate == 'twitpost')
 	$arResult["TWIT_HASH"] = htmlspecialcharsbx(COption::GetOptionString("socialservices", "twitter_search_hash", "#b24"));
 
-$arResult['CURRENTURL'] = $APPLICATION->GetCurPageParam($add."#soc-serv-title-id", $arParamsToDelete);
-if($_SERVER["REQUEST_METHOD"] == "GET" && isset($_REQUEST["auth_service_id"]))
-	LocalRedirect($arResult['CURRENTURL']);
+$arResult['CURRENTURL'] = $APPLICATION->GetCurPageParam($add, $arParamsToDelete);
 
 if(CModule::IncludeModule("socialnetwork"))
 {
-
 	CJSCore::Init(array('socnetlogdest'));
 	// socialnetwork
 	$arResult["PostToShow"]["FEED_DESTINATION"]['LAST']['SONETGROUPS'] = CSocNetLogDestination::GetLastSocnetGroup();

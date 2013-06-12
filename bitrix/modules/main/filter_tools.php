@@ -60,14 +60,14 @@ function InitFilterEx($arName, $varName, $action="set", $session=true, $FilterLo
 		}
 		else
 		{
-			$$name = $FILTER[$name];
+			$$name = isset($FILTER[$name])? $FILTER[$name]: null;
 			if(isset($$period) || isset($FILTER[$period]))
 				$$period = $FILTER[$period];
 
 			if(isset($$direction) || isset($FILTER[$direction]))
 				$$direction = $FILTER[$direction];
 
-			if (strlen($FILTER[$bdays])>0 && $FILTER[$bdays]!="NOT_REF")
+			if (isset($FILTER[$bdays]) && strlen($FILTER[$bdays])>0 && $FILTER[$bdays]!="NOT_REF")
 			{
 				$$bdays = $FILTER[$bdays];
 				$$name = GetTime(time()-86400*intval($FILTER[$bdays]));
@@ -85,11 +85,13 @@ function InitFilterEx($arName, $varName, $action="set", $session=true, $FilterLo
 
 function DelFilterEx($arName, $varName, $session=true, $FilterLogic="FILTER_logic")
 {
-	global $strError, $$FilterLogic;
-	if ($session) unset($_SESSION["SESS_ADMIN"][$varName]);
-	for($i=0; $i<count($arName); $i++)
+	global $$FilterLogic;
+
+	if ($session)
+		unset($_SESSION["SESS_ADMIN"][$varName]);
+
+	foreach ($arName as $name)
 	{
-		$name = $arName[$i];
 		$period = $name."_FILTER_PERIOD";
 		$direction = $name."_FILTER_DIRECTION";
 		$bdays = $name."_DAYS_TO_BACK";
@@ -101,6 +103,7 @@ function DelFilterEx($arName, $varName, $session=true, $FilterLogic="FILTER_logi
 		$$direction = "";
 		$$bdays = "";
 	}
+
 	$$FilterLogic = "and";
 }
 
@@ -108,16 +111,17 @@ function InitFilter($arName)
 {
 	$md5Path = md5(GetPagePath());
 	$FILTER = $_SESSION["SESS_ADMIN"][$md5Path];
-	for($i=0; $i<count($arName); $i++)
+
+	foreach ($arName as $name)
 	{
-		$name = $arName[$i];
 		global $$name;
-		//echo $name." = ".$$name.";<br>";
+
 		if(isset($$name))
 			$FILTER[$name] = $$name;
 		else
 			$$name = $FILTER[$name];
 	}
+
 	$_SESSION["SESS_ADMIN"][$md5Path] = $FILTER;
 }
 
@@ -126,9 +130,8 @@ function DelFilter($arName)
 	$md5Path = md5(GetPagePath());
 	unset($_SESSION["SESS_ADMIN"][$md5Path]);
 
-	for($i=0; $i<count($arName); $i++)
+	foreach ($arName as $name)
 	{
-		$name = $arName[$i];
 		global $$name;
 		$$name = "";
 	}
@@ -143,9 +146,10 @@ function GetFilterHiddens($var = "filter_", $button = array("filter" => "Y", "se
 		$arKeys = @array_merge(array_keys($_GET), array_keys($_POST));
 		if (is_array($arKeys) && count($arKeys)>0)
 		{
-			$arKeys = array_unique($arKeys);
 			$len = strlen($var);
-			for($i=0; $i<count($arKeys); $i++) if(substr($arKeys[$i], 0, $len)==$var) $arrVars[] = $arKeys[$i];
+			foreach (array_unique($arKeys) as $key)
+				if (substr($key, 0, $len) == $var)
+					$arrVars[] = $key;
 		}
 	}
 	else $arrVars = $var;
@@ -200,9 +204,10 @@ function GetFilterParams($var="filter_", $bDoHtmlEncode=true, $button = array("f
 		$arKeys = @array_merge(array_keys($_GET), array_keys($_POST));
 		if(is_array($arKeys) && count($arKeys)>0)
 		{
-			$arKeys = array_unique($arKeys);
 			$len = strlen($var);
-			for($i=0; $i<count($arKeys); $i++) if(substr($arKeys[$i], 0, $len)==$var) $arrVars[] = $arKeys[$i];
+			foreach (array_unique($arKeys) as $key)
+				if (substr($key, 0, $len) == $var)
+					$arrVars[] = $key;
 		}
 	}
 	else
@@ -384,14 +389,14 @@ function GetFilterSqlSearch($arSqlSearch=array(), $FilterLogic="FILTER_logic")
 		$strSqlSearch = "1=1";
 	if (is_array($arSqlSearch) && count($arSqlSearch)>0)
 	{
-		for($i=0; $i<count($arSqlSearch); $i++)
+		foreach ($arSqlSearch as $condition)
 		{
-			if (strlen($arSqlSearch[$i])>0 && $arSqlSearch[$i]!="0")
+			if (strlen($condition)>0 && $condition!="0")
 			{
 				$strSqlSearch .= "
 					".strtoupper($$FilterLogic)."
 					(
-						".$arSqlSearch[$i]."
+						".$condition."
 					)
 					";
 			}

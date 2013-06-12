@@ -59,7 +59,13 @@ if($this->StartResultCache())
 //In "SEF" mode we'll try to parse URL and get ELEMENT_ID from it
 if($arParams["IS_SEF"] === "Y")
 {
-	$componentPage = CComponentEngine::ParseComponentPath(
+	$engine = new CComponentEngine($this);
+	if (CModule::IncludeModule('iblock'))
+	{
+		$engine->addGreedyPart("#SECTION_CODE_PATH#");
+		$engine->setResolveCallback(array("CIBlockFindTools", "resolveComponentEngine"));
+	}
+	$componentPage = $engine->guessComponentPath(
 		$arParams["SEF_BASE_URL"],
 		array(
 			"section" => $arParams["SECTION_PAGE_URL"],
@@ -108,6 +114,7 @@ foreach($arResult["SECTIONS"] as $arSection)
 		$aMenuLinksNew[$menuIndex - 1][3]["IS_PARENT"] = $arSection["DEPTH_LEVEL"] > $previousDepthLevel;
 	$previousDepthLevel = $arSection["DEPTH_LEVEL"];
 
+	$arResult["ELEMENT_LINKS"][$arSection["ID"]][] = urldecode($arSection["~SECTION_PAGE_URL"]);
 	$aMenuLinksNew[$menuIndex++] = array(
 		htmlspecialcharsbx($arSection["~NAME"]),
 		$arSection["~SECTION_PAGE_URL"],

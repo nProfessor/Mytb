@@ -73,6 +73,7 @@ class CBitrixCloudCDNServerGroup
 }
 class CBitrixCloudCDNServerGroups
 {
+	/** @var array[string]CBitrixCloudCDNServerGroup $groups */
 	private $groups = /*.(array[string]CBitrixCloudCDNServerGroup).*/ array();
 	/**
 	 *
@@ -136,6 +137,7 @@ class CBitrixCloudCDNServerGroups
 		$groups = /*.(array[string]string).*/ array();
 		foreach ($this->groups as $group_name => $group)
 		{
+			/** @var CBitrixCloudCDNServerGroup $group */
 			$groups[$group_name] = implode(",", $group->getServers());
 		}
 		$option->setArrayValue($groups);

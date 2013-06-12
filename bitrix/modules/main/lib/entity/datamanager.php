@@ -8,6 +8,12 @@
 
 namespace Bitrix\Main\Entity;
 
+use Bitrix\Main;
+use Bitrix\Main\Localization\Loc;
+
+//Loc::loadMessages(__FILE__);
+IncludeModuleLangFile(__FILE__);
+
 /**
  * Base entity data manager
  * @package bitrix
@@ -15,15 +21,8 @@ namespace Bitrix\Main\Entity;
  */
 abstract class DataManager
 {
-	/**
-	 * @var Base
-	 */
+	/** @var Base */
 	protected static $entity;
-
-	/**
-	 * @var array
-	 */
-	protected static $errors;
 
 	/**
 	 * @static
@@ -35,10 +34,51 @@ abstract class DataManager
 
 		if (!isset(static::$entity[$class]))
 		{
-			static::$entity[$class] = Base::getInstance(get_called_class());
+			static::$entity[$class] = Base::getInstance($class);
 		}
 
 		return static::$entity[$class];
+	}
+
+	/**
+	 * @abstract
+	 */
+	public static function getFilePath()
+	{
+		throw new Main\NotImplementedException("Method getFilePath() must be implemented by successor.");
+	}
+
+	public static function getTableName()
+	{
+		return null;
+	}
+
+	public static function getConnectionName()
+	{
+		return 'default';
+	}
+
+	/**
+	 * @abstract
+	 */
+	public static function getMap()
+	{
+		throw new Main\NotImplementedException("Method getMap() must be implemented by successor.");
+	}
+
+	public static function getUfId()
+	{
+		return null;
+	}
+
+	public static function isUts()
+	{
+		return false;
+	}
+
+	public static function isUtm()
+	{
+		return false;
 	}
 
 	public static function getByPrimary($primary, $parameters = array())
@@ -82,67 +122,68 @@ abstract class DataManager
 	{
 		$query = new Query(static::getEntity());
 
-		if (isset($parameters['select']))
-		{
-			$query->setSelect($parameters['select']);
-		}
-		else
+		if(!isset($parameters['select']))
 		{
 			$query->setSelect(array('*'));
 		}
 
-		if (isset($parameters['filter']))
+		foreach($parameters as $param => $value)
 		{
-			$query->setFilter($parameters['filter']);
-		}
-
-		if (isset($parameters['group']))
-		{
-			$query->setGroup($parameters['group']);
-		}
-
-		if (isset($parameters['order']))
-		{
-			$query->setOrder($parameters['order']);
-		}
-
-		if (isset($parameters['limit']))
-		{
-			$query->setLimit($parameters['limit']);
-		}
-
-		if (isset($parameters['offset']))
-		{
-			$query->setOffset($parameters['offset']);
-		}
-
-		if (isset($parameters['count_total']))
-		{
-			$query->countTotal($parameters['count_total']);
-		}
-
-		if (isset($parameters['options']))
-		{
-			$query->setOptions($parameters['options']);
-		}
-
-		if (isset($parameters['runtime']))
-		{
-			foreach ($parameters['runtime'] as $name => $fieldInfo)
+			switch($param)
 			{
-				$query->registerRuntimeField($name, $fieldInfo);
+				case 'select':
+					$query->setSelect($value);
+					break;
+				case 'filter':
+					$query->setFilter($value);
+					break;
+				case 'group':
+					$query->setGroup($value);
+					break;
+				case 'order';
+					$query->setOrder($value);
+					break;
+				case 'limit':
+					$query->setLimit($value);
+					break;
+				case 'offset':
+					$query->setOffset($value);
+					break;
+				case 'count_total':
+					$query->countTotal($value);
+					break;
+				case 'options':
+					$query->setOptions($value);
+					break;
+				case 'runtime':
+					foreach ($value as $name => $fieldInfo)
+					{
+						$query->registerRuntimeField($name, $fieldInfo);
+					}
+					break;
+				case 'data_doubling':
+					if($value)
+						$query->enableDataDoubling();
+					else
+						$query->disableDataDoubling();
+					break;
+				default:
+					throw new Main\ArgumentException("Unknown parameter: ".$param, $param);
 			}
 		}
 
-		if (isset($parameters['data_doubling']))
-		{
-			$parameters['data_doubling'] ? $query->enableDataDoubling() : $query->disableDataDoubling();
-		}
-
-
 		return $query->exec();
+	}
 
-		// return array?
+	public static function getCount()
+	{
+		$query = new Query(static::getEntity());
+		$query->setSelect(array(
+			'CNT' => array('expression' => array('COUNT(*)'), 'data_type'=>'integer')
+		));
+		$result = $query->exec()->fetch();
+
+		return $result['CNT'];
 	}
 
 	public static function query()
@@ -152,7 +193,6 @@ abstract class DataManager
 
 	protected static function normalizePrimary(&$primary, $data = array())
 	{
-
 		$entity = static::getEntity();
 		$entity_primary = $entity->getPrimaryArray();
 
@@ -163,7 +203,9 @@ abstract class DataManager
 			// extract primary from data array
 			foreach ($entity_primary as $key)
 			{
-				if ($entity->getField($key)->isAutocomplete())
+				/** @var ScalarField $field  */
+				$field = $entity->getField($key);
+				if ($field->isAutocomplete())
 				{
 					continue;
 				}
@@ -229,41 +271,30 @@ abstract class DataManager
 		}
 	}
 
-	protected static function checkFieldsBeforeAdd($data, $throwException = false)
+	/**
+	 * Checks data fields before saving to DB. Result stores in $result object
+	 *
+	 * @param Result $result
+	 * @param array $data
+	 * @param null $id
+	 * @throws \Exception
+	 */
+	public static function checkFields(Result $result, $primary, array $data)
 	{
-		// check required fields
+		//checks required fields
 		foreach (static::getEntity()->getFields() as $field)
 		{
 			if ($field instanceof ScalarField && $field->isRequired())
 			{
-				if (!isset($data[$field->getName()]))
+				$fieldName = $field->getName();
+				if (($id === null && (!isset($data[$fieldName]) || $data[$fieldName] == '')) || ($id !== null && isset($data[$fieldName]) && $data[$fieldName] == ''))
 				{
-					static::registerError('Required '.$field->getName(), $throwException, $field->getName());
+					$result->addError(new FieldError($field, /*Loc::*/getMessage("MAIN_ENTITY_FIELD_REQUIRED", array("#FIELD#"=>$field->getTitle())), FieldError::EMPTY_REQUIRED));
 				}
 			}
 		}
-	}
 
-	protected static function checkFieldsBeforeUpdate($data, $throwException = false)
-	{
-	}
-
-	public static function checkFields($data, $action = 'update', $throwException = false)
-	{
-		if ($action === 'add')
-		{
-			static::checkFieldsBeforeAdd($data, true);
-		}
-		elseif ($action === 'update')
-		{
-			static::checkFieldsBeforeUpdate($data, true);
-		}
-		else
-		{
-			throw new \Exception(sprintf('Unknown action "%s" for %s', $action, __METHOD__));
-		}
-
-		// check data - fieldname & type & strlen etc.
+		// checks data - fieldname & type & strlen etc.
 		foreach ($data as $k => $v)
 		{
 			if (static::getEntity()->hasField($k) && static::getEntity()->getField($k) instanceof ScalarField)
@@ -284,197 +315,164 @@ abstract class DataManager
 				));
 			}
 
-			if (!$field->validateValue($v))
-			{
-				// get message from entity
-				$errMsgCode = $field->getLangCode().'_INVALID';
-
-				if (!HasMessage($errMsgCode))
-				{
-					// get default message
-					IncludeModuleLangFile(__FILE__);
-					$errMsgCode = 'MAIN_ENTITY_FIELD_INVALID';
-				}
-
-				$errMsgText = GetMessage($errMsgCode, array(
-					"#FIELD_NAME#" => $field->getName(),
-					"#FIELD_TITLE#" => $field->getLangText()
-				));
-
-				static::registerError($errMsgText, $throwException , $field->getName());
-			}
+			$field->validateValue($v, $primary, $data, $result);
 		}
-
-		if (!$throwException)
-		{
-			return static::getErrors();
-		}
-
-		/*if (static::getEntity()->getUfId() !== null)
-		{
-			$scalar_row_id = is_array($primary) && count($primary) == 1 ? end($primary) : null;
-
-			if (!$GLOBALS["USER_FIELD_MANAGER"]->CheckFields(static::getEntity()->getUfId(), $scalar_row_id, $data))
-			{
-				global $APPLICATION;
-
-				if(is_object($APPLICATION) && $APPLICATION->GetException())
-				{
-					$e = $APPLICATION->GetException();
-					static::registerError($e->GetString(), $throwException);
-					$APPLICATION->ResetException();
-				}
-				else
-				{
-					static::registerError('Unknown error', $throwException);
-				}
-			}
-		}*/
 	}
 
+	/**
+	 * Adds row to entity table
+	 *
+	 * @param array $data
+	 * @return AddResult Contains ID of inserted row
+	 */
 	public static function add(array $data)
 	{
-		// event PRE
-
 		// check primary
 		$primary = null;
 		static::normalizePrimary($primary, $data);
 		static::validatePrimary($primary);
 
-		// check data
-		static::checkFields($data, 'add', true);
+		$entity = static::getEntity();
+		$result = new AddResult();
 
-		$tableName = static::getEntity()->getDBTableName();
-		$clobFields = static::isolateClobNames($data);
+		//event before adding
+		$event = new DataManagerEvent($entity, "OnBeforeAdd", array("fields"=>$data));
+		$event->send();
+		$event->getErrors($result);
+
+		// check data
+		static::checkFields($result, $primary, $data);
+
+		if(!$result->isSuccess())
+			return $result;
+
+		//event on adding
+		$event = new DataManagerEvent($entity, "OnAdd", array("fields"=>$data));
+		$event->send();
 
 		// save data
-		$ID = $GLOBALS['DB']->Add($tableName, $data, $clobFields);
+		$connection = Main\Application::getDbConnection();
 
-		// save Userfields
+		$tableName = $entity->getDBTableName();
+		$identity = $entity->getAutoIncrement();
 
-		// event POST
+		$id = $connection->add($tableName, $data, $identity);
 
-		return $ID;
+		$result->setId($id);
+
+		//TODO: save Userfields
+
+		//event after adding
+		$event = new DataManagerEvent($entity, "OnAfterAdd", array("id"=>$id, "fields"=>$data));
+		$event->send();
+
+		return $result;
 	}
 
-	public static function update(array $data, $primary)
+	/**
+	 * Updates row in entity table by primary key
+	 *
+	 * @param string|array $primary
+	 * @param array $data
+	 * @return UpdateResult
+	 */
+	public static function update($primary, array $data)
 	{
-		// event PRE
-
 		// check primary
 		static::normalizePrimary($primary, $data);
 		static::validatePrimary($primary);
 
+		$entity = static::getEntity();
+		$result = new UpdateResult();
+
+		//event before update
+		$event = new DataManagerEvent($entity, "OnBeforeUpdate", array("id"=>$primary, "fields"=>$data));
+		$event->send();
+		$event->getErrors($result);
+
 		// check data
-		static::checkFields($data, 'update', true);
+		static::checkFields($result, $primary, $data);
+
+		if(!$result->isSuccess())
+			return $result;
+
+		//event on update
+		$event = new DataManagerEvent($entity, "OnUpdate", array("id"=>$primary, "fields"=>$data));
+		$event->send();
 
 		// save data
-		$tableName = static::getEntity()->getDBTableName();
-		$clobFields = static::isolateClobNames($data);
+		$connection = Main\Application::getDbConnection();
+		$helper = $connection->getSqlHelper();
 
-		$strUpdate = $GLOBALS['DB']->PrepareUpdate($tableName, $data);
+		$tableName = $entity->getDBTableName();
 
-		$strPrimary = array();
+		$update = $helper->prepareUpdate($tableName, $data);
+
+		$id = array();
 		foreach ($primary as $k => $v)
 		{
-			$strPrimary[] = $k . " = '" . $GLOBALS['DB']->ForSQL($v) . "'";
+			$id[] = $k." = '".$helper->forSql($v)."'";
 		}
-		$strPrimary = join(' AND ', $strPrimary);
+		$where = implode(' AND ', $id);
 
-		$strSql = "UPDATE ".$tableName." SET ".$strUpdate." WHERE ".$strPrimary;
+		$sql = "UPDATE ".$tableName." SET ".$update[0]." WHERE ".$where;
+		$connection->queryExecute($sql, $update[1]);
 
-		$result = $GLOBALS['DB']->QueryBind(
-			$strSql, $clobFields, false, "File: ".__FILE__."<br>Line: ".__LINE__
-		);
+		//TODO: save Userfields
 
-		// save Userfields
-
-		// event POST
+		//event after update
+		$event = new DataManagerEvent($entity, "OnAfterUpdate", array("id"=>$primary, "fields"=>$data));
+		$event->send();
 
 		return $result;
 	}
 
+	/**
+	 * Deletes row in entity table by primary key
+	 *
+	 * @param string|array $primary
+	 * @return DeleteResult
+	 */
 	public static function delete($primary)
 	{
-		// event PRE
-
 		// check primary
 		static::normalizePrimary($primary);
 		static::validatePrimary($primary);
 
-		// delete
-		$tableName = static::getEntity()->getDBTableName();
+		$entity = static::getEntity();
+		$result = new DeleteResult();
 
-		$strPrimary = array();
+		//event before delete
+		$event = new DataManagerEvent($entity, "OnBeforeDelete", array("id"=>$primary));
+		$event->send();
+		if($event->getErrors($result))
+			return $result;
+
+		//event on delete
+		$event = new DataManagerEvent($entity, "OnDelete", array("id"=>$primary));
+		$event->send();
+
+		// delete
+		$connection = Main\Application::getDbConnection();
+		$helper = $connection->getSqlHelper();
+
+		$tableName = $entity->getDBTableName();
+
+		$id = array();
 		foreach ($primary as $k => $v)
 		{
-			$strPrimary[] = $k . " = '" . $GLOBALS['DB']->ForSQL($v) . "'";
+			$id[] = $k." = '".$helper->forSql($v)."'";
 		}
-		$strPrimary = join(' AND ', $strPrimary);
+		$where = implode(' AND ', $id);
 
-		$strSql = "DELETE FROM ".$tableName." WHERE ".$strPrimary;
-		$result = $GLOBALS['DB']->Query($strSql, false, "File: ".__FILE__."<br>Line: ".__LINE__);
+		$sql = "DELETE FROM ".$tableName." WHERE ".$where;
+		$connection->queryExecute($sql);
+
+		//event after delete
+		$event = new DataManagerEvent($entity, "OnAfterDelete", array("id"=>$primary));
+		$event->send();
 
 		// event POST
 		return $result;
-	}
-
-	protected static function isolateClobNames($data)
-	{
-		$names = array();
-
-		foreach (array_keys($data) as $k)
-		{
-			if (static::getEntity()->getField($k) instanceof TextField)
-			{
-				$names[] = $k;
-			}
-		}
-
-		return $names;
-	}
-
-	protected static function registerError($error, $throwException = false, $fieldName = null)
-	{
-		if ($throwException)
-		{
-			throw new \Exception($error);
-		}
-		else
-		{
-			if ($fieldName !== null)
-			{
-				self::$errors[get_called_class()][$fieldName][] = $error;
-			}
-			else
-			{
-				self::$errors[get_called_class()]['common'][] = $error;
-			}
-
-			self::$errors[get_called_class()]['all'][] = $error;
-		}
-	}
-
-	public static function getErrors()
-	{
-		if (isset(self::$errors[get_called_class()]))
-		{
-			$errors = self::$errors[get_called_class()];
-			static::cleanErrors();
-
-			return $errors;
-		}
-		else
-		{
-			return array();
-		}
-	}
-
-	public static function cleanErrors()
-	{
-		if (isset(self::$errors[get_called_class()]))
-		{
-			self::$errors[get_called_class()] = array();
-		}
 	}
 }

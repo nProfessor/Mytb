@@ -1,10 +1,29 @@
-<?
+<?php
+/**
+ * Bitrix Framework
+ * @package bitrix
+ * @subpackage main
+ * @copyright 2001-2013 Bitrix
+
+ * @global CMain $APPLICATION
+ * @global CUser $USER
+ * @global CDatabase $DB
+ */
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/bx_root.php");
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/tools.php");
 
 function repair_db()
 {
-	include($_SERVER["DOCUMENT_ROOT"].BX_PERSONAL_ROOT."/php_interface/dbconn.php");
+	/**
+	 * Defined in dbconn.php
+	 *
+	 * @param $DBType
+	 * @param $DBHost
+	 * @param $DBName
+	 * @param $DBLogin
+	 * @param $DBPassword
+	 */
+	@include($_SERVER["DOCUMENT_ROOT"].BX_PERSONAL_ROOT."/php_interface/dbconn.php");
 	if($DBType == "mysql")
 	{
 		function microtime_float()
@@ -22,7 +41,7 @@ function repair_db()
 		if (!$link_rdb)
 			die('<span style="color:red;">'.GetMessage("RDB_CONNECT_ERROR").': '. mysql_error().'</span>');
 
-		$db_selected = mysql_select_db($DBName, $link_rdb);
+		mysql_select_db($DBName, $link_rdb);
 
 		$result = mysql_query('show table status');
 		?>
@@ -45,31 +64,31 @@ function repair_db()
 
 			if(
 				(empty($arResult["Type"]) && strlen($arResult["Comment"]) > 0 && empty($arResult["Engine"]))
-				|| strtoupper($arResult["Type"]) == "MYISAM"
-				|| strtoupper($arResult["Engine"]) == "MYISAM"
-				|| strtoupper($arResult["Type"]) == "INNODB"
-				|| strtoupper($arResult["Engine"]) == "INNODB"
+				|| (isset($arResult["Type"]) && (strtoupper($arResult["Type"]) == "MYISAM" || strtoupper($arResult["Type"]) == "INNODB"))
+				|| (isset($arResult["Engine"]) && (strtoupper($arResult["Engine"]) == "MYISAM" || strtoupper($arResult["Engine"]) == "INNODB"))
 			)
 			{
 				echo "<td>";
 				$query = 'CHECK TABLE `'.$arResult["Name"].'`';
-				$status = mysql_query($query);
-				$i=0;
 				$toRepair = "";
-				while($arStatus = mysql_fetch_array($status))
+				if(($status = mysql_query($query)))
 				{
-					if($i>0) echo "<br>";
-					$i++;
-					echo "[".$arStatus["Msg_type"]."]&nbsp;";
-					if($arStatus["Msg_type"]=="status" || $arStatus["Msg_type"]=="info")
-						echo "<span style='color:green;'>";
-					else
-						echo "<span style='color:red;'>";
-					echo htmlspecialcharsbx($arStatus["Msg_text"])."</span>";
-					flush();
+					$i=0;
+					while($arStatus = mysql_fetch_array($status))
+					{
+						if($i>0) echo "<br>";
+						$i++;
+						echo "[".$arStatus["Msg_type"]."]&nbsp;";
+						if($arStatus["Msg_type"]=="status" || $arStatus["Msg_type"]=="info")
+							echo "<span style='color:green;'>";
+						else
+							echo "<span style='color:red;'>";
+						echo htmlspecialcharsbx($arStatus["Msg_text"])."</span>";
+						flush();
 
-					if($arStatus["Msg_type"]=="error" || $arStatus["Msg_type"]=="warning")
-						$toRepair = $arResult["Name"];
+						if($arStatus["Msg_type"]=="error" || $arStatus["Msg_type"]=="warning")
+							$toRepair = $arResult["Name"];
+					}
 				}
 				echo "</td>";
 				if(!empty($toRepair))
@@ -141,8 +160,9 @@ function show_tip()
 	<form name="check" action="">
 	<input type="submit" value="<?=GetMessage("RDB_CHECK_TABLES")?>" class="adm-btn-save">
 	<input type="hidden" value="Y" name="check_tables">
-	<?echo bitrix_sessid_post();?>
 	<?
+	if(!isset($_REQUEST["login"]) && !isset($_REQUEST["password"]))
+		echo bitrix_sessid_post();
 	if(isset($_REQUEST["login"]))
 		echo '<input type="hidden" value="'.htmlspecialcharsbx($_REQUEST["login"]).'" name="login">';
 	if(isset($_REQUEST["password"]))
@@ -154,6 +174,13 @@ function show_tip()
 
 if(isset($_REQUEST["login"]) && isset($_REQUEST["password"]) && $_REQUEST["login"] <> '' && $_REQUEST["password"] <> '')
 {
+	/**
+	 * Defined in dbconn.php
+	 *
+	 * @param $DBType
+	 * @param $DBLogin
+	 * @param $DBPassword
+	 */
 	include($_SERVER["DOCUMENT_ROOT"].BX_PERSONAL_ROOT."/php_interface/dbconn.php");
 
 	if($_REQUEST["login"] == $DBLogin && $_REQUEST["password"] == $DBPassword)
@@ -172,7 +199,7 @@ if(isset($_REQUEST["login"]) && isset($_REQUEST["password"]) && $_REQUEST["login
 		<?
 		if($DBType == "mysql")
 		{
-			if($_REQUEST["check_tables"]=="Y" && check_bitrix_sessid())
+			if(isset($_REQUEST["check_tables"]) && $_REQUEST["check_tables"]=="Y")
 			{
 				repair_db();
 			}
@@ -226,7 +253,7 @@ else
 			if($table_name=="start|")
 			{
 				$arTable = array_shift($arTables);
-				echo CAdminMessage::ShowMessage(Array("MESSAGE"=>htmlspecialcharsbx($arTable["Name"]), "TYPE"=>"OK", "HTML"=>true, "DETAILS"=>GetMessage("RDB_OPTIMIZE_PROGRESS", array("#done#" => 1, "#todo#" => $tables_count))));
+				CAdminMessage::ShowMessage(array("MESSAGE"=>htmlspecialcharsbx($arTable["Name"]), "TYPE"=>"OK", "HTML"=>true, "DETAILS"=>GetMessage("RDB_OPTIMIZE_PROGRESS", array("#done#" => 1, "#todo#" => $tables_count))));
 				?>
 				<script>setTimeout("Optimize('<?echo CUtil::JSEscape($arTable["Name"])?>')", 100);</script>
 				<?
@@ -284,37 +311,37 @@ else
 
 					if(!$bCheckOK)
 					{
-						echo CAdminMessage::ShowMessage(Array("MESSAGE"=>GetMessage("RDB_OPTIMIZE_ERROR"), "TYPE"=>"ERROR", "HTML"=>true, "DETAILS"=>GetMessage("RDB_OPTIMIZE_CHECK_FIRST", array("#table_name#" => htmlspecialcharsbx($arTable["Name"])))));
+						CAdminMessage::ShowMessage(array("MESSAGE"=>GetMessage("RDB_OPTIMIZE_ERROR"), "TYPE"=>"ERROR", "HTML"=>true, "DETAILS"=>GetMessage("RDB_OPTIMIZE_CHECK_FIRST", array("#table_name#" => htmlspecialcharsbx($arTable["Name"])))));
 					}
 					elseif(count($arTables) > 0)
 					{
 						if($check_time < 5)
 						{
 							$arTable = array_shift($arTables);
-							echo CAdminMessage::ShowMessage(Array("MESSAGE"=>htmlspecialcharsbx($arTable["Name"]), "TYPE"=>"OK", "HTML"=>true, "DETAILS"=>GetMessage("RDB_OPTIMIZE_PROGRESS", array("#done#" => $tables_count-count($arTables), "#todo#" => $tables_count))));
+							CAdminMessage::ShowMessage(array("MESSAGE"=>htmlspecialcharsbx($arTable["Name"]), "TYPE"=>"OK", "HTML"=>true, "DETAILS"=>GetMessage("RDB_OPTIMIZE_PROGRESS", array("#done#" => $tables_count-count($arTables), "#todo#" => $tables_count))));
 							?><script>setTimeout("Optimize('<?echo CUtil::JSEscape($arTable["Name"])?>')", 100);</script><?
 						}
 						elseif($op == "check") //otherwise step optimize
 						{
-							echo CAdminMessage::ShowMessage(Array("MESSAGE"=>htmlspecialcharsbx($arTable["Name"])." - ".GetMessage("RDB_OPTIMIZE_OPTIMIZE"), "TYPE"=>"OK", "HTML"=>true, "DETAILS"=>GetMessage("RDB_OPTIMIZE_PROGRESS", array("#done#" => $tables_count-count($arTables), "#todo#" => $tables_count))));
+							CAdminMessage::ShowMessage(array("MESSAGE"=>htmlspecialcharsbx($arTable["Name"])." - ".GetMessage("RDB_OPTIMIZE_OPTIMIZE"), "TYPE"=>"OK", "HTML"=>true, "DETAILS"=>GetMessage("RDB_OPTIMIZE_PROGRESS", array("#done#" => $tables_count-count($arTables), "#todo#" => $tables_count))));
 							?><script>setTimeout("Optimize('o|<?echo CUtil::JSEscape($arTable["Name"])?>')", 100);</script><?
 						}
 						elseif($op == "optimize") //and step analyze
 						{
-							echo CAdminMessage::ShowMessage(Array("MESSAGE"=>htmlspecialcharsbx($arTable["Name"])." - ".GetMessage("RDB_OPTIMIZE_ANALYZE"), "TYPE"=>"OK", "HTML"=>true, "DETAILS"=>GetMessage("RDB_OPTIMIZE_PROGRESS", array("#done#" => $tables_count-count($arTables), "#todo#" => $tables_count))));
+							CAdminMessage::ShowMessage(array("MESSAGE"=>htmlspecialcharsbx($arTable["Name"])." - ".GetMessage("RDB_OPTIMIZE_ANALYZE"), "TYPE"=>"OK", "HTML"=>true, "DETAILS"=>GetMessage("RDB_OPTIMIZE_PROGRESS", array("#done#" => $tables_count-count($arTables), "#todo#" => $tables_count))));
 							?><script>setTimeout("Optimize('a|<?echo CUtil::JSEscape($arTable["Name"])?>')", 100);</script><?
 						}
 						else
 						{
 							$arTable = array_shift($arTables);
-							echo CAdminMessage::ShowMessage(Array("MESSAGE"=>htmlspecialcharsbx($arTable["Name"]), "TYPE"=>"OK", "HTML"=>true, "DETAILS"=>GetMessage("RDB_OPTIMIZE_PROGRESS", array("#done#" => $tables_count-count($arTables), "#todo#" => $tables_count))));
+							CAdminMessage::ShowMessage(array("MESSAGE"=>htmlspecialcharsbx($arTable["Name"]), "TYPE"=>"OK", "HTML"=>true, "DETAILS"=>GetMessage("RDB_OPTIMIZE_PROGRESS", array("#done#" => $tables_count-count($arTables), "#todo#" => $tables_count))));
 							?><script>setTimeout("Optimize('<?echo CUtil::JSEscape($arTable["Name"])?>')", 100);</script><?
 						}
 					}
 					else
 					{
 						COption::SetOptionInt("main", "LAST_DB_OPTIMIZATION_TIME", time());
-						echo CAdminMessage::ShowMessage(Array("MESSAGE"=>GetMessage("RDB_OPTIMIZE_DONE"), "TYPE"=>"OK", "HTML"=>true, "DETAILS"=>GetMessage("RDB_OPTIMIZE_ALL_DONE")));
+						CAdminMessage::ShowMessage(array("MESSAGE"=>GetMessage("RDB_OPTIMIZE_DONE"), "TYPE"=>"OK", "HTML"=>true, "DETAILS"=>GetMessage("RDB_OPTIMIZE_ALL_DONE")));
 						?>
 						<script>
 						document.getElementById('opt_start').disabled = false;
@@ -326,7 +353,7 @@ else
 				}
 				else
 				{
-					echo CAdminMessage::ShowMessage(Array("MESSAGE"=>GetMessage("RDB_OPTIMIZE_ERROR"), "TYPE"=>"ERROR", "HTML"=>true, "DETAILS"=>GetMessage("RDB_OPTIMIZE_TABLE_NOT_FOUND")));
+					CAdminMessage::ShowMessage(array("MESSAGE"=>GetMessage("RDB_OPTIMIZE_ERROR"), "TYPE"=>"ERROR", "HTML"=>true, "DETAILS"=>GetMessage("RDB_OPTIMIZE_TABLE_NOT_FOUND")));
 				}
 			}
 		}
@@ -336,7 +363,7 @@ else
 	{
 		$APPLICATION->SetTitle(GetMessage("RDB_REPAIR_DATABASE"));
 		require_once(dirname(__FILE__)."/../include/prolog_admin_after.php");
-		if($DBType == "mysql")
+		if(strtolower($DB->type) == "mysql")
 		{
 			if($_REQUEST["check_tables"]=="Y" && check_bitrix_sessid())
 			{
@@ -347,7 +374,7 @@ else
 				?>
 				<?echo BeginNote(), GetMessage("RDB_OPTIMIZE_TIP"), EndNote();?>
 				<div id="optimize_result">
-				<?echo CAdminMessage::ShowMessage(Array("MESSAGE"=>GetMessage("RDB_OPTIMIZE_WARNING_TITLE"), "TYPE"=>"ERROR", "HTML"=>true, "DETAILS"=>GetMessage("RDB_OPTIMIZE_WARNING_DETAILS")));?>
+				<?CAdminMessage::ShowMessage(array("MESSAGE"=>GetMessage("RDB_OPTIMIZE_WARNING_TITLE"), "TYPE"=>"ERROR", "HTML"=>true, "DETAILS"=>GetMessage("RDB_OPTIMIZE_WARNING_DETAILS")));?>
 				</div>
 				<input type="button" name="opt_start" id="opt_start" value="<?echo GetMessage("RDB_OPTIMIZE_BTN_START")?>" OnClick="Optimize('start|');">
 				<input type="button" name="opt_pause" id="opt_pause" value="<?echo GetMessage("RDB_OPTIMIZE_BTN_PAUSE")?>" OnClick="Pause(true);" disabled>
@@ -382,7 +409,7 @@ else
 						{
 							CloseWaitWindow();
 							document.getElementById('optimize_result').innerHTML = result;
-						}
+						};
 						ShowWaitWindow();
 						if(table_name == 'start|')
 						{
@@ -401,13 +428,12 @@ else
 			{
 				?>
 				<p><?=GetMessage("RDB_TIP_1")?></p>
-				<?echo CAdminMessage::ShowMessage(Array("MESSAGE"=>GetMessage("RDB_TIP_2"), "TYPE"=>"ERROR", "HTML"=>true, "DETAILS"=>GetMessage("RDB_TIP_3")));
+				<?CAdminMessage::ShowMessage(array("MESSAGE"=>GetMessage("RDB_TIP_2"), "TYPE"=>"ERROR", "HTML"=>true, "DETAILS"=>GetMessage("RDB_TIP_3")));
 				show_tip();
 			}
 		}
 		else
-			echo CAdminMessage::ShowMessage(Array("MESSAGE"=>GetMessage("RDB_DATABASE_ERROR"), "TYPE"=>"ERROR"));
+			CAdminMessage::ShowMessage(array("MESSAGE"=>GetMessage("RDB_DATABASE_ERROR"), "TYPE"=>"ERROR"));
 		require_once(dirname(__FILE__)."/../include/epilog_admin.php");
 	}
 }
-?>

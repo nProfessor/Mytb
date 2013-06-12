@@ -11,4 +11,5 @@ $MESS["TASK_NAME_IBLOCK_FULL_EDIT"] = "Изменение";
 $MESS["TASK_DESC_IBLOCK_FULL_EDIT"] = "Редактирование элементов и разделов, но без возможности настроить права доступа";
 $MESS["TASK_NAME_IBLOCK_FULL"] = "Полный доступ";
 $MESS["TASK_DESC_IBLOCK_FULL"] = "Редактирование инфоблоков, элементов и разделов без ограничений";
+$MESS["TASK_BINDING_IBLOCK"] = "Инфоблок";
 ?>

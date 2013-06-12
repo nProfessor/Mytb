@@ -330,7 +330,7 @@ if ($REQUEST_METHOD == "POST" && $STEP > 1 && check_bitrix_sessid())
 					while($arSection = $rsSections->Fetch())
 					{
 						$arPath = array();
-						$rsPath = GetIBlockSectionPath($IBLOCK_ID, $arSection["ID"]);
+						$rsPath = CIBlockSection::GetNavChain($IBLOCK_ID, $arSection["ID"], array("NAME"));
 						while($arPathSection = $rsPath->Fetch())
 						{
 							$arPath[] = $arPathSection["NAME"];
@@ -446,7 +446,7 @@ if (!$bPublicMode)
 	<tr>
 		<td width="40%"><?echo GetMessage("IBLOCK_ADM_EXP_CHOOSE_IBLOCK") ?></td>
 		<td width="60%">
-			<?echo GetIBlockDropDownList($IBLOCK_ID, 'IBLOCK_TYPE_ID', 'IBLOCK_ID');?>
+			<?echo GetIBlockDropDownList($IBLOCK_ID, 'IBLOCK_TYPE_ID', 'IBLOCK_ID', false, 'class="adm-detail-iblock-types"', 'class="adm-detail-iblock-list"');?>
 		</td>
 	</tr>
 <?
@@ -526,7 +526,6 @@ if ($STEP == 2)
 				$intCountFields = count($arAvailFields);
 				$intCountChecked = 0;
 				$arCheckID = array();
-				//for ($i = 0; $i < count($arAvailFields); $i++)
 				for ($i = 0; $i < $intCountFields; $i++)
 				{
 					if ($field_needed[$i]=="Y" || (!isset($field_needed) && strlen($strCSVError)<=0))

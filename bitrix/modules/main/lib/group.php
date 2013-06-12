@@ -1,22 +1,33 @@
 <?php
-
+/**
+ * Bitrix Framework
+ * @package bitrix
+ * @subpackage main
+ * @copyright 2001-2012 Bitrix
+ */
 namespace Bitrix\Main;
 
 use Bitrix\Main\Entity;
 
-class GroupEntity extends Entity\Base
+class GroupTable extends Entity\DataManager
 {
-	protected function __construct() {}
-
-	public function initialize()
+	public static function getFilePath()
 	{
-		$this->className = __CLASS__;
-		$this->filePath = __FILE__;
+		return __FILE__;
+	}
 
-		$this->fieldsMap = array(
+	public static function getTableName()
+	{
+		return 'b_group';
+	}
+
+	public static function getMap()
+	{
+		return array(
 			'ID' => array(
 				'data_type' => 'integer',
-				'primary' => true
+				'primary' => true,
+				'autocomplete' => true,
 			),
 			'TIMESTAMP_X' => array(
 				'data_type' => 'datetime'
@@ -38,6 +49,4 @@ class GroupEntity extends Entity\Base
 			)
 		);
 	}
-
-
 }

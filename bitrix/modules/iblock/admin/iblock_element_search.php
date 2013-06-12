@@ -61,7 +61,14 @@ $dbrFProps = CIBlockProperty::GetList(
 
 $arProps = Array();
 while($arFProps = $dbrFProps->GetNext())
+{
+	if(strlen($arFProps["USER_TYPE"])>0)
+		$arFProps["PROPERTY_USER_TYPE"] = CIBlockProperty::GetUserType($arFProps["USER_TYPE"]);
+	else
+		$arFProps["PROPERTY_USER_TYPE"] = array();
+
 	$arProps[] = $arFProps;
+}
 
 $arFilterFields = Array(
 	"filter_iblock_id",
@@ -174,20 +181,20 @@ $lAdmin->AddHeaders($arHeader);
 $arSelectedFields = $lAdmin->GetVisibleHeaderColumns();
 
 $arSelectedProps = Array();
-for($i=0; $i<count($arProps); $i++)
+foreach($arProps as $prop)
 {
-	if(in_array("PROPERTY_".$arProps[$i]['ID'], $arSelectedFields))
+	if(in_array("PROPERTY_".$prop['ID'], $arSelectedFields))
 	{
-		$arSelectedProps[] = $arProps[$i];
-		$arSelect[$arProps[$i]['ID']] = Array();
-		$props = CIBlockProperty::GetPropertyEnum($arProps[$i]['ID']);
+		$arSelectedProps[] = $prop;
+		$arSelect[$prop['ID']] = Array();
+		$props = CIBlockProperty::GetPropertyEnum($prop['ID']);
 		while($res = $props->Fetch())
-			$arSelect[$arProps[$i]['ID']][$res["ID"]] = $res["VALUE"];
+			$arSelect[$prop['ID']][$res["ID"]] = $res["VALUE"];
 	}
 
-	if($arProps[$i]["MULTIPLE"]=='Y')
+	if($prop["MULTIPLE"]=='Y')
 	{
-		if($key = array_search("PROPERTY_".$arProps[$i]['ID'], $arSelectedFields))
+		if($key = array_search("PROPERTY_".$prop['ID'], $arSelectedFields))
 			unset($arSelectedFields[$key]);
 	}
 }
@@ -404,7 +411,7 @@ function _ShowGroupPropertyField($name, $property_fields, $values)
 		}
 		$res .= '>'.str_repeat(" . ", $ar["DEPTH_LEVEL"]).$ar["NAME"].'</option>';
 	}
-	echo '<select name="'.$name.'[]" size="1">';
+	echo '<select name="'.$name.'[]">';
 	echo '<option value=""'.(!$bWas?' selected':'').'>'.GetMessage("IBLOCK_ELSEARCH_NOT_SET").'</option>';
 	echo $res;
 	echo '</select>';
@@ -426,9 +433,9 @@ $arFindFields["act"] = GetMessage("IBLOCK_ELSEARCH_F_ACTIVE");
 $arFindFields["tit"] = GetMessage("IBLOCK_ELSEARCH_F_TITLE");
 $arFindFields["dsc"] = GetMessage("IBLOCK_ELSEARCH_F_DSC");
 
-for($i=0; $i<count($arProps); $i++)
-	if($arProps[$i]["FILTRABLE"]=="Y" && $arProps[$i]["PROPERTY_TYPE"]!="F")
-		$arFindFields["p".$arProps[$i]["ID"]] = $arProps[$i]["NAME"];
+foreach($arProps as $prop)
+	if($prop["FILTRABLE"]=="Y" && $prop["PROPERTY_TYPE"]!="F")
+		$arFindFields["p".$prop["ID"]] = $prop["NAME"];
 
 $oFilter = new CAdminFilter($sTableID."_filter", $arFindFields);
 
@@ -517,11 +524,9 @@ function SelAll()
 	<tr>
 		<td><?echo GetMessage("IBLOCK_ELSEARCH_FROMTO_ID")?></td>
 		<td>
-			<nobr>
 			<input type="text" name="filter_id_start" size="10" value="<?echo htmlspecialcharsex($filter_id_start)?>">
 			...
 			<input type="text" name="filter_id_end" size="10" value="<?echo htmlspecialcharsex($filter_id_end)?>">
-			</nobr>
 		</td>
 	</tr>
 
@@ -607,36 +612,40 @@ function SelAll()
 		</td>
 	</tr>
 	<?
-	for($i=0; $i<count($arProps); $i++):
-		if($arProps[$i]["FILTRABLE"]!="Y" || $arProps[$i]["PROPERTY_TYPE"]=="F")
+	foreach($arProps as $prop):
+		if($prop["FILTRABLE"]!="Y" || $prop["PROPERTY_TYPE"]=="F")
 			continue;
-		$arFProps = $arProps[$i];
 	?>
 	<tr>
-		<td><?=$arFProps["NAME"]?>:</td>
+		<td><?=$prop["NAME"]?>:</td>
 		<td>
-			<?if($arFProps["PROPERTY_TYPE"]=='L'):?>
-				<select name="find_el_property_<?=$arFProps["ID"]?>">
+			<?if(array_key_exists("GetAdminFilterHTML", $prop["PROPERTY_USER_TYPE"])):
+			echo call_user_func_array($prop["PROPERTY_USER_TYPE"]["GetAdminFilterHTML"], array(
+				$prop,
+				array("VALUE" => "find_el_property_".$prop["ID"]),
+			));
+			elseif($prop["PROPERTY_TYPE"]=='L'):?>
+				<select name="find_el_property_<?=$prop["ID"]?>">
 					<option value=""><?echo GetMessage("IBLOCK_VALUE_ANY")?></option><?
-					$dbrPEnum = CIBlockPropertyEnum::GetList(Array("SORT"=>"ASC", "NAME"=>"ASC"), Array("PROPERTY_ID"=>$arFProps["ID"]));
+					$dbrPEnum = CIBlockPropertyEnum::GetList(Array("SORT"=>"ASC", "NAME"=>"ASC"), Array("PROPERTY_ID"=>$prop["ID"]));
 					while($arPEnum = $dbrPEnum->GetNext()):
 					?>
-						<option value="<?=$arPEnum["ID"]?>"<?if(${"find_el_property_".$arFProps["ID"]} == $arPEnum["ID"])echo " selected"?>><?=$arPEnum["VALUE"]?></option>
+						<option value="<?=$arPEnum["ID"]?>"<?if(${"find_el_property_".$prop["ID"]} == $arPEnum["ID"])echo " selected"?>><?=$arPEnum["VALUE"]?></option>
 					<?
 					endwhile;
 			?></select>
 			<?
-			elseif($arFProps["PROPERTY_TYPE"]=='G'):
-				_ShowGroupPropertyField('find_el_property_'.$arFProps["ID"], $arFProps, ${'find_el_property_'.$arFProps["ID"]});
+			elseif($prop["PROPERTY_TYPE"]=='G'):
+				_ShowGroupPropertyField('find_el_property_'.$prop["ID"], $prop, ${'find_el_property_'.$prop["ID"]});
 			else:
 				?>
-				<input type="text" name="find_el_property_<?=$arFProps["ID"]?>" value="<?echo htmlspecialcharsex(${"find_el_property_".$arFProps["ID"]})?>" size="30">&nbsp;<?=ShowFilterLogicHelp()?>
+				<input type="text" name="find_el_property_<?=$prop["ID"]?>" value="<?echo htmlspecialcharsex(${"find_el_property_".$prop["ID"]})?>" size="30">&nbsp;<?=ShowFilterLogicHelp()?>
 				<?
 			endif;
 			?>
 		</td>
 	</tr>
-	<?endfor;?>
+	<?endforeach;?>
 
 <?
 $oFilter->Buttons(array(

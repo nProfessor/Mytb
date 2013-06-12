@@ -235,32 +235,35 @@ else
 	}
 
 	//recent urls
-	$aRecent = CUserOptions::GetOption("start_menu", "recent", array());
-	if(!empty($aRecent))
+	if (!$bSkipRecent)
 	{
-		$aPopup[] = array("SEPARATOR"=>true);
-
-		$nLinks = 5;
-		if($aUserOpt["start_menu_links"] <> "")
-			$nLinks = intval($aUserOpt["start_menu_links"]);
-
-		$i = 0;
-		foreach($aRecent as $recent)
+		$aRecent = CUserOptions::GetOption("start_menu", "recent", array());
+		if(!empty($aRecent))
 		{
-			$i++;
-			if($i > $nLinks)
-				break;
+			$aPopup[] = array("SEPARATOR"=>true);
 
-			$aItem = array(
-				"TEXT"=>htmlspecialcharsbx($recent["text"]),
-				"TITLE"=>($aUserOpt['start_menu_title'] <> 'N'? htmlspecialcharsbx($recent["title"]):''),
-				"GLOBAL_ICON"=>htmlspecialcharsbx($recent["icon"]),
-				"LINK"=>$recent["url"],
-			);
+			$nLinks = 5;
+			if($aUserOpt["start_menu_links"] <> "")
+				$nLinks = intval($aUserOpt["start_menu_links"]);
 
-			$aItem["ONCLICK"] = 'BX.admin.startMenuRecent('.CUtil::PhpToJsObject($aItem).')';
+			$i = 0;
+			foreach($aRecent as $recent)
+			{
+				$i++;
+				if($i > $nLinks)
+					break;
 
-			$aPopup[] = $aItem;
+				$aItem = array(
+					"TEXT"=>htmlspecialcharsbx($recent["text"]),
+					"TITLE"=>($aUserOpt['start_menu_title'] <> 'N'? htmlspecialcharsbx($recent["title"]):''),
+					"GLOBAL_ICON"=>htmlspecialcharsbx($recent["icon"]),
+					"LINK"=>$recent["url"],
+				);
+
+				$aItem["ONCLICK"] = 'BX.admin.startMenuRecent('.CUtil::PhpToJsObject($aItem).')';
+
+				$aPopup[] = $aItem;
+			}
 		}
 	}
 

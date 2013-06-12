@@ -192,6 +192,8 @@ BX.CTooltip = function(user_id, anchor, loader, rootClassName, bForceUseLoader)
 		_this.ROOT_DIV.style.top = parseInt(top) + "px";
 		_this.ROOT_DIV.style.zIndex = 1200;
 
+		BX.bind(BX(_this.ROOT_DIV), "click", BX.eventCancelBubble);
+
 		if (
 			this.rootClassName != 'undefined'
 			&& this.rootClassName != null

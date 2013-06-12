@@ -72,6 +72,7 @@
 		"PRODUCT_ID_VARIABLE" => $arParams["PRODUCT_ID_VARIABLE"],
 		"SECTION_ID_VARIABLE" => $arParams["SECTION_ID_VARIABLE"],
 		"PRODUCT_QUANTITY_VARIABLE" => $arParams["PRODUCT_QUANTITY_VARIABLE"],
+		"PRODUCT_PROPS_VARIABLE" => $arParams["PRODUCT_PROPS_VARIABLE"],
 		"FILTER_NAME" => $arParams["FILTER_NAME"],
 		"CACHE_TYPE" => $arParams["CACHE_TYPE"],
 		"CACHE_TIME" => $arParams["CACHE_TIME"],
@@ -88,6 +89,8 @@
 		"PRICE_VAT_INCLUDE" => $arParams["PRICE_VAT_INCLUDE"],
 		"PRICE_VAT_SHOW_VALUE" => $arParams["PRICE_VAT_SHOW_VALUE"],
 		"USE_PRODUCT_QUANTITY" => $arParams['USE_PRODUCT_QUANTITY'],
+		"QUANTITY_FLOAT" => $arParams["QUANTITY_FLOAT"],
+		"PRODUCT_PROPERTIES" => $arParams["PRODUCT_PROPERTIES"],
 		"DISPLAY_TOP_PAGER" => $arParams["DISPLAY_TOP_PAGER"],
 		"DISPLAY_BOTTOM_PAGER" => $arParams["DISPLAY_BOTTOM_PAGER"],
 		"PAGER_TITLE" => $arParams["PAGER_TITLE"],
@@ -101,11 +104,11 @@
 		"SECTION_CODE" => $arResult["VARIABLES"]["SECTION_CODE"],
 		"SECTION_URL" => $arResult["FOLDER"].$arResult["URL_TEMPLATES"]["section"],
 		"DETAIL_URL" => $arResult["FOLDER"].$arResult["URL_TEMPLATES"]["element"],
+		'CONVERT_CURRENCY' => $arParams['CONVERT_CURRENCY'],
+		'CURRENCY_ID' => $arParams['CURRENCY_ID'],
 		//Template parameters
 		"LINK_IBLOCK_ID" => $arParams["LINK_IBLOCK_ID"],
 		"LINK_PROPERTY_SID" => $arParams["LINK_PROPERTY_SID"],
-		'CONVERT_CURRENCY' => $arParams['CONVERT_CURRENCY'],
-		'CURRENCY_ID' => $arParams['CURRENCY_ID'],
 	),
 	$component
 );

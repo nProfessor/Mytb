@@ -1,5 +1,12 @@
 <?
 if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true) die();
+/** @var CBitrixComponent $this */
+/** @global CUser $USER */
+global $USER;
+/** @global CMain $APPLICATION */
+global $APPLICATION;
+/** @global CDatabase $DB */
+global $DB;
 
 CPageOption::SetOptionString("main", "nav_page_in_session", "N");
 
@@ -104,7 +111,7 @@ if(!is_array($arParams["GROUP_PERMISSIONS"]))
 $bUSER_HAVE_ACCESS = !$arParams["USE_PERMISSIONS"];
 if($arParams["USE_PERMISSIONS"] && isset($GLOBALS["USER"]) && is_object($GLOBALS["USER"]))
 {
-	$arUserGroupArray = $GLOBALS["USER"]->GetUserGroupArray();
+	$arUserGroupArray = $USER->GetUserGroupArray();
 	foreach($arParams["GROUP_PERMISSIONS"] as $PERM)
 	{
 		if(in_array($PERM, $arUserGroupArray))
@@ -185,7 +192,7 @@ if($this->StartResultCache(false, array(($arParams["CACHE_GROUPS"]==="N"? false:
 				$arFilter["INCLUDE_SUBSECTIONS"] = "Y";
 
 			$arResult["SECTION"]= array("PATH" => array());
-			$rsPath = GetIBlockSectionPath($arResult["ID"], $arParams["PARENT_SECTION"]);
+			$rsPath = CIBlockSection::GetNavChain($arResult["ID"], $arParams["PARENT_SECTION"]);
 			$rsPath->SetUrlTemplates("", $arParams["SECTION_URL"], $arParams["IBLOCK_URL"]);
 			while($arPath=$rsPath->GetNext())
 			{

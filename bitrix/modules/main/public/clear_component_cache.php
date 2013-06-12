@@ -1,6 +1,10 @@
 <?
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_js.php");
+/** @global CUser $USER */
+global $USER;
+/** @global CCacheManager $CACHE_MANAGER */
+global $CACHE_MANAGER;
 
 if(!$USER->CanDoOperation('cache_control') || !check_bitrix_sessid())
 	die(GetMessage("ACCESS_DENIED"));
@@ -33,6 +37,8 @@ foreach($aComponents as $component_name)
 				}
 			}
 		}
+		if(defined("BX_COMP_MANAGED_CACHE"))
+			$CACHE_MANAGER->ClearByTag($component_name);
 	}
 }
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin_js.php");

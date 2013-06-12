@@ -87,9 +87,9 @@ class WelcomeStep extends CWizardStep
 			include($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/.config.php");
 
 		if(isset($bxProductConfig["product_wizard"]["welcome_text"]))
-			$this->content .= $bxProductConfig["product_wizard"]["welcome_text"];
+			$this->content .= '<div class="inst-cont-text-block"><div class="inst-cont-text">'.$bxProductConfig["product_wizard"]["welcome_text"].'</div></div>';
 		else
-			$this->content .= (isset($arWizardConfig["welcomeText"]) ? $arWizardConfig["welcomeText"] : InstallGetMessage("FIRST_PAGE"));
+			$this->content .= '<div class="inst-cont-text-block"><div class="inst-cont-text">'.(isset($arWizardConfig["welcomeText"]) ? $arWizardConfig["welcomeText"] : InstallGetMessage("FIRST_PAGE")).'</div></div>';
 	}
 
 	function unformat($str)
@@ -133,7 +133,7 @@ class AgreementStep extends CWizardStep
 
 	function ShowStep()
 	{
-		$this->content = '<iframe name="license_text" src="/license.php" width="100%" height="250" border="0" frameBorder="1" scrolling="yes"></iframe><br /><br />';
+		$this->content = '<br /><iframe name="license_text" src="/license.php" width="100%" height="250" border="0" frameBorder="1" scrolling="yes"></iframe><br /><br />';
 		$this->content .= $this->ShowCheckboxField("agree_license", "Y", Array("id" => "agree_license_id", "tabindex" => "1"));
 		$this->content .= '&nbsp;<label for="agree_license_id">'.InstallGetMessage("LICENSE_AGREE_PROMT").'</label>';
 
@@ -235,7 +235,7 @@ class DBTypeStep extends CWizardStep
 		if (!defined("TRIAL_VERSION") && !defined("TRIAL_RENT_VERSION") && function_exists("preg_match") && !preg_match('/[A-Z0-9]{3}-[A-Z]{2}-?[A-Z0-9]{12,18}/i', $licenseKey))
 			$this->SetError(InstallGetMessage("BAD_LICENSE_KEY"), "license");
 
-		if ($dbType == "mssql")
+		if ($dbType == "mssql_native")
 			$wizard->SetVar("utf8", "N");
 
 		if(defined("TRIAL_VERSION") || defined("TRIAL_RENT_VERSION"))
@@ -453,8 +453,6 @@ class DBTypeStep extends CWizardStep
 					$dbName = "MySQL";
 				elseif ($dbType == "oracle")
 					$dbName = "Oracle";
-				elseif ($dbType == "mssql")
-					$dbName = "Microsoft SQL Server (ODBC)";
 				elseif ($dbType == "mssql_native")
 					$dbName = "Microsoft SQL Server (Native)";
 
@@ -481,7 +479,7 @@ class DBTypeStep extends CWizardStep
 		}
 
 		$dbType = $wizard->GetVar("dbType", $useDefault = true);
-		$rowStyle = (($dbType == "mssql" || $dbType == "mssql_native")? ' style="display:none;"' : "");
+		$rowStyle = ($dbType == "mssql_native"? ' style="display:none;"' : "");
 
 		$this->content .= '
 			<tr id="utf-row-one"'.$rowStyle.'>
@@ -592,9 +590,7 @@ class RequirementStep extends CWizardStep
 		$arDBTypes = BXInstallServices::GetDBTypes();
 		if (!array_key_exists($dbType, $arDBTypes) || $arDBTypes[$dbType] === false)
 		{
-			if ($dbType == "mssql")
-				$errorCode = "SC_ERR_NO_ODBC";
-			elseif ($dbType == "oracle")
+			if ($dbType == "oracle")
 				$errorCode = "SC_NO_ORA_LIB_ER";
 			else
 				$errorCode = "SC_NO_MYS_LIB_ER";
@@ -802,7 +798,7 @@ RewriteRule ^.+\.php$ /bitrix/httest/404.php
 		$this->content .= '<h3>'.InstallGetMessage("SC_SUBTITLE_REQUIED").'</h3>'.InstallGetMessage("SC_SUBTITLE_REQUIED_DESC").'<br><br>';
 
 		$this->content .= '
-		<table border="0" class="data-table">
+		<table border="0" class="data-table data-table-multiple-column">
 			<tr>
 				<td class="header">'.InstallGetMessage("SC_PARAM").'</td>
 				<td class="header">'.InstallGetMessage("SC_REQUIED").'</td>
@@ -843,7 +839,7 @@ RewriteRule ^.+\.php$ /bitrix/httest/404.php
 
 		$this->content .= '
 		<tr>
-			<td valign="top">&nbsp; - safe mode</td>
+			<td valign="top">safe mode</td>
 			<td valign="top">'.InstallGetMessage("SC_TURN_OFF").'</td>
 			<td valign="top">
 					'.($this->GetPHPSetting("safe_mode")=="ON" ?
@@ -860,8 +856,6 @@ RewriteRule ^.+\.php$ /bitrix/httest/404.php
 
 		if ($dbType == "mysql")
 			$library = '<a href="http://www.php.net/manual/en/ref.mysql.php" target="_blank">'.InstallGetMessage("SC_MOD_MYSQL").'</a>';
-		elseif ($dbType == "mssql")
-			$library = '<a href="http://www.php.net/manual/en/ref.uodbc.php" target="_blank">'.InstallGetMessage("SC_ODBC_FUNCTIONS").'</a>';
 		elseif ($dbType == "mssql_native")
 			$library = '<a href="http://msdn.microsoft.com/en-us/library/ee229551(v=SQL.10).aspx" target="_blank">SQL Server Native</a>';
 		elseif ($dbType == "oracle")
@@ -872,7 +866,7 @@ RewriteRule ^.+\.php$ /bitrix/httest/404.php
 			<td colspan="3"><b>'.InstallGetMessage("SC_REQUIED_PHP_MODS").'</b></td>
 		</tr>
 		<tr>
-			<td valign="top">&nbsp; - '.$library.'</td>
+			<td valign="top">'.$library.'</td>
 			<td valign="top">'.InstallGetMessage("SC_SETTED").'</td>
 			<td valign="top">
 			'.(
@@ -885,7 +879,7 @@ RewriteRule ^.+\.php$ /bitrix/httest/404.php
 		$this->content .= '
 		<tr>
 			<td valign="top">
-				&nbsp; - <a href="http://www.php.net/manual/en/ref.pcre.php" target="_blank">'.InstallGetMessage("SC_MOD_PERL_REG").'</a>
+				<a href="http://www.php.net/manual/en/ref.pcre.php" target="_blank">'.InstallGetMessage("SC_MOD_PERL_REG").'</a>
 			</td>
 			<td valign="top">'.InstallGetMessage("SC_SETTED").'</td>
 			<td valign="top">
@@ -898,7 +892,7 @@ RewriteRule ^.+\.php$ /bitrix/httest/404.php
 			$this->content .= '
 				<tr>
 					<td valign="top">
-							&nbsp; - <a href="http://www.php.net/manual/en/book.session.php" target="_blank">'.InstallGetMessage("INST_SESSION_SUPPORT").'</a>
+							<a href="http://www.php.net/manual/en/book.session.php" target="_blank">'.InstallGetMessage("INST_SESSION_SUPPORT").'</a>
 					</td>
 					<td valign="top">'.InstallGetMessage("INST_YES").'</td>
 					<td valign="top">'.$this->ShowResult(InstallGetMessage("INST_NO").". ".InstallGetMessage("INST_SESSION_NOT_SUPPORT"),"ERROR").'</td>
@@ -909,7 +903,7 @@ RewriteRule ^.+\.php$ /bitrix/httest/404.php
 		//UTF-8
 		$utf8 = $wizard->GetVar("utf8");
 		$utf8 = ($utf8 == "Y");
-		if ($dbType != "mssql" && $dbType != "mssql_native" && $utf8)
+		if ($dbType != "mssql_native" && $utf8)
 		{
 			$this->content .= '
 				<tr>
@@ -917,7 +911,7 @@ RewriteRule ^.+\.php$ /bitrix/httest/404.php
 				</tr>
 				<tr>
 					<td valign="top">
-						&nbsp; - <a href="http://www.php.net/manual/en/ref.mbstring.php" target="_blank">Multibyte String</a>
+						<a href="http://www.php.net/manual/en/ref.mbstring.php" target="_blank">Multibyte String</a>
 					</td>
 					<td valign="top">'.InstallGetMessage("SC_SETTED").'</td>
 					<td valign="top">
@@ -933,7 +927,7 @@ RewriteRule ^.+\.php$ /bitrix/httest/404.php
 
 			$this->content .= '
 				<tr>
-					<td valign="top">&nbsp; - mbstring.func_overload</td>
+					<td valign="top">mbstring.func_overload</td>
 					<td valign="top">2, 3, 6 '.InstallGetMessage("SC_OR").' 7</td>
 					<td valign="top">'.$funcOverload.'</td>
 				</tr>';
@@ -946,16 +940,16 @@ RewriteRule ^.+\.php$ /bitrix/httest/404.php
 
 			$this->content .= '
 				<tr>
-					<td valign="top">&nbsp; - mbstring.internal_encoding</td>
+					<td valign="top">mbstring.internal_encoding</td>
 					<td valign="top">UTF-8</td>
 					<td valign="top">'.$encoding.'</td>
 				</tr>';
 		}
-		elseif (/*$dbType != "mssql" &&*/ !$utf8 && extension_loaded("mbstring") && intval(ini_get("mbstring.func_overload")) > 0 && strtoupper(ini_get("mbstring.internal_encoding")) == "UTF-8")
+		elseif (!$utf8 && extension_loaded("mbstring") && intval(ini_get("mbstring.func_overload")) > 0 && strtoupper(ini_get("mbstring.internal_encoding")) == "UTF-8")
 		{
 			$this->content .= '
 				<tr>
-					<td valign="top">&nbsp; - mbstring.func_overload</td>
+					<td valign="top">mbstring.func_overload</td>
 					<td valign="top">0</td>
 					<td valign="top">'.$this->ShowResult(ini_get("mbstring.func_overload")." (".ini_get("mbstring.internal_encoding").")", "ERROR").'</td>
 				</tr>';
@@ -965,7 +959,7 @@ RewriteRule ^.+\.php$ /bitrix/httest/404.php
 		{
 			$this->content .= '
 				<tr>
-					<td valign="top">&nbsp; - <a href="http://download.oracle.com/docs/cd/B19306_01/server.102/b14225/ch3globenv.htm#sthref195" target="_blank">NLS_LANG</a></td>
+					<td valign="top"><a href="http://download.oracle.com/docs/cd/B19306_01/server.102/b14225/ch3globenv.htm#sthref195" target="_blank">NLS_LANG</a></td>
 					<td valign="top">&lt;'.InstallGetMessage("NLS_LANGUAGE_TERRITORY").'&gt;.utf8</td>
 					<td valign="top">'.$this->ShowResult(strlen(getenv("NLS_LANG")) > 0 ? getenv("NLS_LANG") : InstallGetMessage("SC_NOT_SETTED"), "ERROR").'</td>
 				</tr>';
@@ -976,7 +970,7 @@ RewriteRule ^.+\.php$ /bitrix/httest/404.php
 		//File and folder permissons
 		$this->content .= '<h3>'.InstallGetMessage("SC_SUBTITLE_DISK").'</h3>'.InstallGetMessage("SC_SUBTITLE_DISK_DESC").'<br><br>';
 		$this->content .= '
-		<table border="0" class="data-table">
+		<table border="0" class="data-table data-table-multiple-column">
 		<tr>
 			<td class="header">'.InstallGetMessage("SC_PARAM").'</td>
 			<td class="header">'.InstallGetMessage("SC_VALUE").'</td>
@@ -1000,7 +994,7 @@ RewriteRule ^.+\.php$ /bitrix/httest/404.php
 		//Recommend
 		$this->content .= '<h3>'.InstallGetMessage("SC_SUBTITLE_RECOMMEND").'</h3>'.InstallGetMessage("SC_SUBTITLE_RECOMMEND_DESC").'<br><br>';
 		$this->content .= '
-		<table border="0" class="data-table">
+		<table border="0" class="data-table data-table-multiple-column">
 			<tr>
 				<td class="header">'.InstallGetMessage("SC_PARAM").'</td>
 				<td class="header">'.InstallGetMessage("SC_RECOMMEND").'</td>
@@ -1090,7 +1084,7 @@ RewriteRule ^.+\.php$ /bitrix/httest/404.php
 			<td colspan="3"><b>'.InstallGetMessage("SC_RECOM_PHP_SETTINGS").'</b></td>
 		</tr>
 		<tr>
-			<td valign="top">&nbsp; - '.InstallGetMessage("SC_AVAIL_MEMORY").'</td>
+			<td valign="top">'.InstallGetMessage("SC_AVAIL_MEMORY").'</td>
 			<td valign="top">'.$recommendMemory.'</td>
 			<td valign="top">
 					'.($memoryLimit > 0 && $memoryLimit < $this->memoryMin*1048576 ? $this->ShowResult(ini_get('memory_limit'), "ERROR") : $this->ShowResult(ini_get('memory_limit'), "OK")).'
@@ -1099,21 +1093,21 @@ RewriteRule ^.+\.php$ /bitrix/httest/404.php
 
 		$this->content .= '
 		<tr>
-			<td valign="top">&nbsp; - '.InstallGetMessage("SC_ALLOW_UPLOAD").' (file_uploads)</td>
+			<td valign="top">'.InstallGetMessage("SC_ALLOW_UPLOAD").' (file_uploads)</td>
 			<td valign="top">'.InstallGetMessage("SC_TURN_ON1").'</td>
 			<td valign="top">
 					'.($this->GetPHPSetting("file_uploads")=="ON" ? $this->ShowResult(InstallGetMessage("SC_TURN_ON1"), "OK") : $this->ShowResult(InstallGetMessage("SC_TURN_OFF1"), "ERROR")).'
 			</td>
 		</tr>
 		<tr>
-			<td valign="top">&nbsp; - '.InstallGetMessage("SC_SHOW_ERRORS").' (display_errors)</td>
+			<td valign="top">'.InstallGetMessage("SC_SHOW_ERRORS").' (display_errors)</td>
 			<td valign="top">'.InstallGetMessage("SC_TURN_ON1").'</td>
 			<td valign="top">
 					'.($this->GetPHPSetting("display_errors")=="ON" ? $this->ShowResult(InstallGetMessage("SC_TURN_ON1"), "OK") : $this->ShowResult(InstallGetMessage("SC_TURN_OFF1"), "ERROR")).'
 			</td>
 		</tr>
 		<tr>
-			<td valign="top">&nbsp; - '.InstallGetMessage("SC_magic_quotes_sybase").' (magic_quotes_sybase)</td>
+			<td valign="top">'.InstallGetMessage("SC_magic_quotes_sybase").' (magic_quotes_sybase)</td>
 			<td valign="top">'.InstallGetMessage("SC_TURN_OFF1").'</td>
 			<td valign="top">
 					'.($this->GetPHPSetting("magic_quotes_sybase")=="ON" ? $this->ShowResult(InstallGetMessage("SC_TURN_ON1"), "ERROR") : $this->ShowResult(InstallGetMessage("SC_TURN_OFF1"), "OK")).'
@@ -1142,7 +1136,7 @@ RewriteRule ^.+\.php$ /bitrix/httest/404.php
 
 		$this->content .= '
 		<tr>
-			<td valign="top">&nbsp; - '.InstallGetMessage("SC_SESS_PATH").'</td>
+			<td valign="top">'.InstallGetMessage("SC_SESS_PATH").'</td>
 			<td valign="top">'.InstallGetMessage("SC_SETTED").'</td>
 			<td valign="top">'.$sessionInfo.'</td>
 		</tr>';
@@ -1155,7 +1149,7 @@ RewriteRule ^.+\.php$ /bitrix/httest/404.php
 		</tr>
 		<tr>
 			<td valign="top">
-				&nbsp; - <a href="http://www.php.net/manual/en/ref.zlib.php" target="_blank">Zlib Compression</a>
+				<a href="http://www.php.net/manual/en/ref.zlib.php" target="_blank">Zlib Compression</a>
 			</td>
 			<td valign="top">'.InstallGetMessage("SC_SETTED").'</td>
 			<td valign="top">
@@ -1164,7 +1158,7 @@ RewriteRule ^.+\.php$ /bitrix/httest/404.php
 		</tr>
 		<tr>
 			<td valign="top">
-				&nbsp; - <a href="http://www.php.net/manual/en/ref.image.php" target="_blank">'.InstallGetMessage("SC_MOD_GD").'</a>
+				<a href="http://www.php.net/manual/en/ref.image.php" target="_blank">'.InstallGetMessage("SC_MOD_GD").'</a>
 			</td>
 			<td valign="top">'.InstallGetMessage("SC_SETTED").'</td>
 			<td valign="top">
@@ -1172,7 +1166,7 @@ RewriteRule ^.+\.php$ /bitrix/httest/404.php
 			</td>
 		</tr>
 		<tr>
-			<td valign="top">&nbsp; - <a href="http://www.freetype.org" target="_blank">Free Type Library</a></td>
+			<td valign="top"><a href="http://www.freetype.org" target="_blank">Free Type Library</a></td>
 			<td valign="top">'.InstallGetMessage("SC_SETTED").'</td>
 			<td valign="top">
 					'.(function_exists("imagettftext") ? $this->ShowResult(InstallGetMessage("SC_SETTED"), "OK") : $this->ShowResult(InstallGetMessage("SC_NOT_SETTED"), "ERROR")).'
@@ -1226,8 +1220,8 @@ class CreateDBStep extends CWizardStep
 		$wizard =& $this->GetWizard();
 
 		$wizard->SetDefaultVars(Array(
-			"folder_access_perms" => "0755",
-			"file_access_perms" => "0644",
+			"folder_access_perms" => "0700",
+			"file_access_perms" => "0600",
 			"create_user" => "N",
 			"create_database" => "N",
 		));
@@ -1339,7 +1333,7 @@ class CreateDBStep extends CWizardStep
 
 		if ($this->dbType == "mysql" && !$this->CreateMySQL())
 			return;
-		elseif ($this->dbType == "mssql" && !$this->CreateMSSQL())
+		elseif ($this->dbType == "mssql" && !$this->CreateMSSQLNative())
 			return;
 		elseif ($this->dbType == "oracle" && !$this->CreateOracle())
 			return;
@@ -1539,63 +1533,6 @@ class CreateDBStep extends CWizardStep
 				}
 
 				@mysql_query("SET NAMES '".$codePage."'", $dbConn);
-			}
-		}
-
-		return true;
-	}
-
-	function CreateMSSQL()
-	{
-		if($this->DBSQLServerType=="NATIVE")
-			return $this->CreateMSSQLNative();
-
-		if ($this->createDatabase || $this->createUser)
-			$dbConn = @odbc_connect($this->dbHost, $this->rootUser, $this->rootPassword);
-		else
-			$dbConn = @odbc_connect($this->dbHost, $this->dbUser, $this->dbPassword);
-
-		if (!$dbConn)
-		{
-			$this->SetError(InstallGetMessage("ERR_CONNECT2MYSQL")." ".odbc_errormsg());
-			return false;
-		}
-
-		if ($this->createDatabase)
-		{
-			$query = 'CREATE DATABASE "'.$this->dbName.'"';
-			if (!@odbc_exec($dbConn, $query))
-			{
-				$this->SetError(str_replace("#DB#", $this->dbName, InstallGetMessage("ERR_CREATE_DB1"))." ".odbc_errormsg($dbConn));
-				return false;
-			}
-		}
-
-		$query = 'USE "'.$this->dbName.'"';
-		if (!@odbc_exec($dbConn, $query))
-		{
-			$this->SetError(str_replace("#DB#", $this->dbName, InstallGetMessage("ERR_CONNECT_DB1"))." ".odbc_errormsg($dbConn));
-			return false;
-		}
-
-		if ($this->createUser)
-		{
-			$query = 'sp_addlogin "'.$this->dbUser.'", "'.addslashes($this->dbPassword).'", "'.$this->dbName.'"';
-			if (!@odbc_exec($dbConn, $query))
-			{
-				$this->SetError(InstallGetMessage("ERR_CREATE_USER")." ".odbc_errormsg($dbConn));
-				return false;
-			}
-		}
-
-		if ($this->dbUser != $this->rootUser && ($this->createUser || $this->createDatabase))
-		{
-			$query = 'sp_grantdbaccess "'.$this->dbUser.'";
-						EXEC sp_addrolemember "db_owner","'.$this->dbUser.'";';
-			if (!@odbc_exec($dbConn, $query))
-			{
-				$this->SetError(InstallGetMessage("ERR_GRANT_USER")." ".odbc_errormsg($dbConn));
-				return false;
 			}
 		}
 
@@ -1829,10 +1766,6 @@ class CreateDBStep extends CWizardStep
 			$fileContent .= "define(\"BX_DIR_PERMISSIONS\", 0".$this->folderPermission.");\n";
 			$fileContent .= "@umask(~BX_DIR_PERMISSIONS);\n";
 		}
-
-		if ($this->dbType == "mssql" && $this->DBSQLServerType!="NATIVE")
-			$fileContent .= "@ini_set(\"odbc.defaultlrl\", 200000);\n";
-
 
 		$memoryLimit = WelcomeStep::unformat(ini_get('memory_limit'));
 		if (!$memoryLimit || strlen($memoryLimit)<=0)
@@ -2087,19 +2020,6 @@ class CreateDBStep extends CWizardStep
 				<td width="60%" valign="top">
 					'.$this->ShowInputField("text", "host", Array("size" => "30")).'
 					<br /><small>'.InstallGetMessage("INS_HOST_DESCR").'<br></small>
-				</td>
-			</tr>';
-
-		elseif ($dbType == "mssql")
-			$this->content .= '
-			<tr>
-				<td nowrap align="right" valign="top" width="40%" >
-					<span style="color:red">*</span>&nbsp;DSN:
-				</td>
-				<td width="60%" valign="top">
-					'.$this->ShowInputField("textarea", "host", Array("style" => "width:90%", "rows" => "3")).'<br />
-					<small>'.InstallGetMessage("INS_HOST_DESCR_MSSQL").'<br></small>
-
 				</td>
 			</tr>';
 
@@ -2472,7 +2392,7 @@ class CreateModulesStep extends CWizardStep
 			else
 				require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/classes/".$DBType."/database.php");
 			require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/classes/general/time.php");
-			require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/classes/general/favorites.php");
+			require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/classes/general/user_options.php");
 			require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/classes/".$DBType."/main.php");
 			require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/classes/general/cache.php");
 			require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/classes/".$DBType."/usertype.php");
@@ -2618,37 +2538,28 @@ class CreateModulesStep extends CWizardStep
 		@include($_SERVER["DOCUMENT_ROOT"].BX_PERSONAL_ROOT."/php_interface/dbconn.php");
 
 		$this->content .= '
-		<div id="result">
-			<table border="0" cellspacing="0" cellpadding="2" width="100%">
-				<tr>
-					<td colspan="2"><div id="status"></div></td>
-				</tr>
-				<tr>
-					<td width=90% height="10">
-						<div style="border:1px solid #B9CBDF">
-						<div id="indicator" style="height:10px; width:0%; background-color:#B9CBDF"></div>
-						</div>
-					</td>
-					<td width=10%>&nbsp;<span id="percent">0%</span></td>
-				</tr>
-			</table>
+		<div class="instal-load-block" id="result">
+			<div class="instal-load-label" id="status"></div>
+			<div class="instal-progress-bar-outer" style="width: 670px;">
+				<div class="instal-progress-bar-alignment">
+					<div class="instal-progress-bar-inner" id="indicator">
+						<div class="instal-progress-bar-inner-text" style="width: 670px;" id="percent"></div>
+					</div>
+					<span id="percent2">0%</span>
+				</div>
+			</div>
 		</div>
-
-		<div id="wait" align=center>
-			<br /><br />
-			<table width=200 cellspacing=0 cellpadding=0 border=0 style="border:1px solid #EFCB69" bgcolor="#FFF7D7">
-				<tr>
-					<td height=50 width="50" valign="middle" align=center><img src="/bitrix/images/install/wait.gif"></td>
-					<td height=50 width=150>'.InstallGetMessage("INST_LOAD_WAIT").'</td>
-				</tr>
-			</table>
-		</div><br />
 		<div id="error_container" style="display:none">
-			<div id="error_notice"><span style="color:red;">'.InstallGetMessage("INST_ERROR_OCCURED").'<br />'.InstallGetMessage("INST_TEXT_ERROR").':</span></div>
-			<div id="error_text"></div>
-			<div><span style="color:red;">'.InstallGetMessage("INST_ERROR_NOTICE").'</span></div>
+			<div id="error_notice">
+				<div class="inst-note-block inst-note-block-red">
+					<div class="inst-note-block-icon"></div>
+					<div class="inst-note-block-label">'.InstallGetMessage("INST_ERROR_OCCURED").'</div><br />
+					<div class="inst-note-block-text">'.InstallGetMessage("INST_ERROR_NOTICE").'<div id="error_text"></div></div>
+				</div>
+			</div>
+
 			<div id="error_buttons" align="center">
-			<br /><input type="button" value="'.InstallGetMessage("INST_RETRY_BUTTON").'" id="error_retry_button" onclick="" />&nbsp;<input type="button" id="error_skip_button" value="'.InstallGetMessage("INST_SKIP_BUTTON").'" onclick="" />&nbsp;</div>
+			<br /><input type="button" value="'.InstallGetMessage("INST_RETRY_BUTTON").'" id="error_retry_button" onclick="" class="instal-btn instal-btn-inp" />&nbsp;<input type="button" id="error_skip_button" value="'.InstallGetMessage("INST_SKIP_BUTTON").'" onclick="" class="instal-btn instal-btn-inp" />&nbsp;</div>
 		</div>
 
 		'.$this->ShowHiddenField("nextStep", "main").'
@@ -2912,8 +2823,8 @@ class SelectWizardStep extends CWizardStep
 				$_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/".$ar[0]."/install/wizards/".$ar[1]."/".$ar[2],
 				$_SERVER["DOCUMENT_ROOT"]."/bitrix/wizards/".$ar[1]."/".$ar[2],
 				true,
-				(defined("BX_DIR_PERMISSIONS") ? (BX_DIR_PERMISSIONS) : 0755),
-				(defined("BX_FILE_PERMISSIONS") ? (BX_FILE_PERMISSIONS) : 0644)
+				(defined("BX_DIR_PERMISSIONS") ? (BX_DIR_PERMISSIONS) : 0700),
+				(defined("BX_FILE_PERMISSIONS") ? (BX_FILE_PERMISSIONS) : 0600)
 			);
 
 			$ar = array($ar[1], $ar[2]);
@@ -2975,179 +2886,55 @@ class SelectWizardStep extends CWizardStep
 
 		$arWizardsList = BXInstallServices::GetWizardsList();
 
-		$b = true;
-
 		$this->content = '
-			<style type="text/css">
-			#solutions-container
-			{
-				margin-bottom: 15px;
-			}
-
-			a.solution-item
-			{
-				display:block;
-				border: 0;
-				margin-bottom: 10px;
-				color: Black;
-				text-decoration: none;
-				outline: none;
-			}
-
-			a.solution-item h4
-			{
-				margin: 10px;
-				margin-top: 9px; /*compensating 1px padding*/
-				font-family:Helvetica;
-				font-size:1.5em;
-			}
-			a.solution-item p
-			{
-				margin: 10px;
-			}
-
-			div.solution-item-wrapper
-			{
-				width: 97px;
-				float: left;
-			}
-
-			a.solution-picture-item
-			{
-				margin: 3px;
-				text-align: center;
-			}
-
-			div.solution-description
-			{
-				margin-top: 3px;
-				margin-left: 4px;
-				color: #999;
-				text-align:left;
-			}
-
-			a.solution-picture-item img.solution-image
-			{
-				width: 70px;
-				float: none;
-				margin: 7px 0px 7px;
-			}
-
-			img.solution-image
-			{
-				width: 100px;
-				float: left;
-				margin: 10px;
-				border: 1px solid #CFCFCF;
-			}
-			div.solution-inner-item
-			{
-				padding: 1px;
-				overflow: hidden;
-				zoom: 1;
-			}
-
-			a.solution-item div.solution-inner-item,
-			a.solution-item b
-			{
-				background-color:#F7F7F7;
-				cursor: pointer;
-				cursor: hand;
-			}
-
-			a.solution-item:hover div.solution-inner-item,
-			a.solution-item:hover b
-			{
-				background-color: #FFF0B2;
-			}
-
-			a.solution-item-selected div.solution-inner-item,
-			a.solution-item-selected b,
-			a.solution-item-selected:hover div.solution-inner-item,
-			a.solution-item-selected:hover b
-			{
-				background-color: #CADBEC;
-			}
-
-			#solution-preview
-			{
-				margin-top: 10px;
-			}
-
-			#solution-preview div.solution-inner-item,
-			#solution-preview b
-			{
-				background-color:#F7F7F7;
-			}
-
-			#solution-preview div.solution-inner-item
-			{
-				padding: 10px;
-				text-align: center;
-			}
-
-			#solution-preview-image
-			{
-				border: 1px solid #CFCFCF;
-				width: 450px;
-			}
-
-			/* Round Corners */
-			.r0, .r1, .r2, .r3, .r4 { overflow: hidden; font-size:1px; display: block; height: 1px;}
-			.r4 { margin: 0 4px; }
-			.r3 { margin: 0 3px; }
-			.r2 { margin: 0 2px; }
-			.r1 { margin: 0 1px; }
-			</style>';
-
-		$this->content .= '
 		<script type="text/javascript">
 			function SelectSolution(element, solutionId)
 			{
-				var container = document.getElementById("solutions-container");
-				var anchors = container.getElementsByTagName("A");
-				for (var i = 0; i < anchors.length; i++)
-				{
-					if (anchors[i].parentNode != container)
-						continue;
-					anchors[i].className = "solution-item";
-				}
-				element.className = "solution-item solution-item-selected";
 				var hidden = document.getElementById("id_'.CUtil::JSEscape($prefixName).'");
 				hidden.value = solutionId;
-
 				document.getElementById("id_radio_"+solutionId).checked=true;
 			}
 		</script>
 		';
 
-		$this->content .= '<div id="solutions-container">';
+		$arWizardsList[] = array(
+				"ID" => "@",
+				"IMAGE" => "/bitrix/images/install/marketplace.gif",
+				"NAME" => InstallGetMessage("INS_LOAD_FROM_MARKETPLACE"),
+				"DESCRIPTION" => InstallGetMessage("INS_LOAD_FROM_MARKETPLACE_DESCR"),
+			);
+
+		$this->content .= '<table class="inst-module-table" id="solutions-container">';
+		$i = 0;
 		foreach ($arWizardsList as $w)
 		{
-			$this->content .= '<a class="solution-item" href="javascript:void(0);" onclick="SelectSolution(this, \''.htmlspecialcharsbx($w["ID"]).'\');" ondblclick="document.forms[\''.htmlspecialcharsbx($wizard->GetFormName()).'\'].submit();">
-				<b class="r3"></b><b class="r1"></b><b class="r1"></b>
-				<div class="solution-inner-item">
-					<input type="radio" id="id_radio_'.htmlspecialcharsbx($w["ID"]).'" name="redio" style="float:left;margin-left:4px;margin-top:10px;margin-bottom:20px;" />
-					'.(strlen($w["IMAGE"]) > 0 ? '<img alt="" src="'.htmlspecialcharsbx($w["IMAGE"]).'" class="solution-image" />' : "").'
-					<h4>'.$w["NAME"].'</h4>
-					<p>'.$w["DESCRIPTION"].'</p>
-				</div>
-				<b class="r1"></b><b class="r1"></b><b class="r3"></b>
-			</a>';
+			if($i == 0)
+				$this->content .= '<tr>';
+			$this->content .= '
+				<td class="inst-module-cell">
+					<div class="inst-module-block" onclick="SelectSolution(this, \''.htmlspecialcharsbx($w["ID"]).'\');" ondblclick="document.forms[\''.htmlspecialcharsbx($wizard->GetFormName()).'\'].submit();">
+							<div class="inst-module-title"><span class="inst-module-title-alignment"></span><span class="inst-module-title-text">'.$w["NAME"].'</span></div>
+							<div class="inst-module-cont">
+								'.(strlen($w["IMAGE"]) > 0 ? '<div class="inst-module-img"><img alt="" src="'.htmlspecialcharsbx($w["IMAGE"]).'" /></div>' : "").'
+								<div class="inst-module-text">'.$w["DESCRIPTION"].'</div>
+							</div>
+							<input type="radio" id="id_radio_'.htmlspecialcharsbx($w["ID"]).'" name="redio" class="inst-module-checkbox" />
+					</div>
+				</td>';
+
+			if($i == 1)
+			{
+				$this->content .= '</tr>';
+				$i = 0;
+			}
+			else
+			{
+				$i++;
+			}
 		}
-
-		$this->content .= '<a class="solution-item" href="javascript:void(0);" onclick="SelectSolution(this, \'@\'); return false;" ondblclick="document.forms[\''.htmlspecialcharsbx($wizard->GetFormName()).'\'].submit();">
-			<b class="r3"></b><b class="r1"></b><b class="r1"></b>
-			<div class="solution-inner-item">
-				<input type="radio" id="id_radio_@" name="redio" style="float:left;margin-left:4px;margin-top:10px;margin-bottom:20px;">
-				<img alt="" src="/bitrix/images/install/marketplace.gif" class="solution-image" />
-				<h4>'.InstallGetMessage("INS_LOAD_FROM_MARKETPLACE").'</h4>
-				<p>'.InstallGetMessage("INS_LOAD_FROM_MARKETPLACE_DESCR").'</p>
-			</div>
-			<b class="r1"></b><b class="r1"></b><b class="r3"></b>
-		</a>';
-
-		$this->content .= '</div>
+		if($i == 0)
+			$this->content .= '<td></td></tr>';
+		$this->content .= '</table>
 		<input type="hidden" id="id_'.htmlspecialcharsbx($prefixName).'" name="'.htmlspecialcharsbx($prefixName).'" value="">';
 	}
 }
@@ -3167,6 +2954,7 @@ class LoadModuleStep extends CWizardStep
 		global $DB, $DBType, $DBHost, $DBLogin, $DBPassword, $DBName, $DBDebug, $DBDebugToFile, $APPLICATION, $USER, $DBSQLServerType, $MESS;
 		$SAVED_MESS = $MESS;
 		require_once($_SERVER['DOCUMENT_ROOT']."/bitrix/modules/main/include.php");
+		require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/classes/general/update_client_partner.php");
 		$MESS = array_merge($MESS, $SAVED_MESS);
 
 		@set_time_limit(3600);
@@ -3174,7 +2962,22 @@ class LoadModuleStep extends CWizardStep
 		$wizard =& $this->GetWizard();
 		$selectedModule = $wizard->GetVar("selected_module");
 		$selectedModule = preg_replace("#[^a-z0-9._-]#i", "", $selectedModule);
+		$coupon = $wizard->GetVar("coupon");
+		$wizard->SetVar("MP_ACT_OK", "");
 
+		if(strlen($coupon) > 0)
+		{
+			if(CUpdateClientPartner::ActivateCoupon($coupon, $error))
+			{
+				$wizard->SetVar("MP_ACT_OK", "OK");
+			}
+			else
+				$this->SetError(GetMessage("MP_COUPON_ACT_ERROR").": ".$error);
+
+			$wizard->SetCurrentStep("load_module");
+			return;
+		}
+		
 		if (strlen($selectedModule)<=0)
 		{
 			$wizard->SetCurrentStep("select_wizard");
@@ -3188,8 +2991,6 @@ class LoadModuleStep extends CWizardStep
 
 		if (!file_exists($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/".$selectedModule))
 		{
-			require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/classes/general/update_client_partner.php");
-
 			$selectedModule = preg_replace("#[^a-z0-9_.-]+#i", "", $selectedModule);
 
 			$errorMessage = "";
@@ -3239,8 +3040,8 @@ class LoadModuleStep extends CWizardStep
 				$_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/".$ar[0]."/install/wizards/".$ar[1]."/".$ar[2],
 				$_SERVER["DOCUMENT_ROOT"]."/bitrix/wizards/".$ar[1]."/".$ar[2],
 				true,
-				(defined("BX_DIR_PERMISSIONS") ? (BX_DIR_PERMISSIONS) : 0755),
-				(defined("BX_FILE_PERMISSIONS") ? (BX_FILE_PERMISSIONS) : 0644)
+				(defined("BX_DIR_PERMISSIONS") ? (BX_DIR_PERMISSIONS) : 0700),
+				(defined("BX_FILE_PERMISSIONS") ? (BX_FILE_PERMISSIONS) : 0600)
 			);
 
 			if (BXInstallServices::CreateWizardIndex($ar[1].":".$ar[2]))
@@ -3311,6 +3112,7 @@ class LoadModuleStep extends CWizardStep
 
 		$wizard =& $this->GetWizard();
 		$prefixName = $wizard->GetRealName("selected_module");
+		$couponName = $wizard->GetRealName("coupon");
 
 		$arModulesList = array();
 
@@ -3324,7 +3126,7 @@ class LoadModuleStep extends CWizardStep
 		*/
 
 		$arModules = CUpdateClientPartner::SearchModulesEx(
-			array("NAME" => "ASC"),
+			array("SORT" => "DESC", "NAME" => "ASC"),
 			//array("TYPE" => $tTmp),
 			array("CATEGORY" => Array(7, 14)),
 			1,
@@ -3351,6 +3153,8 @@ class LoadModuleStep extends CWizardStep
 					"IMAGE_HEIGHT" => $module["@"]["IMAGE_HEIGHT"],
 					"IMAGE_WIDTH" => $module["@"]["IMAGE_WIDTH"],
 					"VERSION" => $module["@"]["VERSION"],
+					"BUYED" => $module["@"]["BUYED"],
+					"LINK" => "http://marketplace.1c-bitrix.ru/solutions/".$module["@"]["ID"]."/",
 				);
 			}
 		}
@@ -3358,181 +3162,92 @@ class LoadModuleStep extends CWizardStep
 		if (strlen($errorMessage) > 0)
 			$this->SetError($errorMessage);
 
-		$this->content = '
-			<style type="text/css">
-			#solutions-container
-			{
-				margin-bottom: 15px;
-			}
-
-			a.solution-item
-			{
-				display:block;
-				border: 0;
-				margin-bottom: 10px;
-				color: Black;
-				text-decoration: none;
-				outline: none;
-			}
-
-			a.solution-item h4
-			{
-				margin: 10px;
-				margin-top: 9px; /*compensating 1px padding*/
-				font-family:Helvetica;
-				font-size:1.5em;
-			}
-			a.solution-item p
-			{
-				margin: 10px;
-			}
-
-			div.solution-item-wrapper
-			{
-				width: 97px;
-				float: left;
-			}
-
-			a.solution-picture-item
-			{
-				margin: 3px;
-				text-align: center;
-			}
-
-			div.solution-description
-			{
-				margin-top: 3px;
-				margin-left: 4px;
-				color: #999;
-				text-align:left;
-			}
-
-			a.solution-picture-item img.solution-image
-			{
-				width: 70px;
-				float: none;
-				margin: 7px 0px 7px;
-			}
-
-			img.solution-image
-			{
-				width: 100px;
-				float: left;
-				margin: 10px;
-				border: 1px solid #CFCFCF;
-			}
-			div.solution-inner-item
-			{
-				padding: 1px;
-				overflow: hidden;
-				zoom: 1;
-			}
-
-			a.solution-item div.solution-inner-item,
-			a.solution-item b
-			{
-				background-color:#F7F7F7;
-				cursor: pointer;
-				cursor: hand;
-			}
-
-			a.solution-item:hover div.solution-inner-item,
-			a.solution-item:hover b
-			{
-				background-color: #FFF0B2;
-			}
-
-			a.solution-item-selected div.solution-inner-item,
-			a.solution-item-selected b,
-			a.solution-item-selected:hover div.solution-inner-item,
-			a.solution-item-selected:hover b
-			{
-				background-color: #CADBEC;
-			}
-
-			#solution-preview
-			{
-				margin-top: 10px;
-			}
-
-			#solution-preview div.solution-inner-item,
-			#solution-preview b
-			{
-				background-color:#F7F7F7;
-			}
-
-			#solution-preview div.solution-inner-item
-			{
-				padding: 10px;
-				text-align: center;
-			}
-
-			#solution-preview-image
-			{
-				border: 1px solid #CFCFCF;
-				width: 450px;
-			}
-
-			/* Round Corners */
-			.r0, .r1, .r2, .r3, .r4 { overflow: hidden; font-size:1px; display: block; height: 1px;}
-			.r4 { margin: 0 4px; }
-			.r3 { margin: 0 3px; }
-			.r2 { margin: 0 2px; }
-			.r1 { margin: 0 1px; }
-			</style>';
-
 		$this->content .= '
 		<script type="text/javascript">
-			function SelectSolution(element, solutionId)
+			function SelectSolutionMP(element, solutionId)
 			{
-				var container = document.getElementById("solutions-container");
-				var anchors = container.getElementsByTagName("A");
-				for (var i = 0; i < anchors.length; i++)
-				{
-					if (anchors[i].parentNode != container)
-						continue;
-					anchors[i].className = "solution-item";
-				}
-				element.className = "solution-item solution-item-selected";
 				var hidden = document.getElementById("id_'.CUtil::JSEscape($prefixName).'");
 				hidden.value = solutionId;
+
+				var container = document.getElementById("solutions-container");
+				var anchors = container.getElementsByTagName("TD");
+				for (var i = 0; i < anchors.length; i++)
+				{
+					anchors[i].className = "inst-module-cell";
+				}
+
+				element.parentNode.className = "inst-module-cell inst-module-cell-active";
 
 				document.getElementById("id_radio_"+solutionId).checked=true;
 			}
 		</script>
 		';
 
-		$this->content .= '<div id="solutions-container">';
 
 		$arCurrentModules = CUpdateClientPartner::GetCurrentModules($errorMessage);
 
-		foreach ($arModulesList as $m)
+		if(strlen(CUpdateClientPartner::GetLicenseKey()) > 0 && !defined("DEMO"))
 		{
-			$bLoaded = array_key_exists($m["ID"], $arCurrentModules);
-			$this->content .= '<a class="solution-item" href="javascript:void(0);" onclick="'.($bLoaded ? 'return false;' : 'SelectSolution(this, \''.htmlspecialcharsbx($m["ID"]).'\');').'" ondblclick="'.($bLoaded ? 'return false;' : 'document.forms[\''.htmlspecialcharsbx($wizard->GetFormName()).'\'].submit();').'">
-				<b class="r3"></b><b class="r1"></b><b class="r1"></b>
-				<div class="solution-inner-item">
-					<input type="radio" id="id_radio_'.htmlspecialcharsbx($m["ID"]).'" name="redio" style="float:left;margin-left:4px;margin-top:10px;margin-bottom:20px;"'.($bLoaded ? ' disabled' : '').'>
-					'.(strlen($m["IMAGE"]) > 0 ? '<img alt="" src="'.htmlspecialcharsbx($m["IMAGE"]).'" class="solution-image" />' : "").'
-					'.($bLoaded ? '<p><i>'.InstallGetMessage("INS_MODULE_IS_ALREADY_LOADED").'</i></p>' : '').'
-					<h4>'.$m["NAME"].'</h4>
-					<p>'.$m["DESCRIPTION"].'</p>
-				</div>
-				<b class="r1"></b><b class="r1"></b><b class="r3"></b>
-			</a>';
+			$actRes = $wizard->GetVar("MP_ACT_OK");
+			if($actRes == "OK")
+			{
+				$this->content .= '<div class="inst-note-block inst-note-block-blue">
+						<div class="inst-note-block-icon"></div>
+						<div class="inst-note-block-text">'.GetMessage("MP_COUPON_ACTIVATION_OK").'</div>
+					</div>';
+			}
+			$this->content .= '
+				<div class="inst-discount-pass">
+					<span class="inst-discount-label">'.GetMessage("MP_COUPON").':</span><input type="text" name="'.$couponName.'" value="" class="inst-discount-inp"><span class="instal-btn inst-btn-discount" onclick="document.forms[\''.htmlspecialcharsbx($wizard->GetFormName()).'\'].submit();">'.GetMessage("MP_ACTIVATE").'</span>
+				</div>';
 		}
 
-		$this->content .= '<a class="solution-item" href="javascript:void(0);" onclick="SelectSolution(this, \'\');" ondblclick="document.forms[\''.htmlspecialcharsbx($wizard->GetFormName()).'\'].submit();">
-			<b class="r3"></b><b class="r1"></b><b class="r1"></b>
-			<div class="solution-inner-item">
-				<input type="radio" id="id_radio_" name="redio" style="float:left;margin-left:4px;margin-top:10px;margin-bottom:20px;">
-				<h4>'.InstallGetMessage("INS_SKIP_MODULE_LOADING").'</h4>
-				<p>'.InstallGetMessage("INS_SKIP_MODULE_LOADING_DESCR").'</p>
-			</div>
-			<b class="r1"></b><b class="r1"></b><b class="r3"></b>
-		</a>';
+		$arModulesList[] = array(
+				"ID" => "",
+				"IMAGE" => "",
+				"NAME" => InstallGetMessage("INS_SKIP_MODULE_LOADING"),
+				"DESCRIPTION" => InstallGetMessage("INS_SKIP_MODULE_LOADING_DESCR"),
+			);
 
-		$this->content .= '</div>
+		$this->content .= '<table class="inst-module-table" id="solutions-container">';
+		$i = 0;
+		foreach ($arModulesList as $m)
+		{
+			if($i == 0)
+				$this->content .= '<tr>';
+
+			$bLoaded = array_key_exists($m["ID"], $arCurrentModules);
+		
+			$this->content .= '
+				<td class="inst-module-cell">
+					<div class="inst-module-block" onclick="'.'SelectSolutionMP(this, \''.htmlspecialcharsbx($m["ID"]).'\');" ondblclick="'.($bLoaded ? 'return false;' : 'document.forms[\''.htmlspecialcharsbx($wizard->GetFormName()).'\'].submit();').'">
+							<div class="inst-module-title"><span class="inst-module-title-alignment"></span><span class="inst-module-title-text">'.TruncateText($m["NAME"], 60).'</span></div>
+							<div class="inst-module-cont">
+								'.(strlen($m["IMAGE"]) > 0 ? '<div class="inst-module-img-mp"><img alt="" src="'.htmlspecialcharsbx($m["IMAGE"]).'" /></div>' : "").'
+								<div class="inst-module-text-mp">'.
+								($m["BUYED"] == "Y" ? '<b>'.InstallGetMessage("INS_MODULE_IS_BUYED").'</b><br />' : '').
+								($bLoaded ? '<b>'.InstallGetMessage("INS_MODULE_IS_ALREADY_LOADED").'</b><br />' : '').
+								TruncateText($m["DESCRIPTION"], 90).'</div>
+							</div>'.
+							(strlen($m["LINK"]) > 0 ? '<div class="inst-module-footer"><a class="inst-module-more" href="'.$m["LINK"].'" target="_blank">'.GetMessage("MP_MORE").'</a></div>' : '').'
+							<input type="radio" id="id_radio_'.htmlspecialcharsbx($m["ID"]).'" name="redio" class="inst-module-checkbox" />
+					</div>
+				</td>';
+
+			if($i == 1)
+			{
+				$this->content .= '</tr>';
+				$i = 0;
+			}
+			else
+			{
+				$i++;
+			}
+		}
+		if($i == 0)
+			$this->content .= '<td></td></tr>';
+
+		$this->content .= '</table>
 		<input type="hidden" id="id_'.htmlspecialcharsbx($prefixName).'" name="'.htmlspecialcharsbx($prefixName).'" value="">';
 	}
 }
@@ -3697,8 +3412,8 @@ class LoadModuleActionStep extends CWizardStep
 					$_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/".$ar[0]."/install/wizards/".$ar[1]."/".$ar[2],
 					$_SERVER["DOCUMENT_ROOT"]."/bitrix/wizards/".$ar[1]."/".$ar[2],
 					true,
-					(defined("BX_DIR_PERMISSIONS") ? (BX_DIR_PERMISSIONS) : 0755),
-					(defined("BX_FILE_PERMISSIONS") ? (BX_FILE_PERMISSIONS) : 0644)
+					(defined("BX_DIR_PERMISSIONS") ? (BX_DIR_PERMISSIONS) : 0700),
+					(defined("BX_FILE_PERMISSIONS") ? (BX_FILE_PERMISSIONS) : 0600)
 				);
 
 				$nextStep = "LocalRedirect";
@@ -3754,37 +3469,29 @@ class LoadModuleActionStep extends CWizardStep
 		$nextStepStage = $wizard->GetVar("nextStepStage");
 
 		$this->content .= '
-		<div id="result">
-			<table border="0" cellspacing="0" cellpadding="2" width="100%">
-				<tr>
-					<td colspan="2"><div id="status"></div></td>
-				</tr>
-				<tr>
-					<td width=90% height="10">
-						<div style="border:1px solid #B9CBDF">
-						<div id="indicator" style="height:10px; width:0%; background-color:#B9CBDF"></div>
-						</div>
-					</td>
-					<td width=10%>&nbsp;<span id="percent">0%</span></td>
-				</tr>
-			</table>
+		<div class="instal-load-block" id="result">
+			<div class="instal-load-label" id="status"></div>
+			<div class="instal-progress-bar-outer" style="width: 670px;">
+				<div class="instal-progress-bar-alignment">
+					<div class="instal-progress-bar-inner" id="indicator">
+						<div class="instal-progress-bar-inner-text" style="width: 670px;" id="percent"></div>
+					</div>
+					<span id="percent2">0%</span>
+				</div>
+			</div>
 		</div>
 
-		<div id="wait" align=center>
-			<br /><br />
-			<table width=200 cellspacing=0 cellpadding=0 border=0 style="border:1px solid #EFCB69" bgcolor="#FFF7D7">
-				<tr>
-					<td height=50 width="50" valign="middle" align=center><img src="/bitrix/images/install/wait.gif"></td>
-					<td height=50 width=150>'.InstallGetMessage("INST_LOAD_WAIT").'</td>
-				</tr>
-			</table>
-		</div><br />
 		<div id="error_container" style="display:none">
-			<div id="error_notice"><span style="color:red;">'.InstallGetMessage("INST_ERROR_OCCURED").'<br />'.InstallGetMessage("INST_TEXT_ERROR").':</span></div>
-			<div id="error_text"></div>
-			<div><span style="color:red;">'.InstallGetMessage("INST_ERROR_NOTICE").'</span></div>
+			<div id="error_notice">
+				<div class="inst-note-block inst-note-block-red">
+					<div class="inst-note-block-icon"></div>
+					<div class="inst-note-block-label">'.InstallGetMessage("INST_ERROR_OCCURED").'</div><br />
+					<div class="inst-note-block-text">'.InstallGetMessage("INST_ERROR_NOTICE").'<div id="error_text"></div></div>
+				</div>
+			</div>
+
 			<div id="error_buttons" align="center">
-			<br /><input type="button" value="'.InstallGetMessage("INST_RETRY_BUTTON").'" id="error_retry_button" style="display:none" onclick="" />&nbsp;<input type="button" id="error_skip_button" value="'.InstallGetMessage("INST_SKIP_BUTTON").'" onclick="" />&nbsp;</div>
+			<br /><input type="button" value="'.InstallGetMessage("INST_RETRY_BUTTON").'" id="error_retry_button" style="display:none" onclick="" class="instal-btn instal-btn-inp" />&nbsp;<input type="button" id="error_skip_button" value="'.InstallGetMessage("INST_SKIP_BUTTON").'" onclick="" class="instal-btn instal-btn-inp" />&nbsp;</div>
 		</div>
 
 		'.$this->ShowHiddenField("nextStep", "do_load_module").'
@@ -3862,8 +3569,8 @@ class SelectWizard1Step extends SelectWizardStep
 				$_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/".$ar[0]."/install/wizards/".$ar[1]."/".$ar[2],
 				$_SERVER["DOCUMENT_ROOT"]."/bitrix/wizards/".$ar[1]."/".$ar[2],
 				true,
-				(defined("BX_DIR_PERMISSIONS") ? (BX_DIR_PERMISSIONS) : 0755),
-				(defined("BX_FILE_PERMISSIONS") ? (BX_FILE_PERMISSIONS) : 0644)
+				(defined("BX_DIR_PERMISSIONS") ? (BX_DIR_PERMISSIONS) : 0700),
+				(defined("BX_FILE_PERMISSIONS") ? (BX_FILE_PERMISSIONS) : 0600)
 			);
 
 			$ar = array($ar[1], $ar[2]);
@@ -3928,175 +3635,64 @@ class SelectWizard1Step extends SelectWizardStep
 		$arWizardsList = BXInstallServices::GetWizardsList($selectedModule);
 
 		$this->content = '
-			<style type="text/css">
-			#solutions-container
-			{
-				margin-bottom: 15px;
-			}
-
-			a.solution-item
-			{
-				display:block;
-				border: 0;
-				margin-bottom: 10px;
-				color: Black;
-				text-decoration: none;
-				outline: none;
-			}
-
-			a.solution-item h4
-			{
-				margin: 10px;
-				margin-top: 9px; /*compensating 1px padding*/
-				font-family:Helvetica;
-				font-size:1.5em;
-			}
-			a.solution-item p
-			{
-				margin: 10px;
-			}
-
-			div.solution-item-wrapper
-			{
-				width: 97px;
-				float: left;
-			}
-
-			a.solution-picture-item
-			{
-				margin: 3px;
-				text-align: center;
-			}
-
-			div.solution-description
-			{
-				margin-top: 3px;
-				margin-left: 4px;
-				color: #999;
-				text-align:left;
-			}
-
-			a.solution-picture-item img.solution-image
-			{
-				width: 70px;
-				float: none;
-				margin: 7px 0px 7px;
-			}
-
-			img.solution-image
-			{
-				width: 100px;
-				float: left;
-				margin: 10px;
-				border: 1px solid #CFCFCF;
-			}
-			div.solution-inner-item
-			{
-				padding: 1px;
-				overflow: hidden;
-				zoom: 1;
-			}
-
-			a.solution-item div.solution-inner-item,
-			a.solution-item b
-			{
-				background-color:#F7F7F7;
-				cursor: pointer;
-				cursor: hand;
-			}
-
-			a.solution-item:hover div.solution-inner-item,
-			a.solution-item:hover b
-			{
-				background-color: #FFF0B2;
-			}
-
-			a.solution-item-selected div.solution-inner-item,
-			a.solution-item-selected b,
-			a.solution-item-selected:hover div.solution-inner-item,
-			a.solution-item-selected:hover b
-			{
-				background-color: #CADBEC;
-			}
-
-			#solution-preview
-			{
-				margin-top: 10px;
-			}
-
-			#solution-preview div.solution-inner-item,
-			#solution-preview b
-			{
-				background-color:#F7F7F7;
-			}
-
-			#solution-preview div.solution-inner-item
-			{
-				padding: 10px;
-				text-align: center;
-			}
-
-			#solution-preview-image
-			{
-				border: 1px solid #CFCFCF;
-				width: 450px;
-			}
-
-			/* Round Corners */
-			.r0, .r1, .r2, .r3, .r4 { overflow: hidden; font-size:1px; display: block; height: 1px;}
-			.r4 { margin: 0 4px; }
-			.r3 { margin: 0 3px; }
-			.r2 { margin: 0 2px; }
-			.r1 { margin: 0 1px; }
-			</style>';
-
-		$this->content .= '
 		<script type="text/javascript">
 			function SelectSolution(element, solutionId)
 			{
-				var container = document.getElementById("solutions-container");
-				var anchors = container.getElementsByTagName("A");
-				for (var i = 0; i < anchors.length; i++)
-				{
-					if (anchors[i].parentNode != container)
-						continue;
-					anchors[i].className = "solution-item";
-				}
-				element.className = "solution-item solution-item-selected";
 				var hidden = document.getElementById("id_'.CUtil::JSEscape($prefixName).'");
 				hidden.value = solutionId;
 
+				var container = document.getElementById("solutions-container");
+				var anchors = container.getElementsByTagName("TD");
+				for (var i = 0; i < anchors.length; i++)
+				{
+					anchors[i].className = "inst-module-cell";
+				}
+
+				element.parentNode.className = "inst-module-cell inst-module-cell-active";
+				
 				document.getElementById("id_radio_"+solutionId).checked=true;
 			}
 		</script>
 		';
 
-		$this->content .= '<div id="solutions-container">';
+		$arWizardsList[] = array(
+				"ID" => "@",
+				"IMAGE" => "/bitrix/images/install/marketplace.gif",
+				"NAME" => InstallGetMessage("INS_LOAD_FROM_MARKETPLACE"),
+				"DESCRIPTION" => InstallGetMessage("INS_LOAD_FROM_MARKETPLACE_DESCR"),
+			);
+
+		$this->content .= '<table class="inst-module-table" id="solutions-container">';
+		$i = 0;
 		foreach ($arWizardsList as $w)
 		{
-			$this->content .= '<a class="solution-item" href="javascript:void(0);" onclick="SelectSolution(this, \''.htmlspecialcharsbx($w["ID"]).'\');" ondblclick="document.forms[\''.htmlspecialcharsbx($wizard->GetFormName()).'\'].submit();">
-				<b class="r3"></b><b class="r1"></b><b class="r1"></b>
-				<div class="solution-inner-item">
-					<input type="radio" id="id_radio_'.htmlspecialcharsbx($w["ID"]).'" name="redio" style="float:left;margin-left:4px;margin-top:10px;margin-bottom:20px;">
-					'.(strlen($w["IMAGE"]) > 0 ? '<img alt="" src="'.htmlspecialcharsbx($w["IMAGE"]).'" class="solution-image" />' : "").'
-					<h4>'.$w["NAME"].'</h4>
-					<p>'.$w["DESCRIPTION"].'</p>
-				</div>
-				<b class="r1"></b><b class="r1"></b><b class="r3"></b>
-			</a>';
+			if($i == 0)
+				$this->content .= '<tr>';
+			$this->content .= '
+				<td class="inst-module-cell">
+					<div class="inst-module-block" onclick="SelectSolution(this, \''.htmlspecialcharsbx($w["ID"]).'\');" ondblclick="document.forms[\''.htmlspecialcharsbx($wizard->GetFormName()).'\'].submit();">
+							<div class="inst-module-title"><span class="inst-module-title-alignment"></span><span class="inst-module-title-text">'.$w["NAME"].'</span></div>
+							<div class="inst-module-cont">
+								'.(strlen($w["IMAGE"]) > 0 ? '<div class="inst-module-img"><img alt="" src="'.htmlspecialcharsbx($w["IMAGE"]).'" /></div>' : "").'
+								<div class="inst-module-text">'.$w["DESCRIPTION"].'</div>
+							</div>
+							<input type="radio" id="id_radio_'.htmlspecialcharsbx($w["ID"]).'" name="redio" class="inst-module-checkbox" />
+					</div>
+				</td>';
+
+			if($i == 1)
+			{
+				$this->content .= '</tr>';
+				$i = 0;
+			}
+			else
+			{
+				$i++;
+			}
 		}
-
-		$this->content .= '<a class="solution-item" href="javascript:void(0);" onclick="SelectSolution(this, \'@\'); return false;" ondblclick="document.forms[\''.htmlspecialcharsbx($wizard->GetFormName()).'\'].submit();">
-			<b class="r3"></b><b class="r1"></b><b class="r1"></b>
-			<div class="solution-inner-item">
-				<input type="radio" id="id_radio_@" name="redio" style="float:left;margin-left:4px;margin-top:10px;margin-bottom:20px;">
-				<h4>'.InstallGetMessage("INS_LOAD_FROM_MARKETPLACE").'</h4>
-				<p>'.InstallGetMessage("INS_LOAD_FROM_MARKETPLACE_DESCR").'</p>
-			</div>
-			<b class="r1"></b><b class="r1"></b><b class="r3"></b>
-		</a>';
-
-		$this->content .= '</div>
+		if($i == 0)
+			$this->content .= '<td></td></tr>';
+		$this->content .= '</table>
 		<input type="hidden" id="id_'.htmlspecialcharsbx($prefixName).'" name="'.htmlspecialcharsbx($prefixName).'" value="">';
 	}
 }

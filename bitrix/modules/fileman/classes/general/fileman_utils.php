@@ -62,6 +62,7 @@ class CFilemanUtils
 				title: "<?= GetMessage("FM_UTIL_FIND")?>",
 				id: 'search',
 				name: 'search',
+				className: 'adm-btn-save',
 				action: function(){window.oFMSearch.Search();}
 			}),
 			new BX.CWindowButton(
@@ -630,7 +631,7 @@ CAdminFileDialog::ShowScript(Array
 CAdminFileDialog::ShowScript(Array
 	(
 		"event" => "FMFD_PackUnpackOpen",
-		"arResultDest" => Array("ELEMENT_ID" => "bx_pack_to"),
+		"arResultDest" => Array("FUNCTION_NAME" => "MakeArchivePathFromFolderPath"),
 		"arPath" => Array("SITE" => $GLOBALS['site'], "PATH" => "/"),
 		"select" => 'D',
 		"operation" => 'O',// O - open, S - save
@@ -642,6 +643,27 @@ CAdminFileDialog::ShowScript(Array
 );
 ?>
 		</div>
+		<script type="text/javascript">
+			function MakeArchivePathFromFolderPath(filename, path, site)
+			{
+				var
+					oldArchivePath = BX('bx_pack_to').value,
+					newArchivePath,
+					archiveName;
+
+				archiveName = oldArchivePath.substr(oldArchivePath.lastIndexOf('/') + 1);
+				newArchivePath = "/" + path + "/" + filename + "/" + archiveName;
+
+				newArchivePath = newArchivePath.replace(/[\/]+$/g, "");
+				newArchivePath = newArchivePath.replace(/[\/]+/g, '/');
+				newArchivePath = newArchivePath.replace(/[\\]+/g, '/');
+
+				if (newArchivePath == '')
+					newArchivePath = '/';
+
+				BX('bx_pack_to').value = newArchivePath;
+			}
+		</script>
 		<div id="bx_pack_ask_dialog" class="bx-pack-cont">
 		<div style="margin: 0 20px 0 20px; width: 450px; padding: 10px 0 5px;">
 		<?= GetMessage("FM_UTIL_FILE_EXIST", array("#NAME#" => "<span id='bx_pack_ask_file_name'>#NAME#</span>", "#FOLDER#" => "<span id='bx_pack_ask_folder'>#FOLDER#</span>"))?>:

@@ -1,5 +1,6 @@
 <?
 IncludeModuleLangFile(__FILE__);
+/** @global CUser $USER */
 if ($USER->IsAdmin())
 {
 	$menu = array(

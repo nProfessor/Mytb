@@ -37,26 +37,17 @@ if($_SERVER["REQUEST_METHOD"] == "POST" && $_POST["Update"].$_POST["Apply"].$_PO
 	else
 	{
 		COption::SetOptionString("socialservices", "use_on_sites", serialize($_POST["use_on_sites"]));
+		CAgent::RemoveModuleAgents("socialservices");
+		CAgent::AddAgent("CSocServAuthManager::SendSocialservicesMessages();", "socialservices", "N", 100, "", "Y", "");
+		CAgent::AddAgent("CSocServMessage::CleanUp();", "socialservices", "N", 86400, "", "Y", "");
 		foreach($arSiteList as $site)
 		{
-			$sendTwit = 'N';
-			$allowAuthorization = 'N';
 			$suffix = ($site <> ''? '_bx_site_'.$site:'');
 			$siteId = ($site <> '' ? $site : SITE_ID);
 
 			COption::SetOptionString("socialservices", "auth_services".$suffix, serialize($_POST["AUTH_SERVICES".$suffix]));
 			COption::SetOptionString("socialservices", "twitter_search_hash".$suffix, $_POST["twitter_search_hash".$suffix]);
-			CAgent::RemoveAgent("CSocServAuthManager::GetTwitMessages($siteId);", "socialservices");
-			if($_POST["allow_socserv_authorization".$suffix] == 'Y')
-				$allowAuthorization = 'Y';
-			COption::SetOptionString("socialservices", "allow_socserv_authorization".$suffix, $allowAuthorization);
-			if($_POST["send_message_to_twitter".$suffix] == 'Y')
-			{
-				$sendTwit = 'Y';
-				CAgent::AddAgent("CSocServAuthManager::GetTwitMessages($site);", "socialservices", "N", 60, "", "Y", "");
-			}
 
-			COption::SetOptionString("socialservices", "send_message_to_twitter".$suffix, $sendTwit);
 			foreach($arOptions as $option)
 			{
 				if(is_array($option))
@@ -65,6 +56,20 @@ if($_SERVER["REQUEST_METHOD"] == "POST" && $_POST["Update"].$_POST["Apply"].$_PO
 			}
 		}
 	}
+	$sendTwit = $allowSendActivity = 'N';
+
+	if($_POST["get_message_from_twitter"] == 'Y')
+	{
+		$sendTwit = 'Y';
+		CAgent::AddAgent("CSocServAuthManager::GetTwitMessages();", "socialservices", "N", 90, "", "Y", "");
+	}
+	COption::SetOptionString("socialservices", "get_message_from_twitter", $sendTwit);
+
+	if($_POST["allow_send_user_activity"] == 'Y')
+		$allowSendActivity = 'Y';
+	COption::SetOptionString("socialservices", "allow_send_user_activity", $allowSendActivity);
+
+
 
 	if(strlen($_REQUEST["back_url_settings"]) > 0)
 	{
@@ -135,17 +140,27 @@ foreach($arSiteList as $site):
 	</tr>
 </table>
 <?endif?>
-<table cellpadding="0" cellspacing="0" border="0" class="edit-table" id="site_settings<?=$suffix?>"<?if($site <> '' && $arUseOnSites[$site] <> "Y") echo ' style="display:none"';?>>
+<table cellpadding="0" cellspacing="0" border="0" class="edit-table" width="100%" id="site_settings<?=$suffix?>"<?if($site <> '' && $arUseOnSites[$site] <> "Y") echo ' style="display:none"';?>>
+	<?if($site == ''):?>
+
 	<tr>
-		<td colspan="2" class="to_twitter">
-			<input type="checkbox" name="allow_socserv_authorization<?=$suffix?>" id="allow_socserv_authorization<?=$suffix?>" value="Y"
-				<?if(COption::GetOptionString("socialservices", "allow_socserv_authorization".$suffix, "N") == 'Y') echo " checked"; elseif(COption::GetOptionString("socialservices", "allow_socserv_authorization".$suffix, false) === false && $suffix == '')  echo " checked";?>>
-			<?=GetMessage("soc_serv_opt_allow");?>
+		<td> <?=GetMessage("soc_serv_send_activity");?> </td><td>
+			<input type="checkbox" name="allow_send_user_activity" id="allow_send_user_activity" value="Y"
+				<?if(COption::GetOptionString("socialservices", "allow_send_user_activity", "N") == 'Y') echo " checked"; elseif(COption::GetOptionString("socialservices", "allow_send_user_activity", false) === false)  echo " checked";?>>
+
+		</td>
+	</tr>
+	<tr>
+		<td> <?=str_replace("#hash#", $twitHashInput, GetMessage("socserv_twit_to_buzz"))?> </td><td>
+			<input type="checkbox" name="get_message_from_twitter" id="get_message_from_twitter" value="Y"
+				<?if(COption::GetOptionString("socialservices", "get_message_from_twitter", "N") == 'Y') echo " checked"; elseif(COption::GetOptionString("socialservices", "get_message_from_twitter", false) === false)  echo " checked";?>>
+
+		</td>
+	</tr>
 	<tr class="heading">
 		<td colspan="2"><?=GetMessage("soc_serv_opt_list_title")?></td>
 	</tr>
-		</td>
-	</tr>
+	<?endif;?>
 	<tr valign="top">
 
 		<td width="50%" class="field-name"><?echo GetMessage("soc_serv_opt_list")?></td>
@@ -174,13 +189,6 @@ foreach($arSiteList as $site):
 	endforeach;
 ?>
 			</table>
-		</td>
-	</tr>
-	<tr>
-		<td colspan="2" class="to_twitter">
-			<input type="checkbox" name="send_message_to_twitter<?=$suffix?>" id="send_message_to_twitter<?=$suffix?>" value="Y"
-			<?if(COption::GetOptionString("socialservices", "send_message_to_twitter".$suffix, "N") == 'Y') echo " checked"; elseif(COption::GetOptionString("socialservices", "send_message_to_twitter".$suffix, false) === false && $suffix == '')  echo " checked";?>>
-			<?=str_replace("#hash#", $twitHashInput, GetMessage("socserv_twit_to_buzz"))?>
 		</td>
 	</tr>
 <?

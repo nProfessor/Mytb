@@ -71,9 +71,6 @@ class CIBlockPropertySKU extends CIBlockPropertyElementAutoComplete
 		$strResult = '<tr>
 		<td>'.GetMessage('BT_UT_SKU_SETTING_VIEW').'</td>
 		<td>'.SelectBoxFromArray($strHTMLControlName["NAME"].'[VIEW]',self::GetPropertyViewsList(true),htmlspecialcharsbx($arSettings['VIEW'])).'</td>
-		<tr>
-		<td>'.GetMessage('BT_UT_SKU_SETTING_IBLOCK_MESS').'</td>
-		<td>'.InputType('checkbox',$strHTMLControlName["NAME"].'[IBLOCK_MESS]','Y',htmlspecialcharsbx($arSettings["IBLOCK_MESS"])).'</td>
 		</tr>
 		<tr>
 		<td>'.GetMessage('BT_UT_SKU_SETTING_MAX_WIDTH').'</td>

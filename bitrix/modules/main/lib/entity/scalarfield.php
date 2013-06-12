@@ -37,24 +37,6 @@ class ScalarField extends Field
 		$this->column_name = isset($parameters['column_name']) ? $parameters['column_name'] : $this->name;
 	}
 
-	public function validateValue($value)
-	{
-		if (is_scalar($value))
-		{
-			if ($this->is_unique)
-			{
-				// if (value_is_not_unique) return false;
-				// how to check this?
-				// getList(filter) ?
-				// it's better to have unique index in db
-			}
-
-			return true;
-		}
-
-		return false;
-	}
-
 	public function isPrimary()
 	{
 		return $this->is_primary;

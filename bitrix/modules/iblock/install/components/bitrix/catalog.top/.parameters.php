@@ -267,6 +267,7 @@ $arComponentParameters = array(
 			"NAME" => GetMessage("CP_BCT_USE_PRODUCT_QUANTITY"),
 			"TYPE" => "CHECKBOX",
 			"DEFAULT" => "N",
+			"REFRESH" => "Y",
 		),
 		"CACHE_TIME"  =>  Array("DEFAULT"=>36000000),
 		"CACHE_GROUPS" => array(
@@ -316,13 +317,22 @@ if(!$OFFERS_IBLOCK_ID)
 }
 else
 {
-	unset($arComponentParameters["PARAMETERS"]["PRODUCT_PROPERTIES"]);
 	$arComponentParameters["PARAMETERS"]["OFFERS_CART_PROPERTIES"] = array(
 		"PARENT" => "PRICES",
 		"NAME" => GetMessage("CP_BCT_OFFERS_CART_PROPERTIES"),
 		"TYPE" => "LIST",
 		"MULTIPLE" => "Y",
 		"VALUES" => $arProperty_Offers,
+	);
+}
+
+if (isset($arCurrentValues["USE_PRODUCT_QUANTITY"]) && 'Y' == $arCurrentValues["USE_PRODUCT_QUANTITY"])
+{
+	$arComponentParameters["PARAMETERS"]['QUANTITY_FLOAT'] = array(
+		'PARENT' => 'PRICES',
+		'NAME' => GetMessage('CP_BCT_QUANTITY_FLOAT'),
+		'TYPE' => 'CHECKBOX',
+		'DEFAULT' => 'N',
 	);
 }
 ?>

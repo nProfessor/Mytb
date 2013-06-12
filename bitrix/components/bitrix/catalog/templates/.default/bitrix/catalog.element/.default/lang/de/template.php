@@ -18,5 +18,4 @@ $MESS["CATALOG_VAT_NOT_INCLUDED"] = "MwSt. ist im Preis nicht enthalten";
 $MESS["CT_BCE_QUANTITY"] = "Menge";
 $MESS["CT_BCE_CATALOG_ADD"] = "In Warenkorb";
 $MESS["CT_BCE_CATALOG_COMPARE"] = "Vergleichen";
-$MESS["CATALOG_SUBSCRIBE"] = "Abonnieren";
 ?>

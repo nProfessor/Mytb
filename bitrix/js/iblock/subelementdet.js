@@ -124,5 +124,10 @@
 		sParam += '&n='+encodeURIComponent(this.name)+'_disabled';
 		sParam += '&action=delete';
 		request.Send('/bitrix/admin/user_options.php?lang=' + phpVars.LANGUAGE_ID + sParam + '&sessid='+phpVars.bitrix_sessid);
-	};	
+	};
+	
+	BX.adminSubTabControl.prototype.CloseSettings =  function()
+	{
+		BX.WindowManager.Get().Close();
+	};
 })(window);

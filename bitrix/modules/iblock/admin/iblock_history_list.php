@@ -209,13 +209,13 @@ while($arRes = $rsData->NavNext(true, "f_"))
 		"ICON"=>"delete",
 		"TEXT"=>GetMessage('IBLOCK_ADM_HISTORY_DELETE'),
 		"TITLE"=>GetMessage("IBLOCK_ADM_HISTORY_DELETE_ALT"),
-		"ACTION"=>"if(confirm('".GetMessage("IBLOCK_ADM_HISTORY_CONFIRM_DEL")."')) ".$lAdmin->ActionDoGroup($f_ID, "delete", 'type='.htmlspecialcharsbx($type).'&ELEMENT_ID='.$ELEMENT_ID.'&IBLOCK_ID='.$IBLOCK_ID.'&find_section_section='.$find_section_section)
+		"ACTION"=>"if(confirm('".GetMessageJS("IBLOCK_ADM_HISTORY_CONFIRM_DEL")."')) ".$lAdmin->ActionDoGroup($f_ID, "delete", 'type='.htmlspecialcharsbx($type).'&ELEMENT_ID='.$ELEMENT_ID.'&IBLOCK_ID='.$IBLOCK_ID.'&find_section_section='.$find_section_section)
 		);
 	$arActions[] = array(
 		"ICON"=>"restore",
 		"TEXT"=>GetMessage('IBLOCK_ADM_HISTORY_RESTORE'),
 		"TITLE"=>GetMessage("IBLOCK_ADM_HISTORY_RESTORE_ALT"),
-		"ACTION"=>"if(confirm('".GetMessage("IBLOCK_ADM_HISTORY_RESTORE_CONFIRM")."')) ".$lAdmin->ActionDoGroup($f_ID, "restore", 'type='.htmlspecialcharsbx($type).'&ELEMENT_ID='.$ELEMENT_ID.'&IBLOCK_ID='.$IBLOCK_ID.'&find_section_section='.$find_section_section)
+		"ACTION"=>"if(confirm('".GetMessageJS("IBLOCK_ADM_HISTORY_RESTORE_CONFIRM")."')) ".$lAdmin->ActionDoGroup($f_ID, "restore", 'type='.htmlspecialcharsbx($type).'&ELEMENT_ID='.$ELEMENT_ID.'&IBLOCK_ID='.$IBLOCK_ID.'&find_section_section='.$find_section_section)
 		);
 
 	$row->AddActions($arActions);

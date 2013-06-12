@@ -92,7 +92,8 @@ class CRatings extends CAllRatings
 				WHERE RU.ID IS NULL	";
 			$res = $DB->Query($strSql, false, $err_mess.__LINE__);
 			// authority calc
-			if ($arRating['AUTHORITY'] == 'Y') {
+			if ($arRating['AUTHORITY'] == 'Y')
+			{
 				$sRatingAssignType = COption::GetOptionString("main", "rating_assign_type", "manual");
 				if ($sRatingAssignType == 'auto')
 				{
@@ -190,9 +191,50 @@ class CRatings extends CAllRatings
 				}
 
 			}
+			global $CACHE_MANAGER;
+			$CACHE_MANAGER->CleanDir("b_rating_user");
 
 			$DB->Query("UPDATE b_rating SET CALCULATED = 'Y', LAST_CALCULATED = ".$DB->GetNowFunction()." WHERE id = ".$ID, false, $err_mess.__LINE__);
 		}
+		return true;
+	}
+
+	function DeleteByUser($ID)
+	{
+		global $DB, $CACHE_MANAGER;
+
+		$ID = intval($ID);
+		$err_mess = (CRatings::err_mess())."<br>Function: DeleteByUser<br>Line: ";
+
+		$strSql =  "
+			UPDATE
+				b_rating_voting RV,
+				(
+					SELECT
+						RATING_VOTING_ID, SUM(case when USER_ID <> $ID then VALUE else '0' end) as TOTAL_VALUE,
+						SUM(case when USER_ID <> $ID then '1' else '0' end) as TOTAL_VOTES,
+						SUM(case when VALUE > 0 AND USER_ID <> $ID then '1' else '0' end) as TOTAL_POSITIVE_VOTES,
+						SUM(case when VALUE < 0 AND USER_ID <> $ID then '1' else '0' end) as TOTAL_NEGATIVE_VOTES
+					FROM b_rating_vote
+					WHERE RATING_VOTING_ID IN (
+						SELECT DISTINCT RV0.RATING_VOTING_ID FROM b_rating_vote RV0 WHERE RV0.USER_ID=$ID
+					)
+					GROUP BY RATING_VOTING_ID
+				) as RP
+			SET
+				RV.TOTAL_VALUE = RP.TOTAL_VALUE,
+				RV.TOTAL_VOTES = RP.TOTAL_VOTES,
+				RV.TOTAL_POSITIVE_VOTES = RP.TOTAL_POSITIVE_VOTES,
+				RV.TOTAL_NEGATIVE_VOTES = RP.TOTAL_NEGATIVE_VOTES
+			WHERE
+				RV.ID = RP.RATING_VOTING_ID
+		";
+		$res = $DB->Query($strSql, false, $err_mess.__LINE__);
+
+		$DB->Query("DELETE FROM b_rating_vote WHERE USER_ID=$ID", false, $err_mess.__LINE__);
+		$DB->Query("DELETE FROM b_rating_user WHERE ENTITY_ID=$ID", false, $err_mess.__LINE__);
+		$CACHE_MANAGER->ClearByTag('RV_CACHE');
+
 		return true;
 	}
 
@@ -406,55 +448,33 @@ class CRatings extends CAllRatings
 		{
 			static $cacheAllowVote = array();
 			static $cacheUserVote = array();
-			static $cacheVoteAccess = null;
-			static $cacheVoteGroup = array();
 			static $cacheVoteSize = 0;
 			if(!array_key_exists($userId, $cacheAllowVote))
 			{
 				global $DB;
 				$arGroups = array();
-				$bAllGroups = false;
 				$sVoteType = $arVoteParam['ENTITY_TYPE_ID'] == 'USER'? 'A': 'R';
-				if (!isset($cacheVoteGroup[$sVoteType]))
+
+				$userVoteGroup = Array();
+				$ar = CRatings::GetVoteGroupEx();
+				foreach($ar as $group)
+					if ($sVoteType == $group['TYPE'])
+						$userVoteGroup[] = $group['GROUP_ID'];
+
+				$userGroup = $USER->GetUserGroupArray();
+
+				$result = array_intersect($userGroup, $userVoteGroup);
+				if (empty($result))
 				{
-					$cacheVoteGroup[$sVoteType] = Array();
-					$rsGroups = CRatings::GetVoteGroup($sVoteType);
-					while ($arVoteGroup = $rsGroups->Fetch())
-						$cacheVoteGroup[$sVoteType][] = $arVoteGroup;
-				}
-				foreach($cacheVoteGroup[$sVoteType] as $arVoteGroup)
-				{
-					if ($arVoteGroup['GROUP_ID'] == 2)
-					{
-						$bAllGroups = true;
-						break;
-					}
-					$arGroups[] = $arVoteGroup['GROUP_ID'];
-				}
-				if (!$bAllGroups && !empty($arGroups) && is_null($cacheVoteAccess))
-				{
-					$strSql = '
-						SELECT * FROM b_user_group UG
-						WHERE UG.GROUP_ID IN ('.implode(',', $arGroups).')
-						AND UG.USER_ID = '.$userId.'
-						AND ((UG.DATE_ACTIVE_FROM IS NULL) OR (UG.DATE_ACTIVE_FROM <= '.$DB->CurrentTimeFunction().'))
-						AND ((UG.DATE_ACTIVE_TO IS NULL) OR (UG.DATE_ACTIVE_TO >= '.$DB->CurrentTimeFunction().'))';
-					$res = $DB->Query($strSql, false, $err_mess.__LINE__);
-					if ($row = $res->Fetch())
-						$cacheVoteAccess = true;
-					else
-					{
-						$cacheVoteAccess = false;
-						$arInfo = $cacheAllowVote[$userId] = array(
-							'RESULT' => false,
-							'ERROR_TYPE' => 'ACCESS',
-							'ERROR_MSG' => GetMessage('RATING_ALLOW_VOTE_ACCESS'),
-						);
-					}
+					$arInfo = $cacheAllowVote[$userId] = array(
+						'RESULT' => false,
+						'ERROR_TYPE' => 'ACCESS',
+						'ERROR_MSG' => GetMessage('RATING_ALLOW_VOTE_ACCESS'),
+					);
 				}
 
 				$authorityRatingId	 = CRatings::GetAuthorityRating();
-				$arAuthorityUserProp = CRatings::GetRatingUserProp($authorityRatingId, $userId);
+				$arAuthorityUserProp = CRatings::GetRatingUserPropEx($authorityRatingId, $userId);
 				if ($arAuthorityUserProp['VOTE_WEIGHT'] <= 0)
 				{
 					$arInfo = $cacheAllowVote[$userId] = array(
@@ -466,7 +486,6 @@ class CRatings extends CAllRatings
 
 				if ($arInfo['RESULT'] && $sVoteType == 'A')
 				{
-
 					$strSql = '
 						SELECT COUNT(*) as VOTE
 						FROM b_rating_vote RV
@@ -505,8 +524,11 @@ class CRatings extends CAllRatings
 			}
 		}
 
-		$db_events = GetModuleEvents("main", "OnAfterCheckAllowVote");
-		while ($arEvent = $db_events->Fetch())
+		static $handlers;
+		if (!isset($handlers))
+			$handlers = GetModuleEvents("main", "OnAfterCheckAllowVote", true);
+
+		foreach ($handlers as $arEvent)
 		{
 			$arEventResult = ExecuteModuleEventEx($arEvent, array($arVoteParam));
 			if (is_array($arEventResult) && isset($arEventResult['RESULT']) && $arEventResult['RESULT'] === false
@@ -620,8 +642,6 @@ class CRatings extends CAllRatings
 	{
 		global $DB, $USER;
 
-		$userId = $USER->GetId();
-
 		$bplus = true;
 		if (strtoupper($arParam['LIST_TYPE']) == 'MINUS')
 			$bplus = false;
@@ -643,11 +663,11 @@ class CRatings extends CAllRatings
 
 		if (
 			(
-				array_key_exists("USER_FIELDS", $arParam) 
+				array_key_exists("USER_FIELDS", $arParam)
 				&& is_array($arParam["USER_FIELDS"])
 			)
 			|| (
-				array_key_exists("USER_SELECT", $arParam) 
+				array_key_exists("USER_SELECT", $arParam)
 				&& is_array($arParam["USER_SELECT"])
 			)
 		)
@@ -697,8 +717,8 @@ class CRatings extends CAllRatings
 				ORDER BY ".($bIntranetInstalled? "RV.VALUE DESC, RANK DESC, RV.ID DESC": "RANK DESC, RV.VALUE DESC, RV.ID DESC");
 		}
 
+		$arList = Array();
 		$arVoteList = Array();
-		$arCurrentUser = Array();
 		if ($arParam['LIST_LIMIT'] != 0 && ceil($cnt/intval($arParam['LIST_LIMIT'])) >= intval($arParam['LIST_PAGE']))
 		{
 			$res = new CDBResult();
@@ -722,16 +742,16 @@ class CRatings extends CAllRatings
 				else
 					$arUserID[] = $row["ID"];
 
-				if ($ar['ID'] != $userId)
-					$arVoteList[] = $ar;
+				if ($ar['ID'] != $USER->GetId())
+					$arList[$ar['ID']] = $ar;
 				else
-					$arCurrentUser[] = $ar;
+					$arVoteList[$ar['ID']] = $ar;
 			}
-
-			$arVoteList = array_merge($arCurrentUser, $arVoteList);
+			foreach ($arList as $ar)
+				$arVoteList[$ar['ID']] = $ar;
 
 			if (
-				$bExtended 
+				$bExtended
 				&& count($arUserID) > 0
 			)
 			{
@@ -773,7 +793,7 @@ class CRatings extends CAllRatings
 						);
 						$arUser["PHOTO"] = CFile::ShowImage($arFileTmp["src"], 21, 21, "border=0");
 					}
-					$arUser["FULL_NAME"] = CUser::FormatName(CSite::GetNameFormat(false), $arUser);					
+					$arUser["FULL_NAME"] = CUser::FormatName(CSite::GetNameFormat(false), $arUser);
 					$arUsers[$arUser["ID"]] = $arUser;
 				}
 

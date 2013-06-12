@@ -1,5 +1,12 @@
 <?
 if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true) die();
+/** @var CBitrixComponent $this */
+/** @var array $arParams */
+/** @var array $arResult */
+/** @global CUser $USER */
+global $USER;
+/** @global CMain $APPLICATION */
+global $APPLICATION;
 
 /*************************************************************************
 	Processing of received parameters
@@ -18,23 +25,27 @@ foreach($arParams["IBLOCKS"] as $IBLOCK_ID)
 		$arIBlockFilter[]=$IBLOCK_ID;
 }
 
-if(count($arIBlockFilter)<=0)
+if(empty($arIBlockFilter))
 {
 	if(!CModule::IncludeModule("iblock"))
 	{
 		ShowError(GetMessage("IBLOCK_MODULE_NOT_INSTALLED"));
 		return;
 	}
-	$rsIBlocks = GetIBlockList($arParams["IBLOCK_TYPE"]);
-	if($arIBlock = $rsIBlocks->GetNext())
-		$arIBlockFilter[]=$arIBlock["ID"];
+	$rsIBlocks = CIBlock::GetList(array("sort" => "asc"), array(
+		"type" => $arParams["IBLOCK_TYPE"],
+		"LID" => SITE_ID,
+		"ACTIVE" => "Y",
+	));
+	if($arIBlock = $rsIBlocks->Fetch())
+		$arIBlockFilter[] = $arIBlock["ID"];
 }
 
 unset($arParams["IBLOCK_TYPE"]);
 $arParams["PARENT_SECTION"] = intval($arParams["PARENT_SECTION"]);
 $arParams["IBLOCKS"] = $arIBlockFilter;
 
-if(count($arIBlockFilter)>0 && $this->StartResultCache(false, ($arParams["CACHE_GROUPS"]==="N"? false: $USER->GetGroups())))
+if(!empty($arIBlockFilter) && $this->StartResultCache(false, ($arParams["CACHE_GROUPS"]==="N"? false: $USER->GetGroups())))
 {
 	if(!CModule::IncludeModule("iblock"))
 	{

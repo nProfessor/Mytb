@@ -22,12 +22,17 @@ class CBXShortUri
 
 		$taskId = intval($DB->LastID());
 
+		$arFields["ID"] = $taskId;
+
+		foreach (GetModuleEvents("main", "OnAfterShortUriAdd", true) as $arEvent)
+			ExecuteModuleEventEx($arEvent, array($arFields));
+
 		return $taskId;
 	}
 
 	public static function GetList($arOrder = array("ID" => "DESC"), $arFilter = array(), $arNavStartParams = false)
 	{
- 		global $DB;
+		global $DB;
 
 		self::ClearErrors();
 

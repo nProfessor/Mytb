@@ -1,6 +1,23 @@
 <?
-//error_reporting(E_ALL);
+/**
+ * Bitrix Framework
+ * @package bitrix
+ * @subpackage main
+ * @copyright 2001-2013 Bitrix
+ */
+
+/**
+ * Bitrix vars
+ * @global CUser $USER
+ * @global CMain $APPLICATION
+ * @global CAdminPage $adminPage
+ * @global CAdminMenu $adminMenu
+ * @global CAdminMainChain $adminChain
+ * @global string $SiteExpireDate
+ */
+
 if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true) die();
+
 IncludeModuleLangFile(__FILE__);
 
 if(strlen($APPLICATION->GetTitle())<=0)
@@ -14,6 +31,7 @@ $adminMenu->Init($adminPage->aModules);
 
 $bShowAdminMenu = !empty($adminMenu->aGlobalMenu);
 
+$aOptMenuPos = array();
 if($bShowAdminMenu && class_exists("CUserOptions"))
 {
 	$aOptMenuPos = CUserOptions::GetOption("admin_menu", "pos", array());
@@ -53,8 +71,8 @@ endif;
 
 $APPLICATION->AddBufferContent(array($adminPage, "ShowCSS"));
 echo $adminPage->ShowScript();
-$APPLICATION->ShowHeadScripts();
 $APPLICATION->ShowHeadStrings();
+$APPLICATION->ShowHeadScripts();
 ?>
 <script type="text/javascript">
 BX.message({MENU_ENABLE_TOOLTIP: <?=($aUserOptGlobal['start_menu_title'] <> 'N' ? 'true' : 'false')?>});
@@ -240,7 +258,6 @@ if ($APPLICATION->GetCurPage(true) != "/bitrix/admin/index.php")
 		$arLastItem = $adminChain->Show();
 
 		$currentFavId = CFavorites::GetIDByUrl($_SERVER["REQUEST_URI"]);
-		//$currentItemsId = is_array($arLastItem) && isset($arLastItem['ID'])	? $arLastItem['ID'] : '';
 		$currentItemsId = '';
 	}
 ?>
@@ -352,7 +369,7 @@ if($USER->IsAuthorized()):
 	//diagnostic for spaces in init.php etc.
 	//$aHeadersInfo set in the include.php
 	if(!empty($aHeadersInfo))
-		echo CAdminMessage::ShowMessage(GetMessage("prolog_admin_headers_sent", array("#FILE#"=>$aHeadersInfo['file'], "#LINE#"=>$aHeadersInfo['line'])));
+		CAdminMessage::ShowMessage(GetMessage("prolog_admin_headers_sent", array("#FILE#"=>$aHeadersInfo['file'], "#LINE#"=>$aHeadersInfo['line'])));
 
 endif; //$USER->IsAuthorized()
 ?>

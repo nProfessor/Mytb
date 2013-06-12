@@ -15,6 +15,7 @@ while($arr=$rsIBlock->Fetch())
 
 $arProperty = array();
 $arProperty_N = array();
+$arProperty_X = array();
 if (0 < intval($arCurrentValues["IBLOCK_ID"]))
 {
 	$rsProp = CIBlockProperty::GetList(Array("sort"=>"asc", "name"=>"asc"), Array("IBLOCK_ID"=>$arCurrentValues["IBLOCK_ID"], "ACTIVE"=>"Y"));
@@ -25,6 +26,16 @@ if (0 < intval($arCurrentValues["IBLOCK_ID"]))
 
 		if($arr["PROPERTY_TYPE"] == "N")
 			$arProperty_N[$arr["CODE"]] = "[".$arr["CODE"]."] ".$arr["NAME"];
+
+		if ($arr["PROPERTY_TYPE"] != "F")
+		{
+			if($arr["MULTIPLE"] == "Y")
+				$arProperty_X[$arr["CODE"]] = "[".$arr["CODE"]."] ".$arr["NAME"];
+			elseif($arr["PROPERTY_TYPE"] == "L")
+				$arProperty_X[$arr["CODE"]] = "[".$arr["CODE"]."] ".$arr["NAME"];
+			elseif($arr["PROPERTY_TYPE"] == "E" && $arr["LINK_IBLOCK_ID"] > 0)
+				$arProperty_X[$arr["CODE"]] = "[".$arr["CODE"]."] ".$arr["NAME"];
+		}
 	}
 }
 $arProperty_LNS = $arProperty;
@@ -343,6 +354,12 @@ $arComponentParameters = array(
 			"TYPE" => "STRING",
 			"DEFAULT" => "quantity",
 		),
+		"PRODUCT_PROPS_VARIABLE" => array(
+			"PARENT" => "URL_TEMPLATES",
+			"NAME" => GetMessage("CP_BC_PRODUCT_PROPS_VARIABLE"),
+			"TYPE" => "STRING",
+			"DEFAULT" => "prop",
+		),
 		"CACHE_TIME"  =>  Array("DEFAULT"=>36000000),
 		"CACHE_FILTER" => array(
 			"PARENT" => "CACHE_SETTINGS",
@@ -394,11 +411,19 @@ $arComponentParameters = array(
 			"TYPE" => "CHECKBOX",
 			"DEFAULT" => "N",
 		),
+		"PRODUCT_PROPERTIES" => array(
+			"PARENT" => "PRICES",
+			"NAME" => GetMessage("CP_BC_PRODUCT_PROPERTIES"),
+			"TYPE" => "LIST",
+			"MULTIPLE" => "Y",
+			"VALUES" => $arProperty_X,
+		),
 		"USE_PRODUCT_QUANTITY" => array(
 			"PARENT" => "PRICES",
 			"NAME" => GetMessage("CP_BC_USE_PRODUCT_QUANTITY"),
 			"TYPE" => "CHECKBOX",
 			"DEFAULT" => "N",
+			"REFRESH" => "Y",
 		),
 		"LINK_IBLOCK_TYPE" => array(
 			"PARENT" => "LINK",
@@ -783,7 +808,7 @@ if (CModule::IncludeModule('catalog') && $arCurrentValues["USE_STORE"]=='Y')
 		'PARENT' => 'STORE_SETTINGS',
 		'NAME' => GetMessage('STORE_PATH'),
 		"TYPE"		=> "STRING",
-		"DEFAULT"	=> "store/#store_id#",
+		"DEFAULT"	=> "/store/#store_id#",
 	);
 	$arComponentParameters["PARAMETERS"]['MAIN_TITLE'] = array(
 		'PARENT' => 'STORE_SETTINGS',
@@ -844,6 +869,16 @@ if (CModule::IncludeModule('catalog') && CModule::IncludeModule('currency'))
 			"ADDITIONAL_VALUES" => "Y",
 		);
 	}
+}
+
+if (isset($arCurrentValues["USE_PRODUCT_QUANTITY"]) && 'Y' == $arCurrentValues["USE_PRODUCT_QUANTITY"])
+{
+	$arComponentParameters["PARAMETERS"]['QUANTITY_FLOAT'] = array(
+		'PARENT' => 'PRICES',
+		'NAME' => GetMessage('CP_BC_QUANTITY_FLOAT'),
+		'TYPE' => 'CHECKBOX',
+		'DEFAULT' => 'N',
+	);
 }
 
 if(!$OFFERS_IBLOCK_ID)

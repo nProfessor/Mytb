@@ -15,7 +15,7 @@ $arIBlock = CIBlock::GetArrayByID($IBLOCK_ID);
 if($arIBlock)
 	$bBadBlock = !(CIBlockSectionRights::UserHasRightTo($IBLOCK_ID, $ID, "iblock_admin_display")
 			&& (
-				CIBlockSectionRights::UserHasRightTo($IBLOCK_ID, $ID, "section_read")
+				CIBlockSectionRights::UserHasRightTo($IBLOCK_ID, $ID, "section_edit")
 				|| CIBlockSectionRights::UserHasRightTo($IBLOCK_ID, $IBLOCK_SECTION_ID, "section_section_bind")
 			)
 		);
@@ -104,7 +104,7 @@ if($REQUEST_METHOD=="POST" && strlen($Update)>0 && check_bitrix_sessid())
 		$arPICTURE = $_FILES["PICTURE"];
 	elseif(isset($_REQUEST["PICTURE"]))
 	{
-		$arPICTURE = CFile::MakeFileArray($_REQUEST["PICTURE"]);
+		$arPICTURE = CFile::MakeFileArray($_REQUEST["PICTURE"], false, true);
 		$arPICTURE["COPY_FILE"] = "Y";
 	}
 	else
@@ -116,7 +116,7 @@ if($REQUEST_METHOD=="POST" && strlen($Update)>0 && check_bitrix_sessid())
 		$arDETAIL_PICTURE = $_FILES["DETAIL_PICTURE"];
 	elseif(isset($_REQUEST["DETAIL_PICTURE"]))
 	{
-		$arDETAIL_PICTURE = CFile::MakeFileArray($_REQUEST["DETAIL_PICTURE"]);
+		$arDETAIL_PICTURE = CFile::MakeFileArray($_REQUEST["DETAIL_PICTURE"], false, true);
 		$arDETAIL_PICTURE["COPY_FILE"] = "Y";
 	}
 	else
@@ -287,6 +287,24 @@ if(!defined("CATALOG_PRODUCT"))
 		}
 	}
 }
+else
+{
+	if ($find_section_section > 0)
+	{
+		$nav = CIBlockSection::GetNavChain($IBLOCK_ID, IntVal($find_section_section));
+		while ($ar_nav = $nav->GetNext())
+		{
+			$last_nav = CIBlock::GetAdminSectionListLink($IBLOCK_ID, array(
+				'find_section_section' => $ar_nav["ID"], 'catalog' => null
+			));
+			$adminChain->AddItem(array(
+				"TEXT" => $ar_nav["NAME"],
+				"LINK" => htmlspecialcharsbx($last_nav),
+			));
+		}
+	}
+}
+
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_after.php");
 $aMenu = array(
 	array(
@@ -316,7 +334,7 @@ if ($ID > 0)
 	$urlDelete.= '&ID[]='.(preg_match('/^iblock_list_admin\.php/', $urlDelete) ? "S" : "").$ID;
 	$aMenu[] = array(
 		"TEXT" => htmlspecialcharsbx($arIBlock["SECTION_DELETE"]),
-		"LINK" => "javascript:if(confirm('".GetMessage("IBSEC_E_CONFIRM_DEL_MESSAGE")."'))window.location='".CUtil::JSEscape($urlDelete)."'",
+		"LINK" => "javascript:if(confirm('".GetMessageJS("IBSEC_E_CONFIRM_DEL_MESSAGE")."'))window.location='".CUtil::JSEscape($urlDelete)."'",
 		"ICON" => "btn_delete",
 	);
 }
@@ -560,8 +578,8 @@ $tabControl->BeginCustomField("PICTURE", GetMessage("IBSEC_E_PICTURE"), $arIBloc
 if($bVarsFromForm && !array_key_exists("PICTURE", $_REQUEST) && $arSection)
 	$str_PICTURE = intval($arSection["PICTURE"]);
 ?>
-	<tr>
-		<td class="adm-detail-valign-top"><?echo $tabControl->GetCustomLabelHTML()?></td>
+	<tr class="adm-detail-file-row">
+		<td><?echo $tabControl->GetCustomLabelHTML()?></td>
 		<td>
 			<?echo CFileInput::Show("PICTURE", $str_PICTURE,
 				array(
@@ -570,7 +588,10 @@ if($bVarsFromForm && !array_key_exists("PICTURE", $_REQUEST) && $arSection)
 					"FILE_SIZE" => "Y",
 					"DIMENSIONS" => "Y",
 					"IMAGE_POPUP" => "Y",
-					"MAX_SIZE" => array("W" => 200, "H"=>200),
+					"MAX_SIZE" => array(
+						"W" => COption::GetOptionString("iblock", "detail_image_size"),
+						"H" => COption::GetOptionString("iblock", "detail_image_size"),
+					),
 				), array(
 					'upload' => true,
 					'medialib' => true,
@@ -595,7 +616,21 @@ $tabControl->BeginCustomField("DESCRIPTION", GetMessage("IBSEC_E_DESCRIPTION"), 
 	<?if(COption::GetOptionString("iblock", "use_htmledit", "Y")=="Y" && $bFileman):?>
 	<tr>
 		<td colspan="2" align="center">
-			<?CFileMan::AddHTMLEditorFrame("DESCRIPTION", $str_DESCRIPTION, "DESCRIPTION_TYPE", $str_DESCRIPTION_TYPE, 300, "N", 0, "", "", $arIBlock["LID"]);?>
+			<?CFileMan::AddHTMLEditorFrame(
+				"DESCRIPTION",
+				$str_DESCRIPTION,
+				"DESCRIPTION_TYPE",
+				$str_DESCRIPTION_TYPE,
+				array(
+					'height' => 450,
+					'width' => '100%'
+				),
+				"N",
+				0,
+				"",
+				"",
+				$arIBlock["LID"]
+			);?>
 		</td>
 	</tr>
 	<?else:?>
@@ -642,8 +677,8 @@ $tabControl->BeginCustomField("DETAIL_PICTURE", GetMessage("IBLOCK_FIELD_DETAIL_
 if($bVarsFromForm && !array_key_exists("DETAIL_PICTURE", $_REQUEST) && $arSection)
 	$str_DETAIL_PICTURE = intval($arSection["DETAIL_PICTURE"]);
 ?>
-	<tr>
-		<td class="adm-detail-valign-top"><?echo $tabControl->GetCustomLabelHTML()?></td>
+	<tr class="adm-detail-file-row">
+		<td><?echo $tabControl->GetCustomLabelHTML()?></td>
 		<td>
 			<?echo CFileInput::Show("DETAIL_PICTURE", $str_DETAIL_PICTURE,
 				array(
@@ -652,7 +687,10 @@ if($bVarsFromForm && !array_key_exists("DETAIL_PICTURE", $_REQUEST) && $arSectio
 					"FILE_SIZE" => "Y",
 					"DIMENSIONS" => "Y",
 					"IMAGE_POPUP" => "Y",
-					"MAX_SIZE" => array("W" => 200, "H"=>200),
+					"MAX_SIZE" => array(
+						"W" => COption::GetOptionString("iblock", "detail_image_size"),
+						"H" => COption::GetOptionString("iblock", "detail_image_size"),
+					),
 				), array(
 					'upload' => true,
 					'medialib' => true,
@@ -820,7 +858,7 @@ if($arIBlock["SECTION_PROPERTY"] === "Y" && defined("CATALOG_PRODUCT"))
 				?></td>
 				<td align="left"><?
 					if(!is_array($arLink) || $arLink["INHERITED"] == "N")
-						echo '<a class="bx-action-href" href="javascript:deleteSectionProperty('.$arProp['ID'].', \'select_SECTION_PROPERTY\', \'shadow_SECTION_PROPERTY\', \'table_SECTION_PROPERTY\')">'.GetMessage("IBSEC_E_PROP_TABLE_ACTION_DELETE").'</a>';
+						echo '<a class="bx-action-href" href="javascript:deleteSectionProperty('.$arProp['ID'].', \'select_SECTION_PROPERTY\', \'shadow_SECTION_PROPERTY\', \'table_SECTION_PROPERTY\')">'.GetMessage("IBSEC_E_PROP_TABLE_ACTION_HIDE").'</a>';
 					else
 						echo '&nbsp;';
 				?></td>
@@ -925,11 +963,12 @@ if($arIBlock["SECTION_PROPERTY"] === "Y" && defined("CATALOG_PRODUCT"))
 					row.cells[2].style.textAlign = 'center';
 					row.cells[2].innerHTML = '<input type="checkbox" value="Y" name="SECTION_PROPERTY['+id+'][SMART_FILTER]">';
 					row.cells[3].align = 'left';
-					row.cells[3].innerHTML = '<a class="bx-action-href" href="javascript:deleteSectionProperty('+id+', \''+target_select_id+'\', \''+target_shadow_id+'\', \''+target_id+'\')"><?echo GetMessageJS("IBSEC_E_PROP_TABLE_ACTION_DELETE")?></a>';
+					row.cells[3].innerHTML = '<a class="bx-action-href" href="javascript:deleteSectionProperty('+id+', \''+target_select_id+'\', \''+target_shadow_id+'\', \''+target_id+'\')"><?echo GetMessageJS("IBSEC_E_PROP_TABLE_ACTION_HIDE")?></a>';
 					var shadow = BX(target_shadow_id);
 					if(shadow)
 						jsSelectUtils.addNewOption(shadow, id, name);
 					adjustEmptyTR(target_id);
+					BX.adminPanel.modifyFormElements(row);
 				}
 			}
 			function adjustEmptyTR(table_id)
@@ -951,6 +990,122 @@ if($arIBlock["SECTION_PROPERTY"] === "Y" && defined("CATALOG_PRODUCT"))
 			}
 			</script>
 		</td></tr>
+
+		<?
+		$arCatalog = false;
+		if (CModule::IncludeModule("catalog"))
+			$arCatalog = CCatalog::GetSkuInfoByProductID($IBLOCK_ID);
+
+		if (is_array($arCatalog))
+		{
+		?>
+		<tr class="heading">
+			<td align="center" colspan="3"><?echo GetMessage("IBSEC_E_PROP_SKU_SECTION");?></td>
+		</tr>
+		<tr><td align="center" colspan="2">
+			<table class="internal" id="table_SKU_SECTION_PROPERTY">
+			<tr class="heading">
+				<td><?echo GetMessage("IBSEC_E_PROP_TABLE_NAME");?></td>
+				<td><?echo GetMessage("IBSEC_E_PROP_TABLE_TYPE");?></td>
+				<td><?echo GetMessage("IBSEC_E_PROP_TABLE_SMART_FILTER");?></td>
+				<td><?echo GetMessage("IBSEC_E_PROP_TABLE_ACTION");?></td></tr>
+			<?
+			if(CIBlockRights::UserHasRightTo($arCatalog["IBLOCK_ID"], $arCatalog["IBLOCK_ID"], "iblock_edit"))
+				$arShadow = $arHidden = array(
+					-1 => GetMessage("IBSEC_E_PROP_SELECT_CHOOSE"),
+					0 => GetMessage("IBSEC_E_PROP_SELECT_CREATE"),
+				);
+			else
+				$arShadow = $arHidden = array(
+					-1 => GetMessage("IBSEC_E_PROP_SELECT_CHOOSE"),
+				);
+
+			$arPropLinks = CIBlockSectionPropertyLink::GetArray($arCatalog["IBLOCK_ID"], $ID);
+			$rsProps =  CIBlockProperty::GetList(array(
+					"SORT"=>"ASC",
+					'ID' => 'ASC',
+				), array(
+					"IBLOCK_ID" => $arCatalog["IBLOCK_ID"],
+					"CHECK_PERMISSIONS" => "N",
+					"ACTIVE"=>"Y",
+				));
+			$rows = 0;
+			while ($arProp = $rsProps->Fetch()):
+
+				if($arProp["ID"] == $arCatalog["SKU_PROPERTY_ID"])
+					continue;
+
+				if(array_key_exists($arProp["ID"], $arPropLinks))
+				{
+					$rows++;
+					$arLink = $arPropLinks[$arProp["ID"]];
+					if($arLink["INHERITED"] == "N")
+						$arShadow[$arProp["ID"]] = $arProp["NAME"];
+				}
+				else
+				{
+					$arLink = false;
+					$arHidden[$arProp["ID"]] = $arProp["NAME"];
+					$arShadow[$arProp["ID"]] = $arProp["NAME"];
+				}
+			?>
+			<tr id="tr_SECTION_PROPERTY_<?echo $arProp["ID"]?>" <?if(!is_array($arLink)) echo 'style="display:none"';?>>
+				<td align="left">
+					<?if(!is_array($arLink) || $arLink["INHERITED"] == "N"):?>
+					<input type="hidden" name="SECTION_PROPERTY[<?echo $arProp["ID"]?>][SHOW]" id="hidden_SECTION_PROPERTY_<?echo $arProp["ID"]?>" value="<?echo is_array($arLink)? "Y": "N";?>">
+					<?endif?>
+					<?echo htmlspecialcharsex($arProp["NAME"])?>
+				</td>
+				<td align="left"><?
+					if($arProp['PROPERTY_TYPE'] == "S" && !$arProp['USER_TYPE'])
+						echo GetMessage("IBLOCK_PROP_S");
+					elseif($arProp['PROPERTY_TYPE'] == "N" && !$arProp['USER_TYPE'])
+						echo GetMessage("IBLOCK_PROP_N");
+					elseif($arProp['PROPERTY_TYPE'] == "L" && !$arProp['USER_TYPE'])
+						echo GetMessage("IBLOCK_PROP_L");
+					elseif($arProp['PROPERTY_TYPE'] == "F" && !$arProp['USER_TYPE'])
+						echo GetMessage("IBLOCK_PROP_F");
+					elseif($arProp['PROPERTY_TYPE'] == "G" && !$arProp['USER_TYPE'])
+						echo GetMessage("IBLOCK_PROP_G");
+					elseif($arProp['PROPERTY_TYPE'] == "E" && !$arProp['USER_TYPE'])
+						echo GetMessage("IBLOCK_PROP_E");
+					elseif($arProp['USER_TYPE'] && is_array($ar = CIBlockProperty::GetUserType($arProp['USER_TYPE'])))
+						echo htmlspecialcharsex($ar["DESCRIPTION"]);
+					else
+						echo GetMessage("IBSEC_E_PROP_TYPE_S");
+				?></td>
+				<td align="center"><?
+					echo '<input type="checkbox" value="Y" '.((is_array($arLink) && $arLink["INHERITED"] == "Y")? 'disabled="disabled"': '').' name="SECTION_PROPERTY['.$arProp['ID'].'][SMART_FILTER]" '.($arLink["SMART_FILTER"] == "Y"? 'checked="checked"': '').'>';
+				?></td>
+				<td align="left"><?
+					if(!is_array($arLink) || $arLink["INHERITED"] == "N")
+						echo '<a href="javascript:deleteSectionProperty('.$arProp['ID'].', \'select_SKU_SECTION_PROPERTY\', \'shadow_SKU_SECTION_PROPERTY\', \'table_SKU_SECTION_PROPERTY\')">'.GetMessage("IBSEC_E_PROP_TABLE_ACTION_HIDE").'</a>';
+					else
+						echo '&nbsp;';
+				?></td>
+			</tr>
+			<?endwhile?>
+			<tr <?echo ($rows == 0)? '': 'style="display:none"';?>>
+				<td align="center" colspan="4">
+					<?echo GetMessage("IBSEC_E_PROP_TABLE_EMPTY")?>
+				</td>
+			</tr>
+			</table>
+			<select id="shadow_SKU_SECTION_PROPERTY" style="display:none">
+			<?foreach($arShadow as $key => $value):?>
+				<option value="<?echo htmlspecialcharsex($key)?>"><?echo htmlspecialcharsbx($value)?></option>
+			<?endforeach?>
+			</select>
+			<select id="select_SKU_SECTION_PROPERTY">
+			<?foreach($arHidden as $key => $value):?>
+				<option value="<?echo htmlspecialcharsex($key)?>"><?echo htmlspecialcharsbx($value)?></option>
+			<?endforeach?>
+			</select>
+			<input type="button" value="<?echo GetMessage("IBSEC_E_PROP_TABLE_ACTION_ADD")?>" onclick="javascript:addSectionProperty(<?echo $arCatalog["IBLOCK_ID"];?>, 'select_SKU_SECTION_PROPERTY', 'shadow_SKU_SECTION_PROPERTY', 'table_SKU_SECTION_PROPERTY')">
+		</td></tr>
+			<?
+		}
+		?>
 	<?
 	$tabControl->EndCustomField("SECTION_PROPERTY", '');
 }

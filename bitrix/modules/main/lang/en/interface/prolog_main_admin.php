@@ -17,11 +17,11 @@ $MESS["TRIAL_ATTENTION_TEXT1_bitrix"] = "This is trial version of Bitrix Site Ma
 $MESS["TRIAL_ATTENTION_TEXT4_bitrix"] = "Trial period of the Bitrix Site Manager product has expired. This site will completely stop working in two weeks. ";
 $MESS["TRIAL_ATTENTION_TEXT5_bitrix"] = "You can purchase the full version of Bitrix Site Manager from the <a href=\"http://www.bitrixsoft.com/buy/\">http://www.bitrixsoft.com/buy/</a> page.";
 $MESS["TRIAL_ATTENTION_TEXT1_1c_bitrix_portal"] = "This is trial version of 1C-Bitrix Intranet product.";
-$MESS["TRIAL_ATTENTION_TEXT4_1c_bitrix_portal"] = "Trial period of the Bitrix Intranet product has expired. This site will completely stop working in two weeks.";
+$MESS["TRIAL_ATTENTION_TEXT4_1c_bitrix_portal"] = "Trial period of the Bitrix24 product has expired. This site will completely stop working in two weeks.";
 $MESS["TRIAL_ATTENTION_TEXT5_1c_bitrix_portal"] = "You can purchase the full version of 1C-Bitrix Intranet from the <a href=\"http://www.bitrixsoft.com/buy/\">http://www.bitrixsoft.com/buy/</a> page.";
-$MESS["TRIAL_ATTENTION_TEXT1_bitrix_portal"] = "This is trial version of Bitrix Intranet product.";
-$MESS["TRIAL_ATTENTION_TEXT4_bitrix_portal"] = "Trial period of the Bitrix Intranet product has expired. This site will completely stop working in two weeks. ";
-$MESS["TRIAL_ATTENTION_TEXT5_bitrix_portal"] = "You can purchase the full version of Bitrix Intranet from the <a href=\"http://www.bitrixsoft.com/buy/\">http://www.bitrixsoft.com/buy/</a> page.";
+$MESS["TRIAL_ATTENTION_TEXT1_bitrix_portal"] = "This is trial version of Bitrix24 product.";
+$MESS["TRIAL_ATTENTION_TEXT4_bitrix_portal"] = "Trial period of the Bitrix24 product has expired. This site will completely stop working in two weeks. ";
+$MESS["TRIAL_ATTENTION_TEXT5_bitrix_portal"] = "You can purchase the full version of Bitrix24 from the <a href=\"http://www.bitrixsoft.com/buy/\">http://www.bitrixsoft.com/buy/</a> page.";
 $MESS["prolog_main_more_buttons"] = "Enlarge buttons";
 $MESS["prolog_main_support1"] = "<span class=\"required\">Attention!</span> Your techsupport and update subscription <b>will expire</b> on #FINISH_DATE#, #DAYS_AGO#. You can buy <a href=\"http://www.bitrixsoft.com/support/key_info.php?license_key=#LICENSE_KEY#\" target=\"_blank\">Early subscription renewal</a> within one month after expiration date.";
 $MESS["prolog_main_support_days"] = "in <b>#N_DAYS_AGO#&nbsp;day(s)</b>";

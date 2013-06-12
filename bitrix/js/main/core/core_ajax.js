@@ -35,6 +35,7 @@ any of the default parameters can be overridden. defaults can be changed by BX.a
 	},
 	ajax_session = null,
 	loadedScripts = {},
+	loadedScriptsQueue = [],
 	r = {
 		'url_utf': /[^\034-\254]+/g,
 		'script_self': /\/bitrix\/js\/main\/core\/core(_ajax)*.js$/i,
@@ -78,6 +79,9 @@ BX.ajax = function(config)
 			} while (result);
 		}
 	}
+
+	if(config.dataType == 'json')
+		config.emulateOnload = false;
 
 	if (!config.cache && config.method == 'GET')
 		config.url = BX.ajax._uncache(config.url);
@@ -318,6 +322,7 @@ BX.ajax.processRequestData = function(data, config)
 		break;
 		case 'SCRIPT':
 			scripts.push({"isInternal": true, "JS": data, bRunFirst: config.scriptsRunFirst});
+			config.processScriptsConsecutive = true;
 			result = data;
 		break;
 
@@ -340,6 +345,19 @@ BX.ajax.processRequestData = function(data, config)
 	if (config.emulateOnload)
 			BX.ajax.__prepareOnload(scripts);
 
+	var cb = BX.DoNothing;
+	if(config.emulateOnload || bSessionCreated)
+	{
+		cb = BX.defer(function()
+		{
+			if (config.emulateOnload)
+				BX.ajax.__runOnload();
+			if (bSessionCreated)
+				ajax_session = null;
+			BX.onCustomEvent(config.xhr, 'onAjaxSuccessFinish', [config]);
+		});
+	}
+
 	try
 	{
 		if (!!config.jsonFailure)
@@ -347,7 +365,10 @@ BX.ajax.processRequestData = function(data, config)
 			throw {type: 'json_failure', data: config.jsonResponse, bProactive: config.jsonProactive};
 		}
 
-		BX.ajax.processScripts(scripts, true);
+		config.scripts = scripts;
+
+		BX.ajax.processScripts(config.scripts, true);
+
 
 		if (config.onsuccess)
 		{
@@ -356,7 +377,15 @@ BX.ajax.processRequestData = function(data, config)
 
 		BX.onCustomEvent(config.xhr, 'onAjaxSuccess', [result, config]);
 
-		BX.ajax.processScripts(scripts, false);
+		if(!config.processScriptsConsecutive)
+		{
+			BX.ajax.processScripts(config.scripts, false, cb);
+		}
+		else
+		{
+			BX.ajax.processScriptsConsecutive(config.scripts, false);
+			cb();
+		}
 	}
 	catch (e)
 	{
@@ -364,17 +393,46 @@ BX.ajax.processRequestData = function(data, config)
 			config.onfailure("processing", e);
 		BX.onCustomEvent(config.xhr, 'onAjaxFailure', ['processing', e, config]);
 	}
-
-	setTimeout(function()
-	{
-		if (config.emulateOnload)
-			BX.ajax.__runOnload();
-		if (bSessionCreated)
-			ajax_session = null;
-	}, 10);
 }
 
-BX.ajax.processScripts = function(scripts, bRunFirst)
+BX.ajax.processScripts = function(scripts, bRunFirst, cb)
+{
+	var scriptsExt = [], scriptsInt = '';
+
+	cb=cb||BX.DoNothing;
+
+	for (var i = 0, length = scripts.length; i < length; i++)
+	{
+		if (typeof bRunFirst != 'undefined' && bRunFirst != !!scripts[i].bRunFirst)
+			continue;
+
+		if (scripts[i].isInternal)
+			scriptsInt += ';' + scripts[i].JS
+		else
+			scriptsExt.push(scripts[i].JS);
+	}
+
+	scriptsExt = BX.util.array_unique(scriptsExt);
+
+	var l=l1=scriptsExt.length,
+		f=scriptsInt.length>0?function(){BX.evalGlobal(scriptsInt)}:BX.DoNothing;
+
+	if(l>0)
+	{
+		var c=function(){if(--l1<=0){f();cb();f=BX.DoNothing;}};
+		for(var i=0; i<l;i++)
+		{
+			BX.loadScript(scriptsExt[i], c);
+		}
+	}
+	else
+	{
+		//f();BX.defer(cb)();
+		f();cb();
+	}
+}
+
+BX.ajax.processScriptsConsecutive = function(scripts, bRunFirst)
 {
 	for (var i = 0, length = scripts.length; i < length; i++)
 	{
@@ -402,6 +460,8 @@ BX.ajax.prepareData = function(arData, prefix)
 	{
 		for(var i in arData)
 		{
+			if (!arData.hasOwnProperty(i))
+				continue;
 			if (data.length > 0) data += '&';
 			var name = BX.util.urlencode(i);
 			if(prefix)
@@ -542,6 +602,7 @@ BX.ajax.loadScriptAjax = function(script_src, callback, bPreload)
 					dataType: 'script',
 					processData: true,
 					emulateOnload: false,
+					scriptsRunFirst: true,
 					async: false,
 					start: true,
 					onsuccess: function(result) {
@@ -741,7 +802,24 @@ BX.ajax.UpdatePageData = function (arData)
 	if (arData.CSS && arData.CSS.length > 0)
 		BX.loadCSS(arData.CSS);
 	if (arData.SCRIPTS && arData.SCRIPTS.length > 0)
-		BX.loadScript(arData.SCRIPTS);
+	{
+		var f=function(result,config){
+			if(!!config && BX.type.isArray(config.scripts))
+			{
+				for(var i=0,l=arData.SCRIPTS.length;i<l;i++)
+				{
+					config.scripts.push({isInternal:false,JS:arData.SCRIPTS[i]});
+				}
+			}
+			else
+			{
+				BX.loadScript(arData.SCRIPTS);
+			}
+
+			BX.removeCustomEvent('onAjaxSuccess',f);
+		}
+		BX.addCustomEvent('onAjaxSuccess',f);
+	}
 }
 
 BX.ajax.UpdatePageTitle = function(title)
@@ -823,7 +901,7 @@ BX.userOptions.__get = function()
 {
 	if (!BX.userOptions.options) return '';
 
-	var sParam = '', n = -1, prevParam = '', arOpt, i;
+	var sParam = '', n = -1, prevParam = '', aOpt, i;
 
 	for (i in BX.userOptions.options)
 	{
@@ -859,6 +937,8 @@ BX.ajax.history = {
 	bHashCollision: false,
 	bPushState: !!(history.pushState && BX.type.isFunction(history.pushState)),
 
+	startState: null,
+
 	init: function(obParams)
 	{
 		if (BX.ajax.history.bInited)
@@ -873,8 +953,8 @@ BX.ajax.history = {
 			if (window.location.search)
 				BX.ajax.history.expected_hash += window.location.search;
 
-			BX.ajax.history.put(obCurrentState, BX.ajax.history.expected_hash);
-			BX.bind(window, 'popstate', BX.ajax.history.__hashListener);
+			BX.ajax.history.put(obCurrentState, BX.ajax.history.expected_hash, '', true);
+			setTimeout("BX.bind(window, 'popstate', BX.ajax.history.__hashListener);", 100);
 		}
 		else
 		{
@@ -915,9 +995,9 @@ BX.ajax.history = {
 	{
 		e = e || window.event || {state:false};
 
-		if (BX.ajax.history.bPushState && e.state)
+		if (BX.ajax.history.bPushState)
 		{
-			BX.ajax.history.obParams.setState(e.state);
+			BX.ajax.history.obParams.setState(e.state||BX.ajax.history.startState);
 		}
 		else
 		{
@@ -959,11 +1039,18 @@ BX.ajax.history = {
 		}
 	},
 
-	put: function(state, new_hash, new_hash1)
+	put: function(state, new_hash, new_hash1, bStartState)
 	{
 		if (this.bPushState)
 		{
-			history.pushState(state, '', new_hash);
+			if(!bStartState)
+			{
+				history.pushState(state, '', new_hash);
+			}
+			else
+			{
+				BX.ajax.history.startState = state;
+			}
 		}
 		else
 		{

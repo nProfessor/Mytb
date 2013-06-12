@@ -15,6 +15,7 @@ Init: function(arConfig)
 	this.bPopup = false;
 	this.buttonsIndex = {};
 	this.parseAlign = true;
+	this.parseTable = true;
 	this.lastCursorId = 'bxed-last-cursor';
 	this.bHandleOnPaste = this.arConfig.bHandleOnPaste !== false;
 
@@ -74,7 +75,7 @@ Init: function(arConfig)
 
 	if (this.arConfig.height.indexOf('%') == -1)
 	{
-		h = parseInt(this.arConfig.height) - this.toolbarLineCount * 27;
+		var h = parseInt(this.arConfig.height) - this.toolbarLineCount * 27;
 		if (h > 0)
 			this.pEditCont.style.height = h + 'px';
 	}
@@ -93,6 +94,17 @@ Init: function(arConfig)
 	this.pTextarea.style.fontFamily = this.arConfig.fontFamily;
 	this.pTextarea.style.fontSize = this.arConfig.fontSize;
 	this.pTextarea.style.fontSize = this.arConfig.lineHeight;
+
+	if (this.pHiddenInput.form)
+	{
+		BX.bind(this.pHiddenInput.form, 'submit', function(){
+			try{
+				_this.SaveContent();
+				_this.pHiddenInput.value = _this.pTextarea.value = _this.pHiddenInput.value.replace(/#BXCURSOR#/ig, '');
+			}
+			catch(e){}
+		});
+	}
 
 	// Sort smiles
 	if (this.arConfig.arSmiles && this.arConfig.arSmiles.length > 0)
@@ -132,19 +144,21 @@ Init: function(arConfig)
 
 	if (this.arConfig.bResizable)
 	{
-		this.pResizer = BX('bxlhe_resize_' + this.id);
-		/*this.pResizer.style.width = this.arConfig.width;*/
-		this.pResizer.title = LHE_MESS.ResizerTitle;
+		if (this.arConfig.bManualResize)
+		{
+			this.pResizer = BX('bxlhe_resize_' + this.id);
+			/*this.pResizer.style.width = this.arConfig.width;*/
+			this.pResizer.title = BX.message.ResizerTitle;
 
-		if (!this.arConfig.minHeight || parseInt(this.arConfig.minHeight) <= 0)
-			this.arConfig.minHeight = 100;
-		if (!this.arConfig.maxHeight || parseInt(this.arConfig.maxHeight) <= 0)
-			this.arConfig.maxHeight = 2000;
+			if (!this.arConfig.minHeight || parseInt(this.arConfig.minHeight) <= 0)
+				this.arConfig.minHeight = 100;
+			if (!this.arConfig.maxHeight || parseInt(this.arConfig.maxHeight) <= 0)
+				this.arConfig.maxHeight = 2000;
 
-		this.pResizer.unselectable = "on";
-		this.pResizer.ondragstart = function (e){return BX.PreventDefault(e);};
-		this.pResizer.onmousedown = function(){_this.InitResizer(); return false;};
-
+			this.pResizer.unselectable = "on";
+			this.pResizer.ondragstart = function (e){return BX.PreventDefault(e);};
+			this.pResizer.onmousedown = function(){_this.InitResizer(); return false;};
+		}
 
 		if (this.arConfig.bAutoResize)
 		{
@@ -157,19 +171,31 @@ Init: function(arConfig)
 	this.AddButtons();
 
 	// Check if ALIGN tags allowed
-	if (!this.buttonsIndex['Justify'] && !this.buttonsIndex['JustifyLeft'])
+	this.parseAlign = !!(this.buttonsIndex['Justify'] || this.buttonsIndex['JustifyLeft']);
+	this.parseTable = !!this.buttonsIndex['Table'];
+
+	if (!this.parseAlign || !this.parseTable)
 	{
 		var arBBTags = [];
 		for (var k in this.arBBTags)
 		{
-			if (this.arBBTags[k] == 'center' || this.arBBTags[k] ==  'left' ||
-				this.arBBTags[k] ==  'right' || this.arBBTags[k] == 'justify')
+			// Align tags
+			if (!this.parseAlign && (
+				this.arBBTags[k] == 'center' || this.arBBTags[k] ==  'left' ||
+				this.arBBTags[k] ==  'right' || this.arBBTags[k] == 'justify'
+			))
+				continue;
+
+			// Table tags
+			if (!this.parseTable && (
+				this.arBBTags[k] == 'table' || this.arBBTags[k] ==  'tr' ||
+					this.arBBTags[k] ==  'td' || this.arBBTags[k] == 'th'
+				))
 				continue;
 
 			arBBTags.push(this.arBBTags[k]);
 		}
 		this.arBBTags = arBBTags;
-		this.parseAlign = false;
 	}
 
 	this.SetEditorContent(this.content);
@@ -177,7 +203,7 @@ Init: function(arConfig)
 	// TODO: Fix it
 	//this.oContextMenu = new LHEContextMenu({zIndex: 1000}, this);
 
-	BX.onCustomEvent(window, 'LHE_OnInit', [this]);
+	BX.onCustomEvent(window, 'LHE_OnInit', [this, false]);
 
 	// Init events
 	BX.bind(this.pEditorDocument, 'click', BX.proxy(this.OnClick, this));
@@ -189,6 +215,12 @@ Init: function(arConfig)
 
 	if (this.arConfig.ctrlEnterHandler && typeof window[this.arConfig.ctrlEnterHandler] == 'function')
 		this.ctrlEnterHandler = window[this.arConfig.ctrlEnterHandler];
+
+	// Android < 4.x
+	if (BX.browser.IsAndroid() && /Android\s[1-3].[0-9]/i.test(navigator.userAgent))
+	{
+		this.arConfig.bSetDefaultCodeView = true;
+	}
 
 	if (this.arConfig.bSetDefaultCodeView)
 	{
@@ -239,12 +271,14 @@ CreateFrame: function()
 
 ReInit: function(content)
 {
-	if (typeof content == undefined)
+	if (typeof content == 'undefined')
 		content = '';
 	this.SetContent(content);
 	this.CreateFrame();
 	this.SetEditorContent(this.content);
 	this.SetFocus();
+
+	BX.onCustomEvent(window, 'LHE_OnInit', [this, true]);
 },
 
 SetConstants: function()
@@ -534,15 +568,12 @@ SetView: function(sType)
 SaveContent: function()
 {
 	var sContent = this.sEditorMode == 'code' ? this.GetCodeEditorContent() : this.GetEditorContent();
-
 	if (this.bBBCode)
 		sContent = this.OptimizeBB(sContent);
 
 	this.SetContent(sContent);
 
 	BX.onCustomEvent(this, 'OnSaveContent', [sContent]);
-
-	// Todo: restore carret pos ?
 },
 
 SetContent: function(sContent)
@@ -718,6 +749,9 @@ _RecursiveDomWalker: function(pNode, pParentNode)
 			var
 				attr = pNode.attributes,
 				j, l = attr.length;
+
+			if (pNode.nodeName.toLowerCase() == 'a' && pNode.innerHTML == '' && (this.bBBCode || !pNode.getAttribute("name")))
+				return;
 
 			for(j = 0; j < l; j++)
 			{
@@ -1033,7 +1067,7 @@ ParseContent: function(sContent, bJustParse) // HTML -> WYSIWYG
 		if (!_this.bBBCode)
 			strId = " id=\"" + _this.SetBxTag(false, {tag: "code"}) + "\" ";
 
-		arCodes.push('<pre ' + strId + 'class="lhe-code" title="' + LHE_MESS.CodeDel + '">' + BX.util.htmlspecialchars(code) + '</pre>');
+		arCodes.push('<pre ' + strId + 'class="lhe-code" title="' + BX.message.CodeDel + '">' + BX.util.htmlspecialchars(code) + '</pre>');
 		return '#BX_CODE' + (arCodes.length - 1) + '#';
 	});
 
@@ -1097,9 +1131,12 @@ UnParseContent: function() // WYSIWYG - > html
 	BX.onCustomEvent(this, 'OnUnParseContent');
 	var sContent = this._RecursiveGetHTML(this._RecursiveDomWalker(this.pEditorDocument.body, false));
 
-	if (!BX.browser.IsIE())
-		sContent = sContent.replace(/\r/ig, '');
-	sContent = sContent.replace(/\n/ig, '');
+	if (this.bBBCode)
+	{
+		if (!BX.browser.IsIE())
+			sContent = sContent.replace(/\r/ig, '');
+		sContent = sContent.replace(/\n/ig, '');
+	}
 
 	var arDivRules = [
 		['#BR#(#TAG_BEGIN#)', "$1"], // 111<br><div>... => 111<>
@@ -1359,7 +1396,7 @@ ResizeFrame: function(newHeight)
 {
 	var
 		deltaWidth = 7,
-		resizeHeight = this.arConfig.bResizable ? 3 : 0, // resize row
+		resizeHeight = this.arConfig.bManualResize ? 3 : 0, // resize row
 		height = newHeight || parseInt(this.pFrame.offsetHeight),
 		width = this.pFrame.offsetWidth;
 
@@ -1496,11 +1533,15 @@ AddButton: function(oBut, buttonId)
 			this.bCodeBut = true;
 
 		var pButton = new window.LHEButton(oBut, this);
-		if (buttonId == 'Source')
-			this.sourseBut = pButton;
-		else if(buttonId == 'Quote')
-			this.quoteBut = pButton;
-		result = this.pButtonsCont.appendChild(pButton.pCont);
+		if (pButton && pButton.oBut)
+		{
+			if (buttonId == 'Source')
+				this.sourseBut = pButton;
+			else if(buttonId == 'Quote')
+				this.quoteBut = pButton;
+
+			result = this.pButtonsCont.appendChild(pButton.pCont);
+		}
 	}
 	else if (oBut.type == 'Colorpicker')
 	{
@@ -2359,7 +2400,12 @@ UnParseNodeBB: function (pNode) // WYSIWYG -> BBCode
 		pNode.text = 'url';
 		pNode.bbValue = pNode.arAttributes.href;
 	}
-	else if(this.parseAlign && (pNode.arAttributes.align || pNode.arStyle.textAlign))
+	else if(this.parseAlign
+		&&
+		(pNode.arAttributes.align || pNode.arStyle.textAlign)
+		&&
+		!(BX.util.in_array(pNode.text.toLowerCase(), ['table', 'tr', 'td', 'th']))
+		)
 	{
 		var align = pNode.arStyle.textAlign || pNode.arAttributes.align;
 		if (BX.util.in_array(align, ['left', 'right', 'center', 'justify']))
@@ -2391,13 +2437,22 @@ RecGetCodeContent: function(pNode) // WYSIWYG -> BBCode
 		if (pNode.arNodes[i].type == 'text')
 			res += pNode.arNodes[i].text;
 		else if (pNode.arNodes[i].type == 'element' && pNode.arNodes[i].text == "br")
-			res += "\n";
+			res += (this.bBBCode ? "#BR#" : "\n");
 		else if (pNode.arNodes[i].arNodes)
 			res += this.RecGetCodeContent(pNode.arNodes[i]);
 	}
 
-	if (BX.browser.IsIE())
+	if (this.bBBCode)
+	{
+		if (BX.browser.IsIE())
+			res = res.replace(/\r/ig, "#BR#");
+		else
+			res = res.replace(/\n/ig, "#BR#");
+	}
+	else if (BX.browser.IsIE())
+	{
 		res = res.replace(/\n/ig, "\r\n");
+	}
 
 	return res;
 },
@@ -2574,15 +2629,19 @@ GetCutHTML: function(e)
 	}
 
 	this.curCutId = this.SetBxTag(false, {tag: "cut"});
-	return '<img src="' + this.oneGif+ '" class="bxed-cut" id="' + this.curCutId + '" title="' + LHE_MESS.CutTitle + '"/>';
+	return '<img src="' + this.oneGif+ '" class="bxed-cut" id="' + this.curCutId + '" title="' + BX.message.CutTitle + '"/>';
 },
 
 OnPaste: function()
 {
-	var _this = this;
-	BX.showWait(this.iFrame, LHE_MESS.OnPasteProcessing);
+	if (this.bOnPasteProcessing)
+		return;
 
+	this.bOnPasteProcessing = true;
+	var _this = this;
+	var scrollTop = this.pEditorDocument.body.scrollTop;
 	setTimeout(function(){
+		_this.bOnPasteProcessing = false;
 		_this.InsertHTML('<span style="visibility: hidden;" id="' + _this.SetBxTag(false, {tag: "cursor"}) + '" ></span>');
 
 		_this.SaveContent();
@@ -2601,15 +2660,20 @@ OnPaste: function()
 					var pCursor = _this.pEditorDocument.getElementById(_this.lastCursorId);
 					if (pCursor && pCursor.parentNode)
 					{
+						var newScrollTop = pCursor.offsetTop - 30;
+						if (newScrollTop > 0)
+						{
+							if (scrollTop > 0 && scrollTop + parseInt(_this.pFrame.offsetHeight) > newScrollTop)
+								_this.pEditorDocument.body.scrollTop = scrollTop;
+							else
+								_this.pEditorDocument.body.scrollTop = newScrollTop;
+						}
+
 						_this.SelectElement(pCursor);
 						pCursor.parentNode.removeChild(pCursor);
 						_this.SetFocus();
 					}
 				}catch(e){}
-
-				setTimeout(function(){
-					BX.closeWait(_this.iFrame);
-				}, 1000);
 			}, 100);
 
 		}, 100);
@@ -2797,7 +2861,7 @@ function BXFindParentElement(pElement1, pElement2)
 window.BXFindParentByTagName = function (pElement, tagName)
 {
 	tagName = tagName.toUpperCase();
-	while(pElement && (pElement.nodeType!=1 || pElement.tagName.toUpperCase() != tagName))
+	while(pElement && (pElement.nodeType !=1 || pElement.tagName.toUpperCase() != tagName))
 		pElement = pElement.parentNode;
 	return pElement;
 }

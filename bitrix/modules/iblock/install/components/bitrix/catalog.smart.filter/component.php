@@ -1,5 +1,12 @@
 <?
 if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true) die();
+/** @var CBitrixCatalogSmartFilter $this */
+/** @var array $arParams */
+/** @var array $arResult */
+/** @global CUser $USER */
+global $USER;
+/** @global CMain $APPLICATION */
+global $APPLICATION;
 
 if(!CModule::IncludeModule("iblock"))
 {
@@ -7,7 +14,7 @@ if(!CModule::IncludeModule("iblock"))
 	return;
 }
 
-$FILTER_NAME = $arParams["FILTER_NAME"];
+$FILTER_NAME = (string)$arParams["FILTER_NAME"];
 
 if($this->StartResultCache(false, ($arParams["CACHE_GROUPS"]? $USER->GetGroups(): false)))
 {
@@ -28,17 +35,58 @@ if($this->StartResultCache(false, ($arParams["CACHE_GROUPS"]? $USER->GetGroups()
 			"ACTIVE" => "Y",
 			"CHECK_PERMISSIONS" => "Y",
 		);
-		$arPropertyOrder = array(
-			"sort" => "asc",
-			"id" => "asc",
-			"enum_sort" => "asc",
-			"value_id" => "asc",
-		);
-		$arPropertyFilter = array(
-			"ID" => array_keys($arResult["ITEMS"]),
-			"ACTIVE" => "Y",
-			"EMPTY" => "N",
-		);
+
+		$arElements = array();
+		$rsElements = CIBlockElement::GetPropertyValues($this->IBLOCK_ID, $arElementFilter);
+		while($arElement = $rsElements->Fetch())
+			$arElements[$arElement["IBLOCK_ELEMENT_ID"]] = $arElement;
+
+
+		if (!empty($arElements) && $this->SKU_IBLOCK_ID && $this->SKU_PROPERTY_COUNT > 0)
+		{
+			$arSkuFilter = array(
+				"IBLOCK_ID" => $this->SKU_IBLOCK_ID,
+				"ACTIVE_DATE" => "Y",
+				"ACTIVE" => "Y",
+				"CHECK_PERMISSIONS" => "Y",
+				"=PROPERTY_".$this->SKU_PROPERTY_ID => array_keys($arElements),
+			);
+			$rsElements = CIBlockElement::GetPropertyValues($this->SKU_IBLOCK_ID, $arSkuFilter);
+			while($arSku = $rsElements->Fetch())
+			{
+				foreach($arResult["ITEMS"] as $PID => $arItem)
+				{
+					if (isset($arSku[$PID]) && $arSku[$this->SKU_PROPERTY_ID] > 0)
+						$arElements[$arSku[$this->SKU_PROPERTY_ID]][$PID] = $arSku[$PID];
+				}
+			}
+		}
+
+		foreach($arElements as $arElement)
+		{
+			$propertyValues = $propertyEmptyValuesCombination;
+			foreach($arResult["ITEMS"] as $PID => $arItem)
+			{
+				if (is_array($arElement[$PID]))
+				{
+					foreach($arElement[$PID] as $value)
+					{
+						$key = $this->fillItemValues($arResult["ITEMS"][$PID], $value);
+						$propertyValues[$PID][$key] = $arResult["ITEMS"][$PID]["VALUES"][$key]["VALUE"];
+					}
+				}
+				elseif ($arElement[$PID] !== false)
+				{
+					$key = $this->fillItemValues($arResult["ITEMS"][$PID], $arElement[$PID]);
+					$propertyValues[$PID][$key] = $arResult["ITEMS"][$PID]["VALUES"][$key]["VALUE"];
+				}
+			}
+
+			$propertyValuesCombination = array();
+			$this->ArrayMultiply($propertyValuesCombination, $propertyValues);
+			foreach($propertyValuesCombination as $propertyValues)
+				$arResult["COMBO"][md5(serialize($propertyValues))] = $propertyValues;
+		}
 
 		$arSelect = array("ID", "IBLOCK_ID");
 		foreach($arResult["PRICES"] as &$value)
@@ -50,23 +98,20 @@ if($this->StartResultCache(false, ($arParams["CACHE_GROUPS"]? $USER->GetGroups()
 		$rsElements = CIBlockElement::GetList(array(), $arElementFilter, false, false, $arSelect);
 		while($arElement = $rsElements->Fetch())
 		{
-			$propertyValues = $propertyEmptyValuesCombination;
-
-			$rsProperties = CIBlockElement::GetProperty($arElement["IBLOCK_ID"], $arElement["ID"], $arPropertyOrder, $arPropertyFilter);
-			while($arProperty = $rsProperties->Fetch())
-			{
-				$key = $this->fillItemValues($arResult["ITEMS"][$arProperty["ID"]], $arProperty);
-				$propertyValues[$arProperty["ID"]][$key] = $arResult["ITEMS"][$arProperty["ID"]]["VALUES"][$key]["VALUE"];
-			}
-
-			$propertyValuesCombination = array();
-			$this->ArrayMultiply($propertyValuesCombination, $propertyValues);
-			foreach($propertyValuesCombination as $propertyValues)
-				$arResult["COMBO"][md5(serialize($propertyValues))] = $propertyValues;
-
 			foreach($arResult["PRICES"] as $NAME => $arPrice)
 				if(isset($arResult["ITEMS"][$NAME]))
 					$this->fillItemPrices($arResult["ITEMS"][$NAME], $arElement);
+		}
+
+		if (isset($arSkuFilter))
+		{
+			$rsElements = CIBlockElement::GetList(array(), $arSkuFilter, false, false, $arSelect);
+			while($arSku = $rsElements->Fetch())
+			{
+				foreach($arResult["PRICES"] as $NAME => $arPrice)
+					if(isset($arResult["ITEMS"][$NAME]))
+						$this->fillItemPrices($arResult["ITEMS"][$NAME], $arSku);
+			}
 		}
 
 		foreach($arResult["ITEMS"] as $PID => $arItem)
@@ -82,12 +127,12 @@ elseif(isset($_REQUEST["del_filter"]))
 	$_CHECK = array();
 elseif(isset($_GET["set_filter"]))
 	$_CHECK = &$_GET;
-elseif($arParams["SAVE_IN_SESSION"] && isset($_SESSION[$FILTER_NAME]) && is_array($FILTER_NAME))
+elseif($arParams["SAVE_IN_SESSION"] && isset($_SESSION[$FILTER_NAME]))
 	$_CHECK = $_SESSION[$FILTER_NAME];
 else
 	$_CHECK = array();
 
-/*Set state of the html contrlos depending on filter values*/
+/*Set state of the html controls depending on filter values*/
 foreach($arResult["ITEMS"] as $PID => $arItem)
 {
 	foreach($arItem["VALUES"] as $key => $ar)
@@ -123,6 +168,14 @@ foreach($arResult["ITEMS"] as $PID => $arItem)
 global ${$FILTER_NAME};
 if(!is_array(${$FILTER_NAME}))
 	${$FILTER_NAME} = array();
+
+if($this->SKU_PROPERTY_COUNT > 0)
+{
+	//This will force to use catalog.section offers price filter
+	if(!isset(${$FILTER_NAME}["OFFERS"]))
+		${$FILTER_NAME}["OFFERS"] = array();
+}
+
 foreach($arResult["ITEMS"] as $PID => $arItem)
 {
 	if(isset($arItem["PRICE"]))
@@ -136,28 +189,39 @@ foreach($arResult["ITEMS"] as $PID => $arItem)
 	}
 	elseif($arItem["PROPERTY_TYPE"] == "N")
 	{
+		if ($arItem["IBLOCK_ID"] == $this->SKU_IBLOCK_ID)
+			$filter = &${$FILTER_NAME}["OFFERS"];
+		else
+			$filter = &${$FILTER_NAME};
+
 		if(strlen($arItem["VALUES"]["MIN"]["HTML_VALUE"]) && strlen($arItem["VALUES"]["MAX"]["HTML_VALUE"]))
-			${$FILTER_NAME}["><PROPERTY_".$PID] = array($arItem["VALUES"]["MIN"]["HTML_VALUE"], $arItem["VALUES"]["MAX"]["HTML_VALUE"]);
+			$filter["><PROPERTY_".$PID] = array($arItem["VALUES"]["MIN"]["HTML_VALUE"], $arItem["VALUES"]["MAX"]["HTML_VALUE"]);
 		elseif(strlen($arItem["VALUES"]["MIN"]["HTML_VALUE"]))
-			${$FILTER_NAME}[">=PROPERTY_".$PID] = $arItem["VALUES"]["MIN"]["HTML_VALUE"];
+			$filter[">=PROPERTY_".$PID] = $arItem["VALUES"]["MIN"]["HTML_VALUE"];
 		elseif(strlen($arItem["VALUES"]["MAX"]["HTML_VALUE"]))
-			${$FILTER_NAME}["<=PROPERTY_".$PID] = $arItem["VALUES"]["MAX"]["HTML_VALUE"];
+			$filter["<=PROPERTY_".$PID] = $arItem["VALUES"]["MAX"]["HTML_VALUE"];
 	}
 	else
 	{
+		if ($arItem["IBLOCK_ID"] == $this->SKU_IBLOCK_ID)
+			$filter = &${$FILTER_NAME}["OFFERS"];
+		else
+			$filter = &${$FILTER_NAME};
+
 		foreach($arItem["VALUES"] as $key => $ar)
 		{
 			if($ar["CHECKED"])
 			{
 				$filterKey = "=PROPERTY_".$PID;
-				if(!array_key_exists($filterKey, $$FILTER_NAME))
-					${$FILTER_NAME}[$filterKey] = array($key);
+				if(!array_key_exists($filterKey, $filter))
+					$filter[$filterKey] = array(htmlspecialcharsback($key));
 				else
-					${$FILTER_NAME}[$filterKey][] = $key;
+					$filter[$filterKey][] = htmlspecialcharsback($key);
 			}
 		}
 	}
 }
+
 /*Save to session if needed*/
 if($arParams["SAVE_IN_SESSION"])
 {
@@ -177,30 +241,19 @@ if($arParams["SAVE_IN_SESSION"])
 	}
 }
 
+$pageURL = $APPLICATION->GetCurPageParam();
+$paramsToDelete = array("set_filter", "del_filter", "ajax", "bxajaxid", "AJAX_CALL");
+foreach($arResult["ITEMS"] as $PID => $arItem)
+{
+	foreach($arItem["VALUES"] as $key => $ar)
+		$paramsToDelete[] = $ar["CONTROL_NAME"];
+}
+$clearURL = CHTTP::urlDeleteParams($pageURL, $paramsToDelete, array("delete_system_params" => true));
+
 if(isset($_REQUEST["ajax"]) && $_REQUEST["ajax"] === "y")
 {
-	$arFilter = array(
-		"IBLOCK_ID" => $arParams["IBLOCK_ID"],
-		"IBLOCK_LID" => SITE_ID,
-		"IBLOCK_ACTIVE" => "Y",
-		"ACTIVE_DATE" => "Y",
-		"ACTIVE" => "Y",
-		"CHECK_PERMISSIONS" => "Y",
-		"MIN_PERMISSION" => "R",
-		"INCLUDE_SUBSECTIONS" => "Y", //($arParams["INCLUDE_SUBSECTIONS"] != 'N' ? 'Y' : 'N'),
-		"SECTION_ID" => $arParams["SECTION_ID"],
-	);
-	$arResult["ELEMENT_COUNT"] = CIBlockElement::GetList(array(), array_merge(${$FILTER_NAME}, $arFilter), array(), false);
-
-	$pageURL = $APPLICATION->GetCurPageParam();
-
-	$paramsToDelete = array("set_filter", "del_filter", "ajax");
-	foreach($arResult["ITEMS"] as $PID => $arItem)
-	{
-		foreach($arItem["VALUES"] as $key => $ar)
-			$paramsToDelete[] = $ar["CONTROL_NAME"];
-	}
-	$clearURL = CHTTP::urlDeleteParams($pageURL, $paramsToDelete, array("delete_system_params" => true));
+	$arFilter = $this->makeFilter($FILTER_NAME);
+	$arResult["ELEMENT_COUNT"] = CIBlockElement::GetList(array(), $arFilter, array(), false);
 
 	$paramsToAdd = array(
 		"set_filter" => "y",
@@ -219,6 +272,21 @@ if(isset($_REQUEST["ajax"]) && $_REQUEST["ajax"] === "y")
 		}
 	}
 	$arResult["FILTER_URL"] = htmlspecialcharsbx(CHTTP::urlAddParams($clearURL, $paramsToAdd, array(
+		"skip_empty" => true,
+		"encode" => true,
+	)));
+
+	if (isset($_GET["bxajaxid"]))
+	{
+		$arResult["COMPONENT_CONTAINER_ID"] = htmlspecialcharsbx("comp_".$_GET["bxajaxid"]);
+		if ($arParams["INSTANT_RELOAD"])
+			$arResult["INSTANT_RELOAD"] = true;
+	}
+
+	$arResult["FILTER_AJAX_URL"] = htmlspecialcharsbx(CHTTP::urlAddParams($clearURL, $paramsToAdd + array(
+		"AJAX_CALL" => "Y",
+		"bxajaxid" => $_GET["bxajaxid"],
+	), array(
 		"skip_empty" => true,
 		"encode" => true,
 	)));
@@ -249,6 +317,7 @@ $arSkip = array(
 	"ajax" => true,
 );
 
+$arResult["FORM_ACTION"] = $clearURL;
 $arResult["HIDDEN"] = array();
 foreach(array_merge($_GET, $_POST) as $key => $value)
 {
@@ -269,6 +338,7 @@ foreach(array_merge($_GET, $_POST) as $key => $value)
 if(isset($_REQUEST["ajax"]) && $_REQUEST["ajax"] === "y")
 {
 	$this->IncludeComponentTemplate("ajax");
+	require_once($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/include/epilog_after.php");
 	die();
 }
 else

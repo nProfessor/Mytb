@@ -1,4 +1,11 @@
-<?
+<?php
+/**
+ * Bitrix Framework
+ * @package bitrix
+ * @subpackage main
+ * @copyright 2001-2013 Bitrix
+ */
+
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/classes/general/database.php");
 
 /********************************************************************
@@ -32,7 +39,7 @@ class CDatabase extends CAllDatabase
 		if($ar = $rs->Fetch())
 		{
 			$version = trim($ar["R"]);
-			preg_match("#[0-9]+\.[0-9]+\.[0-9]+#", $version, $arr);
+			preg_match("#[0-9]+\\.[0-9]+\\.[0-9]+#", $version, $arr);
 			$version = $arr[0];
 			$this->version = $version;
 			return $version;
@@ -80,7 +87,7 @@ class CDatabase extends CAllDatabase
 	function DoConnect()
 	{
 		if($this->bConnected)
-			return;
+			return true;
 		$this->bConnected = true;
 
 		if (DBPersistent && !$this->bNodeConnection)
@@ -111,6 +118,7 @@ class CDatabase extends CAllDatabase
 		$this->timeQuery = 0;
 		$this->arQueryDebug = array();
 
+		/** @noinspection PhpUnusedLocalVariableInspection */
 		global $DB, $USER, $APPLICATION;
 		if(file_exists($_SERVER["DOCUMENT_ROOT"].BX_PERSONAL_ROOT."/php_interface/after_connect.php"))
 			include($_SERVER["DOCUMENT_ROOT"].BX_PERSONAL_ROOT."/php_interface/after_connect.php");
@@ -127,10 +135,7 @@ class CDatabase extends CAllDatabase
 		$this->db_Error="";
 
 		if($this->DebugToFile || $DB->ShowSqlStat)
-		{
-			list($usec, $sec) = explode(" ", microtime());
-			$start_time = ((float)$usec + (float)$sec);
-		}
+			$start_time = microtime(true);
 
 		//We track queries for DML statements
 		//and when there is no one we can choose
@@ -181,21 +186,11 @@ class CDatabase extends CAllDatabase
 
 		if($this->DebugToFile || $DB->ShowSqlStat)
 		{
-			list($usec, $sec) = explode(" ",microtime());
-			$end_time = ((float)$usec + (float)$sec);
-			$exec_time = round($end_time-$start_time, 10);
+			/** @noinspection PhpUndefinedVariableInspection */
+			$exec_time = round(microtime(true) - $start_time, 10);
 
 			if($DB->ShowSqlStat)
-			{
-				$DB->cntQuery++;
-				$DB->timeQuery+=$exec_time;
-				$DB->arQueryDebug[] = array(
-					"QUERY"	=>$strSql,
-					"TIME"	=>$exec_time,
-					"TRACE"	=>(function_exists("debug_backtrace")? debug_backtrace():false),
-					"BX_STATE" => $GLOBALS["BX_STATE"],
-				);
-			}
+				$DB->addDebugQuery($strSql, $exec_time);
 
 			if($this->DebugToFile)
 			{
@@ -243,7 +238,7 @@ class CDatabase extends CAllDatabase
 		$res = new CDBResult($result);
 		$res->DB = $this;
 		if($DB->ShowSqlStat)
-			$res->SqlTraceIndex = count($DB->arQueryDebug);
+			$res->SqlTraceIndex = count($DB->arQueryDebug) - 1;
 		return $res;
 	}
 
@@ -492,14 +487,17 @@ class CDatabase extends CAllDatabase
 		return array($strInsert1, $strInsert2);
 	}
 
-	function PrepareUpdate($strTableName, $arFields, $strFileDir="", $lang = false)
-	{
-		return $this->PrepareUpdateBind($strTableName, $arFields, $strFileDir, $lang, $arBinds);
-	}
-
-	function PrepareUpdateBind($strTableName, $arFields, $strFileDir, $lang, &$arBinds)
+	function PrepareUpdate($strTableName, $arFields, $strFileDir="", $lang = false, $strTableAlias = "")
 	{
 		$arBinds = array();
+		return $this->PrepareUpdateBind($strTableName, $arFields, $strFileDir, $lang, $arBinds, $strTableAlias);
+	}
+
+	function PrepareUpdateBind($strTableName, $arFields, $strFileDir, $lang, &$arBinds, $strTableAlias = "")
+	{
+		$arBinds = array();
+		if ($strTableAlias != "")
+			$strTableAlias .= ".";
 		$strUpdate = "";
 		$arColumns = $this->GetTableFields($strTableName);
 		foreach($arColumns as $strColumnName => $arColumnInfo)
@@ -510,7 +508,7 @@ class CDatabase extends CAllDatabase
 				$value = $arFields[$strColumnName];
 				if($value === false)
 				{
-					$strUpdate .= ", `".$strColumnName."` = NULL";
+					$strUpdate .= ", $strTableAlias`".$strColumnName."` = NULL";
 				}
 				else
 				{
@@ -537,12 +535,12 @@ class CDatabase extends CAllDatabase
 						default:
 							$value = "'".$this->ForSql($value)."'";
 					}
-					$strUpdate .= ", `".$strColumnName."` = ".$value;
+					$strUpdate .= ", $strTableAlias`".$strColumnName."` = ".$value;
 				}
 			}
 			elseif(is_set($arFields, "~".$strColumnName))
 			{
-				$strUpdate .= ", `".$strColumnName."` = ".$arFields["~".$strColumnName];
+				$strUpdate .= ", $strTableAlias`".$strColumnName."` = ".$arFields["~".$strColumnName];
 			}
 		}
 
@@ -636,9 +634,11 @@ class CDatabase extends CAllDatabase
 
 	function Add($tablename, $arFields, $arCLOBFields = Array(), $strFileDir="", $ignore_errors=false, $error_position="", $arOptions=array())
 	{
+		global $DB;
+
 		if(!is_object($this) || !isset($this->type))
 		{
-			return $GLOBALS["DB"]->Add($tablename, $arFields, $arCLOBFields, $strFileDir, $ignore_errors, $error_position, $arOptions);
+			return $DB->Add($tablename, $arFields, $arCLOBFields, $strFileDir, $ignore_errors, $error_position, $arOptions);
 		}
 		else
 		{
@@ -660,74 +660,40 @@ class CDatabase extends CAllDatabase
 			return $strSql;
 	}
 
-	function ForSql($strValue, $iMaxLength=0)
+	function ForSql($strValue, $iMaxLength = 0)
 	{
-		if(!defined("BX_USE_ESCAPE_FUNC"))
-		{
-			if(function_exists("mysql_real_escape_string"))
-				define("BX_USE_ESCAPE_FUNC", 1);
-			else
-				define("BX_USE_ESCAPE_FUNC", 2);
-		}
-
-		if($iMaxLength>0)
+		if ($iMaxLength > 0)
 			$strValue = substr($strValue, 0, $iMaxLength);
 
-		if(BX_USE_ESCAPE_FUNC==1)
+		if (!is_object($this) || !$this->db_Conn)
 		{
-			if(!is_object($this) || !$this->db_Conn)
-			{
-				global $DB;
-				$DB->DoConnect();
-				return mysql_real_escape_string($strValue, $DB->db_Conn);
-			}
-			else
-			{
-				$this->DoConnect();
-				return mysql_real_escape_string($strValue, $this->db_Conn);
-			}
-		}
-		elseif(BX_USE_ESCAPE_FUNC==2)
-			return mysql_escape_string($strValue);
-
-		//almost unreachable
-		static $aSearch = array("\\", "'", '"');
-		static $aReplace = array("\\\\", "\'", '\"');
-		return str_replace($aSearch, $aReplace, $strValue);
-	}
-
-	function ForSqlLike($strValue, $iMaxLength=0)
-	{
-		if(!defined("BX_USE_ESCAPE_FUNC"))
-		{
-			if(function_exists("mysql_real_escape_string"))
-				define("BX_USE_ESCAPE_FUNC", 1);
-			elseif(BX_USE_ESCAPE_FUNC==2)
-				define("BX_USE_ESCAPE_FUNC", 2);
-		}
-
-		if($iMaxLength>0)
-			$strValue = substr($strValue, 0, $iMaxLength);
-
-		if(BX_USE_ESCAPE_FUNC==1)
-		{
-			if(!is_object($this) || !$this->db_Conn)
-			{
-				global $DB;
-				$DB->DoConnect();
-				return mysql_real_escape_string(str_replace("\\", "\\\\", $strValue), $DB->db_Conn);
-			}
-			else
-			{
-				$this->DoConnect();
-				return mysql_real_escape_string(str_replace("\\", "\\\\", $strValue), $this->db_Conn);
-			}
+			global $DB;
+			$DB->DoConnect();
+			return mysql_real_escape_string($strValue, $DB->db_Conn);
 		}
 		else
-			return mysql_escape_string(str_replace("\\", "\\\\", $strValue));
+		{
+			$this->DoConnect();
+			return mysql_real_escape_string($strValue, $this->db_Conn);
+		}
+	}
 
-		//unreachable
-		return str_replace("'", "\'", str_replace("\\", "\\\\\\\\", $strValue));
+	function ForSqlLike($strValue, $iMaxLength = 0)
+	{
+		if ($iMaxLength > 0)
+			$strValue = substr($strValue, 0, $iMaxLength);
+
+		if(!is_object($this) || !$this->db_Conn)
+		{
+			global $DB;
+			$DB->DoConnect();
+			return mysql_real_escape_string(str_replace("\\", "\\\\", $strValue), $DB->db_Conn);
+		}
+		else
+		{
+			$this->DoConnect();
+			return mysql_real_escape_string(str_replace("\\", "\\\\", $strValue), $this->db_Conn);
+		}
 	}
 
 	function InitTableVarsForEdit($tablename, $strIdentFrom="str_", $strIdentTo="str_", $strSuffixFrom="", $bAlways=false)
@@ -741,19 +707,19 @@ class CDatabase extends CAllDatabase
 			{
 				$strColumnName = mysql_field_name($db_result, $intNumFields);
 
-				$varnameFrom=$strIdentFrom.$strColumnName.$strSuffixFrom;
-				$varnameTo=$strIdentTo.$strColumnName;
-				global $$varnameFrom, $$varnameTo;
-				if((isset($$varnameFrom) || $bAlways))
+				$varnameFrom = $strIdentFrom.$strColumnName.$strSuffixFrom;
+				$varnameTo = $strIdentTo.$strColumnName;
+				global ${$varnameFrom}, ${$varnameTo};
+				if((isset(${$varnameFrom}) || $bAlways))
 				{
-					if(is_array($$varnameFrom))
+					if(is_array(${$varnameFrom}))
 					{
-						$$varnameTo = array();
-						foreach($$varnameFrom as $k=>$v)
-							$$varnameTo[$k] = htmlspecialcharsbx($v);
+						${$varnameTo} = array();
+						foreach(${$varnameFrom} as $k => $v)
+							${$varnameTo}[$k] = htmlspecialcharsbx($v);
 					}
 					else
-						$$varnameTo = htmlspecialcharsbx($$varnameFrom);
+						${$varnameTo} = htmlspecialcharsbx(${$varnameFrom});
 				}
 			}
 		}
@@ -960,6 +926,11 @@ class CDatabase extends CAllDatabase
 			}
 		}
 	}
+
+	function Instr($str, $toFind)
+	{
+		return "INSTR($str, $toFind)";
+	}
 }
 
 class CDBResult extends CAllDBResult
@@ -976,6 +947,8 @@ class CDBResult extends CAllDBResult
 	 */
 	function Fetch()
 	{
+		global $DB;
+
 		if($this->bNavStart || $this->bFromArray)
 		{
 			if(!is_array($this->arResult))
@@ -985,8 +958,7 @@ class CDBResult extends CAllDBResult
 		}
 		elseif($this->SqlTraceIndex)
 		{
-			list($usec, $sec) = explode(" ", microtime());
-			$start_time = ((float)$usec + (float)$sec);
+			$start_time = microtime(true);
 
 			if(!$this->arUserMultyFields)
 			{
@@ -1010,11 +982,9 @@ class CDBResult extends CAllDBResult
 				}
 			}
 
-			list($usec, $sec) = explode(" ", microtime());
-			$end_time = ((float)$usec + (float)$sec);
-			$exec_time = round($end_time-$start_time, 10);
-			$GLOBALS["DB"]->arQueryDebug[$this->SqlTraceIndex - 1]["TIME"] += $exec_time;
-			$GLOBALS["DB"]->timeQuery += $exec_time;
+			$exec_time = round(microtime(true) - $start_time, 10);
+			$DB->addDebugTime($this->SqlTraceIndex, $exec_time);
+			$DB->timeQuery += $exec_time;
 		}
 		else
 		{
@@ -1059,6 +1029,7 @@ class CDBResult extends CAllDBResult
 	{
 		if(is_object($this) && is_object($this->DB))
 		{
+			/** @noinspection PhpUndefinedMethodInspection */
 			$this->DB->DoConnect();
 			return mysql_affected_rows($this->DB->db_Conn);
 		}
@@ -1073,8 +1044,8 @@ class CDBResult extends CAllDBResult
 	function AffectedRowsCountEx()
 	{
 		if(is_resource($this->result) && mysql_num_rows($this->result) > 0)
-			return 0; 
-		else 
+			return 0;
+		else
 			return mysql_affected_rows();
 	}
 
@@ -1093,6 +1064,8 @@ class CDBResult extends CAllDBResult
 
 	function DBNavStart()
 	{
+		global $DB;
+
 		//total rows count
 		if(is_resource($this->result))
 			$this->NavRecordCount = mysql_num_rows($this->result);
@@ -1118,10 +1091,7 @@ class CDBResult extends CAllDBResult
 		$NavLastRecordShow = $this->NavPageSize * $this->NavPageNomer;
 
 		if($this->SqlTraceIndex)
-		{
-			list($usec, $sec) = explode(" ", microtime());
-			$start_time = ((float)$usec + (float)$sec);
-		}
+			$start_time = microtime(true);
 
 		mysql_data_seek($this->result, $NavFirstRecordShow);
 		$temp_arrray = array();
@@ -1153,34 +1123,26 @@ class CDBResult extends CAllDBResult
 
 		if($this->SqlTraceIndex)
 		{
-			list($usec, $sec) = explode(" ", microtime());
-			$end_time = ((float)$usec + (float)$sec);
-			$exec_time = round($end_time-$start_time, 10);
-			$GLOBALS["DB"]->arQueryDebug[$this->SqlTraceIndex - 1]["TIME"] += $exec_time;
-			$GLOBALS["DB"]->timeQuery += $exec_time;
+			/** @noinspection PhpUndefinedVariableInspection */
+			$exec_time = round(microtime(true) - $start_time, 10);
+			$DB->addDebugTime($this->SqlTraceIndex, $exec_time);
+			$DB->timeQuery += $exec_time;
 		}
 
 		$this->arResult = $temp_arrray;
 	}
 
-	function NavQuery($strSql, $cnt, $arNavStartParams)
+	function NavQuery($strSql, $cnt, $arNavStartParams, $bIgnoreErrors = false)
 	{
-		if(is_set($arNavStartParams, "SubstitutionFunction"))
+		global $DB;
+
+		if(isset($arNavStartParams["SubstitutionFunction"]))
 		{
 			$arNavStartParams["SubstitutionFunction"]($this, $strSql, $cnt, $arNavStartParams);
-			return;
+			return null;
 		}
-		if(is_set($arNavStartParams, "bShowAll"))
-			$bShowAll = $arNavStartParams["bShowAll"];
-		else
-			$bShowAll = true;
 
-		if(is_set($arNavStartParams, "iNumPage"))
-			$iNumPage = $arNavStartParams["iNumPage"];
-		else
-			$iNumPage = false;
-
-		if(is_set($arNavStartParams, "bDescPageNumbering"))
+		if(isset($arNavStartParams["bDescPageNumbering"]))
 			$bDescPageNumbering = $arNavStartParams["bDescPageNumbering"];
 		else
 			$bDescPageNumbering = false;
@@ -1200,21 +1162,19 @@ class CDBResult extends CAllDBResult
 				$this->NavPageCount = 1;
 
 			//page number to display
-			//if($iNumPage===false)
-			//	$this->PAGEN = $this->NavPageCount;
 			$this->NavPageNomer =
-				(
-					$this->PAGEN < 1 || $this->PAGEN > $this->NavPageCount
+			(
+				$this->PAGEN < 1 || $this->PAGEN > $this->NavPageCount
+				?
+					($_SESSION[$this->SESS_PAGEN] < 1 || $_SESSION[$this->SESS_PAGEN] > $this->NavPageCount
 					?
-						($_SESSION[$this->SESS_PAGEN] < 1 || $_SESSION[$this->SESS_PAGEN] > $this->NavPageCount
-						?
-							$this->NavPageCount
-						:
-							$_SESSION[$this->SESS_PAGEN]
-						)
+						$this->NavPageCount
 					:
-						$this->PAGEN
-				);
+						$_SESSION[$this->SESS_PAGEN]
+					)
+				:
+					$this->PAGEN
+			);
 
 			//rows to skip
 			$NavFirstRecordShow = 0;
@@ -1237,7 +1197,7 @@ class CDBResult extends CAllDBResult
 			elseif($arNavStartParams["checkOutOfRange"] !== true)
 				$this->NavPageNomer = 1;
 			else
-				return;
+				return null;
 
 			//rows to skip
 			$NavFirstRecordShow = $this->NavPageSize*($this->NavPageNomer-1);
@@ -1252,15 +1212,16 @@ class CDBResult extends CAllDBResult
 			$strSql .= " LIMIT ".$NavFirstRecordShow.", ".($NavLastRecordShow - $NavFirstRecordShow + $NavAdditionalRecords);
 
 		if(is_object($this->DB))
-			$res_tmp = $this->DB->Query($strSql);
+			$res_tmp = $this->DB->Query($strSql, $bIgnoreErrors);
 		else
-			$res_tmp = $GLOBALS["DB"]->Query($strSql);
+			$res_tmp = $DB->Query($strSql, $bIgnoreErrors);
+
+		// Return false on sql errors (if $bIgnoreErrors == true)
+		if ($bIgnoreErrors && ($res_tmp === false))
+			return false;
 
 		if($this->SqlTraceIndex)
-		{
-			list($usec, $sec) = explode(" ", microtime());
-			$start_time = ((float)$usec + (float)$sec);
-		}
+			$start_time = microtime(true);
 
 		$temp_arrray = array();
 		$temp_arrray_add = array();
@@ -1291,20 +1252,20 @@ class CDBResult extends CAllDBResult
 
 		if($this->SqlTraceIndex)
 		{
-			list($usec, $sec) = explode(" ", microtime());
-			$end_time = ((float)$usec + (float)$sec);
-			$exec_time = round($end_time-$start_time, 10);
-			$GLOBALS["DB"]->arQueryDebug[$this->SqlTraceIndex - 1]["TIME"] += $exec_time;
-			$GLOBALS["DB"]->timeQuery += $exec_time;
+			/** @noinspection PhpUndefinedVariableInspection */
+			$exec_time = round(microtime(true) - $start_time, 10);
+			$DB->addDebugTime($this->SqlTraceIndex, $exec_time);
+			$DB->timeQuery += $exec_time;
 		}
 
 		$this->result = $res_tmp->result; // added for FieldsCount and other compatibility
-		$this->arResult = count($temp_arrray)? $temp_arrray: false;
-		$this->arResultAdd = count($temp_arrray_add)? $temp_arrray_add: false;
+		$this->arResult = (count($temp_arrray)? $temp_arrray : false);
+		$this->arResultAdd = (count($temp_arrray_add)? $temp_arrray_add : false);
 		$this->nSelectedCount = $cnt;
 		$this->bDescPageNumbering = $bDescPageNumbering;
-		$this->bFromLimited=true;
+		$this->bFromLimited = true;
 		$this->DB = $res_tmp->DB;
+
+		return null;
 	}
 }
-?>

@@ -180,8 +180,10 @@ if($strWarning == "")
 	}
 }
 $componentPath = CComponentEngine::MakeComponentPath($_GET["component_name"]);
-if($arComponentDescription["ICON"] <> "" && $io->FileExists($io->RelativeToAbsolutePath("/bitrix/components".$componentPath.$arComponentDescription["ICON"])))
-	$sIcon = "/bitrix/components".$componentPath.$arComponentDescription["ICON"];
+$arComponentDescription["ICON"] = ltrim($arComponentDescription["ICON"], "/");
+$localPath = getLocalPath("components".$componentPath);
+if($localPath !== false && $arComponentDescription["ICON"] <> "" && $io->FileExists($io->RelativeToAbsolutePath($localPath."/".$arComponentDescription["ICON"])))
+	$sIcon = $localPath."/".$arComponentDescription["ICON"];
 else
 	$sIcon = "/bitrix/images/fileman/htmledit2/component.gif";
 ?>
@@ -192,9 +194,9 @@ $obJSPopup->StartDescription($sIcon);
 <p title="<?echo GetMessage("comp_prop_name")?>" class="title"><?echo htmlspecialcharsbx($arComponentDescription["NAME"])?></p>
 <?endif;?>
 <?if($arComponentDescription["DESCRIPTION"] <> ""):?>
-<p title="<?echo GetMessage("comp_prop_desc")?>"><?echo htmlspecialcharsbx($arComponentDescription["DESCRIPTION"])?></p>
+<p title="<?echo GetMessage("comp_prop_desc")?>"><?echo $arComponentDescription["DESCRIPTION"]?></p>
 <?endif;?>
-<p class="note" title="<?echo GetMessage("comp_prop_path")?>"><a href="/bitrix/admin/fileman_admin.php?lang=<?echo LANGUAGE_ID?>&amp;path=<?echo urlencode("/bitrix/components".$componentPath)?>"><?echo htmlspecialcharsbx($_GET["component_name"])?></a></p>
+<p class="note" title="<?echo GetMessage("comp_prop_path")?>"><a href="/bitrix/admin/fileman_admin.php?lang=<?echo LANGUAGE_ID?>&amp;path=<?echo urlencode($localPath)?>"><?echo htmlspecialcharsbx($_GET["component_name"])?></a></p>
 <?
 if($strWarning <> "")
 {
@@ -359,10 +361,8 @@ foreach($arComponentTemplates as $template):
 endif; //!empty($arComponentTemplates)
 
 // Fetch tooltips
-$cn = CUtil::addslashes($_GET["component_name"]);
-$cn = str_replace(array(':', '..'), array('/', ''), $cn);
-CComponentUtil::__IncludeLang("/bitrix/components/".$cn, "/help/.tooltips.php");
-$tooltips_path = $_SERVER["DOCUMENT_ROOT"]."/bitrix/components/".$cn."/help/.tooltips.php";
+CComponentUtil::__IncludeLang($localPath, "/help/.tooltips.php");
+$tooltips_path = $_SERVER["DOCUMENT_ROOT"].$localPath."/help/.tooltips.php";
 $arTooltips = array();
 if(file_exists($tooltips_path))
 	include($tooltips_path);
@@ -708,7 +708,7 @@ switch(strtoupper($prop["TYPE"]))
 					ob_start();
 					$jsid = strtolower($ID);
 					?>
-					<input name="<?= $ID?>" id="<?= $jsid?>" size="10" style="float: left;"/>
+					<input name="<?= $ID?>" id="<?= $jsid?>" size="10" style="float: left;" value="<?= htmlspecialcharsbx($val)?>" type="text">
 					<script>function colorOnSelect<?= $jsid?>(value){BX('<?= $jsid?>').value = value;}</script>
 					<style>.bx-colpic-cont{z-index: 1500 !important;}</style>
 					<?$APPLICATION->IncludeComponent(

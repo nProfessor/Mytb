@@ -5,7 +5,6 @@ $MESS["TP_BSP_PATH_TO_SONET_MESSAGES_CHAT"] = "Страница отправки
 $MESS["TP_BSP_PATH_TO_VIDEO_CALL"] = "Страница видеозвонка";
 $MESS["TP_BSP_PATH_TO_CONPANY_DEPARTMENT"] = "Шаблон пути к странице подразделения";
 $MESS["TP_BSP_NAME_TEMPLATE"] = "Отображение имени";
-$MESS["TP_BSP_NAME_TEMPLATE_DEFAULT"] = "#NOBR##LAST_NAME# #NAME##/NOBR#";
 $MESS["TP_BSP_SHOW_LOGIN"] = "Показывать логин, если не задано имя";
 $MESS["TP_BSP_SHOW_RATING"] = "Включить рейтинг";
 $MESS["TP_BSP_SHOW_RATING_CONFIG"] = "по умолчанию";

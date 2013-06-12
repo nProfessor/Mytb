@@ -1,4 +1,17 @@
 <?
+/**
+ * Bitrix Framework
+ * @package bitrix
+ * @subpackage main
+ * @copyright 2001-2013 Bitrix
+ */
+
+/**
+ * Bitrix vars
+ * @global CUser $USER
+ * @global CMain $APPLICATION
+ */
+
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
 require_once($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/prolog.php");
 
@@ -160,7 +173,7 @@ $tabControl->BeginNextTab();
 		active_button:function(event){
 				if (test_is_run == true)
 				{
-					ShowStatusAlert("bx_autotest_btn","<?=addslashes(GetMessage("CL_NEED_TO_STOP"));?>");
+					ShowStatusAlert("bx_autotest_btn",'<?=GetMessageJS("CL_NEED_TO_STOP");?>');
 					return;
 				}
 				for(var i=0;i<test_buttons.buttons.length; i++){
@@ -176,18 +189,18 @@ $tabControl->BeginNextTab();
 				}
 			}
 		};
-		test_buttons.clickable()
+		test_buttons.clickable();
 		BX.addClass(BX(currentStatus+"_status").parentNode,'checklist-popup-tes-active');
 		if (BX('performer_comment_area').innerHTML.length<=0)
 		{
 			BX('performer_comment_area').style.color="#999";
 			BX('performer_comment_area').style.fontWeight="lighter";
-			BX('performer_comment_area').innerHTML = '<?=GetMessage("CL_NO_COMMENT");?>';
+			BX('performer_comment_area').innerHTML = '<?=GetMessageJS("CL_NO_COMMENT");?>';
 		}
 
 	function ShowDetailComment()
 	{
-		content = BX.create("DIV",{
+		var content = BX.create("DIV",{
 			props:{},
 			html:BX("detail_system_comment_"+testID).innerHTML.replace(/\r\n|\r|\n/g,'<br>')
 		});
@@ -196,7 +209,7 @@ $tabControl->BeginNextTab();
 
 			DetailWindow = new BX.CAdminDialog(
 			{
-				title: "<?=GetMessage("CL_MORE_DETAILS");?>",
+				title: '<?=GetMessageJS("CL_MORE_DETAILS");?>',
 				head: "",
 				content: content,
 				icon: "head-block",
@@ -221,12 +234,12 @@ $tabControl->BeginNextTab();
 	function ShowStatusAlert(bindElement,text,hide,class_name)
 	{
 		if (!hide)
-		var hide = false;
+			hide = false;
 		if (!class_name)
 			class_name = "checklist-alert-comment";
 		var bx_info = document.createElement('div');
-					BX.addClass(bx_info,class_name);
-					bx_info.innerHTML = text;
+		BX.addClass(bx_info,class_name);
+		bx_info.innerHTML = text;
 		var bx_alert = BX.PopupWindowManager.create(
 			"bx_alert"+Math.random(),
 			BX(bindElement),
@@ -248,7 +261,7 @@ $tabControl->BeginNextTab();
 
 	function ShowPopupDetail(_this)
 	{
-		ShowStatusAlert(_this.id,"<?=addslashes(GetMessage("CL_MORE_DETAILS_INF"));?>",true,"checklist-alert-comment-detail");
+		ShowStatusAlert(_this.id,'<?=GetMessageJS("CL_MORE_DETAILS_INF");?>',true,"checklist-alert-comment-detail");
 	}
 
 	function SaveStatus(_this)
@@ -262,7 +275,7 @@ $tabControl->BeginNextTab();
 		}
 		if (status == "S" || status == "A")
 		{
-			if (BX("performer_comment").value.length <2)
+			if (BX("performer_comment").value.replace(/ /g, '').length < 2)
 			{
 				BX(currentStatus+"_status").checked = true;
 				BX.addClass(BX(currentStatus+"_status").parentNode,'checklist-popup-tes-active');
@@ -271,7 +284,7 @@ $tabControl->BeginNextTab();
 					BX.removeClass(BX(_this.value+"_status").parentNode,'checklist-popup-tes-active');
 					_this.checked = false;
 				}
-				ShowStatusAlert("performer_comment_area","<?=addslashes(GetMessage("CL_EMPTY_COMMENT"));?>");
+				ShowStatusAlert("performer_comment_area",'<?=GetMessageJS("CL_EMPTY_COMMENT");?>');
 				return;
 			}
 		}
@@ -329,17 +342,17 @@ $tabControl->BeginNextTab();
 						if (json_data.CAN_CLOSE_PROJECT == "Y")
 							ShowCloseProject();
 					}
-					BX("bx_per_point_done").innerHTML = "<?=GetMessage("CL_AUTOTEST_DONE")?>";
+					BX("bx_per_point_done").innerHTML = '<?=GetMessageJS("CL_AUTOTEST_DONE")?>';
 					
 					var buttonText = BX.findChild(BX("bx_start_button_detail"), {className:'checklist-button-cont'}, true, false);
-					buttonText.innerHTML = "<?=GetMessage("CL_AUTOTEST_START");?>";
+					buttonText.innerHTML = '<?=GetMessageJS("CL_AUTOTEST_START");?>';
 
 					step = 0;
 					test_is_run = false;
 				}
 				else if (json_data.IN_PROGRESS == "Y")
 				{
-					BX("bx_per_point_done").innerHTML = "<?=GetMessage("CL_PERCENT_LIVE")?>"+" "+json_data.PERCENT+"%";
+					BX("bx_per_point_done").innerHTML = '<?=GetMessageJS("CL_PERCENT_LIVE")?>'+" "+json_data.PERCENT+"%";
 					BX.ajax.post("/bitrix/admin/checklist.php","ACTION=update&autotest=Y&bxpublic=Y&TEST_ID="+testID+"&STEP="+(++step)+"&lang=<?=LANG;?>&<?=bitrix_sessid_get()?>",callback);
 				}
 				else
@@ -354,20 +367,20 @@ $tabControl->BeginNextTab();
 					test_is_run = false;
 					stoptest = false;
 				}
-		}
+		};
 
 		if (test_is_run == true)
 		{
 			var buttonText = BX.findChild(BX("bx_start_button_detail"), {className:'checklist-button-cont'}, true, false);
-			buttonText.innerHTML = "<?=GetMessage("CL_END_TEST_PROCCESS");?>";
+			buttonText.innerHTML = '<?=GetMessageJS("CL_END_TEST_PROCCESS");?>';
 			stoptest = true;
 			return;
 		}
 		BX("bx_per_point_done").innerHTML = "";
 		test_is_run = true;
-		stoptest = false
-		var buttonText = BX.findChild(BX("bx_start_button_detail"), {className:'checklist-button-cont'}, true, false);
-		buttonText.innerHTML = "<?=GetMessage("CL_END_TEST");?>";
+		stoptest = false;
+		buttonText = BX.findChild(BX("bx_start_button_detail"), {className:'checklist-button-cont'}, true, false);
+		buttonText.innerHTML = '<?=GetMessageJS("CL_END_TEST");?>';
 		BX.ajax.post("/bitrix/admin/checklist.php","ACTION=update&autotest=Y&bxpublic=Y&TEST_ID="+testID+"&STEP="+step+"&lang=<?=LANG;?>&<?=bitrix_sessid_get()?>",callback);
 	}
 
@@ -389,7 +402,7 @@ $tabControl->BeginNextTab();
 				ReCalc(current);
 				testtitle = arStates["POINTS"][current].NAME+" - "+arStates["POINTS"][current].TEST_ID;
 				if (arStates["POINTS"][current].IS_REQUIRE == "Y")
-					testtitle = testtitle+" ("+"<?=GetMessage("CL_TEST_IS_REQUIRE");?>"+")";
+					testtitle = testtitle+" ("+'<?=GetMessageJS("CL_TEST_IS_REQUIRE");?>'+")";
 				
 				Dialog.SetTitle(testtitle);
 				Dialog.SetContent(data);
@@ -412,7 +425,7 @@ $tabControl->BeginNextTab();
 		{
 			toDiv.style.color="#999";
 			toDiv.style.fontWeight="lighter";
-			text='<?=GetMessage("CL_NO_COMMENT");?>';
+			text='<?=GetMessageJS("CL_NO_COMMENT");?>';
 		}
 
 		toDiv.innerHTML = text;

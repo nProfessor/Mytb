@@ -1,5 +1,12 @@
 <?
 if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true) die();
+/** @var CBitrixComponent $this */
+/** @var array $arParams */
+/** @var array $arResult */
+/** @global CUser $USER */
+global $USER;
+/** @global CMain $APPLICATION */
+global $APPLICATION;
 
 CPageOption::SetOptionString("main", "nav_page_in_session", "N");
 
@@ -34,7 +41,7 @@ if(strlen($arParams["FILTER_NAME"])<=0 || !preg_match("/^[A-Za-z_][A-Za-z01-9_]*
 }
 else
 {
-	global $$arParams["FILTER_NAME"];
+	global ${$arParams["FILTER_NAME"]};
 	$arrFilter = ${$arParams["FILTER_NAME"]};
 	if(!is_array($arrFilter))
 		$arrFilter = array();
@@ -92,7 +99,7 @@ if(!is_array($arParams["GROUP_PERMISSIONS"]))
 $bUSER_HAVE_ACCESS = !$arParams["USE_PERMISSIONS"];
 if($arParams["USE_PERMISSIONS"] && isset($GLOBALS["USER"]) && is_object($GLOBALS["USER"]))
 {
-	$arUserGroupArray = $GLOBALS["USER"]->GetUserGroupArray();
+	$arUserGroupArray = $USER->GetUserGroupArray();
 	foreach($arParams["GROUP_PERMISSIONS"] as $PERM)
 	{
 		if(in_array($PERM, $arUserGroupArray))
@@ -131,7 +138,7 @@ if($this->StartResultCache(false, array($arrFilter, ($arParams["CACHE_GROUPS"]==
 	);
 
 	if(strlen($arParams["SECTION_CODE"]) > 0)
-		$arFilter["CODE"]=$arParams["SECTION_CODE"];
+		$arFilter["=CODE"]=$arParams["SECTION_CODE"];
 	else
 		$arFilter["ID"]=$arParams["SECTION_ID"];
 
@@ -153,7 +160,7 @@ if($this->StartResultCache(false, array($arrFilter, ($arParams["CACHE_GROUPS"]==
 		$arResult["PATH"] = array();
 		if($arParams["ADD_SECTIONS_CHAIN"])
 		{
-			$rsPath = GetIBlockSectionPath($arResult["IBLOCK_ID"], $arResult["ID"]);
+			$rsPath = CIBlockSection::GetNavChain($arResult["IBLOCK_ID"], $arResult["ID"]);
 			$rsPath->SetUrlTemplates("", $arParams["SECTION_URL"]);
 			while($arPath=$rsPath->GetNext())
 			{

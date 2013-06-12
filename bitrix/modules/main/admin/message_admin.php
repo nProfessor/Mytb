@@ -1,10 +1,17 @@
 <?
-##############################################
-# Bitrix Site Manager                        #
-# Copyright (c) 2002-2007 Bitrix             #
-# http://www.bitrixsoft.com                  #
-# mailto:admin@bitrixsoft.com                #
-##############################################
+/**
+ * Bitrix Framework
+ * @package bitrix
+ * @subpackage main
+ * @copyright 2001-2013 Bitrix
+ */
+
+/**
+ * Bitrix vars
+ * @global CUser $USER
+ * @global CMain $APPLICATION
+ * @global CDatabase $DB
+ */
 
 require_once(dirname(__FILE__)."/../include/prolog_admin_before.php");
 require_once($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/prolog.php");
@@ -50,8 +57,13 @@ Functions
 ***************************************************************************/
 function CheckFilter($arFilterFields) // checking input fields
 {
+	global $lAdmin;
+
 	$FilterArr = $arFilterFields;
-	reset($FilterArr); foreach ($FilterArr as $f) global $$f;
+	reset($FilterArr);
+	foreach ($FilterArr as $f)
+		global ${$f};
+
 	$str = "";
 	if (strlen(trim($find_timestamp_1))>0 || strlen(trim($find_timestamp_2))>0)
 	{
@@ -66,8 +78,10 @@ function CheckFilter($arFilterFields) // checking input fields
 		elseif ($date_1_ok && $date2_stm <= $date1_stm && strlen($date2_stm)>0)
 			$str.= GetMessage("MAIN_FROM_TILL_TIMESTAMP")."<br>";
 	}
-	$GLOBALS["lAdmin"]->AddFilterError($str);
-	if (strlen($str)>0) return false; else return true;
+	$lAdmin->AddFilterError($str);
+	if (strlen($str)>0)
+		return false;
+	return true;
 }
 
 if(CheckFilter($arFilterFields))
@@ -86,7 +100,7 @@ if(CheckFilter($arFilterFields))
 		"SUBJECT"		=> ($find!='' && $find_type == "subject"? $find: $find_subject),
 		"BODY_TYPE"		=> $find_body_type,
 		"BODY"			=> ($find!='' && $find_type == "body"? $find: $find_body)
-		);
+	);
 }
 
 
@@ -99,12 +113,12 @@ if($lAdmin->EditAction() && $isAdmin) // if saving from list
 			continue;
 
 		$DB->StartTransaction();
-		$ID = IntVal($ID);
+		$ID = intval($ID);
 
 		$em = new CEventMessage;
 		if(!$em->Update($ID, $arFields))
 		{
-			$lAdmin->AddUpdateError(GetMessage("SAVE_ERROR").$id.": ".$em->LAST_ERROR, $ID);
+			$lAdmin->AddUpdateError(GetMessage("SAVE_ERROR").$ID.": ".$em->LAST_ERROR, $ID);
 			$DB->Rollback();
 		}
 		$DB->Commit();
@@ -157,7 +171,6 @@ $rsData->NavStart();
 
 // LIST
 $lAdmin->NavText($rsData->GetNavPrint(GetMessage("PAGES")));
-
 
 
 // Header
@@ -238,7 +251,7 @@ $lAdmin->AddGroupActionTable(Array(
 $aContext = array(
 	array(
 		"TEXT" => GetMessage("ADD_TEMPL"),
-		"LINK" => "message_edit.php?lang=".LANG."&type=".urlencode($type).'&'.GetFilterParams("find_".$type."_"),
+		"LINK" => "message_edit.php?lang=".LANG.'&'.GetFilterParams("find_".$type."_"),
 		"TITLE" => GetMessage("ADD_TEMPL_TITLE"),
 		"ICON" => "btn_new"
 	),
@@ -294,7 +307,7 @@ $oFilter->Begin();
 		$event_type_ref = array();
 		$event_type_ref_id = array();
 		$ref_en = array();
-		$rsType = CEventType::GetList(array("LID"=>LANGUAGE_ID), array("sort"=>"asc", "name"=>"asc"));
+		$rsType = CEventType::GetList(array("LID"=>LANGUAGE_ID), array("name"=>"asc"));
 		while($arType = $rsType->Fetch())
 		{
 			$event_type_ref[] = $arType["NAME"].($arType["NAME"] == ''? '' : ' ')."[".$arType["EVENT_NAME"]."]";

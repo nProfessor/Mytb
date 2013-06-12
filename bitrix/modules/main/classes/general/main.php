@@ -1,10 +1,10 @@
-<?
-##############################################
-# Bitrix Site Manager                        #
-# Copyright (c) 2002-2007 Bitrix             #
-# http://www.bitrixsoft.com                  #
-# mailto:admin@bitrixsoft.com                #
-##############################################
+<?php
+/**
+ * Bitrix Framework
+ * @package bitrix
+ * @subpackage main
+ * @copyright 2001-2013 Bitrix
+ */
 
 define('BX_SPREAD_SITES', 2);
 define('BX_SPREAD_DOMAIN', 4);
@@ -14,11 +14,11 @@ define('BX_RESIZE_IMAGE_PROPORTIONAL', 1);
 define('BX_RESIZE_IMAGE_EXACT', 2);
 
 global $BX_CACHE_DOCROOT;
-$BX_CACHE_DOCROOT = Array();
+$BX_CACHE_DOCROOT = array();
 global $MODULE_PERMISSIONS;
-$MODULE_PERMISSIONS = Array();
+$MODULE_PERMISSIONS = array();
 
-class CAllMain
+abstract class CAllMain
 {
 	var $ma, $mapos;
 	var $sDocPath2, $sDirPath, $sUriParam;
@@ -27,11 +27,22 @@ class CAllMain
 	var $arPageProperties = array();
 	var $arPagePropertiesChanger = array();
 	var $arDirProperties = array();
-	var $bDirProperties = false;
 	var $sLastError;
 	var $sPath2css = array();
+	var $iHeaderLastCss = 0;
+	var $iWorkAreaLastCss = 0;
+	var $iHeaderLastJs = 0;
+	var $iWorkAreaLastJs = 0;
 	var $arHeadStrings = array();
 	var $arHeadScripts = array();
+	var $arHeadAdditionalCss = array();
+	var $arHeadAdditionalScripts = array();
+	var $arHeadAdditionalStrings = array();
+	var $arLangJS = array();
+	var $arAdditionalJS = array();
+	var $bShowHeadString = false;
+	var $bShowHeadScript = false;
+	var $bInAjax = false;
 	var $version;
 	var $arAdditionalChain = array();
 	var $FILE_PERMISSION_CACHE = array();
@@ -55,8 +66,11 @@ class CAllMain
 	var $ShowIncludeStat = false;
 	var $_menu_recalc_counter = 0;
 	var $__view = array();
+	/** @var CEditArea */
 	var $editArea = false;
+	/** @var array */
 	var $arComponentMatch = false;
+	var $arAuthResult;
 
 	function __construct()
 	{
@@ -141,20 +155,22 @@ class CAllMain
 
 	function GetFileRecursive($strFileName, $strDir=false)
 	{
-		if($strDir===false)
+		if($strDir === false)
 			$strDir = $this->GetCurDir();
 
 		$io = CBXVirtualIo::GetInstance();
 		$fn = $io->CombinePath("/", $strDir, $strFileName);
 
+		$p = null;
 		while(!$io->FileExists($io->RelativeToAbsolutePath($fn)))
 		{
 			$p = bxstrrpos($strDir, "/");
-			if($p===false) break;
+			if($p === false)
+				break;
 			$strDir = substr($strDir, 0, $p);
 			$fn = $io->CombinePath("/", $strDir, $strFileName);
 		}
-		if($p===false)
+		if($p === false)
 			return false;
 
 		return $fn;
@@ -164,14 +180,15 @@ class CAllMain
 	{
 		//define all global vars
 		$keys = array_keys($GLOBALS);
-		for($i=0; $i<count($keys); $i++)
+		$keys_count = count($keys);
+		for($i=0; $i<$keys_count; $i++)
 			if($keys[$i]!="i" && $keys[$i]!="GLOBALS" && $keys[$i]!="strTitle" && $keys[$i]!="filepath")
 				global ${$keys[$i]};
 
 		//title
+		/** @global CMain $APPLICATION */
 		$APPLICATION->SetTitle($strTitle);
 
-		//в зависимости от параметров покажем форму
 		include($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/include/prolog_admin_after.php");
 		include($filepath);
 		include($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/include/epilog_admin.php");
@@ -185,8 +202,7 @@ class CAllMain
 
 	function AuthForm($mess, $show_prolog=true, $show_epilog=true, $not_show_links="N", $do_die=true)
 	{
-		//сдалаем все глобальные переменные видимыми здесь
-		$excl = array("excl"=>1, "key"=>1, "GLOBALS"=>1, "mess"=>1, "show_epilog"=>1, "show_epilog"=>1, "not_show_links"=>1, "do_die"=>1);
+		$excl = array("excl"=>1, "key"=>1, "GLOBALS"=>1, "mess"=>1, "show_epilog"=>1, "not_show_links"=>1, "do_die"=>1);
 		foreach($GLOBALS as $key => $value)
 			if(!array_key_exists($key , $excl))
 				global ${$key};
@@ -201,31 +217,33 @@ class CAllMain
 		else
 			$arAuthResult = $mess;
 
-		//заголовок страницы
+		/** @global CMain $APPLICATION */
+		global $APPLICATION, $forgot_password, $change_password, $register, $confirm_registration, $authorize_registration;
+
+		//page title
 		$APPLICATION->SetTitle(GetMessage("AUTH_TITLE"));
 
-		//вытащим из cookies последнее удачное имя входа
+		//last login from cookie
 		$last_login = ${COption::GetOptionString("main", "cookie_name", "BITRIX_SM")."_LOGIN"};
 
-		$inc_file = "";
 		$comp_name = "";
 		if($forgot_password=="yes")
 		{
-			//форма высылки пароля
+			//pass request form
 			$APPLICATION->SetTitle(GetMessage("AUTH_TITLE_SEND_PASSWORD"));
 			$comp_name = "system.auth.forgotpasswd";
 			$inc_file = "forgot_password";
 		}
 		elseif($change_password=="yes")
 		{
-			//форма изменения пароля
+			//pass change form
 			$APPLICATION->SetTitle(GetMessage("AUTH_TITLE_CHANGE_PASSWORD"));
 			$comp_name = "system.auth.changepasswd";
 			$inc_file = "change_password";
 		}
 		elseif($register=="yes" && $isAdmin==""	&& COption::GetOptionString("main", "new_user_registration", "N")=="Y")
 		{
-			//форма регистрации
+			//registration form
 			$APPLICATION->SetTitle(GetMessage("AUTH_TITLE_REGISTER"));
 			$comp_name = "system.auth.registration";
 			$inc_file = "registration";
@@ -239,12 +257,12 @@ class CAllMain
 		}
 		elseif($authorize_registration=="yes" && $isAdmin=="")
 		{
-			//форма авторизации и регистрации
+			//combined auth and reg form
 			$inc_file = "authorize_registration";
 		}
 		else
 		{
-			//форма авторизации
+			//auth form
 			$comp_name = "system.auth.authorize";
 			$inc_file = "authorize";
 		}
@@ -259,7 +277,7 @@ class CAllMain
 
 		if($isAdmin == "")
 		{
-			// если пользуем вторые компоненты и есть что подключать - подключаем
+			// form by Components 2.0
 			if(COption::GetOptionString("main", "auth_comp2", "N") == "Y" && $comp_name <> "")
 			{
 				$this->IncludeComponent("bitrix:".$comp_name, "", array(
@@ -269,7 +287,7 @@ class CAllMain
 			}
 			else
 			{
-				$this->IncludeFile("main/auth/".$inc_file.".php", Array("last_login"=>$last_login, "arAuthResult"=>$arAuthResult, "not_show_links" => $not_show_links));
+				$this->IncludeFile("main/auth/".$inc_file.".php", array("last_login"=>$last_login, "arAuthResult"=>$arAuthResult, "not_show_links" => $not_show_links));
 			}
 		}
 		else
@@ -286,7 +304,9 @@ class CAllMain
 
 	function ShowAuthForm($message)
 	{
-		$GLOBALS['APPLICATION']->AuthForm($message, false, false, "N", false);
+		/** @global CMain $APPLICATION */
+		global $APPLICATION;
+		$APPLICATION->AuthForm($message, false, false, "N", false);
 	}
 
 	function NeedCAPTHAForLogin($login)
@@ -373,7 +393,15 @@ class CAllMain
 
 	function IsHTTPS()
 	{
-		return ($_SERVER["SERVER_PORT"]==443 || (isset($_SERVER["HTTPS"]) && strtolower($_SERVER["HTTPS"])=="on"));
+		if($_SERVER["SERVER_PORT"] == 443)
+			return true;
+
+		// 'HTTPS' Set to a non-empty value if the script was queried through the HTTPS protocol.
+		// Note that when using ISAPI with IIS, the value will be "off" if the request was not made through the HTTPS protocol.
+		if(isset($_SERVER["HTTPS"]) && !empty($_SERVER["HTTPS"]) && strtolower($_SERVER["HTTPS"]) <> "off")
+			return true;
+
+		return false;
 	}
 
 	function GetTitle($property_name = false, $strip_tags = false)
@@ -399,14 +427,16 @@ class CAllMain
 		{
 			$arTrace = array_reverse(debug_backtrace());
 
-			foreach ($arTrace as $key => $arTraceRes)
+			foreach ($arTrace as $arTraceRes)
 			{
 				if (isset($arTraceRes['class']) && isset($arTraceRes['function']))
 				{
 					if (ToUpper($arTraceRes['class']) == 'CBITRIXCOMPONENT' && ToUpper($arTraceRes['function']) == 'INCLUDECOMPONENT' && is_object($arTraceRes['object']))
 					{
+						/** @var CBitrixComponent $comp */
+						$comp = $arTraceRes['object'];
 						$this->sDocTitleChanger = array(
-							'COMPONENT_NAME' => $arTraceRes['object']->GetName(),
+							'COMPONENT_NAME' => $comp->GetName(),
 						);
 
 						break;
@@ -417,7 +447,7 @@ class CAllMain
 	}
 	function ShowTitle($property_name="title", $strip_tags = true)
 	{
-		$this->AddBufferContent(Array(&$this, "GetTitle"), $property_name, $strip_tags);
+		$this->AddBufferContent(array(&$this, "GetTitle"), $property_name, $strip_tags);
 	}
 
 	function SetPageProperty($PROPERTY_ID, $PROPERTY_VALUE, $arOptions = null)
@@ -437,7 +467,7 @@ class CAllMain
 
 	function ShowProperty($PROPERTY_ID, $default_value = false)
 	{
-		$this->AddBufferContent(Array(&$this, "GetProperty"), $PROPERTY_ID, $default_value);
+		$this->AddBufferContent(array(&$this, "GetProperty"), $PROPERTY_ID, $default_value);
 	}
 
 	function GetProperty($PROPERTY_ID, $default_value = false)
@@ -458,11 +488,6 @@ class CAllMain
 		return $this->arPageProperties;
 	}
 
-	function SetDirProperty($PROPERTY_ID, $PROPERTY_VALUE)
-	{
-		$this->arDirProperties[strtoupper($PROPERTY_ID)] = $PROPERTY_VALUE;
-	}
-
 	function InitPathVars(&$site, &$path)
 	{
 		$site = false;
@@ -474,23 +499,39 @@ class CAllMain
 		return $path;
 	}
 
+	function SetDirProperty($PROPERTY_ID, $PROPERTY_VALUE, $path=false)
+	{
+		self::InitPathVars($site, $path);
+
+		if($path === false)
+			$path = $this->GetCurDir();
+		if($site === false)
+			$site = SITE_ID;
+
+		$this->arDirProperties[$site][$path][strtoupper($PROPERTY_ID)] = $PROPERTY_VALUE;
+	}
+
 	function InitDirProperties($path)
 	{
-		CMain::InitPathVars($site, $path);
+		self::InitPathVars($site, $path);
+
 		$DOC_ROOT = CSite::GetSiteDocRoot($site);
 
-		if($this->bDirProperties)
-			return true;
-
-		if($path===false)
+		if($path === false)
 			$path = $this->GetCurDir();
+		if($site === false)
+			$site = SITE_ID;
+
+		if(isset($this->arDirProperties[$site][$path]))
+			return true;
 
 		$io = CBXVirtualIo::GetInstance();
 
-		while (true) // будем до корня искать
+		$dir = $path;
+		while (true) // until the root
 		{
-			$path = rtrim($path, "/");
-			$section_file_name = $DOC_ROOT.$path."/.section.php";
+			$dir = rtrim($dir, "/");
+			$section_file_name = $DOC_ROOT.$dir."/.section.php";
 
 			if($io->FileExists($section_file_name))
 			{
@@ -501,58 +542,60 @@ class CAllMain
 					foreach($arDirProperties as $prid=>$prval)
 					{
 						$prid = strtoupper($prid);
-						if(!isset($this->arDirProperties[$prid]))
-							$this->arDirProperties[$prid] = $prval;
+						if(!isset($this->arDirProperties[$site][$path][$prid]))
+							$this->arDirProperties[$site][$path][$prid] = $prval;
 					}
 				}
 			}
 
-			if(strlen($path)<=0)
+			if(strlen($dir)<=0)
 				break;
 
-			// найдем имя файла или папки
-			$pos = bxstrrpos($path, "/");
+			// file or folder
+			$pos = bxstrrpos($dir, "/");
 			if($pos===false)
 				break;
 
-			//найдем папку-родителя
-			$path = substr($path, 0, $pos+1);
+			//parent folder
+			$dir = substr($dir, 0, $pos+1);
 		}
 
-		$this->bDirProperties = true;
 		return true;
 	}
 
 	function GetDirProperty($PROPERTY_ID, $path=false, $default_value = false)
 	{
-		CMain::InitPathVars($site, $path);
-		$DOC_ROOT = CSite::GetSiteDocRoot($site);
+		self::InitPathVars($site, $path);
 
-		if($path===false)
+		if($path === false)
 			$path = $this->GetCurDir();
+		if($site === false)
+			$site = SITE_ID;
 
-		if(!$this->bDirProperties)
+		if(!isset($this->arDirProperties[$site][$path]))
 			$this->InitDirProperties(array($site, $path));
 
-		if(isset($this->arDirProperties[strtoupper($PROPERTY_ID)]))
-			return $this->arDirProperties[strtoupper($PROPERTY_ID)];
+		$prop_id = strtoupper($PROPERTY_ID);
+		if(isset($this->arDirProperties[$site][$path][$prop_id]))
+			return $this->arDirProperties[$site][$path][$prop_id];
 
 		return $default_value;
 	}
 
 	function GetDirPropertyList($path=false)
 	{
-		CMain::InitPathVars($site, $path);
-		$DOC_ROOT = CSite::GetSiteDocRoot($site);
+		self::InitPathVars($site, $path);
 
-		if($path===false)
+		if($path === false)
 			$path = $this->GetCurDir();
+		if($site === false)
+			$site = SITE_ID;
 
-		if(!$this->bDirProperties)
+		if(!isset($this->arDirProperties[$site][$path]))
 			$this->InitDirProperties(array($site, $path));
 
-		if(is_array($this->arDirProperties))
-			return $this->arDirProperties;
+		if(is_array($this->arDirProperties[$site][$path]))
+			return $this->arDirProperties[$site][$path];
 
 		return false;
 	}
@@ -570,21 +613,65 @@ class CAllMain
 	function ShowBanner($type, $html_before="", $html_after="")
 	{
 		if(!CModule::IncludeModule("advertising"))
-			return false;
+			return;
 
+		/** @global CMain $APPLICATION */
 		global $APPLICATION;
-		$APPLICATION->AddBufferContent(Array("CAdvBanner", "Show"), $type, $html_before, $html_after);
+		$APPLICATION->AddBufferContent(array("CAdvBanner", "Show"), $type, $html_before, $html_after);
 	}
 
 	function ShowMeta($id, $meta_name=false, $bXhtmlStyle=true)
 	{
-		$this->AddBufferContent(Array(&$this, "GetMeta"), $id, $meta_name, $bXhtmlStyle);
+		$this->AddBufferContent(array(&$this, "GetMeta"), $id, $meta_name, $bXhtmlStyle);
 	}
 
-	function SetAdditionalCSS($Path2css)
+	function SetAdditionalCSS($Path2css, $additional=false)
 	{
-		$this->sPath2css[] = $Path2css;
+		if($additional)
+			$this->arHeadAdditionalCss[] = $Path2css;
+		else
+			$this->sPath2css[] = $Path2css;
 	}
+
+	function SetHeaderLastCss($lastKey = 0)
+	{
+		$this->iHeaderLastCss = intval($lastKey);
+	}
+
+	function SetWorkAreaLastCss($lastKey = 0)
+	{
+		$this->iWorkAreaLastCss = intval($lastKey);
+	}
+
+	function SetHeaderLastJs($lastKey = 0)
+	{
+		$this->iHeaderLastJs = intval($lastKey);
+	}
+
+	function SetWorkAreaLastJs($lastKey = 0)
+	{
+		$this->iWorkAreaLastJs = intval($lastKey);
+	}
+
+	static function FixCssIncludes($contents, $css_path)
+	{
+		$css_path = dirname($css_path);
+
+		$contents = preg_replace_callback(
+			'#([;\s:]*(?:url|@import)\s*\(\s*)(\'|"|)(.+?)(\2)\s*\)#si',
+			create_function('$matches', 'return $matches[1].CMain::__ReplaceUrlCSS($matches[2].$matches[3].$matches[4], "'.addslashes($css_path).'").")";'),
+			$contents
+		);
+
+		$contents = preg_replace_callback(
+			'#(\s*@import\s*)([\'"][^\'"]+[\'"])\s*\;#si',
+			create_function('$matches', 'return $matches[1].CMain::__ReplaceUrlCSS($matches[2], "'.addslashes($css_path).'").";";'),
+			$contents
+		);
+
+		return $contents;
+	}
+
 	function GetAdditionalCSS()
 	{
 		$n = count($this->sPath2css);
@@ -592,6 +679,7 @@ class CAllMain
 			return $this->sPath2css[$n-1];
 		return false;
 	}
+
 	function GetCSSArray()
 	{
 		return array_unique($this->sPath2css);
@@ -599,59 +687,72 @@ class CAllMain
 
 	function GetCSS($cMaxStylesCnt=true, $bXhtmlStyle=true)
 	{
-		if($cMaxStylesCnt === true)
-			$cMaxStylesCnt = COption::GetOptionInt('main', 'max_css_files', 15);
-
 		$res = '';
 		$site_template = '';
-		$arCSS = $this->sPath2css;
-		$addTemplateStyle = true;
+		$arCSS = $this->GetCSSArray();
 		$arTemplateCss = array();
-		$optimizeCSS = COption::GetOptionString('main', 'optimize_css_files', 'N');
+		$optimizeCSS = self::IsCSSOptimized();
+
+		if($cMaxStylesCnt === true)
+		{
+			$cMaxStylesCnt = COption::GetOptionInt('main', 'max_css_files', 15);
+		}
+
+		if($optimizeCSS)
+		{
+			$cMaxStylesCnt -= 3;
+		}
 
 		global $USER;
-		if(isset($_GET['bx_template_preview_mode']) && $_GET['bx_template_preview_mode'] == 'Y' && $USER->CanDoOperation('edit_other_settings'))
+		if(!$this->bInAjax)
 		{
-			$addTemplateStyle = false;
-			$path = BX_PERSONAL_ROOT."/tmp/templates/__bx_preview/";
-			$arTemplateCss[] = $path."styles.css";
-			$arTemplateCss[] = $path."template_styles.css";
+			if(isset($_GET['bx_template_preview_mode']) && $_GET['bx_template_preview_mode'] == 'Y' && $USER->CanDoOperation('edit_other_settings'))
+			{
+				$path = BX_PERSONAL_ROOT."/tmp/templates/__bx_preview/";
+				$arTemplateCss[] = $path."styles.css";
+				$arTemplateCss[] = $path."template_styles.css";
+			}
+			elseif(defined("SITE_TEMPLATE_ID"))
+			{
+				$site_template = SITE_TEMPLATE_ID;
+				$path = BX_PERSONAL_ROOT."/templates/".SITE_TEMPLATE_ID;
+				$arTemplateCss[] = $path."/styles.css";
+				$arTemplateCss[] = $path."/template_styles.css";
+			}
+			else
+			{
+				$site_template = '.default';
+				$path = BX_PERSONAL_ROOT."/templates/.default";
+				$arTemplateCss[] = $path."/styles.css";
+				$arTemplateCss[] = $path."/template_styles.css";
+			}
 		}
-		elseif(defined("SITE_TEMPLATE_ID"))
-		{
-			$site_template = SITE_TEMPLATE_ID;
-			$path = BX_PERSONAL_ROOT."/templates/".SITE_TEMPLATE_ID;
-			$arTemplateCss[] = $path."/styles.css";
-			$arTemplateCss[] = $path."/template_styles.css";
-		}
-		else
-		{
-			$site_template = '.default';
-			$path = BX_PERSONAL_ROOT."/templates/.default";
-			$arTemplateCss[] = $path."/styles.css";
-			$arTemplateCss[] = $path."/template_styles.css";
-		}
-
 		if($optimizeCSS == 'Y')
 		{
 			$cssFile = array();
 			$cssSrcFile = array();
-			$cssMD5 = '';
-			$oldCssMD5 = '';
+			$cssBxFile = array();
+			$cssSrcBxFile = array();
+			$cssTemplateFile = array();
+			$cssSrcTmplateFile = array();
+
+			foreach ($arTemplateCss as $key => $css)
+			{
+				if(!file_exists($_SERVER['DOCUMENT_ROOT'].$css))
+					unset($arTemplateCss[$key]);
+			}
 		}
 		else
 		{
-			$arCSS[] = $arTemplateCss[0];
-			$arCSS[] = $arTemplateCss[1];
+			$arCSS = array_merge($arCSS,$arTemplateCss, array_unique($this->arHeadAdditionalCss));
 		}
-
-		$arCSS = array_unique($arCSS);
 
 		$isIE = IsIE();
 		$cnt = 0;
+		$optimCnt = 0;
 		$res_content = '';
 		$ruleCount = 0;
-		foreach($arCSS as $css_path)
+		foreach($arCSS as $cssKey => $css_path)
 		{
 			$bExternalLink = (strncmp($css_path, 'http://', 7) == 0 || strncmp($css_path, 'https://', 8) == 0);
 
@@ -666,9 +767,10 @@ class CAllMain
 			}
 
 			$bLink = ($bExternalLink || substr($css_file, -4, 4) != '.css');
-			$addCSS = (strncmp($css_path, '/bitrix/themes/', 15) != 0);
+			$addCSS = ((strncmp($css_path, '/bitrix/themes/', 15) != 0) && (strncmp($css_path, '/bitrix/modules/', 16) != 0));
+			$optimize = ($optimizeCSS == 'Y' && $addCSS);
 
-			if((($cnt < $cMaxStylesCnt || ($optimizeCSS == 'Y' && $addCSS) || !$isIE) || $bLink) && strncmp($css_path, '/bitrix/modules/', 16) != 0)
+			if(!$isIE || $cnt < $cMaxStylesCnt || $optimize || $bLink)
 			{
 				if($bExternalLink || file_exists($filename))
 				{
@@ -679,46 +781,77 @@ class CAllMain
 					}
 
 					if(!$bExternalLink && strpos($css_path, '?') === false)
-						$css_path = CUtil::GetAdditionalFileURL($css_path, true);
-
-					if($optimizeCSS == 'Y' && $addCSS)
 					{
-						$cssSrcFile[] = $css_path;
-						$cssFile[] = $css_file;
+						$css_path = CUtil::GetAdditionalFileURL($css_path, true);
+					}
+
+					if($optimize && !$bExternalLink)
+					{
+						if(strncmp($css_path, '/bitrix/js/', 11) != 0)
+						{
+							if($cssKey > $this->iHeaderLastCss && $cssKey <= $this->iWorkAreaLastCss)
+							{
+								// Page css
+								$cssSrcFile[] = $css_path;
+								$cssFile[] = $css_file;
+							}
+							else
+							{
+								// Template css
+								$cssSrcTmplateFile[] = $css_path;
+								$cssTemplateFile[] = $css_file;
+							}
+						}
+						else
+						{
+							// Kernell css
+							$cssSrcBxFile[] = $css_path;
+							$cssBxFile[] = $css_file;
+						}
+						$optimCnt++;
 					}
 					else
 					{
 						$res .= '<link href="'.$css_path.'" type="text/css" rel="stylesheet"'.($bXhtmlStyle? ' /':'').'>'."\n";
+						$cnt++;
 					}
-					$cnt++;
 				}
 			}
 			elseif(!$bLink && file_exists($filename) && filesize($filename) > 0)
 			{
-				$contents = file_get_contents($filename);
-				if($contents != '')
+				if($cnt < $cMaxStylesCnt)
 				{
-					$contents = preg_replace('#([;\s:]+url\s*\(\s*)([^\)]+)\)#sie', "'\\1'.CMain::__ReplaceUrlCSS('\\2', '".AddSlashes($css_path)."').')'", $contents);
-					if($isIE)
+					if(!$bExternalLink && strpos($css_path, '?') === false)
 					{
-						$c = CMain::__GetCssSelectCnt($contents);
-						$ruleCount += $c;
-						if($ruleCount > 4000)
-						{
-							$ruleCount = $c;
-							if($res_content <> '')
-								$res_content .= "</style>\n<style type=\"text/css\">";
-						}
+						$css_path = CUtil::GetAdditionalFileURL($css_path, true);
 					}
-					$res_content .= "\n".$contents."\n";
+
+					$res .= '<link href="'.$css_path.'" type="text/css" rel="stylesheet"'.($bXhtmlStyle? ' /':'').'>'."\n";
+					$cnt++;
+				}
+				else
+				{
+					$arTmp = $this->__ShowInlineCssIE($filename, $css_path, $ruleCount);
+					$ruleCount = $arTmp['CNT'];
+					$res_content .= $arTmp['CONTENT'];
 				}
 			}
 		}
 
-		if($optimizeCSS == 'Y' && $cnt > 0)
+		if($optimizeCSS == 'Y' && $optimCnt > 0)
 		{
-			$res .= CMain::__OptimizeCss($cssFile, $cssSrcFile, $site_template, $addTemplateStyle, $arTemplateCss, $bXhtmlStyle);
-			unset($cssFile, $cssSrcFile, $addTemplateStyle);
+			$res .= $this->__OptimizeCssJs($cssFile, $cssSrcFile, $site_template, false, 'page', 'css', $bXhtmlStyle);
+			$res .= $this->__OptimizeCssJs($cssBxFile, $cssSrcBxFile, $site_template, true, 'kernel', 'css', $bXhtmlStyle);
+
+
+			$arTemplateCss = array_merge($arTemplateCss, array_unique($this->arHeadAdditionalCss));
+			foreach ($arTemplateCss as $key => $css)
+			{
+				$cssTemplateFile[] = $css;
+				$cssSrcTmplateFile[] = CUtil::GetAdditionalFileURL($css);
+			}
+			$res .= $this->__OptimizeCssJs($cssTemplateFile, $cssSrcTmplateFile, $site_template, false, 'template', 'css', $bXhtmlStyle);
+			unset($cssFile, $cssSrcFile, $arTemplateCss, $cssTemplateFile, $cssSrcTmplateFile);
 		}
 
 		if($res_content!='')
@@ -727,148 +860,233 @@ class CAllMain
 		return $res;
 	}
 
-	function __OptimizeCss($cssFile, $cssSrcFile, $site_template, $addTemplateStyle, $arTemplateCss, $bXhtmlStyle)
+	/**
+	 * Optimize css and js files
+	 *
+	 * @param array $arFile - Full path for a source css or js file
+	 * @param array $arSrcFile - Full path for a source css or js file with timestamp
+	 * @param string $site_template - Site template name
+	 * @param bool $unique - Create unique file for all site in a current template
+	 * @param string $sufix - Some sufix for css or js files
+	 * @param string $type - file type, css or js
+	 * @param bool $bXhtmlStyle - Xhtml or not
+	 * @return string - String for including css or js in html page
+	 */
+	private function __OptimizeCssJs($arFile = array(), $arSrcFile = array(), $site_template, $unique = false, $sufix = 'default', $type = 'css', $bXhtmlStyle=true)
 	{
-		$cssOptPath = BX_PERSONAL_ROOT."/cache/css/".SITE_ID.'/'.$site_template.'/';
-		$cssFName = $cssOptPath.'styles.css';
-		$cssFNameIE = $cssOptPath.'styles#CNT#.css';
-		$cssTemplateFName = $cssOptPath.'template_styles.css';
-		$cssInfoFile = BX_PERSONAL_ROOT."/managed_cache/".$GLOBALS['DB']->type.'/css/'.SITE_ID.'/'.$site_template.'_styles.php';
-
-		$res = '';
-		$upCSS = 'NO';
-		$unsetKey = array();
-		$arCSSInfo = array();
-		$arCSSInfo['CUR_SEL_CNT'] = 0;
-		$arCSSInfo['CUR_IE_CNT'] = 0;
-		$arCSSInfo['CSS_MD5'] = 0;
-		$maxAddCssSelect = 3950;
-		$maxCssSelect = 4000;
-
-		if($addTemplateStyle)
+		if((!is_array($arFile) || count($arFile) < 1) || (!is_array($arSrcFile) || count($arSrcFile) < 1))
 		{
-			foreach($arTemplateCss as $css_path)
-			{
-				if(!$bExternalLink && strpos($css_path, '?') === false)
-					$css_path = CUtil::GetAdditionalFileURL($css_path);
-				$cssMD5 .= $css_path;
-			}
-			$cssMD5 = md5($cssMD5);
+			return '';
 		}
 
-		if(file_exists($_SERVER['DOCUMENT_ROOT'].$cssInfoFile))
+		$res = '';
+		$fileMTime = '';
+		$upOptim = 'NO';
+		$isIE = IsIE();
+		$writeResult = true;
+		$unsetKey = array();
+		$arFilesInfo = array();
+		$arFilesInfo['CUR_SEL_CNT'] = 0;
+		$arFilesInfo['CUR_IE_CNT'] = 0;
+		$arFilesInfo['FILES'] = array();
+
+		$noCheckOnly = !defined('BX_HEADFILES_CACHE_CHECK_ONLY');
+
+		$sufix = trim($sufix);
+		$sufix = strlen($sufix) < 1 ? 'default' : $sufix;
+
+		foreach($arSrcFile as $key => $filePath)
 		{
-			include($_SERVER['DOCUMENT_ROOT'].$cssInfoFile);
-			$oldCssMD5 = $arCSSInfo['CSS_MD5'];
-			foreach($cssFile as $key => $css)
+			if(strpos($filePath, '?') === false)
 			{
-				if(array_key_exists($css, $arCSSInfo['CSS']))
-				{
-					if($cssSrcFile[$key] != $css.'?'.$arCSSInfo['CSS'][$css])
-					{
-						$upCSS = 'NEW';
-						break;
-					}
-					else
-					{
-						$unsetKey[] = $key;
-					}
-				}
-				else
-				{
-					$upCSS = 'UP';
-				}
+				$arSrcFile[$key] = CUtil::GetAdditionalFileURL($filePath);
 			}
+		}
+
+		if(!$unique)
+		{
+			$fileMTime = '_'.md5(implode('_', $arSrcFile));
+			$sufix .= '_'.md5(implode('_', $arFile));
+		}
+
+		$type = ($type == 'js' ? 'js' : 'css');
+
+		$optimPath = BX_PERSONAL_ROOT.'/cache/'.$type.'/'.SITE_ID.'/'.$site_template.'/'.$sufix.'/';
+		$infoFile = BX_PERSONAL_ROOT.'/managed_cache/'.$GLOBALS['DB']->type.'/'.$type.'/'.SITE_ID.'/'.$site_template.'/'.$sufix.'/info.php';
+
+		if($type == 'css')
+		{
+			$maxAddCssSelect = 3950;
+			$maxCssSelect = 4000;
+			$optimFName = $optimPath.$sufix.$fileMTime.'.css';
+			$cssFNameIE = $optimPath.$sufix.$fileMTime.'#CNT#.css';
 		}
 		else
 		{
-			$upCSS = 'NEW';
+			$optimFName = $optimPath.$sufix.$fileMTime.'.js';
 		}
 
-		if(!file_exists($_SERVER["DOCUMENT_ROOT"].$cssFName) || $upCSS == 'NEW')
-		{
-			$upCSS = 'NEW';
-			$arCSSInfo = array();
-			$arCSSInfo['CUR_SEL_CNT'] = 0;
-			$arCSSInfo['CUR_IE_CNT'] = 0;
-			$arCSSInfo['CSS_MD5'] = 0;
-			DeleteDirFilesEx($cssOptPath);
-		}
+		$optimFileExist = file_exists($_SERVER["DOCUMENT_ROOT"].$optimFName);
 
-		if($upCSS != 'NO')
+		if($unique && $optimFileExist)
 		{
-			$contents = '';
-			$arIEContent = array();
-
-			if($upCSS == 'UP' && file_exists($_SERVER["DOCUMENT_ROOT"].$cssFName))
+			if(file_exists($_SERVER['DOCUMENT_ROOT'].$infoFile))
 			{
-				foreach($unsetKey as $key)
-					unset($cssFile[$key], $cssSrcFile[$key]);
+				include($_SERVER['DOCUMENT_ROOT'].$infoFile);
 
-				$contents .= file_get_contents($_SERVER["DOCUMENT_ROOT"].$cssFName);
-
-				if($arCSSInfo['CUR_SEL_CNT'] < $maxAddCssSelect)
+				if(is_array($arFilesInfo['FILES']))
 				{
-					$css = str_replace('#CNT#', $arCSSInfo['CUR_IE_CNT'], $cssFNameIE);
-					if(file_exists($_SERVER["DOCUMENT_ROOT"].$css))
+					foreach($arFile as $key => $fp)
 					{
-						$arIEContent[$arCSSInfo['CUR_IE_CNT']] .= file_get_contents($_SERVER["DOCUMENT_ROOT"].$css);
-						$arCSSInfo['CUR_SEL_CNT'] = CMain::__GetCssSelectCnt($arIEContent[$arCSSInfo['CUR_IE_CNT']]);
+						$fp = $_SERVER['DOCUMENT_ROOT'].$fp;
+						if(isset($arFilesInfo['FILES'][$fp]))
+						{
+							if($_SERVER['DOCUMENT_ROOT'].$arSrcFile[$key] != $fp.'?'.$arFilesInfo['FILES'][$fp])
+							{
+								$upOptim = 'NEW';
+								break;
+							}
+							else
+							{
+								$unsetKey[] = $key;
+							}
+						}
+						else
+						{
+							$upOptim = 'UP';
+						}
 					}
-				}
-				elseif($arCSSInfo['CUR_SEL_CNT'] >= $maxAddCssSelect)
-				{
-					$arCSSInfo['CUR_IE_CNT']++;
-					$arCSSInfo['CUR_SEL_CNT'] = 0;
-				}
-			}
-
-			foreach($cssFile as $key => $filename)
-			{
-				$filename = $_SERVER['DOCUMENT_ROOT'].$filename;
-				$tmp_content = file_get_contents($filename);
-
-				$f_cnt = CMain::__GetCssSelectCnt($tmp_content);
-				$new_cnt = $f_cnt + $arCSSInfo['CUR_SEL_CNT'];
-				$contents .= $tmp_content = "\n".preg_replace('#([;\s:]+url\s*\(\s*)([^\)]+)\)#sie', "'\\1'.CMain::__ReplaceUrlCSS('\\2', '".AddSlashes($cssSrcFile[$key])."').')'", $tmp_content)."\n";
-				if($new_cnt < $maxCssSelect)
-				{
-					$arCSSInfo['CUR_SEL_CNT'] = $new_cnt;
-					$arIEContent[$arCSSInfo['CUR_IE_CNT']] .= $tmp_content;
 				}
 				else
 				{
-					$arCSSInfo['CUR_SEL_CNT'] = $f_cnt;
-					$arCSSInfo['CUR_IE_CNT']++;
-					$arIEContent[$arCSSInfo['CUR_IE_CNT']] .= $tmp_content;
+					$upOptim = 'NEW';
 				}
-
-				$arCSSInfo['CSS'][$cssFile[$key]] = CMain::__GetCssJsTime($cssSrcFile[$key]);
 			}
-
-			if(CMain::__WriteCssCache($cssFName, $contents))
+			else
 			{
-				$cacheInfo = '<? $arCSSInfo = array( \'CSS\' => array(';
-
-				foreach($arCSSInfo['CSS'] as $css => $time)
-					$cacheInfo .= "'".EscapePHPString($css)."' => '".intval($time)."',";
-
-				$cacheInfo .= "), 'CUR_SEL_CNT' => '".$arCSSInfo['CUR_SEL_CNT']."', 'CUR_IE_CNT' => '".$arCSSInfo['CUR_IE_CNT']."', ";
-				$cacheInfo .= "'CSS_MD5' => '".$cssMD5."'); ?>";
-
-				CMain::__WriteCssCache($cssInfoFile, $cacheInfo, false);
-			}
-
-			foreach($arIEContent as $key => $ieContent)
-			{
-				$css = str_replace('#CNT#', $key, $cssFNameIE);
-				CMain::__WriteCssCache($css, $ieContent);
+				$upOptim = 'NEW';
 			}
 		}
 
-		if(IsIE())
+		if(!$optimFileExist || $upOptim == 'NEW')
 		{
-			for($i = 0; $i <= $arCSSInfo['CUR_IE_CNT']; $i++)
+			$upOptim = 'NEW';
+			$arFilesInfo = array();
+			$arFilesInfo['CUR_SEL_CNT'] = 0;
+			$arFilesInfo['CUR_IE_CNT'] = 0;
+			$arFilesInfo['FILES'] = array();
+
+			$writeResult = false;
+
+			if($unique)
+				DeleteDirFilesEx($optimPath);
+		}
+
+		$contents = '';
+		$arIEContent = array();
+
+		if($upOptim != 'NO')
+		{
+			if($upOptim == 'UP' && $optimFileExist)
+			{
+				foreach($unsetKey as $key)
+					unset($arFile[$key]);
+
+				if($noCheckOnly)
+				{
+					$contents .= "\n\n".file_get_contents($_SERVER["DOCUMENT_ROOT"].$optimFName);
+
+					if($type == 'css')
+					{
+						if($arFilesInfo['CUR_SEL_CNT'] < $maxAddCssSelect)
+						{
+							$css = str_replace('#CNT#', $arFilesInfo['CUR_IE_CNT'], $cssFNameIE);
+							if(file_exists($_SERVER["DOCUMENT_ROOT"].$css))
+							{
+								$arIEContent[$arFilesInfo['CUR_IE_CNT']] .= file_get_contents($_SERVER["DOCUMENT_ROOT"].$css);
+								$arFilesInfo['CUR_SEL_CNT'] = self::__GetCssSelectCnt($arIEContent[$arFilesInfo['CUR_IE_CNT']]);
+							}
+						}
+						elseif($arFilesInfo['CUR_SEL_CNT'] >= $maxAddCssSelect)
+						{
+							$arFilesInfo['CUR_IE_CNT']++;
+							$arFilesInfo['CUR_SEL_CNT'] = 0;
+						}
+					}
+				}
+				else
+				{
+					$writeResult = false;
+				}
+			}
+
+			if($noCheckOnly)
+			{
+				foreach($arFile as $key => $filename)
+				{
+					$filename = $_SERVER['DOCUMENT_ROOT'].$filename;
+					$tmp_content = file_get_contents($filename);
+					if($tmp_content !== '')
+					{
+						if($type == 'css')
+						{
+							$f_cnt = self::__GetCssSelectCnt($tmp_content);
+							$new_cnt = $f_cnt + $arFilesInfo['CUR_SEL_CNT'];
+
+							$tmp_content = self::FixCssIncludes($tmp_content, $arSrcFile[$key]);
+							$tmp_content = "\n/* Start:".$arFile[$key]."*/\n".$tmp_content."\n/* End */\n";
+
+							if($new_cnt < $maxCssSelect)
+							{
+								$arFilesInfo['CUR_SEL_CNT'] = $new_cnt;
+								$arIEContent[$arFilesInfo['CUR_IE_CNT']] .= $tmp_content;
+							}
+							else
+							{
+								$arFilesInfo['CUR_SEL_CNT'] = $f_cnt;
+								$arFilesInfo['CUR_IE_CNT']++;
+								$arIEContent[$arFilesInfo['CUR_IE_CNT']] .= $tmp_content;
+							}
+
+							$contents .= "\n\n".$tmp_content;
+						}
+						else
+						{
+							$contents .= "\n; /* Start:".$arFile[$key]."*/\n".$tmp_content."\n/* End */\n;";
+						}
+					}
+
+					if($unique)
+						$arFilesInfo['FILES'][$filename] = self::__GetCssJsTime($arSrcFile[$key]);
+				}
+
+				if(($writeResult = self::__WriteCssJsCache($optimFName, $contents)) && $unique)
+				{
+					$cacheInfo = '<? $arFilesInfo = array( \'FILES\' => array(';
+
+					foreach($arFilesInfo['FILES'] as $key => $time)
+						$cacheInfo .= "'".EscapePHPString($key)."' => '".intval($time)."',";
+
+					$cacheInfo .= "), 'CUR_SEL_CNT' => '".$arFilesInfo['CUR_SEL_CNT']."', 'CUR_IE_CNT' => '".$arFilesInfo['CUR_IE_CNT']."'); ?>";
+					self::__WriteCssJsCache($infoFile, $cacheInfo, false);
+				}
+
+				if($type == 'css' && $writeResult)
+				{
+					foreach($arIEContent as $key => $ieContent)
+					{
+							$css = str_replace('#CNT#', $key, $cssFNameIE);
+							self::__WriteCssJsCache($css, $ieContent);
+					}
+				}
+
+				unset($contents, $arIEContent);
+			}
+		}
+
+		if($type == 'css' && $isIE && $writeResult)
+		{
+			for($i = 0; $i <= $arFilesInfo['CUR_IE_CNT']; $i++)
 			{
 				$css = str_replace('#CNT#', $i, $cssFNameIE);
 				$res .= '<link href="'.CUtil::GetAdditionalFileURL($css).'" type="text/css" rel="stylesheet"'.($bXhtmlStyle? ' /':'').'>'."\n";
@@ -876,36 +1094,104 @@ class CAllMain
 		}
 		else
 		{
-			$res .= '<link href="'.CUtil::GetAdditionalFileURL($cssFName).'" type="text/css" rel="stylesheet"'.($bXhtmlStyle? ' /':'').'>'."\n";
-		}
-
-		if($addTemplateStyle)
-		{
-			if($cssMD5 != $oldCssMD5 || !file_exists($_SERVER['DOCUMENT_ROOT'].$cssTemplateFName))
+			if($type == 'css')
 			{
-				$contents = '';
-				foreach($arTemplateCss as $css)
+				if($writeResult || !$writeResult && $unique && $upOptim == 'UP')
+					$res .= '<link href="'.CUtil::GetAdditionalFileURL($optimFName).'" type="text/css" rel="stylesheet"'.($bXhtmlStyle? ' /':'').'>'."\n";
+
+				if(!$writeResult)
 				{
-					if(file_exists($_SERVER["DOCUMENT_ROOT"].$css))
+					if($isIE)
 					{
-						$tmp_content = file_get_contents($_SERVER["DOCUMENT_ROOT"].$css);
-						$contents .= preg_replace('#([;\s:]+url\s*\(\s*)([^\)]+)\)#sie', "'\\1'.CMain::__ReplaceUrlCSS('\\2', '".AddSlashes($css)."').')'", $tmp_content);
+						$cnt = 0;
+						$res_content = '';
+						$ruleCount = 0;
+						$cMaxStylesCnt = COption::GetOptionInt('main', 'max_css_files', 15);
+
+						foreach($arFile as $key => $src)
+						{
+							if($cnt < $cMaxStylesCnt)
+							{
+								$res .= '<link href="'.$arSrcFile[$key].'" type="text/css" rel="stylesheet"'.($bXhtmlStyle? ' /':'').'>'."\n";
+							}
+							elseif(file_exists($_SERVER['DOCUMENT_ROOT'].$arFile[$key]) && filesize($_SERVER['DOCUMENT_ROOT'].$arFile[$key]) > 0)
+							{
+								$arTmp = $this->__ShowInlineCssIE($_SERVER['DOCUMENT_ROOT'].$arFile[$key], $arFile[$key], $ruleCount);
+								$ruleCount = $arTmp['CNT'];
+								$res_content .= $arTmp['CONTENT'];
+							}
+							$cnt++;
+						}
+
+						if($res_content != '')
+							$res .= '<style type="text/css">'."\n".$res_content."\n</style>\n";
+					}
+					else
+					{
+						foreach($arFile as $key => $src)
+							$res .= '<link href="'.$arSrcFile[$key].'" type="text/css" rel="stylesheet"'.($bXhtmlStyle? ' /':'').'>'."\n";
 					}
 				}
-				CMain::__WriteCssCache($cssTemplateFName, $contents);
 			}
-			$res .= '<link href="'.$cssTemplateFName.'?'.$cssMD5.'" type="text/css" rel="stylesheet"'.($bXhtmlStyle? ' /':'').'>'."\n";
+			else
+			{
+				if($writeResult || !$writeResult && $unique && $upOptim == 'UP')
+					$res .= '<script type="text/javascript" src="'.CUtil::GetAdditionalFileURL($optimFName).'"></script>'."\n";
+
+				if(!$writeResult)
+				{
+					foreach ($arFile as $key => $src)
+					{
+						$res .= '<script type="text/javascript" src="'.$arSrcFile[$key].'"></script>'."\n";
+					}
+				}
+
+				if($unique && $sufix == 'kernel')
+				{
+					$arF = array_keys($arFilesInfo['FILES']);
+					foreach ($arF as $key => $item)
+					{
+						$arF[$key] = str_replace($_SERVER['DOCUMENT_ROOT'], '', $item);
+					}
+					$res .= '<script type="text/javascript">'." BX.setKernelJS(['".implode("','", $arF)."']); </script>";
+				}
+			}
 		}
-		unset($content, $arIEContent, $arCSSInfo, $cacheInfo);
+
+		if($unique && $sufix == 'kernel' && $type == 'css')
+		{
+			$arF = array_keys($arFilesInfo['FILES']);
+			foreach ($arF as $key => $item)
+			{
+				$arF[$key] = str_replace($_SERVER['DOCUMENT_ROOT'], '', $item);
+			}
+			$res .= '<script type="text/javascript">'." var arKernelCSS = new Array('".implode("','", $arF)."'); </script>";
+		}
+
+		unset($arFile, $arSrcFile);
 		return $res;
 	}
 
-	function __WriteCssCache($css_path, $contents, $gzip_content = true)
+	/**
+	 * Write optimized css, js files or info file
+	 *
+	 * @param string $file_path - Path for optimized css, js or info file
+	 * @param string $contents - File contents
+	 * @param bool $gzip_content - For disabled gzip
+	 * @return bool - TRUE or FALSE result
+	 */
+	function __WriteCssJsCache($file_path, $contents, $gzip_content = true)
 	{
 		$result = false;
-		CheckDirPath($_SERVER["DOCUMENT_ROOT"].$css_path);
-		$handle = fopen($_SERVER["DOCUMENT_ROOT"].$css_path.'.tmp', "wb");
-		$written = fwrite($handle, $contents);
+
+		CheckDirPath($_SERVER["DOCUMENT_ROOT"].$file_path);
+
+		if(!$handle = @fopen($_SERVER["DOCUMENT_ROOT"].$file_path.'.tmp', "wb"))
+			return false;
+
+		if(($written = @fwrite($handle, $contents)) === false)
+			return false;
+
 		$len = function_exists('mb_strlen') ? mb_strlen($contents, 'latin1'): strlen($contents);
 		fclose($handle);
 
@@ -913,32 +1199,71 @@ class CAllMain
 		{
 			//This checks for Zend Server CE in order to supress warnings
 			if(function_exists('accelerator_reset'))
-				@unlink($_SERVER["DOCUMENT_ROOT"].$css_path);
-			elseif(file_exists($_SERVER["DOCUMENT_ROOT"].$css_path))
-				unlink($_SERVER["DOCUMENT_ROOT"].$css_path);
+				@unlink($_SERVER["DOCUMENT_ROOT"].$file_path);
+			elseif(file_exists($_SERVER["DOCUMENT_ROOT"].$file_path))
+				@unlink($_SERVER["DOCUMENT_ROOT"].$file_path);
 
-			rename($_SERVER["DOCUMENT_ROOT"].$css_path.'.tmp', $_SERVER["DOCUMENT_ROOT"].$css_path);
+			if(@rename($_SERVER["DOCUMENT_ROOT"].$file_path.'.tmp', $_SERVER["DOCUMENT_ROOT"].$file_path) === false)
+				return false;
+
 			$result = true;
-		}
 
-		if(
-			extension_loaded('zlib') && function_exists("gzcompress")
-			&& COption::GetOptionString('main', 'compres_css_files', 'N') == 'Y'
-			&& $gzip_content
-		)
-		{
-			$tmpGz = $_SERVER["DOCUMENT_ROOT"].$css_path.'.tmp.gz';
-			$gz = gzopen($tmpGz, 'wb9f');
-			$written = gzwrite ($gz, $contents);
-			gzclose ($gz);
-			$len = function_exists('mb_strlen') ? mb_strlen($contents, 'latin1'): strlen($contents);
-			if($written === $len)
-				rename($tmpGz, $_SERVER["DOCUMENT_ROOT"].$css_path.'.gz');
+			if(
+				$gzip_content && COption::GetOptionString('main', 'compres_css_js_files', 'N') == 'Y' &&
+				extension_loaded('zlib') && function_exists('gzcompress')
+			)
+			{
+				$tmpGz = $_SERVER["DOCUMENT_ROOT"].$file_path.'.tmp.gz';
+				if($gz = gzopen($tmpGz, 'wb9f'))
+				{
+					$written = @gzwrite ($gz, $contents);
+					gzclose ($gz);
+					$len = function_exists('mb_strlen') ? mb_strlen($contents, 'latin1'): strlen($contents);
+					if($written === $len)
+						@rename($tmpGz, $_SERVER["DOCUMENT_ROOT"].$file_path.'.gz');
+				}
+			}
 		}
 		return $result;
 	}
 
-	function __GetCssJsTime($css_file)
+	/**
+	 * Show css inline for IE
+	 *
+	 * @param string $filename - Full path for a source css file
+	 * @param $css_path - Path to css without document root, Include timestamp
+	 * @param int $ruleCount - Current css selector count
+	 * @return array - Return array(cnt - current css selector count, content - css content)
+	 */
+	public static function __ShowInlineCssIE($filename, $css_path, $ruleCount)
+	{
+		$res_content = '';
+		if(file_exists($filename) && filesize($filename) > 0)
+		{
+			$contents = file_get_contents($filename);
+			if($contents != '')
+			{
+				$contents = self::FixCssIncludes($contents, $css_path);
+
+				$ruleCountOld = $ruleCount;
+				$c = self::__GetCssSelectCnt($contents);
+				$ruleCount += $c;
+				if($ruleCount > 4000)
+				{
+					$ruleCount = $c;
+					if($ruleCountOld > 0)
+					{
+						$res_content .= '</style>'."\n".'<style type="text/css">';
+					}
+				}
+				$res_content .= "\n".$contents."\n";
+			}
+		}
+
+		return array('CNT' => $ruleCount, 'CONTENT' => $res_content);
+	}
+
+	static function __GetCssJsTime($css_file)
 	{
 		$qpos = strpos($css_file, '?');
 		if($qpos === false)
@@ -947,79 +1272,239 @@ class CAllMain
 		return intval(substr($css_file, $qpos));
 	}
 
-	function __GetCssSelectCnt($css)
+	static function __GetCssSelectCnt($css)
 	{
-		$cnt = 0;
-		$ar = explode('}', $css);
-		foreach ($ar as $key => $val)
-		{
-			$ar[$key] = explode('{', $val);
-			$cnt += count(explode(',', $ar[$key][0]));
-		}
-		unset($ar);
-		return $cnt;
+		$matches = array();
+		$cnt = preg_match_all("#[^,{]+\\s*(?:\\{[^}]*\\}\\s*;?|,)#is", $css, $matches);
+		unset($matches);
+
+		return intval($cnt);
 	}
 
-	function __ReplaceUrlCSS($url, $cssPath)
+	static function __ReplaceUrlCSS($url, $cssPath)
 	{
 		if(strpos($url, "://") !== false || strpos($url, "data:") !== false)
 			return $url;
 		$url = trim(stripslashes($url), "'\" \r\n\t");
 		if(substr($url, 0, 1) == "/")
 			return $url;
-		$cssPath = dirname($cssPath);
 		return "'".$cssPath.'/'.$url."'";
 	}
 
 	function ShowCSS($cMaxStylesCnt=true, $bXhtmlStyle=true)
 	{
-		$this->AddBufferContent(Array(&$this, "GetCSS"), $cMaxStylesCnt, $bXhtmlStyle);
+		$this->AddBufferContent(array(&$this, "GetCSS"), $cMaxStylesCnt, $bXhtmlStyle);
 	}
 
-	function AddHeadString($str, $bUnique=false)
+	function AddHeadString($str, $bUnique=false, $additional=false)
 	{
 		if($str <> '')
 		{
 			if($bUnique)
 			{
 				$check_sum = md5($str);
-				if(!array_key_exists($check_sum, $this->arHeadStrings))
-					$this->arHeadStrings[$check_sum] = $str;
+				if($additional)
+				{
+					if(!array_key_exists($check_sum, $this->arHeadAdditionalStrings))
+						$this->arHeadAdditionalStrings[$check_sum] = $str;
+				}
+				else
+				{
+					if(!array_key_exists($check_sum, $this->arHeadStrings))
+						$this->arHeadStrings[$check_sum] = $str;
+				}
 			}
 			else
-				$this->arHeadStrings[] = $str;
+			{
+				if($additional)
+					$this->arHeadAdditionalStrings[] = $str;
+				else
+					$this->arHeadStrings[] = $str;
+			}
 		}
-	}
-	function GetHeadStrings()
-	{
-		return implode("\n", $this->arHeadStrings)."\n";
-	}
-	function ShowHeadStrings()
-	{
-		$this->AddBufferContent(Array(&$this, "GetHeadStrings"));
 	}
 
-	function AddHeadScript($src)
+	function GetHeadStrings($additional=false)
+	{
+		if($additional)
+		{
+			return implode("\n", $this->arHeadAdditionalStrings)."\n";
+		}
+		else
+		{
+			$res = '';
+			if ($this->IsJSOptimized())
+				$res .= $this->GetHeadScripts(1);
+
+			return $res.implode("\n", $this->arHeadStrings)."\n";
+		}
+	}
+
+	function ShowHeadStrings()
+	{
+		if(!$this->bShowHeadString)
+		{
+			$this->bShowHeadString = true;
+			$this->AddBufferContent(array(&$this, "GetHeadStrings"), true);
+			$this->AddBufferContent(array(&$this, "GetHeadStrings"), false);
+		}
+	}
+
+	function AddHeadScript($src, $additional=false)
 	{
 		if($src <> '')
-			$this->arHeadScripts[] = $src;
-	}
-	function GetHeadScripts()
-	{
-		$arScripts = array_unique($this->arHeadScripts);
-		$res = "";
-		foreach($arScripts as $src)
 		{
-			if(strncmp($src, 'http://', 7) !== 0 && strncmp($src, 'https://', 8) !== 0)
-				if(strpos($src, '?') === false)
-					$src = CUtil::GetAdditionalFileURL($src);
-			$res .= '<script type="text/javascript" src="'.$src.'"></script>'."\n";
+			if($additional)
+				$this->arHeadAdditionalScripts[] = $src;
+			else
+				$this->arHeadScripts[] = $src;
 		}
+	}
+
+	function AddLangJS($content)
+	{
+		if($content <> '')
+			$this->arLangJS[] = $content;
+	}
+
+	function GetLangJS()
+	{
+		return implode("\n", $this->arLangJS)."\n";
+	}
+
+	function AddAdditionalJS($content)
+	{
+		if($content <> '')
+			$this->arAdditionalJS[] = $content;
+	}
+
+	function GetAdditionalJS()
+	{
+		return implode("\n", $this->arAdditionalJS)."\n";
+	}
+
+	function IsCSSOptimized()
+	{
+		return defined('SITE_TEMPLATE_ID') && COption::GetOptionString('main', 'optimize_css_files', 'N') == 'Y' && !$this->bInAjax;
+	}
+
+	function IsJSOptimized()
+	{
+		return defined('SITE_TEMPLATE_ID') && COption::GetOptionString('main', 'optimize_js_files', 'N') == 'Y' && !$this->bInAjax;
+	}
+
+	function GetHeadScripts($type = 0)
+	{
+		$res = "";
+		$optimJS = $this->IsJSOptimized();
+
+		$additionalJS = array_unique($this->arHeadAdditionalScripts);
+
+		if($optimJS)
+			$arScripts = array_unique($this->arHeadScripts);
+		else
+			$arScripts = array_merge(array_unique($this->arHeadScripts),$additionalJS);
+
+		static $firstExec = true;
+		static $arJS = array('KERNEL' => '', 'TEMPLATE' => '', 'PAGE' => '', 'OTHERS' => '');
+		$type = intval($type);
+
+		if($type == 1 && $this->bShowHeadString && !$this->bShowHeadScript)
+			$type = 0;
+
+		if($firstExec && $optimJS)
+		{
+			$arBxFile = array();
+			$arSrcBxFile = array();
+
+			$arTemplateFile = array();
+			$arSrcTemplateFile = array();
+
+			$arPageFile = array();
+			$arSrcPageFile = array();
+		}
+
+		if(!$optimJS || $firstExec)
+		{
+			foreach($arScripts as $jsKey => $src)
+			{
+				$bExternalLink = (strncmp($src, 'http://', 7) == 0 || strncmp($src, 'https://', 8) == 0);
+
+				if(!$bExternalLink)
+				{
+					if(strpos($src, '?') === false)
+						$src = CUtil::GetAdditionalFileURL($src);
+				}
+
+				if(!$bExternalLink && $optimJS)
+				{
+					if(strncmp($src, '/bitrix/js/', 11) != 0)
+					{
+						if($jsKey > $this->iHeaderLastJs && $jsKey <= $this->iWorkAreaLastJs)
+						{
+							$arPageFile[] = $arScripts[$jsKey];
+							$arSrcPageFile[] = $src;
+						}
+						else
+						{
+							$arTemplateFile[] = $arScripts[$jsKey];
+							$arSrcTemplateFile[] = $src;
+						}
+					}
+					else
+					{
+						$arBxFile[] = $arScripts[$jsKey];
+						$arSrcBxFile[] = $src;
+					}
+				}
+				else
+				{
+					if($optimJS)
+						$arJS['PAGE'] .= '<script type="text/javascript" src="'.$src.'"></script>'."\n";
+					else
+						$res .= '<script type="text/javascript" src="'.$src.'"></script>'."\n";
+				}
+			}
+		}
+
+		if($optimJS)
+		{
+			if($firstExec)
+			{
+				$arJS['KERNEL'] .= '<script type="text/javascript">if(!window.BX)window.BX={message:function(mess){if(typeof mess==\'object\') for(var i in mess) BX.message[i]=mess[i]; return true;}};</script>';
+				$arJS['KERNEL'] .= $this->GetLangJS();
+				$arJS['KERNEL'] .= $this->__OptimizeCssJs($arBxFile, $arSrcBxFile, SITE_TEMPLATE_ID, true, 'kernel', 'js');
+				$arJS['KERNEL'] .= $this->GetAdditionalJS();
+
+				$arTemplateFile = array_merge($arTemplateFile, $additionalJS);
+				$arSrcTemplateFile  = array_merge($arSrcTemplateFile, $additionalJS);
+
+				$arJS['TEMPLATE'] .= $this->__OptimizeCssJs($arTemplateFile, $arSrcTemplateFile, SITE_TEMPLATE_ID, false, 'template', 'js');
+				$arJS['PAGE'] .= $this->__OptimizeCssJs($arPageFile, $arSrcPageFile, SITE_TEMPLATE_ID, false, 'page', 'js');
+
+				$firstExec = false;
+			}
+
+			switch ($type)
+			{
+				case 1:
+					return $arJS['KERNEL']."\n";
+					break;
+				case 2:
+					return $arJS['TEMPLATE']."\n".$arJS['PAGE'];
+					break;
+				default:
+					return implode("\n", $arJS);
+			}
+		}
+
 		return $res;
 	}
+
 	function ShowHeadScripts()
 	{
-		$this->AddBufferContent(array(&$this, "GetHeadScripts"));
+		$this->bShowHeadScript = true;
+		$this->AddBufferContent(array(&$this, "GetHeadScripts"), 2);
 	}
 
 	function ShowHead($bXhtmlStyle=true)
@@ -1033,6 +1518,30 @@ class CAllMain
 		$this->ShowHeadScripts();
 	}
 
+	function ShowAjaxHead($bXhtmlStyle=true)
+	{
+		$this->RestartBuffer();
+
+		$this->sPath2css = array();
+		$this->arAdditionalJS = array();
+		$this->arHeadAdditionalCss = array();
+		$this->arHeadAdditionalStrings = array();
+		$this->arHeadAdditionalScripts = array();
+		$this->arHeadScripts = array();
+		$this->arHeadStrings = array();
+		$this->arLangJS = array();
+		$this->iHeaderLastCss = 0;
+		$this->iHeaderLastJs = 0;
+		$this->iWorkAreaLastCss = 0;
+		$this->iWorkAreaLastJs = 0;
+
+		$this->bInAjax = true;
+
+		$this->ShowCSS(true, $bXhtmlStyle);
+		$this->ShowHeadStrings();
+		$this->ShowHeadScripts();
+	}
+
 	function SetShowIncludeAreas($bShow=true)
 	{
 		$_SESSION["SESS_INCLUDE_AREAS"] = $bShow;
@@ -1040,12 +1549,19 @@ class CAllMain
 
 	function GetShowIncludeAreas()
 	{
-		if(!$GLOBALS["USER"]->IsAuthorized() || defined('ADMIN_SECTION') && ADMIN_SECTION == true)
+		global $USER;
+
+		if(!$USER->IsAuthorized() || defined('ADMIN_SECTION') && ADMIN_SECTION == true)
 			return false;
-		if($_SESSION["SESS_INCLUDE_AREAS"])
+		if(isset($_SESSION["SESS_INCLUDE_AREAS"]) && $_SESSION["SESS_INCLUDE_AREAS"])
 			return true;
-		$aUserOpt = CUserOptions::GetOption("global", "settings", array());
-		return ($aUserOpt["panel_dynamic_mode"] == "Y");
+		static $panel_dynamic_mode = null;
+		if (!isset($panel_dynamic_mode))
+		{
+			$aUserOpt = CUserOptions::GetOption("global", "settings", array());
+			$panel_dynamic_mode = (isset($aUserOpt["panel_dynamic_mode"]) && $aUserOpt["panel_dynamic_mode"] == "Y");
+		}
+		return $panel_dynamic_mode;
 	}
 
 	function SetPublicShowMode($mode)
@@ -1122,12 +1638,13 @@ class CAllMain
 	// COMPONENTS 2.0 >>>>>
 	function IncludeComponent($componentName, $componentTemplate, $arParams = array(), $parentComponent = null, $arFunctionParams = array())
 	{
+		/** @global CMain $APPLICATION */
 		global $APPLICATION, $USER;
 
 		if(is_array($this->arComponentMatch))
 		{
 			$skipComponent = true;
-			foreach($this->arComponentMatch as $cIndex => $cValue)
+			foreach($this->arComponentMatch as $cValue)
 			{
 				if(strpos($componentName, $cValue) !== false)
 				{
@@ -1173,15 +1690,29 @@ class CAllMain
 		$bComponentEnabled = (!isset($arFunctionParams["ACTIVE_COMPONENT"]) || $arFunctionParams["ACTIVE_COMPONENT"] <> "N");
 
 		$component = new CBitrixComponent();
-		if($component->InitComponent($componentName) && $bComponentEnabled)
+		if($component->InitComponent($componentName))
 		{
-			if($arParams['AJAX_MODE'] == 'Y')
-				$obAjax = new CComponentAjax($componentName, $componentTemplate, $arParams, $parentComponent);
+			$obAjax = null;
+			if($bComponentEnabled)
+			{
+				if($arParams['AJAX_MODE'] == 'Y')
+					$obAjax = new CComponentAjax($componentName, $componentTemplate, $arParams, $parentComponent);
 
-			$result = $component->IncludeComponent($componentTemplate, $arParams, $parentComponent);
+				$result = $component->IncludeComponent($componentTemplate, $arParams, $parentComponent);
+			}
 
-			if($arParams['AJAX_MODE'] == 'Y')
+			if($bDrawIcons)
+			{
+				$panel = new CComponentPanel($component, $componentName, $componentTemplate, $parentComponent, $bComponentEnabled);
+				$arIcons = $panel->GetIcons();
+
+				echo $s = $this->IncludeStringAfter($arIcons["icons"], $arIcons["parameters"]);
+			}
+
+			if($bComponentEnabled && $obAjax)
+			{
 				$obAjax->Process();
+			}
 		}
 
 		if($_SESSION["SESS_SHOW_INCLUDE_TIME_EXEC"]=="Y" && ($USER->CanDoOperation('edit_php') || $_SESSION["SHOW_SQL_STAT"]=="Y"))
@@ -1189,13 +1720,6 @@ class CAllMain
 		elseif(is_object($debug))
 			$debug->Stop($componentName, "/bitrix/components".$componentRelativePath."/component.php", $arParams["CACHE_TYPE"].$arParams["MENU_CACHE_TYPE"]);
 
-		if($bDrawIcons)
-		{
-			$panel = new CComponentPanel($component, $componentName, $componentTemplate, $parentComponent, $bComponentEnabled);
-			$arIcons = $panel->GetIcons();
-
-			echo $this->IncludeStringAfter($arIcons["icons"], $arIcons["parameters"]);
-		}
 
 		return $result;
 	}
@@ -1210,7 +1734,7 @@ class CAllMain
 
 	function ShowViewContent($view)
 	{
-		$this->AddBufferContent(Array(&$this, "GetViewContent"), $view);
+		$this->AddBufferContent(array(&$this, "GetViewContent"), $view);
 	}
 
 	function GetViewContent($view)
@@ -1229,9 +1753,12 @@ class CAllMain
 
 	function OnChangeFileComponent($path, $site)
 	{
-		require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/classes/general/php_parser.php");
-
+		/** @global CMain $APPLICATION */
 		global $APPLICATION;
+
+		// kind of optimization
+		if(!HasScriptExtension($path))
+			return;
 
 		$docRoot = CSite::GetSiteDocRoot($site);
 
@@ -1239,10 +1766,34 @@ class CAllMain
 			array("SITE_ID" => $site, "PATH" => $path, "ID" => "NULL")
 		);
 
+		if (class_exists("\\Bitrix\\Main\\Application", false))
+		{
+			\Bitrix\Main\Component\ParametersTable::deleteByFilter(
+				array("SITE_ID" => $site, "REAL_PATH" => $path)
+			);
+		}
+
 		$fileSrc = $APPLICATION->GetFileContent($docRoot.$path);
 		$arComponents = PHPParser::ParseScript($fileSrc);
 		for ($i = 0, $cnt = count($arComponents); $i < $cnt; $i++)
 		{
+			if (class_exists("\\Bitrix\\Main\\Application", false))
+			{
+				\Bitrix\Main\Component\ParametersTable::add(
+					array(
+						'SITE_ID' => $site,
+						'COMPONENT_NAME' => $arComponents[$i]["DATA"]["COMPONENT_NAME"],
+						'TEMPLATE_NAME' => $arComponents[$i]["DATA"]["TEMPLATE_NAME"],
+						'REAL_PATH' => $path,
+						'SEF_MODE' => ($arComponents[$i]["DATA"]["PARAMS"]["SEF_MODE"] == "Y") ? \Bitrix\Main\Component\ParametersTable::SEF_MODE : \Bitrix\Main\Component\ParametersTable::NOT_SEF_MODE,
+						'SEF_FOLDER' => ($arComponents[$i]["DATA"]["PARAMS"]["SEF_MODE"] == "Y") ? $arComponents[$i]["DATA"]["PARAMS"]["SEF_FOLDER"] : null,
+						'START_CHAR' => $arComponents[$i]["START"],
+						'END_CHAR' => $arComponents[$i]["END"],
+						'PARAMETERS' => serialize($arComponents[$i]["DATA"]["PARAMS"]),
+					)
+				);
+			}
+
 			if (isset($arComponents[$i]["DATA"]["PARAMS"]) && is_array($arComponents[$i]["DATA"]["PARAMS"]))
 			{
 				if (array_key_exists("SEF_MODE", $arComponents[$i]["DATA"]["PARAMS"])
@@ -1263,9 +1814,11 @@ class CAllMain
 	// <<<<< COMPONENTS 2.0
 	// <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-	// $arParams - не переименовывать !
-	function IncludeFile($rel_path, $arParams = Array(), $arFunctionParams = Array())
+	// $arParams - do not change!
+	function IncludeFile($rel_path, $arParams = array(), $arFunctionParams = array())
 	{
+		/** @global CMain $APPLICATION */
+		/** @noinspection PhpUnusedLocalVariableInspection */
 		global $APPLICATION, $USER, $DB, $MESS, $DOCUMENT_ROOT;
 
 		if($_SESSION["SESS_SHOW_INCLUDE_TIME_EXEC"]=="Y" && ($USER->CanDoOperation('edit_php') || $_SESSION["SHOW_SQL_STAT"]=="Y"))
@@ -1331,6 +1884,9 @@ class CAllMain
 			$path_url = "path=".$path;
 			$encSiteTemplateId = urlencode(SITE_TEMPLATE_ID);
 			$editor = '';
+			$resize = 'false';
+			$iSrcLine = 0;
+			$sSrcFile = '';
 
 			if (!in_array($arFunctionParams['MODE'], array('html', 'text', 'php')))
 			{
@@ -1421,7 +1977,7 @@ class CAllMain
 
 			if($sType == "MODULE")
 			{
-				$arIcons[] = Array(
+				$arIcons[] = array(
 					'URL'=>'javascript:if(confirm(\''.GetMessage("MAIN_INC_BLOCK_MODULE").'\'))window.location=\''.$editor.'&path='.urlencode(BX_PERSONAL_ROOT.'/templates/'.SITE_TEMPLATE_ID.'/'.$rel_path).$arFunctionParams["BACK_URL"].$arFunctionParams["LANG"].'&template='.$path.'\';',
 					'ICON'=>'copy',
 					'TITLE'=>str_replace("#MODE#", $arFunctionParams["MODE"], str_replace("#BLOCK_TYPE#", (!is_set($arFunctionParams, "NAME")? GetMessage("MAIN__INC_BLOCK"): $arFunctionParams["NAME"]), GetMessage("main_incl_file_edit_copy")))
@@ -1429,13 +1985,13 @@ class CAllMain
 			}
 			elseif($sType == "DEFAULT")
 			{
-				$arIcons[] = Array(
+				$arIcons[] = array(
 					'URL'=>'javascript:if(confirm(\''.GetMessage("MAIN_INC_BLOCK_COMMON").'\'))window.location=\''.$editor.$path_url.$arFunctionParams["BACK_URL"].$arFunctionParams["LANG"].$arFunctionParams["TEMPLATE"].'\';',
 					'ICON'=>'edit-common',
 					'TITLE'=>str_replace("#MODE#", $arFunctionParams["MODE"], str_replace("#BLOCK_TYPE#", (!is_set($arFunctionParams, "NAME")? GetMessage("MAIN__INC_BLOCK"): $arFunctionParams["NAME"]), GetMessage("MAIN_INC_BLOCK_EDIT")))
 				);
 
-				$arIcons[] = Array(
+				$arIcons[] = array(
 					'URL'=>$editor.'&path='.urlencode(BX_PERSONAL_ROOT.'/templates/'.SITE_TEMPLATE_ID.'/'.$rel_path).$arFunctionParams["BACK_URL"].$arFunctionParams["LANG"].'&template='.$path,
 					'ICON'=>'copy',
 					'TITLE'=>str_replace("#MODE#", $arFunctionParams["MODE"], str_replace("#BLOCK_TYPE#", (!is_set($arFunctionParams, "NAME")? GetMessage("MAIN__INC_BLOCK"): $arFunctionParams["NAME"]), GetMessage("MAIN_INC_BLOCK_COMMON_COPY")))
@@ -1448,7 +2004,7 @@ class CAllMain
 					'TEXT' => $path
 				);
 
-				$arIcons[] = Array(
+				$arIcons[] = array(
 					'URL' => 'javascript:'.$APPLICATION->GetPopupLink(
 						array(
 							'URL' => $editor.$path_url.$arFunctionParams["BACK_URL"].$arFunctionParams["LANG"].$arFunctionParams["TEMPLATE"],
@@ -1467,7 +2023,7 @@ class CAllMain
 
 				if($arFunctionParams["WORKFLOW"])
 				{
-					$arIcons[] = Array(
+					$arIcons[] = array(
 						'URL'=>'/bitrix/admin/workflow_edit.php?'.$arFunctionParams["LANG"].'&fname='.urlencode($path).$arFunctionParams["TEMPLATE"].$arFunctionParams["BACK_URL"],
 						'ICON'=>'bx-context-toolbar-edit-icon',
 						'TITLE'=>str_replace("#BLOCK_TYPE#", (!is_set($arFunctionParams, "NAME")? GetMessage("MAIN__INC_BLOCK"): $arFunctionParams["NAME"]), GetMessage("MAIN_INC_ED_WF"))
@@ -1514,6 +2070,7 @@ class CAllMain
 
 	function GetNavChain($path=false, $iNumFrom=0, $sNavChainPath=false, $bIncludeOnce=false, $bShowIcons = true)
 	{
+		/** @global CMain $APPLICATION */
 		global $APPLICATION;
 		if($APPLICATION->GetProperty("NOT_SHOW_NAV_CHAIN")=="Y")
 			return "";
@@ -1524,17 +2081,15 @@ class CAllMain
 		if($path===false)
 			$path = $this->GetCurDir();
 
-		$arChain = Array();
+		$arChain = array();
 		$strChainTemplate = $DOC_ROOT.BX_PERSONAL_ROOT."/templates/".SITE_TEMPLATE_ID."/chain_template.php";
 		if(!file_exists($strChainTemplate))
 			$strChainTemplate = $DOC_ROOT.BX_PERSONAL_ROOT."/templates/.default/chain_template.php";
-		$i = -1;
 
 		$io = CBXVirtualIo::GetInstance();
 
-		while(true)//будем до корня искать
+		while(true)//until the root
 		{
-			//отрежем / в конце
 			$path = rtrim($path, "/");
 
 			$chain_file_name = $DOC_ROOT.$path."/.section.php";
@@ -1545,7 +2100,7 @@ class CAllMain
 				$sSectionName = "";
 				include($io->GetPhysicalName($chain_file_name));
 				if(strlen($sSectionName)>0)
-					$arChain[] = Array("TITLE"=>$sSectionName, "LINK"=>$path."/");
+					$arChain[] = array("TITLE"=>$sSectionName, "LINK"=>$path."/");
 				if(strlen($sChainTemplate)>0 && !$section_template_init)
 				{
 					$section_template_init = true;
@@ -1559,12 +2114,12 @@ class CAllMain
 			if(strlen($path)<=0)
 				break;
 
-			//найдем имя файла или папки
+			//file or folder
 			$pos = bxstrrpos($path, "/");
 			if($pos===false)
 				break;
 
-			//найдем папку-родителя
+			//parent folder
 			$path = substr($path, 0, $pos+1);
 		}
 
@@ -1594,11 +2149,11 @@ class CAllMain
 			}
 			else
 			{
-				for($i=0; $i<count($arChain); $i++)
+				foreach($arChain as $i => $arChainItem)
 				{
 					$ITEM_INDEX = $i;
-					$TITLE = $arChain[$i]["TITLE"];
-					$LINK = $arChain[$i]["LINK"];
+					$TITLE = $arChainItem["TITLE"];
+					$LINK = $arChainItem["LINK"];
 					$sChainBody = "";
 					include($strChainTemplate);
 					$strChain .= $sChainBody;
@@ -1610,6 +2165,7 @@ class CAllMain
 			}
 		}
 
+		/** @global CMain $APPLICATION */
 		global $APPLICATION, $USER;
 		if($APPLICATION->GetShowIncludeAreas() && $USER->CanDoOperation('edit_php') && $bShowIcons)
 		{
@@ -1623,8 +2179,8 @@ class CAllMain
 				$templ_perm = $APPLICATION->GetFileAccessPermission($path);
 				if((!defined("ADMIN_SECTION") || ADMIN_SECTION!==true) && $templ_perm>="W")
 				{
-					$arIcons = Array();
-					$arIcons[] = Array(
+					$arIcons = array();
+					$arIcons[] = array(
 						"URL"=>"/bitrix/admin/fileman_file_edit.php?lang=".LANGUAGE_ID."&site=".$site."&back_url=".urlencode($_SERVER["REQUEST_URI"])."&full_src=Y&path=".urlencode($path),
 						"ICON"=>"nav-template",
 						"TITLE"=>GetMessage("MAIN_INC_ED_NAV")
@@ -1639,18 +2195,20 @@ class CAllMain
 
 	function ShowNavChain($path=false, $iNumFrom=0, $sNavChainPath=false)
 	{
-		$this->AddBufferContent(Array(&$this, "GetNavChain"), $path, $iNumFrom, $sNavChainPath);
+		$this->AddBufferContent(array(&$this, "GetNavChain"), $path, $iNumFrom, $sNavChainPath);
 	}
 
 	function ShowNavChainEx($path=false, $iNumFrom=0, $sNavChainPath=false)
 	{
-		$this->AddBufferContent(Array(&$this, "GetNavChain"), $path, $iNumFrom, $sNavChainPath, true);
+		$this->AddBufferContent(array(&$this, "GetNavChain"), $path, $iNumFrom, $sNavChainPath, true);
 	}
 
 	/*****************************************************/
 
 	function SetFileAccessPermission($path, $arPermissions, $bOverWrite=true)
 	{
+		global $CACHE_MANAGER;
+
 		CMain::InitPathVars($site, $path);
 		$DOC_ROOT = CSite::GetSiteDocRoot($site);
 
@@ -1733,13 +2291,12 @@ class CAllMain
 		$str .= "?".">";
 
 		$this->SaveFileContent($DOC_ROOT.$path_dir."/.access.php", $str);
-		$GLOBALS["CACHE_MANAGER"]->CleanDir("menu");
+		$CACHE_MANAGER->CleanDir("menu");
 		unset($this->FILE_PERMISSION_CACHE[$site."|".$path_dir."/.access.php"]);
 
 		if($bDiff)
 		{
-			$db_events = GetModuleEvents("main", "OnChangePermissions");
-			while($arEvent = $db_events->Fetch())
+			foreach(GetModuleEvents("main", "OnChangePermissions", true) as $arEvent)
 				ExecuteModuleEventEx($arEvent, array(array($site, $path), $arPermissions, $FILE_PERM));
 
 			if(COption::GetOptionString("main", "event_log_file_access", "N") === "Y")
@@ -1750,6 +2307,8 @@ class CAllMain
 
 	function RemoveFileAccessPermission($path, $arGroups=false)
 	{
+		global $CACHE_MANAGER;
+
 		CMain::InitPathVars($site, $path);
 		$DOC_ROOT = CSite::GetSiteDocRoot($site);
 
@@ -1799,11 +2358,10 @@ class CAllMain
 		$str .= "?".">";
 
 		$this->SaveFileContent($DOC_ROOT.$path_dir."/.access.php", $str);
-		$GLOBALS["CACHE_MANAGER"]->CleanDir("menu");
+		$CACHE_MANAGER->CleanDir("menu");
 		unset($this->FILE_PERMISSION_CACHE[$site."|".$path_dir."/.access.php"]);
 
-		$db_events = GetModuleEvents("main", "OnChangePermissions");
-		while($arEvent = $db_events->Fetch())
+		foreach(GetModuleEvents("main", "OnChangePermissions", true) as $arEvent)
 			ExecuteModuleEventEx($arEvent, array(array($site, $path), array()));
 
 		return true;
@@ -1815,9 +2373,8 @@ class CAllMain
 		$DOC_ROOT_FROM = CSite::GetSiteDocRoot($site_from);
 
 		CMain::InitPathVars($site_to, $path_to);
-		$DOC_ROOT_TO = CSite::GetSiteDocRoot($site_to);
 
-		//выберем вышележащие .access.php
+		//upper .access.php
 		if(($p = bxstrrpos($path_from, "/"))!==false)
 		{
 			$path_from_file = substr($path_from, $p+1);
@@ -1892,13 +2449,13 @@ class CAllMain
 			return (!$task_mode? 'D' : array(CTask::GetIdByLetter('D', 'main', 'file')));
 
 		$max_perm = "D";
-		$arGroupTask = Array();
+		$arGroupTask = array();
 
 		$io = CBXVirtualIo::GetInstance();
 
-		//к списку групп добавим * === "любая группа"
+		//in the group list * === "any group"
 		$groups[] = "*";
-		while(true)//будем до корня искать
+		while(true)//till the root
 		{
 			$path = rtrim($path, "\0");
 			$path = rtrim($path, "/");
@@ -1910,7 +2467,7 @@ class CAllMain
 			}
 			else
 			{
-				//найдем имя файла или папки
+				//file or folder
 				$pos = strrpos($path, "/");
 				if($pos === false)
 					break;
@@ -1919,7 +2476,7 @@ class CAllMain
 				//security fix: under Windows "my." == "my"
 				$Dir = TrimUnsafe($Dir);
 
-				//найдем папку-родителя
+				//parent folder
 				$path = substr($path, 0, $pos+1);
 
 				$access_file_name=$path.".access.php";
@@ -1933,7 +2490,7 @@ class CAllMain
 			{
 				$PERM = array();
 
-				//подключим файл с правами если он есть
+				//file with rights array
 				if ($io->FileExists($DOC_ROOT.$access_file_name))
 					include($io->GetPhysicalName($DOC_ROOT.$access_file_name));
 
@@ -1949,57 +2506,59 @@ class CAllMain
 				$this->FILE_PERMISSION_CACHE[$site."|".$access_file_name] = $PERM;
 			}
 
-			//проверим - заданы ли права на этот файл/папку для данных групп в этом файле
-			$dir_perm = $PERM[$Dir];
-
-			if(is_array($dir_perm))
+			//check wheather the rights are assigned to this file\folder for these groups
+			if(isset($PERM[$Dir]) && is_array($PERM[$Dir]))
 			{
+				$dir_perm = $PERM[$Dir];
 				foreach($groups as $key => $group_id)
 				{
-					$perm = $dir_perm[$group_id];
-
-					//compatibility with group id
-					if(!isset($perm) && preg_match('/^G[0-9]+$/', $group_id))
-						$perm = $dir_perm[substr($group_id, 1)];
-
-					if(isset($perm))
+					if(isset($dir_perm[$group_id]))
+						$perm = $dir_perm[$group_id];
+					elseif(preg_match('/^G([0-9]+)$/', $group_id, $match)) //compatibility with group id
 					{
-						if ($task_mode)
-						{
-							if(substr($perm, 0, 2) == 'T_')
-								$tid = intval(substr($perm, 2));
-							elseif(($tid = CTask::GetIdByLetter($perm, 'main', 'file')) === false)
-								continue;
-
-							$arGroupTask[$group_id] = $tid;
-						}
+						if(isset($dir_perm[$match[1]]))
+							$perm = $dir_perm[$match[1]];
 						else
-						{
-							if(substr($perm, 0, 2) == 'T_')
-							{
-								$tid = intval(substr($perm, 2));
-								$perm = CTask::GetLetter($tid);
-								if(strlen($perm) == 0)
-									$perm = 'D';
-							}
+							continue;
+					}
+					else
+						continue;
 
-							if($max_perm == "" || $perm > $max_perm)
-							{
-								$max_perm = $perm;
-								if($perm == "W")
-									break 2;
-							}
+					if ($task_mode)
+					{
+						if(substr($perm, 0, 2) == 'T_')
+							$tid = intval(substr($perm, 2));
+						elseif(($tid = CTask::GetIdByLetter($perm, 'main', 'file')) === false)
+							continue;
+
+						$arGroupTask[$group_id] = $tid;
+					}
+					else
+					{
+						if(substr($perm, 0, 2) == 'T_')
+						{
+							$tid = intval(substr($perm, 2));
+							$perm = CTask::GetLetter($tid);
+							if(strlen($perm) == 0)
+								$perm = 'D';
 						}
 
-						if($group_id == "*")
-							break 2;
-
-						//удалим эту группу из списка, т.к. мы уже нашли для нее права
-						unset($groups[$key]);
-
-						if(count($groups) == 1 && in_array("*", $groups))
-							break 2;
+						if($max_perm == "" || $perm > $max_perm)
+						{
+							$max_perm = $perm;
+							if($perm == "W")
+								break 2;
+						}
 					}
+
+					if($group_id == "*")
+						break 2;
+
+					//delete the groip from the list, we have rights alredy for it
+					unset($groups[$key]);
+
+					if(count($groups) == 1 && in_array("*", $groups))
+						break 2;
 				}
 
 				if(count($groups)<=1)
@@ -2024,8 +2583,6 @@ class CAllMain
 
 	function GetFileAccessPermissionByUser($intUserID, $path, $groups=false, $task_mode=false) // task_mode - new access mode
 	{
-		global $USER;
-
 		$intUserIDTmp = intval($intUserID);
 		if ($intUserIDTmp.'|' != $intUserID.'|')
 			return (!$task_mode? 'D' : array(CTask::GetIdByLetter('D', 'main', 'file')));
@@ -2122,54 +2679,52 @@ class CAllMain
 				$this->FILE_PERMISSION_CACHE[$site."|".$access_file_name] = $PERM;
 			}
 
-			$dir_perm = $PERM[$Dir];
-
-			if (is_array($dir_perm))
+			if ($PERM[$Dir] && is_array($PERM[$Dir]))
 			{
+				$dir_perm = $PERM[$Dir];
 				foreach ($groups as $key => $group_id)
 				{
-					$perm = $dir_perm[$group_id];
-
-					if (!isset($perm) && preg_match('/^G[0-9]+$/', $group_id))
+					if(isset($dir_perm[$group_id]))
+						$perm = $dir_perm[$group_id];
+					elseif(preg_match('/^G[0-9]+$/', $group_id)) //compatibility with group id
 						$perm = $dir_perm[substr($group_id, 1)];
+					else
+						continue;
 
-					if (isset($perm))
+					if ($task_mode)
 					{
-						if ($task_mode)
-						{
-							if(substr($perm, 0, 2) == 'T_')
-								$tid = intval(substr($perm, 2));
-							elseif(($tid = CTask::GetIdByLetter($perm, 'main', 'file')) === false)
-								continue;
+						if(substr($perm, 0, 2) == 'T_')
+							$tid = intval(substr($perm, 2));
+						elseif(($tid = CTask::GetIdByLetter($perm, 'main', 'file')) === false)
+							continue;
 
-							$arGroupTask[$group_id] = $tid;
-						}
-						else
-						{
-							if(substr($perm, 0, 2) == 'T_')
-							{
-								$tid = intval(substr($perm, 2));
-								$perm = CTask::GetLetter($tid);
-								if(strlen($perm) == 0)
-									$perm = 'D';
-							}
-
-							if ($max_perm == "" || $perm > $max_perm)
-							{
-								$max_perm = $perm;
-								if($perm == "W")
-									break 2;
-							}
-						}
-
-						if($group_id == "*")
-							break 2;
-
-						unset ($groups[$key]);
-
-						if (count($groups) == 1 && in_array("*", $groups))
-							break 2;
+						$arGroupTask[$group_id] = $tid;
 					}
+					else
+					{
+						if(substr($perm, 0, 2) == 'T_')
+						{
+							$tid = intval(substr($perm, 2));
+							$perm = CTask::GetLetter($tid);
+							if(strlen($perm) == 0)
+								$perm = 'D';
+						}
+
+						if ($max_perm == "" || $perm > $max_perm)
+						{
+							$max_perm = $perm;
+							if($perm == "W")
+								break 2;
+						}
+					}
+
+					if($group_id == "*")
+						break 2;
+
+					unset ($groups[$key]);
+
+					if (count($groups) == 1 && in_array("*", $groups))
+						break 2;
 				}
 
 				if (count($groups)<=1)
@@ -2197,12 +2752,10 @@ class CAllMain
 	{
 		$strContent = str_replace("\r\n", "\n", $strContent);
 
-		$aMsg = array();
 		$file = array();
 		$this->ResetException();
 
-		$db_events = GetModuleEvents("main", "OnBeforeChangeFile");
-		while($arEvent = $db_events->Fetch())
+		foreach(GetModuleEvents("main", "OnBeforeChangeFile", true) as $arEvent)
 		{
 			if(ExecuteModuleEventEx($arEvent, array($abs_path, &$strContent)) == false)
 			{
@@ -2265,8 +2818,7 @@ class CAllMain
 			$DOC_ROOT = rtrim($DOC_ROOT, "/\\");
 			$path = "/".ltrim(substr($abs_path, strlen($DOC_ROOT)), "/\\");
 
-			$db_events = GetModuleEvents("main", "OnChangeFile");
-			while($arEvent = $db_events->Fetch())
+			foreach(GetModuleEvents("main", "OnChangeFile", true) as $arEvent)
 				ExecuteModuleEventEx($arEvent, array($path, $site));
 		}
 		/****************************** QUOTA ******************************/
@@ -2308,7 +2860,6 @@ class CAllMain
 		{
 			$new_filesrc = '';
 			$end = 0;
-			$php_count = 0;
 			for ($n = 0; $n<$l; $n++)
 			{
 				$start = $arPHP[$n][0];
@@ -2331,7 +2882,7 @@ class CAllMain
 						$comp_name = CMain::_ReplaceNonLatin($arRes['COMPONENT_NAME']);
 						$template_name = CMain::_ReplaceNonLatin($arRes['TEMPLATE_NAME']);
 						$arParams = $arRes['PARAMS'];
-						$arPHPparams = Array();
+						$arPHPparams = array();
 						CMain::LPAComponentChecker($arParams, $arPHPparams);
 						$len = count($arPHPparams);
 						$br = "\r\n";
@@ -2343,7 +2894,7 @@ class CAllMain
 						{
 							// Get array with description of component params
 							$arCompParams = CComponentUtil::GetComponentProps($comp_name);
-							$arTemplParams = CComponentUtil::GetTemplateProps($comp_name,$template_name,$template);
+							$arTemplParams = CComponentUtil::GetTemplateProps($comp_name, $template_name);
 
 							$arParameters = array();
 							if (isset($arCompParams["PARAMETERS"]) && is_array($arCompParams["PARAMETERS"]))
@@ -2360,11 +2911,11 @@ class CAllMain
 
 							//ReturnPHPStr
 							$params = PHPParser::ReturnPHPStr2($arParams, $arParameters);
-							$code .= "\t".'Array('.$br."\t".$params.$br."\t".')';
+							$code .= "\t".'array('.$br."\t".$params.$br."\t".')';
 						}
 						else
 						{
-							$code .=  "\t".'Array()';
+							$code .=  "\t".'array()';
 						}
 						$parent_comp = CMain::_ReplaceNonLatin($arRes['PARENT_COMP']);
 						$arExParams_ = $arRes['FUNCTION_PARAMS'];
@@ -2395,7 +2946,7 @@ class CAllMain
 							}
 							//CComponentUtil::PrepareVariables($arExParams);
 							$exParams = PHPParser::ReturnPHPStr2($arExParams);
-							$code .= ','.$br."\tArray(".$exParams.')';
+							$code .= ','.$br."\tarray(".$exParams.')';
 						}
 						$code .= $br.');';
 						$code = '<?'.$code.'?>';
@@ -2415,13 +2966,12 @@ class CAllMain
 		{
 			// Get array of PHP scripts from old saved file
 			$arPHP = PHPParser::ParseFile($old_filesrc);
-			$arPHPscripts = Array();
+			$arPHPscripts = array();
 			$l = count($arPHP);
 			if ($l > 0)
 			{
 				$new_filesrc = '';
 				$end = 0;
-				$php_count = 0;
 				for ($n = 0; $n < $l; $n++)
 				{
 					$start = $arPHP[$n][0];
@@ -2490,7 +3040,7 @@ class CAllMain
 
 	function _ReplaceNonLatin($str)
 	{
-		return preg_replace("/[^a-zA-Z0-9_:\.!\$\-;@\^\~]/is", "", $str);
+		return preg_replace("/[^a-zA-Z0-9_:\\.!\$\\-;@\\^\\~]/is", "", $str);
 	}
 
 	function GetLangSwitcherArray()
@@ -2500,11 +3050,11 @@ class CAllMain
 
 	function GetSiteSwitcherArray()
 	{
-		global $DB, $REQUEST_URI, $DOCUMENT_ROOT;
-
 		$cur_dir = $this->GetCurDir();
 		$cur_page = $this->GetCurPage();
 		$bAdmin = (substr($cur_dir, 0, strlen(BX_ROOT."/admin/")) == BX_ROOT."/admin/");
+
+		$path_without_lang = $path_without_lang_tmp = "";
 
 		$db_res = CSite::GetList($by, $order, array("ACTIVE"=>"Y","ID"=>LANG));
 		if(($ar = $db_res->Fetch()) && strpos($cur_page, $ar["DIR"])===0)
@@ -2514,8 +3064,8 @@ class CAllMain
 			$path_without_lang_tmp = RTrim($path_without_lang, "/");
 		}
 
-		$result = Array();
-		$db_res = CSite::GetList($by="SORT", $order="ASC", Array("ACTIVE"=>"Y"));
+		$result = array();
+		$db_res = CSite::GetList($by="SORT", $order="ASC", array("ACTIVE"=>"Y"));
 		while($ar = $db_res->Fetch())
 		{
 			$ar["NAME"] = htmlspecialcharsbx($ar["NAME"]);
@@ -2549,14 +3099,14 @@ class CAllMain
 	}
 
 	/*
-	Возвращает массив ролей, задаваемых в настройках модуля
-	W - роль с максимальными правами (администратор)
-	D - минимальная роль (доступ закрыт)
+	Returns an array of roles for a module
+	W - max rights (admin)
+	D - min rights (access denied)
 
-	$module_id - идентификатор модуля
-	$arGroups - массив ID групп, если не задан, то берется массив групп текущего пользователя
-	$use_default_role - "Y" - при определении ролей использовать уровень "по умолчанию"
-	$max_role_for_super_admin - "Y" - если в массиве групп пользователя присутствует группа с ID=1 то вернуть максимальную роль
+	$module_id - a module id
+	$arGroups - array of groups ID, if not set then for current useer
+	$use_default_role - "Y" - use default role
+	$max_role_for_super_admin - "Y" - for group ID=1 return max rights
 	*/
 	function GetUserRoles($module_id, $arGroups=false, $use_default_role="Y", $max_role_for_super_admin="Y", $site_id=false)
 	{
@@ -2575,9 +3125,9 @@ class CAllMain
 				$arGroups[] = 2;
 		}
 		$key = $use_default_role."_".$max_role_for_super_admin;
+		$groups = '';
 		if(is_array($arGroups) && count($arGroups)>0)
 		{
-			$groups = '';
 			foreach($arGroups as $grp)
 				$groups .= ($groups<>''? ',':'').intval($grp);
 			$key .= "_".$groups;
@@ -2586,7 +3136,9 @@ class CAllMain
 		$cache_site_key = ($site_id ? $site_id : "COMMON");
 
 		if(isset($MODULE_ROLES[$module_id][$cache_site_key][$key]))
+		{
 			$arRoles = $MODULE_ROLES[$module_id][$cache_site_key][$key];
+		}
 		else
 		{
 			if(is_array($arGroups) && count($arGroups)>0)
@@ -2603,6 +3155,7 @@ class CAllMain
 
 				$t = $DB->Query($strSql, false, $err_mess.__LINE__);
 
+				$default_role = $min_role;
 				if($use_default_role=="Y")
 					$default_role = COption::GetOptionString($module_id, "GROUP_DEFAULT_RIGHT", $min_role);
 
@@ -2631,14 +3184,14 @@ class CAllMain
 	}
 
 	/*
-	Возвращает уровень права доступа к модулю, задаваемого в настройках модуля
-	W - максимальный уровень доступа
-	D - минимальный уровень доступа (доступ закрыт)
+	Returns an array of rights for a module
+	W - max rights (admin)
+	D - min rights (access denied)
 
-	$module_id - идентификатор модуля
-	$arGroups - массив ID групп, если не задан, то берется массив групп текущего пользователя
-	$use_default_level - "Y" - при определении права использовать уровень "по умолчанию"
-	$max_right_for_super_admin - "Y" - если в массиве групп пользователя присутствует группа с ID=1 то вернуть максимальное право
+	$module_id - a module id
+	$arGroups - array of groups ID, if not set then for current useer
+	$use_default_level - "Y" - use default role
+	$max_right_for_super_admin - "Y" - for group ID=1 return max rights
 	*/
 	function GetUserRight($module_id, $arGroups=false, $use_default_level="Y", $max_right_for_super_admin="Y", $site_id=false)
 	{
@@ -2646,7 +3199,6 @@ class CAllMain
 		$err_mess = (CAllMain::err_mess())."<br>Function: GetUserRight<br>Line: ";
 		$min_right = "D";
 		$max_right = "W";
-		$cur_admin = false;
 		if($arGroups===false)
 		{
 			if(is_object($USER))
@@ -2660,19 +3212,19 @@ class CAllMain
 		}
 
 		$key = $use_default_level."_".$max_right_for_super_admin;
+		$groups = '';
 		if(is_array($arGroups) && count($arGroups)>0)
 		{
-			$groups = '';
 			foreach($arGroups as $grp)
 				$groups .= ($groups<>''? ',':'').intval($grp);
 			$key .= "_".$groups;
 		}
 
 
-		$cache_site_key = ($site_id ? $site_id : "COMMON");
-
 		if (!$site_id)
+		{
 			$cache_site_key = "COMMON";
+		}
 		elseif(is_array($site_id))
 		{
 			$cache_site_key = "";
@@ -2685,7 +3237,9 @@ class CAllMain
 			}
 		}
 		else
+		{
 			$cache_site_key = $site_id;
+		}
 
 		if(!is_array($MODULE_PERMISSIONS[$module_id][$cache_site_key]))
 			$MODULE_PERMISSIONS[$module_id][$cache_site_key] = array();
@@ -2794,7 +3348,7 @@ class CAllMain
 				CEventLog::Log("SECURITY", "MODULE_RIGHTS_CHANGED", "main", $group_id, $module_id.($site_id ? "/".$site_id : "").": (".$sOldRight.") => (".$right.")");
 		}
 
-		$arFields = Array(
+		$arFields = array(
 			"MODULE_ID"	=> "'".$DB->ForSql($module_id,50)."'",
 			"GROUP_ID"	=> $group_id,
 			"G_ACCESS"	=> "'".$DB->ForSql($right,255)."'"
@@ -2889,10 +3443,10 @@ class CAllMain
 	}
 
 	/*
-	Возвращает значение кука по заданному имени переменной
+	Returns a cookie value by the name
 
-	$name			: имя кука (без префикса)
-	$name_prefix	: префикс для имени кука (если не задан, то берется из настроек главного модуля)
+	$name			: cookie name (without prefix)
+	$name_prefix	: name prefix (if not set get from options)
 	*/
 	function get_cookie($name, $name_prefix=false)
 	{
@@ -2904,21 +3458,21 @@ class CAllMain
 	}
 
 	/*
-	Устанавливает кук и при необходимости запоминает параметры установленного кука в массиве для дальнейшего распостранения по доменам
+	Sets a cookie and spreads it through domains
 
-	$name			: имя кука (без префикса)
-	$value			: значение переменной
-	$time			: дата после которой кук истекает
-	$folder			: каталог действия кука
-	$domain			: домен действия кука
-	$secure			: флаг secure для кука (1 - secure)
-	$spread			: Y - распостранить кук на все сайты и их домены
-	$name_prefix	: префикс для имени кука (если не задан, то берется из настроек главного модуля)
+	$name			: cookie name (without prefix)
+	$value			: value
+	$time			: expire date
+	$folder			: cookie dir
+	$domain			: cookie domain
+	$secure			: secure flag
+	$spread			: to spread or not to spread
+	$name_prefix	: name prefix (if not set get from options)
 	*/
 	function set_cookie($name, $value, $time=false, $folder="/", $domain=false, $secure=false, $spread=true, $name_prefix=false)
 	{
 		if($time === false)
-			$time = time()+60*60*24*30*12; // 30 суток * 12 ~ 1 год
+			$time = time()+60*60*24*30*12; // 30 days * 12 ~ 1 year
 		if($name_prefix===false)
 			$name = COption::GetOptionString("main", "cookie_name", "BITRIX_SM")."_".$name;
 		else
@@ -3007,7 +3561,7 @@ class CAllMain
 		$_SESSION['SPREAD_COOKIE'] = $this->arrSPREAD_COOKIE;
 	}
 
-	// выводит набор IFRAME'ов для распостранения куков на ряд доменов
+	// Returns string with images to spread cookies
 	function GetSpreadCookieHTML()
 	{
 		static $showed_already;
@@ -3033,11 +3587,11 @@ class CAllMain
 				$params = "s=".urlencode(base64_encode($params))."&k=".urlencode(md5($params.$salt));
 				$arrDomain = array();
 				$arrDomain[] = $_SERVER["HTTP_HOST"];
-				$rs = CSite::GetList(($v1="sort"), ($v2="asc"), array("ACTIVE" => "Y"));
+				$v1 = "sort";
+				$v2 = "asc";
+				$rs = CSite::GetList($v1, $v2, array("ACTIVE" => "Y"));
 				while($ar = $rs->Fetch())
 				{
-					//$arrDomain[] = $ar["SERVER_NAME"];
-					$arD = array();
 					$arD = explode("\n", str_replace("\r", "\n", $ar["DOMAINS"]));
 					if(is_array($arD) && count($arD)>0)
 						foreach($arD as $d)
@@ -3086,7 +3640,7 @@ class CAllMain
 
 	function ShowSpreadCookieHTML()
 	{
-		$this->AddBufferContent(Array(&$this, "GetSpreadCookieHTML"));
+		$this->AddBufferContent(array(&$this, "GetSpreadCookieHTML"));
 	}
 
 	function AddPanelButton($arButton, $bReplace=false)
@@ -3101,7 +3655,10 @@ class CAllMain
 				}
 				elseif($bReplace)
 				{
-					if(is_array($this->arPanelButtons[$arButton["ID"]]["MENU"]))
+					if(
+						isset($this->arPanelButtons[$arButton["ID"]]["MENU"])
+						&& is_array($this->arPanelButtons[$arButton["ID"]]["MENU"])
+					)
 					{
 						if(!is_array($arButton["MENU"]))
 							$arButton["MENU"] = array();
@@ -3112,7 +3669,10 @@ class CAllMain
 
 				if (isset($this->arPanelFutureButtons[$arButton['ID']]))
 				{
-					if (is_array($this->arPanelButtons[$arButton["ID"]]["MENU"]))
+					if (
+						isset($this->arPanelButtons[$arButton["ID"]]["MENU"])
+						&& is_array($this->arPanelButtons[$arButton["ID"]]["MENU"])
+					)
 					{
 						$this->arPanelButtons[$arButton["ID"]]["MENU"] = array_merge(
 							$this->arPanelButtons[$arButton["ID"]]["MENU"],
@@ -3152,13 +3712,17 @@ class CAllMain
 
 	function GetPanel()
 	{
-		if(isset($GLOBALS["USER"]) && is_object($GLOBALS["USER"]) && $GLOBALS["USER"]->IsAuthorized() && !isset($_REQUEST["bx_hit_hash"]))
+		global $USER;
+
+		if(isset($GLOBALS["USER"]) && is_object($USER) && $USER->IsAuthorized() && !isset($_REQUEST["bx_hit_hash"]))
 			echo CTopPanel::GetPanelHtml();
 	}
 
 	function ShowPanel()
 	{
-		if(isset($GLOBALS["USER"]) && is_object($GLOBALS["USER"]) && $GLOBALS["USER"]->IsAuthorized() && !isset($_REQUEST["bx_hit_hash"]))
+		global $USER;
+
+		if(isset($GLOBALS["USER"]) && is_object($USER) && $USER->IsAuthorized() && !isset($_REQUEST["bx_hit_hash"]))
 		{
 			class_exists('CTopPanel'); //http://bugs.php.net/bug.php?id=47948
 			AddEventHandler('main', 'OnBeforeEndBufferContent', array('CTopPanel', 'InitPanel'));
@@ -3167,7 +3731,10 @@ class CAllMain
 			//Prints global url classes and  variables for HotKeys
 			$this->AddBufferContent(array('CAllMain',"PrintHKGlobalUrlVar"));
 
-			$this->AddBufferContent(array('CAdminInformer',"PrintHtml"));
+			//Prints global url classes and  variables for Stickers
+			$this->AddBufferContent(array('CSticker',"InitJsAfter"));
+
+			$this->AddBufferContent(array('CAdminInformer',"PrintHtmlPublic"));
 		}
 	}
 
@@ -3175,6 +3742,8 @@ class CAllMain
 	{
 		return CHotKeys::GetInstance()->PrintGlobalUrlVar();
 	}
+
+	abstract function GetLang($cur_dir=false, $cur_host=false);
 
 	function GetSiteByDir($cur_dir=false, $cur_host=false)
 	{
@@ -3185,7 +3754,7 @@ class CAllMain
 	{
 		//var_dump($callback);
 		//var_dump("-----");
-		$args = Array();
+		$args = array();
 		$args_num = func_num_args();
 		if($args_num>1)
 			for($i=1; $i<$args_num; $i++)
@@ -3199,40 +3768,41 @@ class CAllMain
 		//var_dump(ob_get_length());
 		$this->buffer_content[] = ob_get_contents();
 		$this->buffer_content[] = "";
-		$this->buffer_content_type[] = Array("F"=>$callback, "P"=>$args);
+		$this->buffer_content_type[] = array("F"=>$callback, "P"=>$args);
 		$this->buffer_man = true;
 		$this->auto_buffer_cleaned = false;
 		ob_end_clean();
 		$this->buffer_man = false;
 		$this->buffered = true;
 		if($this->auto_buffer_cleaned) // cross buffer fix
-			ob_start(Array(&$this, "EndBufferContent"));
+			ob_start(array(&$this, "EndBufferContent"));
 		else
 			ob_start();
 	}
 
 	function RestartBuffer()
 	{
+		$this->bShowHeadString = false;
+		$this->bShowHeadScript = false;
 		$this->buffer_man = true;
 		ob_end_clean();
 		$this->buffer_man = false;
-		$this->buffer_content_type = Array();
-		$this->buffer_content = Array();
+		$this->buffer_content_type = array();
+		$this->buffer_content = array();
 
 		if(function_exists("getmoduleevents"))
 		{
-			$db_events = GetModuleEvents("main", "OnBeforeRestartBuffer");
-			while($arEvent = $db_events->Fetch())
+			foreach(GetModuleEvents("main", "OnBeforeRestartBuffer", true) as $arEvent)
 				ExecuteModuleEventEx($arEvent);
 		}
 
-		ob_start(Array(&$this, "EndBufferContent"));
+		ob_start(array(&$this, "EndBufferContent"));
 	}
 
 	function &EndBufferContentMan()
 	{
 		if(!$this->buffered)
-			return;
+			return null;
 		$content = ob_get_contents();
 		$this->buffer_man = true;
 		ob_end_clean();
@@ -3243,8 +3813,8 @@ class CAllMain
 		$res = $this->EndBufferContent($content);
 		$this->buffer_manual = false;
 
-		$this->buffer_content_type = Array();
-		$this->buffer_content = Array();
+		$this->buffer_content_type = array();
+		$this->buffer_content = array();
 		return $res;
 	}
 
@@ -3258,11 +3828,8 @@ class CAllMain
 
 		if(function_exists("getmoduleevents"))
 		{
-			$db_events = GetModuleEvents("main", "OnBeforeEndBufferContent");
-			while($arEvent = $db_events->Fetch())
-			{
+			foreach(GetModuleEvents("main", "OnBeforeEndBufferContent", true) as $arEvent)
 				ExecuteModuleEventEx($arEvent, array());
-			}
 		}
 
 		if(is_object($GLOBALS["APPLICATION"])) //php 5.1.6 fix: http://bugs.php.net/bug.php?id=40104
@@ -3276,8 +3843,7 @@ class CAllMain
 
 		if(function_exists("getmoduleevents"))
 		{
-			$db_events = GetModuleEvents("main", "OnEndBufferContent");
-			while($arEvent = $db_events->Fetch())
+			foreach(GetModuleEvents("main", "OnEndBufferContent", true) as $arEvent)
 				ExecuteModuleEventEx($arEvent, array(&$content));
 		}
 
@@ -3320,7 +3886,12 @@ class CAllMain
 	function ConvertCharsetArray($arData, $charset_from, $charset_to)
 	{
 		if (!is_array($arData))
-			return $this->ConvertCharset($arData, $charset_from, $charset_to);
+		{
+			if (is_string($arData))
+				$arData = $this->ConvertCharset($arData, $charset_from, $charset_to);
+
+			return ($arData);
+		}
 
 		foreach ($arData as $key => $value)
 		{
@@ -3360,11 +3931,12 @@ class CAllMain
 		return $str;
 	}
 
-	// DEPRECATED! Use CAdminFileDialog::ShowScript instead
-	function ShowFileSelectDialog($event, $arResultDest, $arPath = array(), $fileFilter = "", $bAllowFolderSelect = False, $arOptions = Array())
+	/**
+	 * @deprecated Use CAdminFileDialog::ShowScript instead
+	 */
+	function ShowFileSelectDialog($event, $arResultDest, $arPath = array(), $fileFilter = "", $bAllowFolderSelect = False)
 	{
-		return CAdminFileDialog::ShowScript(Array
-			(
+		CAdminFileDialog::ShowScript(array(
 				"event" => $event,
 				"arResultDest" => $arResultDest,
 				"arPath" => $arPath,
@@ -3375,8 +3947,7 @@ class CAllMain
 				"showAddToMenuTab" => false,
 				"allowAllFiles" => true,
 				"SaveConfig" => true
-			)
-		);
+		));
 	}
 
 	/*
@@ -3385,11 +3956,18 @@ class CAllMain
 		"PARAMS"=> array('param' => 'value') - additional params, 2nd argument of jsPopup.ShowDialog()
 	),
 	*/
-	function GetPopupLink($arUrl, $jsPopupSuffix = '')
+	function GetPopupLink($arUrl)
 	{
 		CUtil::InitJSCore(array('window', 'ajax'));
 
-		if (class_exists('CUserOptions') && (!is_array($arUrl['PARAMS']) || $arUrl['PARAMS']['resizable'] !== false))
+		if (
+			class_exists('CUserOptions')
+			&& (
+				!is_array($arUrl['PARAMS'])
+				|| !isset($arUrl['PARAMS']['resizable'])
+				|| $arUrl['PARAMS']['resizable'] !== false
+			)
+		)
 		{
 			$pos = strpos($arUrl['URL'], '?');
 			if ($pos === false)
@@ -3410,7 +3988,7 @@ class CAllMain
 		}
 
 		$dialog_class = 'CDialog';
-		if (!!$arUrl['PARAMS']['dialog_type'])
+		if (isset($arUrl['PARAMS']['dialog_type']) && $arUrl['PARAMS']['dialog_type'])
 		{
 			switch ($arUrl['PARAMS']['dialog_type'])
 			{
@@ -3426,27 +4004,34 @@ class CAllMain
 
 		$arDialogParams = array(
 			'content_url' => $arUrl['URL'],
-			'width' => $arUrl['PARAMS']['width'],
-			'height' => $arUrl['PARAMS']['height']
+			'width' => null,
+			'height' => null,
 		);
 
-		if (isset($arUrl['PARAMS']['min_width'])) $arDialogParams['min_width'] = intval($arUrl['PARAMS']['min_width']);
-		if (isset($arUrl['PARAMS']['min_height'])) $arDialogParams['min_height'] = intval($arUrl['PARAMS']['min_height']);
-
-		if ($arUrl['PARAMS']['resizable'] === false) $arDialogParams['resizable'] = false;
-
-		if ($arUrl['POST'])
-		{
+		if (isset($arUrl['PARAMS']['width']))
+			$arDialogParams['width'] = intval($arUrl['PARAMS']['width']);
+		if (isset($arUrl['PARAMS']['height']))
+			$arDialogParams['height'] = intval($arUrl['PARAMS']['height']);
+		if (isset($arUrl['PARAMS']['min_width']))
+			$arDialogParams['min_width'] = intval($arUrl['PARAMS']['min_width']);
+		if (isset($arUrl['PARAMS']['min_height']))
+			$arDialogParams['min_height'] = intval($arUrl['PARAMS']['min_height']);
+		if (isset($arUrl['PARAMS']['resizable']) && $arUrl['PARAMS']['resizable'] === false)
+			$arDialogParams['resizable'] = false;
+		if (isset($arUrl['POST']) && $arUrl['POST'])
 			$arDialogParams['content_post'] = $arUrl['POST'];
-		}
 
 		return '(new BX.'.$dialog_class.'('.CUtil::PhpToJsObject($arDialogParams).')).Show()';
 	}
 
 	function GetServerUniqID()
 	{
-		$uniq = COption::GetOptionString("main", "server_uniq_id", "");
-		if(strlen($uniq)<=0)
+		static $uniq = null;
+		if($uniq === null)
+		{
+			$uniq = COption::GetOptionString("main", "server_uniq_id", "");
+		}
+		if($uniq == '')
 		{
 			$uniq = md5(uniqid(rand(), true));
 			COption::SetOptionString("main", "server_uniq_id", $uniq);
@@ -3456,7 +4041,8 @@ class CAllMain
 
 	function PrologActions()
 	{
-		global $APPLICATION;
+		/** @global CMain $APPLICATION */
+		global $APPLICATION, $USER;
 
 		if (defined("BX_CHECK_SHORT_URI") && BX_CHECK_SHORT_URI)
 		{
@@ -3473,7 +4059,7 @@ class CAllMain
 		//session expander
 		if(COption::GetOptionString("main", "session_expand", "Y") <> "N" && (!defined("BX_SKIP_SESSION_EXPAND") || BX_SKIP_SESSION_EXPAND == false))
 		{
-			$arPolicy = $GLOBALS["USER"]->GetSecurityPolicy();
+			$arPolicy = $USER->GetSecurityPolicy();
 
 			$phpSessTimeout = ini_get("session.gc_maxlifetime");
 			if($arPolicy["SESSION_TIMEOUT"] > 0)
@@ -3485,7 +4071,7 @@ class CAllMain
 			$salt = $_COOKIE[$cookie_prefix.'_UIDH']."|".$_SERVER["REMOTE_ADDR"]."|".@filemtime($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/classes/general/version.php")."|".LICENSE_KEY."|".CMain::GetServerUniqID();
 			$key = md5(bitrix_sessid().$salt);
 
-			$bShowMess = ($GLOBALS["USER"]->IsAuthorized() && COption::GetOptionString("main", "session_show_message", "Y") <> "N");
+			$bShowMess = ($USER->IsAuthorized() && COption::GetOptionString("main", "session_show_message", "Y") <> "N");
 
 			$ext = array('ajax');
 			if($bShowMess)
@@ -3493,13 +4079,23 @@ class CAllMain
 
 			CUtil::InitJSCore($ext);
 
-			$GLOBALS["APPLICATION"]->AddHeadString(
-				'<script type="text/javascript" src="'.CUtil::GetAdditionalFileURL('/bitrix/js/main/session.js').'"></script>'."\n".
-				'<script type="text/javascript">'."\n".
+			$jsMsg = '<script type="text/javascript">'."\n".
 				($bShowMess? 'bxSession.mess.messSessExpired = \''.CUtil::JSEscape(GetMessage("MAIN_SESS_MESS", array("#TIMEOUT#"=>round($sessTimeout/60)))).'\';'."\n" : '').
 				'bxSession.Expand('.$sessTimeout.', \''.bitrix_sessid().'\', '.($bShowMess? 'true':'false').', \''.$key.'\');'."\n".
-				'</script>', true
-			);
+				'</script>';
+
+			if($APPLICATION->IsJSOptimized())
+			{
+				$APPLICATION->AddHeadScript('/bitrix/js/main/session.js');
+				$APPLICATION->AddAdditionalJS($jsMsg);
+			}
+			else
+			{
+				$APPLICATION->AddHeadString('<script type="text/javascript" src="'.CUtil::GetAdditionalFileURL('/bitrix/js/main/session.js').'"></script>'."\n".
+					$jsMsg
+					, true
+				);
+			}
 
 			$_SESSION["BX_SESSION_COUNTER"] = intval($_SESSION["BX_SESSION_COUNTER"]) + 1;
 			if(!defined("BX_SKIP_SESSION_TERMINATE_TIME"))
@@ -3511,7 +4107,7 @@ class CAllMain
 			CTimeZone::SetAutoCookie();
 
 		// check user options set via cookie
-		if ($GLOBALS["USER"]->IsAuthorized())
+		if ($USER->IsAuthorized())
 		{
 			$cookieName = COption::GetOptionString("main", "cookie_name", "BITRIX_SM")."_LAST_SETTINGS";
 			if(!empty($_COOKIE[$cookieName]))
@@ -3528,8 +4124,7 @@ class CAllMain
 			register_shutdown_function(create_function('', 'while(@ob_end_flush());'));
 		}
 
-		$db_events = GetModuleEvents("main", "OnProlog");
-		while($arEvent = $db_events->Fetch())
+		foreach(GetModuleEvents("main", "OnProlog", true) as $arEvent)
 			ExecuteModuleEventEx($arEvent);
 	}
 
@@ -3574,6 +4169,9 @@ class CAllMain
 		if(empty($arFunctions))
 			return true;
 
+		//Release session
+		session_write_close();
+
 		$func = BX_FORK_AGENTS_AND_EVENTS_FUNCTION;
 		$pid = $func();
 
@@ -3588,8 +4186,6 @@ class CAllMain
 		//Mark start of execution
 		define("BX_FORK_AGENTS_AND_EVENTS_FUNCTION_STARTED", true);
 
-		//Release session
-		session_write_close();
 		global $DB, $CACHE_MANAGER;
 		$CACHE_MANAGER = new CCacheManager;
 
@@ -3599,20 +4195,25 @@ class CAllMain
 			call_user_func_array($action[0], $action[1]);
 		$DB->Disconnect();
 		$CACHE_MANAGER->_Finalize();
+
+		return null;
 	}
 }
 
 global $MAIN_LANGS_CACHE;
-$MAIN_LANGS_CACHE = Array();
+$MAIN_LANGS_CACHE = array();
 
 global $MAIN_LANGS_ADMIN_CACHE;
-$MAIN_LANGS_ADMIN_CACHE = Array();
+$MAIN_LANGS_ADMIN_CACHE = array();
 
 
 class CAllSite
 {
+	var $LAST_ERROR;
+
 	function InDir($strDir)
 	{
+		/** @global CMain $APPLICATION */
 		global $APPLICATION;
 		return (substr($APPLICATION->GetCurPage(true), 0, strlen($strDir))==$strDir);
 	}
@@ -3664,7 +4265,7 @@ class CAllSite
 				global $MAIN_LANGS_ADMIN_CACHE;
 				if(!is_set($MAIN_LANGS_ADMIN_CACHE, LANGUAGE_ID))
 				{
-					$res = CLanguage::GetByID($lang);
+					$res = CLanguage::GetByID(LANGUAGE_ID);
 					if($res = $res->Fetch())
 					{
 						$MAIN_LANGS_ADMIN_CACHE[$res["LID"]] = $res;
@@ -3745,7 +4346,7 @@ class CAllSite
 		return $format;
 	}
 
-	function GetTimeFormat($lang=false, $bSearchInSitesOnly = false, $format = false)
+	function GetTimeFormat($lang=false, $bSearchInSitesOnly = false)
 	{
 		$dateTimeFormat = self::GetDateFormat('FULL', $lang, $bSearchInSitesOnly);
 		preg_match('~[HG]~', $dateTimeFormat, $chars, PREG_OFFSET_CAPTURE);
@@ -3754,9 +4355,11 @@ class CAllSite
 
 	function CheckFields($arFields, $ID=false)
 	{
-		global $DB;
+		/** @global CMain $APPLICATION */
+		global $APPLICATION, $DB;
+
 		$this->LAST_ERROR = "";
-		$arMsg = Array();
+		$arMsg = array();
 
 		if(is_set($arFields, "NAME") && strlen($arFields["NAME"])<2)
 		{
@@ -3815,7 +4418,7 @@ class CAllSite
 		if(is_set($arFields, "TEMPLATE"))
 		{
 			$isOK = false;
-			$check_templ = Array();
+			$check_templ = array();
 			foreach($arFields["TEMPLATE"] as $val)
 			{
 				if(strlen($val["TEMPLATE"])>0 && file_exists($_SERVER["DOCUMENT_ROOT"].BX_PERSONAL_ROOT."/templates/".$val["TEMPLATE"]))
@@ -3834,15 +4437,15 @@ class CAllSite
 		}
 
 		if($ID===false)
-			$db_events = GetModuleEvents("main", "OnBeforeSiteAdd");
+			$events = GetModuleEvents("main", "OnBeforeSiteAdd", true);
 		else
-			$db_events = GetModuleEvents("main", "OnBeforeSiteUpdate");
-		while($arEvent = $db_events->Fetch())
+			$events = GetModuleEvents("main", "OnBeforeSiteUpdate", true);
+		foreach($events as $arEvent)
 		{
 			$bEventRes = ExecuteModuleEventEx($arEvent, array(&$arFields));
 			if($bEventRes===false)
 			{
-				if($err = $GLOBALS["APPLICATION"]->GetException())
+				if($err = $APPLICATION->GetException())
 				{
 					$this->LAST_ERROR .= $err->GetString()." ";
 					$arMsg[] = array("id"=>"EVENT_ERROR", "text"=> $err->GetString());
@@ -3859,7 +4462,7 @@ class CAllSite
 		if(!empty($arMsg))
 		{
 			$e = new CAdminException($arMsg);
-			$GLOBALS["APPLICATION"]->ThrowException($e);
+			$APPLICATION->ThrowException($e);
 		}
 
 		if(strlen($this->LAST_ERROR)>0)
@@ -3871,8 +4474,8 @@ class CAllSite
 			if($r->Fetch())
 			{
 				$this->LAST_ERROR .= GetMessage("BAD_SITE_DUP")." ";
-				$e = new CAdminException(Array(Array("id" => "LID", "text" => GetMessage("BAD_SITE_DUP"))));
-				$GLOBALS["APPLICATION"]->ThrowException($e);
+				$e = new CAdminException(array(array("id" => "LID", "text" => GetMessage("BAD_SITE_DUP"))));
+				$APPLICATION->ThrowException($e);
 				return false;
 			}
 		}
@@ -3900,6 +4503,7 @@ class CAllSite
 		{
 			if($domain <> '')
 			{
+				$arErrors = array();
 				if ($domainTmp = CBXPunycode::ToASCII($domain, $arErrors))
 					$domain = $domainTmp;
 				$DB->Query("INSERT INTO b_lang_domain(LID, DOMAIN) VALUES('".$DB->ForSQL($LID, 2)."', '".$DB->ForSQL($domain, 255)."')");
@@ -3946,7 +4550,7 @@ class CAllSite
 		{
 			global $CACHE_MANAGER;
 			if(CACHED_b_site_template!==false) $CACHE_MANAGER->Clean("b_site_template");
-			$DB->Query("DELETE FROM b_site_template WHERE SITE_ID='".$DB->ForSQL($ID)."'");
+
 			foreach($arFields["TEMPLATE"] as $arTemplate)
 			{
 				if(strlen(trim($arTemplate["TEMPLATE"]))>0)
@@ -3991,7 +4595,7 @@ class CAllSite
 		unset($BX_CACHE_DOCROOT[$ID]);
 
 		if(is_set($arFields, "DIR"))
-			CheckDirPath($DOCUMENT_ROOT.$arFields["DIR"]);
+			CheckDirPath($_SERVER["DOCUMENT_ROOT"].$arFields["DIR"]);
 
 		if(is_set($arFields, "DOMAINS"))
 			self::SaveDomains($ID, $arFields["DOMAINS"]);
@@ -4016,12 +4620,13 @@ class CAllSite
 
 	function Delete($ID)
 	{
+		/** @global CMain $APPLICATION */
 		global $DB, $APPLICATION, $CACHE_MANAGER;
 
 		$APPLICATION->ResetException();
-		//проверка - оставил ли тут кто-нибудь обработчик на OnBeforeDelete
-		$db_events = GetModuleEvents("main", "OnBeforeLangDelete");
-		while($arEvent = $db_events->Fetch())
+
+		foreach(GetModuleEvents("main", "OnBeforeLangDelete", true) as $arEvent)
+		{
 			if(ExecuteModuleEventEx($arEvent, array($ID))===false)
 			{
 				$err = GetMessage("MAIN_BEFORE_DEL_ERR").' '.$arEvent['TO_NAME'];
@@ -4030,9 +4635,10 @@ class CAllSite
 				$APPLICATION->throwException($err);
 				return false;
 			}
+		}
 
-		$db_events = GetModuleEvents("main", "OnBeforeSiteDelete");
-		while($arEvent = $db_events->Fetch())
+		foreach(GetModuleEvents("main", "OnBeforeSiteDelete", true) as $arEvent)
+		{
 			if(ExecuteModuleEventEx($arEvent, array($ID))===false)
 			{
 				$err = GetMessage("MAIN_BEFORE_DEL_ERR").' '.$arEvent['TO_NAME'];
@@ -4041,14 +4647,12 @@ class CAllSite
 				$APPLICATION->throwException($err);
 				return false;
 			}
+		}
 
-		//проверка - оставил ли тут какой-нибудь модуль обработчик на OnDelete
-		$events = GetModuleEvents("main", "OnLangDelete");
-		while($arEvent = $events->Fetch())
+		foreach(GetModuleEvents("main", "OnLangDelete", true) as $arEvent)
 			ExecuteModuleEventEx($arEvent, array($ID));
 
-		$events = GetModuleEvents("main", "OnSiteDelete");
-		while($arEvent = $events->Fetch())
+		foreach(GetModuleEvents("main", "OnSiteDelete", true) as $arEvent)
 			ExecuteModuleEventEx($arEvent, array($ID));
 
 		if(!$DB->Query("DELETE FROM b_event_message_site WHERE SITE_ID='".$DB->ForSQL($ID, 2)."'"))
@@ -4082,9 +4686,6 @@ class CAllSite
 		return $dbr;
 	}
 
-	///////////////////////////////////////////////////////////////////
-	//Функция выборки списка сайтов в порядке приоритета
-	///////////////////////////////////////////////////////////////////
 	function GetDefList()
 	{
 		global $DB;
@@ -4099,15 +4700,13 @@ class CAllSite
 			$site = SITE_ID;
 
 		global $BX_CACHE_DOCROOT;
-		if(!is_set($BX_CACHE_DOCROOT, $site))
+		if(!array_key_exists($site, $BX_CACHE_DOCROOT))
 		{
-			$res = CSite::GetByID($site);
-			if(($ar = $res->Fetch()) && strlen($ar["DOC_ROOT"])>0)
-			{
+			$ar = CSite::getArrayByID($site);
+			if($ar && strlen($ar["DOC_ROOT"])>0)
 				$BX_CACHE_DOCROOT[$site] = Rel2Abs($_SERVER["DOCUMENT_ROOT"], $ar["DOC_ROOT"]);
-			}
 			else
-				$BX_CACHE_DOCROOT[$site] = RTrim($_SERVER["DOCUMENT_ROOT"], "/\\");
+				$BX_CACHE_DOCROOT[$site] = rtrim($_SERVER["DOCUMENT_ROOT"], "/\\");
 		}
 
 		return $BX_CACHE_DOCROOT[$site];
@@ -4115,7 +4714,7 @@ class CAllSite
 
 	function GetSiteByFullPath($path, $bOneResult = true)
 	{
-		$res = Array();
+		$res = array();
 
 		if(($p = realpath($path)))
 			$path = $p;
@@ -4146,10 +4745,7 @@ class CAllSite
 		return false;
 	}
 
-	///////////////////////////////////////////////////////////////////
-	//Функция выборки списка языков
-	///////////////////////////////////////////////////////////////////
-	function GetList(&$by, &$order, $arFilter=Array())
+	function GetList(&$by, &$order, $arFilter=array())
 	{
 		global $DB, $CACHE_MANAGER;
 
@@ -4251,6 +4847,7 @@ class CAllSite
 			while($ar = $res->Fetch())
 				$arResult[]=$ar;
 
+			/** @noinspection PhpUndefinedVariableInspection */
 			$CACHE_MANAGER->Set($cacheId, $arResult);
 
 			$res = new CDBResult;
@@ -4260,12 +4857,43 @@ class CAllSite
 		return $res;
 	}
 
-	///////////////////////////////////////////////////////////////////
-	//Функция выборки одного языка по коду
-	///////////////////////////////////////////////////////////////////
-	function GetByID($ID)
+	public static function GetByID($ID)
 	{
-		return CSite::GetList($ord, $by, Array("LID"=>$ID));
+		return CSite::GetList($ord, $by, array("LID"=>$ID));
+	}
+
+	function GetArrayByID($ID)
+	{
+		global $DB, $CACHE_MANAGER;
+
+		if (CACHED_b_lang !== false)
+		{
+			$cacheId = "b_lang|".$ID;
+			if($CACHE_MANAGER->read(CACHED_b_lang, $cacheId, "b_lang"))
+			{
+				return $CACHE_MANAGER->get($cacheId);
+			}
+		}
+
+		$strSql = "
+			SELECT
+				L.*,
+				L.LID ID
+			FROM
+				b_lang L
+			WHERE
+				L.LID='".$DB->forSql($ID)."'\n
+			";
+
+		$res = $DB->query($strSql, false, "FILE: ".__FILE__."<br> LINE: ".__LINE__);
+		$arResult = $res->fetch();
+
+		if (CACHED_b_lang !== false)
+		{
+			$CACHE_MANAGER->set($cacheId, $arResult);
+		}
+
+		return $arResult;
 	}
 
 	function GetDefSite($LID = false)
@@ -4284,7 +4912,7 @@ class CAllSite
 		return false;
 	}
 
-	function IsDistinctDocRoots($arFilter=Array())
+	function IsDistinctDocRoots($arFilter=array())
 	{
 		$s = false;
 		$res = CSite::GetList($by, $order, $arFilter);
@@ -4303,8 +4931,11 @@ class CAllSite
 	///////////////////////////////////////////////////////////////////
 	function SelectBox($sFieldName, $sValue, $sDefaultValue="", $sFuncName="", $field="class=\"typeselect\"")
 	{
-		$l = CLang::GetList(($by="sort"), ($order="asc"));
+		$by = "sort";
+		$order = "asc";
+		$l = CLang::GetList($by, $order);
 		$s = '<select name="'.$sFieldName.'" '.$field;
+		$s1 = '';
 		if(strlen($sFuncName)>0) $s .= ' OnChange="'.$sFuncName.'"';
 		$s .= '>'."\n";
 		$found = false;
@@ -4320,20 +4951,25 @@ class CAllSite
 
 	function SelectBoxMulti($sFieldName, $Value)
 	{
-		$l = CLang::GetList(($by="sort"), ($order="asc"));
+		$by = "sort";
+		$order = "asc";
+		$l = CLang::GetList($by, $order);
 		if(is_array($Value))
 			$arValue = $Value;
 		else
-			$arValue = Array($Value);
+			$arValue = array($Value);
 
-		$s = '';
+		$s = '<div class="adm-list">';
 		while($l_arr = $l->Fetch())
 		{
 			$s .=
-				'<input type="checkbox" name="'.$sFieldName.'[]" value="'.htmlspecialcharsex($l_arr["LID"]).'" id="'.htmlspecialcharsex($l_arr["LID"]).'" class="typecheckbox"'.(in_array($l_arr["LID"], $arValue)?' checked':'').'>'.
-				'<label for="'.htmlspecialcharsex($l_arr["LID"]).'">['.htmlspecialcharsex($l_arr["LID"]).']&nbsp;'.htmlspecialcharsex($l_arr["NAME"]).'</label>'.
-				'<br>';
+				'<div class="adm-list-item">'.
+				'<div class="adm-list-control"><input type="checkbox" name="'.$sFieldName.'[]" value="'.htmlspecialcharsex($l_arr["LID"]).'" id="'.htmlspecialcharsex($l_arr["LID"]).'" class="typecheckbox"'.(in_array($l_arr["LID"], $arValue)?' checked':'').'></div>'.
+				'<div class="adm-list-label"><label for="'.htmlspecialcharsex($l_arr["LID"]).'">['.htmlspecialcharsex($l_arr["LID"]).']&nbsp;'.htmlspecialcharsex($l_arr["NAME"]).'</label></div>'.
+				'</div>';
 		}
+
+		$s .= '</div>';
 
 		return $s;
 	}
@@ -4379,6 +5015,7 @@ class CAllSite
 	* If there is no value for language - returns pre-defined value @see CSite::GetDefaultNameFormat
 	* FORMAT_NAME constant can be set in dbconn.php
 	*
+	* @param $dummy Unused
 	* @param string $site_id - use to get value for the specific site
 	* @return string ex: #LAST_NAME# #NAME#
 	*/
@@ -4387,7 +5024,10 @@ class CAllSite
 		if ($site_id == "")
 			$site_id = SITE_ID;
 
-		if(defined("SITE_ID") && $site_id == SITE_ID) //for current site
+		$format = "";
+
+		//for current site
+		if(defined("SITE_ID") && $site_id == SITE_ID)
 		{
 			if(defined("FORMAT_NAME"))
 				$format = FORMAT_NAME;
@@ -4446,6 +5086,7 @@ class CAllSite
 			$arNameTemplates["0"] = GetMessage("MAIN_FORMAT_NAME_NOT_SET");
 
 		$s = '<select name="'.$sFieldName.'" '.$field;
+		$s1 = '';
 		if(strlen($sFuncName)>0) $s .= ' OnChange="'.$sFuncName.'"';
 		$s .= '>'."\n";
 		$found = false;
@@ -4487,7 +5128,7 @@ class _CLangDBResult extends CDBResult
 			global $DB, $CACHE_MANAGER;
 			static $arCache;
 			if(!is_array($arCache))
-				$arCache = Array();
+				$arCache = array();
 			if(is_set($arCache, $res["LID"]))
 				$res["DOMAINS"] = $arCache[$res["LID"]];
 			else
@@ -4499,6 +5140,7 @@ class _CLangDBResult extends CDBResult
 					while($ar_res = $db_res->Fetch())
 					{
 						$domain = $ar_res["DOMAIN"];
+						$arErrorsTmp = array();
 						if ($domainTmp = CBXPunycode::ToUnicode($ar_res["DOMAIN"], $arErrorsTmp))
 							$domain = $domainTmp;
 						$res["DOMAINS"] .= $domain."\r\n";
@@ -4526,13 +5168,14 @@ class _CLangDBResult extends CDBResult
 						foreach($arLangDomain["LID"][$res["LID"]] as $ar_res)
 						{
 							$domain = $ar_res["DOMAIN"];
+							$arErrorsTmp = array();
 							if ($domainTmp = CBXPunycode::ToUnicode($ar_res["DOMAIN"], $arErrorsTmp))
 								$domain = $domainTmp;
 							$res["DOMAINS"] .= $domain."\r\n";
 
 						}
 				}
-				$res["DOMAINS"] = Trim($res["DOMAINS"]);
+				$res["DOMAINS"] = trim($res["DOMAINS"]);
 				$arCache[$res["LID"]] = $res["DOMAINS"];
 			}
 
@@ -4551,48 +5194,48 @@ class _CLangDBResult extends CDBResult
 
 class CAllLanguage
 {
-	///////////////////////////////////////////////////////////////////
-	//Функция выборки списка языков
-	///////////////////////////////////////////////////////////////////
-	function GetList(&$by, &$order, $arFilter=Array())
+	var $LAST_ERROR;
+
+	function GetList(&$by, &$order, $arFilter=array())
 	{
 		global $DB;
-		$arSqlSearch = Array();
+		$arSqlSearch = array();
 
-		if(!is_array($arFilter))
-			$filter_keys = Array();
-		else
-			$filter_keys = array_keys($arFilter);
-
-		for($i=0; $i<count($filter_keys); $i++)
+		if (is_array($arFilter))
 		{
-			$val = $DB->ForSql($arFilter[$filter_keys[$i]]);
-			if(strlen($val)<=0) continue;
-			switch(strtoupper($filter_keys[$i]))
+			foreach ($arFilter as $key => $val)
 			{
-			case "ACTIVE":
-				if($val=="Y" || $val=="N")
-					$arSqlSearch[] = "L.ACTIVE='".$val."'";
-				break;
-			case "NAME":
-				$arSqlSearch[] = "UPPER(L.NAME) LIKE UPPER('".$val."')";
-				break;
-			case "ID":
-			case "LID":
-				$arSqlSearch[] = "L.LID='".$val."'";
-				break;
+				if (strlen($val) > 0)
+				{
+					switch (strtoupper($key))
+					{
+					case "ACTIVE":
+						if ($val == "Y" || $val == "N")
+							$arSqlSearch[] = "L.ACTIVE='".$DB->ForSql($val)."'";
+						break;
+
+					case "NAME":
+						$arSqlSearch[] = "UPPER(L.NAME) LIKE UPPER('".$DB->ForSql($val)."')";
+						break;
+
+					case "ID":
+					case "LID":
+						$arSqlSearch[] = "L.LID='".$DB->ForSql($val)."'";
+						break;
+					}
+				}
 			}
 		}
 
 		$strSqlSearch = "";
-		for($i=0; $i<count($arSqlSearch); $i++)
+		foreach($arSqlSearch as $i => $condition)
 		{
-			if($i>0)
+			if($i > 0)
 				$strSqlSearch .= " AND ";
 			else
 				$strSqlSearch = " WHERE ";
 
-			$strSqlSearch .= " (".$arSqlSearch[$i].") ";
+			$strSqlSearch .= " (".$condition.") ";
 		}
 
 		$strSql =
@@ -4600,10 +5243,10 @@ class CAllLanguage
 			"FROM b_language L ".
 				$strSqlSearch;
 
-		if($by == "lid" || $by=="id")	$strSqlOrder = " ORDER BY L.LID ";
-		elseif($by == "active")			$strSqlOrder = " ORDER BY L.ACTIVE ";
-		elseif($by == "name")			$strSqlOrder = " ORDER BY L.NAME ";
-		elseif($by == "def")			$strSqlOrder = " ORDER BY L.DEF ";
+		if($by == "lid" || $by=="id") $strSqlOrder = " ORDER BY L.LID ";
+		elseif($by == "active") $strSqlOrder = " ORDER BY L.ACTIVE ";
+		elseif($by == "name") $strSqlOrder = " ORDER BY L.NAME ";
+		elseif($by == "def") $strSqlOrder = " ORDER BY L.DEF ";
 		else
 		{
 			$strSqlOrder = " ORDER BY L.SORT ";
@@ -4621,19 +5264,18 @@ class CAllLanguage
 		return $res;
 	}
 
-	///////////////////////////////////////////////////////////////////
-	//Функция выборки одного языка по коду
-	///////////////////////////////////////////////////////////////////
 	function GetByID($ID)
 	{
-		return CLanguage::GetList($o, $b, Array("LID"=>$ID));
+		return CLanguage::GetList($o, $b, array("LID"=>$ID));
 	}
 
 	function CheckFields($arFields, $ID=false)
 	{
-		global $DB;
+		/** @global CMain $APPLICATION */
+		global $APPLICATION, $DB;
+
 		$this->LAST_ERROR = "";
-		$arMsg = Array();
+		$arMsg = array();
 
 		if($ID===false && is_set($arFields, "LID") && strlen($arFields["LID"])!=2)
 		{
@@ -4674,7 +5316,7 @@ class CAllLanguage
 		if(!empty($arMsg))
 		{
 			$e = new CAdminException($arMsg);
-			$GLOBALS["APPLICATION"]->ThrowException($e);
+			$APPLICATION->ThrowException($e);
 		}
 
 		if(strlen($this->LAST_ERROR)>0)
@@ -4686,8 +5328,8 @@ class CAllLanguage
 			if($r->Fetch())
 			{
 				$this->LAST_ERROR .= GetMessage("BAD_LANG_DUP")." ";
-				$e = new CAdminException(Array(Array("id"=>"LID", "text" =>GetMessage("BAD_LANG_DUP"))));
-				$GLOBALS["APPLICATION"]->ThrowException($e);
+				$e = new CAdminException(array(array("id"=>"LID", "text" =>GetMessage("BAD_LANG_DUP"))));
+				$APPLICATION->ThrowException($e);
 				return false;
 			}
 		}
@@ -4697,7 +5339,7 @@ class CAllLanguage
 
 	function Add($arFields)
 	{
-		global $DB, $DOCUMENT_ROOT;
+		global $DB;
 
 		if(!$this->CheckFields($arFields))
 			return false;
@@ -4758,16 +5400,17 @@ class CAllLanguage
 
 	function Delete($ID)
 	{
-		global $DB;
+		/** @global CMain $APPLICATION */
+		global $APPLICATION, $DB;
 
-		$db_res = CLang::GetList(($b=""), ($o=""), Array("LANGUAGE_ID" => $ID));
+		$b = "";
+		$o = "";
+		$db_res = CLang::GetList($b, $o, array("LANGUAGE_ID" => $ID));
 		if($db_res->Fetch())
 			return false;
 
-		//проверка - оставил ли тут кто-нибудь обработчик на OnBeforeDelete
-		$bCanDelete = true;
-		$db_events = GetModuleEvents("main", "OnBeforeLanguageDelete");
-		while($arEvent = $db_events->Fetch())
+		foreach(GetModuleEvents("main", "OnBeforeLanguageDelete", true) as $arEvent)
+		{
 			if(ExecuteModuleEventEx($arEvent, array($ID))===false)
 			{
 				$err = GetMessage("MAIN_BEFORE_DEL_ERR").' '.$arEvent['TO_NAME'];
@@ -4776,22 +5419,21 @@ class CAllLanguage
 				$APPLICATION->throwException($err);
 				return false;
 			}
+		}
 
-		//проверка - оставил ли тут какой-нибудь модуль обработчик на OnDelete
-		$events = GetModuleEvents("main", "OnLanguageDelete");
-		while($arEvent = $events->Fetch())
+		foreach(GetModuleEvents("main", "OnLanguageDelete", true) as $arEvent)
 			ExecuteModuleEventEx($arEvent, array($ID));
 
 		return $DB->Query("DELETE FROM b_language WHERE LID='".$DB->ForSQL($ID, 2)."'", true);
 	}
 
-	///////////////////////////////////////////////////////////////////
-	//Функция строит выпадающий список языков
-	///////////////////////////////////////////////////////////////////
 	function SelectBox($sFieldName, $sValue, $sDefaultValue="", $sFuncName="", $field="class=\"typeselect\"")
 	{
-		$l = CLanguage::GetList(($by="sort"), ($order="asc"));
+		$by = "sort";
+		$order = "asc";
+		$l = CLanguage::GetList($by, $order);
 		$s = '<select name="'.$sFieldName.'" '.$field;
+		$s1 = '';
 		if(strlen($sFuncName)>0) $s .= ' OnChange="'.$sFuncName.'"';
 		$s .= '>'."\n";
 		$found = false;
@@ -4807,9 +5449,10 @@ class CAllLanguage
 
 	function GetLangSwitcherArray()
 	{
-		global $DB, $REQUEST_URI, $DOCUMENT_ROOT, $APPLICATION;
+		/** @global CMain $APPLICATION */
+		global $DB, $APPLICATION;
 
-		$result = Array();
+		$result = array();
 		$db_res = $DB->Query("SELECT * FROM b_language WHERE ACTIVE='Y' ORDER BY SORT");
 		while($ar = $db_res->Fetch())
 		{
@@ -4842,7 +5485,7 @@ function ShowImage($PICTURE_ID, $iMaxW=0, $iMaxH=0, $sParams=false, $strImageUrl
 }
 
 
-class CAllFilterQuery
+abstract class CAllFilterQuery
 {
 	var $cnt = 0;
 	var $m_query;
@@ -4856,16 +5499,20 @@ class CAllFilterQuery
 	var $ex_sep;
 	var $clob;
 	var $div_fields;
+	var $clob_upper;
+	var $errorno;
 
 	function __construct($default_query_type = "and", $rus_bool_lang = "yes", $procent="Y", $ex_sep = array(), $clob="N", $div_fields="Y", $clob_upper="N")
 	{
 		$this->CFilterQuery($default_query_type, $rus_bool_lang, $procent, $ex_sep, $clob, $div_fields, $clob_upper);
 	}
 
+	abstract function BuildWhereClause($word);
+
 	/*
-	$default_query_type - логика для пробелов по умолчанию
-	$rus_bool_lang - разрешать ли русскую логику - не, и, или
-	$ex_sep - массив символов которые НЕ надо считать разделителями слов
+	$default_query_type - logic for spaces
+	$rus_bool_lang - use russian logic words
+	$ex_sep - array with exceptions for delimiters
 	*/
 	function CFilterQuery($default_query_type = "and", $rus_bool_lang = "yes", $procent="Y", $ex_sep = array(), $clob="N", $div_fields="Y", $clob_upper="N")
 	{
@@ -4884,7 +5531,7 @@ class CAllFilterQuery
 
 	function GetQueryString($fields, $query)
 	{
-		$this->m_words = Array();
+		$this->m_words = array();
 		if($this->div_fields=="Y")
 			$this->m_fields = explode(",", $fields);
 		else
@@ -5106,8 +5753,11 @@ class CAllLang extends CAllSite
 
 class CSiteTemplate
 {
+	var $LAST_ERROR;
+
 	function GetList($arOrder=array(), $arFilter=array(), $arSelect=false)
 	{
+		/** @global CMain $APPLICATION */
 		global $APPLICATION;
 
 		if(isset($arFilter["ID"]) && !is_array($arFilter["ID"]))
@@ -5199,9 +5849,11 @@ class CSiteTemplate
 
 	function CheckFields($arFields, $ID=false)
 	{
-		global $DB;
+		/** @global CMain $APPLICATION */
+		global $APPLICATION;
+
 		$this->LAST_ERROR = "";
-		$arMsg = Array();
+		$arMsg = array();
 
 		if($ID===false)
 		{
@@ -5228,7 +5880,7 @@ class CSiteTemplate
 		if(!empty($arMsg))
 		{
 			$e = new CAdminException($arMsg);
-			$GLOBALS["APPLICATION"]->ThrowException($e);
+			$APPLICATION->ThrowException($e);
 		}
 
 		if(strlen($this->LAST_ERROR)>0)
@@ -5242,7 +5894,9 @@ class CSiteTemplate
 		if(!$this->CheckFields($arFields))
 			return false;
 
+		/** @global CMain $APPLICATION */
 		global $APPLICATION;
+
 		CheckDirPath($_SERVER["DOCUMENT_ROOT"].BX_PERSONAL_ROOT."/templates/".$arFields["ID"]);
 		if(is_set($arFields, "CONTENT"))
 		{
@@ -5266,7 +5920,7 @@ class CSiteTemplate
 		{
 			$APPLICATION->SaveFileContent($_SERVER["DOCUMENT_ROOT"].BX_PERSONAL_ROOT."/templates/".$arFields["ID"]."/description.php",
 				'<'.'?'.
-				'$arTemplate = Array("NAME"=>"'.EscapePHPString($arFields['NAME']).'", "DESCRIPTION"=>"'.EscapePHPString($arFields['DESCRIPTION']).'");'.
+				'$arTemplate = array("NAME"=>"'.EscapePHPString($arFields['NAME']).'", "DESCRIPTION"=>"'.EscapePHPString($arFields['DESCRIPTION']).'");'.
 				'?'.'>'
 				);
 		}
@@ -5277,6 +5931,7 @@ class CSiteTemplate
 
 	function Update($ID, $arFields)
 	{
+		/** @global CMain $APPLICATION */
 		global $APPLICATION;
 
 		if(!$this->CheckFields($arFields, $ID))
@@ -5311,7 +5966,7 @@ class CSiteTemplate
 				$arFields["DESCRIPTION"] = $ar_t["DESCRIPTION"];
 			$APPLICATION->SaveFileContent($_SERVER["DOCUMENT_ROOT"].BX_PERSONAL_ROOT."/templates/".$ID."/description.php",
 				'<'.'?'.
-				'$arTemplate = Array("NAME"=>"'.EscapePHPString($arFields['NAME']).'", "DESCRIPTION"=>"'.EscapePHPString($arFields['DESCRIPTION']).'");'.
+				'$arTemplate = array("NAME"=>"'.EscapePHPString($arFields['NAME']).'", "DESCRIPTION"=>"'.EscapePHPString($arFields['DESCRIPTION']).'");'.
 				'?'.'>'
 				);
 		}
@@ -5321,7 +5976,6 @@ class CSiteTemplate
 
 	function Delete($ID)
 	{
-		global $DB;
 		if($ID==".default")
 			return false;
 		DeleteDirFilesEx(BX_PERSONAL_ROOT."/templates/".$ID);
@@ -5333,7 +5987,7 @@ class CSiteTemplate
 	function GetContent($ID)
 	{
 		if(strlen($ID)<=0)
-			$arRes = Array();
+			$arRes = array();
 		else
 			$arRes = CSiteTemplate::DirsRecursive($ID);
 		$db_res = new CDBResult;
@@ -5344,7 +5998,7 @@ class CSiteTemplate
 
 	function DirsRecursive($ID, $path="", $depth=0, $maxDepth=1)
 	{
-		$arRes = Array();
+		$arRes = array();
 		$depth++;
 
 		GetDirList(BX_PERSONAL_ROOT."/templates/".$ID."/".$path, $arDirsTmp, $arResTmp);
@@ -5494,8 +6148,6 @@ class CDebugInfo
 		if($this->is_comp)
 			self::$level--;
 
-		$result = "";
-
 		$this->arResult = array(
 			"PATH" => $path,
 			"REL_PATH" => $rel_path,
@@ -5528,7 +6180,7 @@ class CDebugInfo
 
 	function Output($rel_path="", $path="", $cache_type="")
 	{
-		global $DB, $APPLICATION;
+		global $APPLICATION;
 
 		$this->Stop($rel_path, $path, $cache_type);
 		$result = "";
@@ -5547,4 +6199,3 @@ class CDebugInfo
 		return $result;
 	}
 }
-?>

@@ -183,7 +183,7 @@ class QueryChainElement
 
 			foreach ($this->value->getBuildFromChains() as $chain)
 			{
-				$SQLBuildFrom[] = $chain->GetSQLDefinition();
+				$SQLBuildFrom[] = $chain->getSQLDefinition();
 			}
 
 			// join

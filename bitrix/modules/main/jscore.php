@@ -63,7 +63,13 @@ $arJSCoreConfig = array(
 	),
 	'image' => array(
 		'js' => $pathJS.'/core_image.js',
-		'css' => $pathCSS.'/core_image.css'
+		'css' => $pathCSS.'/core_image.css',
+		'rel' => array('ls'),
+	),
+	'viewer' => array(
+		'js' => $pathJS.'/core_viewer.js',
+		'css' => $pathCSS.'/core_viewer.css',
+		'lang' => $pathLang.'/js_core_viewer.php',
 	),
 	'window' => array(
 		'js' => $pathJS.'/core_window.js',
@@ -97,11 +103,11 @@ $arJSCoreConfig = array(
 	/* external libs */
 
 	'jquery' => array(
-		'js' => '/bitrix/js/main/jquery/jquery-1.7.min.js',
+		'js' => '/bitrix/js/main/jquery/jquery-1.8.3.min.js',
 		'skip_core' => true,
 	),
 	'jquery_src' => array(
-		'js' => '/bitrix/js/main/jquery/jquery-1.7.js',
+		'js' => '/bitrix/js/main/jquery/jquery-1.8.3.js',
 		'skip_core' => true,
 	),
 	'json' => array(

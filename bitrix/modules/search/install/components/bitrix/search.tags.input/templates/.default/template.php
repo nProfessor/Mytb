@@ -1,16 +1,18 @@
 <?if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
-?><script src="/bitrix/js/main/cphttprequest.js"></script>
+$APPLICATION->AddHeadScript("/bitrix/js/main/cphttprequest.js");
+?>
 <script type="text/javascript">
-if (typeof oObject != "object")
+if (!window.oObject || typeof oObject != "object")
 	window.oObject = {};
-document.CheckThis = function(oObj)
+
+window.CheckThis = top.CheckThis = document.CheckThis = function(oObj)
 {
 	try
 	{
 		if (TcLoadTI)
 		{
 			if (typeof window.oObject[oObj.id] != 'object')
-				window.oObject[oObj.id] = new JsTc(oObj, '<?=$arParams["ADDITIONAL_VALUES"]?>');
+				window.oObject[oObj.id] = new JsTc(oObj, '<?= $arParams["ADDITIONAL_VALUES"]?>');
 			return;
 		}
 		else

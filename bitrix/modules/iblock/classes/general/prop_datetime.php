@@ -165,16 +165,40 @@ class CIBlockPropertyDateTime
 	//DB form of the value
 	function ConvertToDB($arProperty, $value)
 	{
-		if(strlen($value["VALUE"])>0)
-			$value["VALUE"] = CDatabase::FormatDate($value["VALUE"], CLang::GetDateFormat("FULL"), "YYYY-MM-DD HH:MI:SS");
+		static $intTimeOffset = false;
+		if (false === $intTimeOffset)
+			$intTimeOffset = CTimeZone::GetOffset();
+
+		if (strlen($value["VALUE"])>0)
+		{
+			if (0 != $intTimeOffset)
+			{
+				$value['VALUE'] = date("Y-m-d H:i:s", MakeTimeStamp($value['VALUE'], CLang::GetDateFormat("FULL")) - $intTimeOffset);
+			}
+			else
+			{
+				$value["VALUE"] = CDatabase::FormatDate($value["VALUE"], CLang::GetDateFormat("FULL"), "YYYY-MM-DD HH:MI:SS");
+			}
+		}
 		return $value;
 	}
 
 	function ConvertFromDB($arProperty, $value)
 	{
+		static $intTimeOffset = false;
+		if (false === $intTimeOffset)
+			$intTimeOffset = CTimeZone::GetOffset();
+
 		if(strlen($value["VALUE"])>0)
 		{
-			$value["VALUE"] = CDatabase::FormatDate($value["VALUE"], "YYYY-MM-DD HH:MI:SS", CLang::GetDateFormat("FULL"));
+			if (0 != $intTimeOffset)
+			{
+				$value["VALUE"] = ConvertTimeStamp(MakeTimeStamp($value["VALUE"], 'YYYY-MM-DD HH:MI:SS') + $intTimeOffset, 'FULL');
+			}
+			else
+			{
+				$value["VALUE"] = CDatabase::FormatDate($value["VALUE"], "YYYY-MM-DD HH:MI:SS", CLang::GetDateFormat("FULL"));
+			}
 			$value["VALUE"] = str_replace(" 00:00:00", "", $value["VALUE"]);
 		}
 		return $value;

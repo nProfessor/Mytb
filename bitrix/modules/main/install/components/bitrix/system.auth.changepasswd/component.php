@@ -1,4 +1,15 @@
-<?if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();?><?
+<?php
+if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
+
+/**
+ * Bitrix vars
+ *
+ * @var array $arParams
+ * @var array $arResult
+ * @var CBitrixComponent $this
+ * @global CMain $APPLICATION
+ * @global CUser $USER
+ */
 
 $arResult["GROUP_POLICY"] = CUser::GetGroupPolicy($arResult["ID"]);
 
@@ -43,7 +54,12 @@ foreach ($arRequestParams as $param)
 	$arResult[$param] = htmlspecialcharsbx($arResult[$param]);
 }
 
-$arResult["LAST_LOGIN"] = (isset($_REQUEST["USER_LOGIN"]) ? htmlspecialcharsbx($_REQUEST["USER_LOGIN"]) : htmlspecialcharsbx($_COOKIE[COption::GetOptionString("main", "cookie_name", "BITRIX_SM")."_LOGIN"]));
+if(isset($_GET["USER_LOGIN"]))
+	$arResult["LAST_LOGIN"] = htmlspecialcharsbx(CUtil::ConvertToLangCharset($_GET["USER_LOGIN"]));
+elseif(isset($_POST["USER_LOGIN"]))
+	$arResult["LAST_LOGIN"] = htmlspecialcharsbx($_POST["USER_LOGIN"]);
+else
+	$arResult["LAST_LOGIN"] = htmlspecialcharsbx($_COOKIE[COption::GetOptionString("main", "cookie_name", "BITRIX_SM")."_LOGIN"]);
 
 $arResult["SECURE_AUTH"] = false;
 if(!CMain::IsHTTPS() && COption::GetOptionString('main', 'use_encrypted_auth', 'N') == 'Y')
@@ -58,4 +74,3 @@ if(!CMain::IsHTTPS() && COption::GetOptionString('main', 'use_encrypted_auth', '
 }
 
 $this->IncludeComponentTemplate();
-?>

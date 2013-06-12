@@ -3,6 +3,8 @@ IncludeModuleLangFile(__FILE__);
 class CSticker
 {
 	static $oParser = null;
+	static $Params = null;
+
 	function GetOperations()
 	{
 		global $USER;
@@ -100,6 +102,7 @@ class CSticker
 			return false;
 
 		global $DB, $USER;
+		$bDBResult = isset($Params['bDBResult'])? $Params['bDBResult']: false;
 		$arFilter = $Params['arFilter'];
 		$arOrder = isset($Params['arOrder']) ? $Params['arOrder'] : Array('ID' => 'asc');
 
@@ -143,7 +146,7 @@ class CSticker
 		if ($bCache)
 		{
 			$cache = new CPHPCache;
-			$cacheId = serialize(array($arFilter, $Params['bDBResult']));
+			$cacheId = serialize(array($arFilter, $bDBResult));
 			if(($tzOffset = CTimeZone::GetOffset()) <> 0)
 				$cacheId .= "_".$tzOffset;
 
@@ -205,7 +208,7 @@ class CSticker
 
 		$res = $DB->Query($strSql, false, $err_mess.__LINE__);
 
-		if ($arFilter['USER_ID'] > 0 || !$Params['bDBResult'])
+		if ($arFilter['USER_ID'] > 0 || !$bDBResult)
 		{
 			$arResult = Array();
 			while($arRes = $res->Fetch())
@@ -215,7 +218,7 @@ class CSticker
 				|| $arFilter['ONLY_OWNER'] == 'Y'/* display only owner's stickers*/))
 					continue;
 
-				if (!$Params['bDBResult'])
+				if (!$bDBResult)
 				{
 					$arRes['AUTHOR'] = CSticker::GetUserName($arRes['CREATED_BY']);
 					$arRes['INFO'] = CSticker::GetStickerInfo($arRes['CREATED_BY'], $arRes['DATE_CREATE2'], $arRes['MODIFIED_BY'], $arRes['DATE_UPDATE2']);
@@ -226,11 +229,11 @@ class CSticker
 				$arResult[] = $arRes;
 			}
 
-			if ($Params['bDBResult'])
+			if ($bDBResult)
 				$res->InitFromArray($arResult);
 		}
 
-		if ($Params['bDBResult'])
+		if ($bDBResult)
 			$arResult = $res;
 
 		if ($bCache)
@@ -493,6 +496,8 @@ class CSticker
 		global $APPLICATION, $USER;
 		CUtil::InitJSCore(array('window', 'ajax'));
 		$APPLICATION->AddHeadScript('/bitrix/js/fileman/sticker.js');
+		$APPLICATION->SetAdditionalCSS('/bitrix/js/fileman/sticker.css');
+
 		$pageUrl = $APPLICATION->GetCurPage();
 		$pageTitle = $APPLICATION->GetTitle();
 		if ($pageTitle == '')
@@ -522,70 +527,52 @@ class CSticker
 			"useHotkeys" => COption::GetOptionString('fileman', "stickers_use_hotkeys", "Y") == "Y",
 			"filterParams" => CSticker::GetFilterParams(),
 			"bHideBottom" => COption::GetOptionString("fileman", "stickers_hide_bottom", "Y") == "Y",
-			"focusOnSticker" => intVal($_GET['show_sticker']),
+			"focusOnSticker" => isset($_GET['show_sticker'])? intVal($_GET['show_sticker']): 0,
 			"strDate" => FormatDate("j F", time()+CTimeZone::GetOffset()),
 			"curPageCount" => $Params['curPageCount'],
 			"site_id" => SITE_ID
 		);
 
-		$GLOBALS["APPLICATION"]->SetAdditionalCSS('/bitrix/js/fileman/sticker.css');
-
 		if (!is_array($Params['stickers']))
 			$Params['stickers'] = array();
 
-		$APPLICATION->AddHeadString("
-		<script>
-			BX.ready(function(){".CSticker::AppendLangMessages()." window.oBXSticker = new BXSticker(".CUtil::PhpToJSObject($JSConfig).", ".CUtil::PhpToJSObject($Params['stickers']).", BXST_MESS);});
-		</script>");
+		self::$Params = array("JSCONFIG" => $JSConfig, "STICKERS" => $Params['stickers']);
+	}
+
+	function InitJsAfter()
+	{
+		if(is_array(self::$Params))
+		{
+			return '<script type="text/javascript">BX.ready(function(){'.CSticker::AppendLangMessages()." window.oBXSticker = new BXSticker(".CUtil::PhpToJSObject(self::$Params['JSCONFIG']).", ".CUtil::PhpToJSObject(self::$Params['STICKERS']).", BXST_MESS);});</script>";
+		}
 	}
 
 	function GetUserName($id = false)
 	{
 		global $USER;
-
-		if (!is_array($arUsers))
-			$arUsers = array();
+		static $arUsersCache = array();
 
 		if ($id !== false)
 		{
-			if ($arUsers[$id])
-				return $arUsers[$id];
+			if (isset($arUsersCache[$id]))
+				return $arUsersCache[$id];
 
 			$rsu = CUser::GetByID($id);
 			if($arUser = $rsu->Fetch())
-			{
-				$lastname = trim($arUser['LAST_NAME']);
-				$firstname = trim($arUser['NAME']);
-				$login = trim($arUser['LOGIN']);
-			}
+				$arUsersCache[$id] = htmlspecialcharsback(CUser::FormatName(CSite::GetNameFormat(), $arUser));
 			else
-				return '- Unknown -';
+				$arUsersCache[$id] = '- Unknown -';
 		}
 		else
 		{
 			$id = $USER->GetId();
-			if ($arUsers[$id])
-				return $arUsers[$id];
+			if (isset($arUsersCache[$id]))
+				return $arUsersCache[$id];
 
-			$lastname = trim($USER->GetLastName());
-			$firstname = trim($USER->GetFirstName());
-			$login = trim($USER->GetLogin());
+			$arUsersCache[$id] = htmlspecialcharsback($USER->GetFormattedName());
 		}
 
-		$userName = "";
-		if ($lastname != "")
-		{
-			$userName = $lastname;
-			if ($firstname != "")
-				$userName .= " ".substr($firstname, 0, 1).".";
-		}
-		else
-		{
-			$userName = $login;
-		}
-
-		$arUsers[$id] = $userName;
-		return $userName;
+		return $arUsersCache[$id];
 	}
 
 	function AppendLangMessages()
@@ -676,7 +663,11 @@ class CSticker
 
 	function GetBShowStickers()
 	{
-		return $_SESSION["SESS_SHOW_STICKERS"] == "Y" || intVal($_GET['show_sticker']) > 0;
+		if (isset($_SESSION["SESS_SHOW_STICKERS"]) && $_SESSION["SESS_SHOW_STICKERS"] == "Y")
+			return true;
+		if (isset($_GET['show_sticker']) && intVal($_GET['show_sticker']) > 0)
+			return true;
+		return false;
 	}
 
 	function SetBShowStickers($bShow = false)

@@ -4,7 +4,9 @@ class CBitrixCloudCDNLocation
 	private $name = "";
 	private $proto = "";
 	private $prefixes = /*.(array[int]string).*/ array();
+	/** @var array[int]CBitrixCloudCDNClass $classes */
 	private $classes = /*.(array[int]CBitrixCloudCDNClass).*/ array();
+	/** @var array[int]CBitrixCloudCDNServerGroup $server_groups */
 	private $server_groups = /*.(array[int]CBitrixCloudCDNServerGroup).*/ array();
 	/**
 	 *
@@ -172,8 +174,11 @@ class CBitrixCloudCDNLocation
 		$services = /*.(array[string]string).*/ array();
 		foreach ($this->classes as $i => $file_class)
 		{
+			/** @var CBitrixCloudCDNClass $file_class */
 			$class_name = $file_class->getName();
-			$services[$class_name] = $this->server_groups[$i]->getName();
+			/** @var CBitrixCloudCDNServerGroup $server_group */
+			$server_group = $this->server_groups[$i];
+			$services[$class_name] = $server_group->getName();
 		}
 		return serialize(array(
 			"proto" => $this->proto,
@@ -197,11 +202,14 @@ class CBitrixCloudCDNLocation
 			{
 				foreach ($this->classes as $i => $file_class)
 				{
+					/** @var CBitrixCloudCDNClass $file_class */
 					foreach ($file_class->getExtensions() as $extension)
 					{
 						if ($p_extension === $extension)
 						{
-							$servers = $this->server_groups[$i]->getServers();
+							/** @var CBitrixCloudCDNServerGroup $server_group */
+							$server_group = $this->server_groups[$i];
+							$servers = $server_group->getServers();
 							if (!empty($servers))
 							{
 								$j = intval(abs(crc32($p_link))) % count($servers);
@@ -282,6 +290,7 @@ class CBitrixCloudCDNLocations implements Iterator
 		$locations = array();
 		foreach ($this->locations as $location_name => $location)
 		{
+			/** @var CBitrixCloudCDNLocation $location */
 			$locations[$location_name] = $location->getOptionValue();
 		}
 		$option->setArrayValue($locations);

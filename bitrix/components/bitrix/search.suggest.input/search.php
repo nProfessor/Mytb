@@ -21,7 +21,7 @@ if(CModule::IncludeModule("search"))
 
 		$obSearchSuggest = new CSearchSuggest($arParams["md5"], $search);
 
-		$db_res = $obSearchSuggest->GetList($arParams["pe"]);
+		$db_res = $obSearchSuggest->GetList($arParams["pe"], $arParams["site"]);
 		if($db_res)
 		{
 			while($res = $db_res->Fetch())

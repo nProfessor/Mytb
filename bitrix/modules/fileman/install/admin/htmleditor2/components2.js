@@ -15,7 +15,7 @@ function BXComponents2Taskbar()
 		this.iconDiv.className = 'tb_icon bxed-taskbar-icon-' + this.icon;
 
 		this.pHeaderTable.setAttribute("__bxtagname", "_taskbar_cached"); // need for correct context menu for taskbar title
-		if (lca)
+		if (window.lca)
 			_$LCAContentParser_execed = false;
 
 		oTaskbar.pCellComp = oTaskbar.CreateScrollableArea(oTaskbar.pWnd);
@@ -64,6 +64,7 @@ function BXComponents2Taskbar()
 		oEl.removeAttribute('id');
 
 		var draggedElId = oTaskbar.pMainObj.SetBxTag(oEl, copyObj(oTag));
+		oEl.style.cursor = 'default';
 
 		// Hack for safari
 		if (BX.browser.IsSafari())
@@ -391,8 +392,7 @@ function BXComponents2Taskbar()
 		row = tProp.insertRow(-1);
 		row.className = "bxtaskbarpropscomp";
 		cell = row.insertCell(-1);
-		cell.align = "right";
-		cell.vAlign = "top";
+		cell.className = "bxtaskbarprop-label";
 		cell.innerHTML = "<SPAN>" + bxhtmlspecialchars(arPropertyParams.NAME) + ":</SPAN>";
 		cell = row.insertCell(-1);
 
@@ -967,7 +967,7 @@ function BXComponents2Taskbar()
 			var tTProp = pParDatacell.appendChild(BX.create('TABLE', {props: {id: '__bx_tProp', className : "bxtaskbarprops"}}));
 
 			var row = BX.adjust(tTProp.insertRow(-1), {props: {className: "bxtaskbarpropscomp"}});
-			BX.adjust(row.insertCell(-1), {props: {align: "right", vAlign: "top"}, html: '<label for="__bx_comp2templ_select">' + BX_MESS.COMPONENT_TEMPLATE + ':</label>'});
+			BX.adjust(row.insertCell(-1), {props: {className: 'bxtaskbarprop-label'}, html: '<label for="__bx_comp2templ_select">' + BX_MESS.COMPONENT_TEMPLATE + ':</label>'});
 
 			var templList = row.insertCell(-1).appendChild(BX.create("SELECT", {props: {id: '__bx_comp2templ_select'}}));
 			templList.onchange = function(e)
@@ -1066,7 +1066,7 @@ function BXComponents2Taskbar()
 		window.arComp2Templates = null;
 		window.arComp2TemplateProps = null;
 
-		function OnRequest(result)
+		function OnRequest()
 		{
 			try{
 				setTimeout(function ()
@@ -1079,11 +1079,12 @@ function BXComponents2Taskbar()
 						window.as_arComp2Groups[elementName + arProps.__bx_id] = window.arComp2Groups;
 						window.as_arComp2Templates[elementName] = window.arComp2Templates;
 						window.as_arComp2TemplParams[elementName + arProps.__bx_id] = window.arComp2TemplateProps;
+
 						if(calbackObj && calbackFunc)
 							calbackFunc.apply(calbackObj, calbackParams ? calbackParams : []);
 						else if(calbackFunc)
 							calbackFunc();
-					}, 10
+					}, 50
 				);
 			}catch(e) {alert('Error >> LoadComp2Params');}
 		}
@@ -1370,7 +1371,7 @@ function BXComponents2Taskbar()
 			}
 		}
 		res += "\n);?>";
-		if (lca)
+		if (window.lca)
 		{
 			var key = str_pad_left(++_$compLength, 4, '0');
 			_$arComponents[key] = res;
@@ -1899,7 +1900,7 @@ C2Parser.prototype =
 			return;
 
 		var
-			url = '/bitrix/admin/fileman_comp2_render.php?sessid=' + bxsessid + '&site=' + BXSite,
+			url = '/bitrix/admin/fileman_comp2_render.php?sessid=' + BX.bitrix_sessid() + '&site=' + BXSite,
 			data = {stid: this.pMainObj.templateID || ''},
 			_this = this;
 
@@ -2346,7 +2347,7 @@ function BXCheckForComponent2(_str, pMainObj, bLCA_mode)
 	if (!_oFunc)
 		return false;
 
-	if (_oFunc.name.toUpperCase()=='$APPLICATION->INCLUDECOMPONENT')
+	if (_oFunc.name.toUpperCase() == '$APPLICATION->INCLUDECOMPONENT')
 	{
 		var
 			arParams = oBXEditorUtils.PHPParser.parseParameters(_oFunc.params)
@@ -2412,7 +2413,7 @@ function BXCheckForComponent2(_str, pMainObj, bLCA_mode)
 				pMainObj.arComponents = {};
 			pMainObj.arComponents[id] = allParams;
 
-			return '<img id="' + id + '" src="' + icon + '" />';
+			return '<img style="cursor: default;" id="' + id + '" src="' + icon + '" />';
 		//}catch(e) {}
 	}
 	return false;
@@ -2436,7 +2437,7 @@ function LCAContentParser(str, pMainObj, returnCode)
 	return str;
 }
 
-if (lca) //limit component access
+if (window.lca) //limit component access
 	oBXEditorUtils.addContentParser(LCAContentParser);
 oBXEditorUtils.addPHPParser(BXCheckForComponent2, 0, true);
 

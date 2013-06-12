@@ -147,7 +147,11 @@ class CPerfomanceTable extends CAllPerfomanceTable
 				{
 					$ar["DATA_TYPE"] = "datetime";
 				}
-				elseif(preg_match("/^int/", $ar["Type"]))
+				elseif(preg_match("/^(date)/", $ar["Type"]))
+				{
+					$ar["DATA_TYPE"] = "date";
+				}
+				elseif(preg_match("/^(int|smallint)/", $ar["Type"]))
 				{
 					$ar["DATA_TYPE"] = "int";
 				}

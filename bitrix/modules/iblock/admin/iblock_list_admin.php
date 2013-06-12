@@ -10,12 +10,16 @@ global $USER;
 $bBizproc = CModule::IncludeModule("bizproc");
 $bWorkflow = CModule::IncludeModule("workflow");
 $bFileman = CModule::IncludeModule("fileman");
+$bExcel = isset($_REQUEST["mode"]) && ($_REQUEST["mode"] == "excel");
 
 $bSearch = false;
 $bCurrency = false;
 $arCurrencyList = array();
 $minImageSize = array("W" => 1, "H"=>1);
-$maxImageSize = array("W" => 50, "H"=>50);
+$maxImageSize = array(
+	"W" => COption::GetOptionString("iblock", "list_image_size"),
+	"H" => COption::GetOptionString("iblock", "list_image_size"),
+);
 
 if($_REQUEST['mode']=='list' || $_REQUEST['mode']=='frame')
 	CFile::DisableJSFunction(true);
@@ -68,6 +72,7 @@ $bCatalog = CModule::IncludeModule("catalog");
 $boolSKU = false;
 $boolSKUFiltrable = false;
 $strSKUName = '';
+$uniq_id = 0;
 
 if($bCatalog)
 {
@@ -199,13 +204,11 @@ $arFilter = Array(
 	"ID_1"			=>$find_id_1,
 	"ID_2"			=>$find_id_2,
 	"TIMESTAMP_X_1"		=>$find_timestamp_1,
-	"TIMESTAMP_X_2"		=>$find_timestamp_2,
 	"CODE"			=>$find_code,
 	"EXTERNAL_ID"		=>$find_external_id,
 	"MODIFIED_BY"		=>$find_modified_by,
 	"MODIFIED_USER_ID"	=>$find_modified_user_id,
 	"DATE_CREATE_1"		=>$find_created_from,
-	"DATE_CREATE_2"		=>$find_created_to,
 	"CREATED_BY"		=>$find_created_by,
 	"CREATED_USER_ID"	=>$find_created_user_id,
 	"DATE_ACTIVE_FROM_1"	=>$find_date_active_from_from,
@@ -219,6 +222,10 @@ $arFilter = Array(
 	"CHECK_PERMISSIONS" => "Y",
 	"MIN_PERMISSION" => "R",
 );
+if(!empty($find_timestamp_2))
+	$arFilter["TIMESTAMP_X_2"] = CIBlock::isShortDate($find_timestamp_2)? ConvertTimeStamp(AddTime(MakeTimeStamp($find_timestamp_2), 1, "D"), "FULL"): $find_timestamp_2;
+if(!empty($find_created_to))
+	$arFilter["DATE_CREATE_2"] = CIBlock::isShortDate($find_created_to)? ConvertTimeStamp(AddTime(MakeTimeStamp($find_created_to), 1, "D"), "FULL"): $find_created_to;
 
 if ($bBizproc && 'E' != $arIBlock['RIGHTS_MODE'])
 {
@@ -297,11 +304,11 @@ if(IntVal($find_section_section)<0 || strlen($find_section_section)<=0)
 if($lAdmin->EditAction())
 {
 	if(is_array($_FILES['FIELDS']))
-		CAllFile::ConvertFilesToPost($_FILES['FIELDS'], $_POST['FIELDS']);
+		CAllFile::ConvertFilesToPost($_FILES['FIELDS'], $FIELDS);
 	if(is_array($FIELDS_del))
-		CAllFile::ConvertFilesToPost($FIELDS_del, $_POST['FIELDS'], "del");
+		CAllFile::ConvertFilesToPost($FIELDS_del, $FIELDS, "del");
 
-	foreach($_POST['FIELDS'] as $ID=>$arFields)
+	foreach($FIELDS as $ID=>$arFields)
 	{
 		if(!$lAdmin->IsUpdated($ID))
 			continue;
@@ -315,8 +322,11 @@ if($lAdmin->EditAction())
 			{
 				$obS = new CIBlockSection;
 
+				if(isset($arFields["PREVIEW_PICTURE"]))
+					$arFields["PICTURE"] = $arFields["PREVIEW_PICTURE"];
+
 				if(isset($arFields["PICTURE"]) && !is_array($arFields["PICTURE"]))
-					$arFields["PICTURE"] = CFile::MakeFileArray($arFields["PICTURE"]);
+					$arFields["PICTURE"] = CFile::MakeFileArray($arFields["PICTURE"], false, true);
 
 				if(isset($arFields["PICTURE"]) && is_array($arFields["PICTURE"]))
 				{
@@ -325,7 +335,7 @@ if($lAdmin->EditAction())
 				}
 
 				if(isset($arFields["DETAIL_PICTURE"]) && !is_array($arFields["DETAIL_PICTURE"]))
-					$arFields["DETAIL_PICTURE"] = CFile::MakeFileArray($arFields["DETAIL_PICTURE"]);
+					$arFields["DETAIL_PICTURE"] = CFile::MakeFileArray($arFields["DETAIL_PICTURE"], false, true);
 
 				if(isset($arFields["DETAIL_PICTURE"]) && is_array($arFields["DETAIL_PICTURE"]))
 				{
@@ -334,7 +344,7 @@ if($lAdmin->EditAction())
 				}
 
 				$DB->StartTransaction();
-				if(!$obS->Update($ID, $arFields))
+				if(!$obS->Update($ID, $arFields, true, true, true))
 				{
 					$lAdmin->AddUpdateError(GetMessage("IBLIST_A_SAVE_ERROR", array("#ID#" => $ID, "#ERROR_MESSAGE#" => '<br>'.$obS->LAST_ERROR)), $TYPE.$ID);
 					$DB->Rollback();
@@ -390,24 +400,19 @@ if($lAdmin->EditAction())
 					$lAdmin->AddUpdateError(GetMessage("IBEL_A_UPDERR3")." (ID:".$ID.")", $ID);
 					continue;
 				}
-				$STATUS_PERMISSION = 2;
+
 				// handle workflow status access permissions
-				if (!CIBlockElementRights::UserHasRightTo($IBLOCK_ID, $ID, "element_edit_any_wf_status"))
-					$STATUS_PERMISSION = CIBlockElement::WF_GetStatusPermission($arRes["WF_STATUS_ID"]);
-				if($STATUS_PERMISSION < 2)
+				if (CIBlockElementRights::UserHasRightTo($IBLOCK_ID, $ID, "element_edit_any_wf_status"))
+					$STATUS_PERMISSION = true;
+				elseif ($arFields["WF_STATUS_ID"] > 0)
+					$STATUS_PERMISSION = CIBlockElement::WF_GetStatusPermission($arFields["WF_STATUS_ID"]) >= 1;
+				else
+					$STATUS_PERMISSION = CIBlockElement::WF_GetStatusPermission($arRes["WF_STATUS_ID"]) >= 2;
+
+				if (!$STATUS_PERMISSION)
 				{
 					$lAdmin->AddUpdateError(GetMessage("IBLIST_A_UPDERR_ACCESS", array("#ID#" => $ID)), $TYPE.$ID);
 					continue;
-				}
-
-				// if status change is permitted
-				if(isset($arFields["WF_STATUS_ID"]))
-				{
-					if(CIBlockElement::WF_GetStatusPermission($arFields["WF_STATUS_ID"])<1)
-					{
-						$lAdmin->AddUpdateError(GetMessage("IBLIST_A_UPDERR_STATUS", array("#ID#" => $ID)), $TYPE.$ID);
-						continue;
-					}
 				}
 			}
 			elseif ($bBizproc)
@@ -436,7 +441,7 @@ if($lAdmin->EditAction())
 			}
 
 			if(isset($arFields["PREVIEW_PICTURE"]) && !is_array($arFields["PREVIEW_PICTURE"]))
-				$arFields["PREVIEW_PICTURE"] = CFile::MakeFileArray($arFields["PREVIEW_PICTURE"]);
+				$arFields["PREVIEW_PICTURE"] = CFile::MakeFileArray($arFields["PREVIEW_PICTURE"], false, true);
 
 			if(isset($arFields["PREVIEW_PICTURE"]) && is_array($arFields["PREVIEW_PICTURE"]))
 			{
@@ -445,7 +450,7 @@ if($lAdmin->EditAction())
 			}
 
 			if(isset($arFields["DETAIL_PICTURE"]) && !is_array($arFields["DETAIL_PICTURE"]))
-				$arFields["DETAIL_PICTURE"] = CFile::MakeFileArray($arFields["DETAIL_PICTURE"]);
+				$arFields["DETAIL_PICTURE"] = CFile::MakeFileArray($arFields["DETAIL_PICTURE"], false, true);
 
 			if(isset($arFields["DETAIL_PICTURE"]) && is_array($arFields["DETAIL_PICTURE"]))
 			{
@@ -555,7 +560,10 @@ if($lAdmin->EditAction())
 					{
 						$arCatalogQuantity = Array("ID" => $ID);
 						if(strlen($CATALOG_QUANTITY) > 0)
-							$arCatalogQuantity["QUANTITY"] = $CATALOG_QUANTITY;
+						{
+							if (COption::GetOptionString("catalog", "default_use_store_control") != "Y")
+								$arCatalogQuantity["QUANTITY"] = $CATALOG_QUANTITY;
+						}
 						if(strlen($CATALOG_QUANTITY_TRACE) > 0)
 							$arCatalogQuantity["QUANTITY_TRACE"] = (($CATALOG_QUANTITY_TRACE == "Y") ? "Y" : (($CATALOG_QUANTITY_TRACE == "D") ? "D" : "N"));
 						if (strlen($CATALOG_WEIGHT) > 0)
@@ -566,7 +574,10 @@ if($lAdmin->EditAction())
 					{
 						$arCatalogQuantity = Array();
 						if(strlen($CATALOG_QUANTITY) > 0)
-							$arCatalogQuantity["QUANTITY"] = $CATALOG_QUANTITY;
+						{
+							if (COption::GetOptionString("catalog", "default_use_store_control") != "Y")
+								$arCatalogQuantity["QUANTITY"] = $CATALOG_QUANTITY;
+						}
 						if(strlen($CATALOG_QUANTITY_TRACE) > 0)
 							$arCatalogQuantity["QUANTITY_TRACE"] = (($CATALOG_QUANTITY_TRACE == "Y") ? "Y" : (($CATALOG_QUANTITY_TRACE == "D") ? "D" : "N"));
 						if (strlen($CATALOG_WEIGHT) > 0)
@@ -1136,7 +1147,9 @@ $arHeader = array(
 		"sort" => "tags",
 	),
 );
-$arWFStatus = Array();
+
+$arWFStatusAll = array();
+$arWFStatusPerm = array();
 if($bWorkFlow)
 {
 	$arHeader[] = array(
@@ -1169,7 +1182,10 @@ if($bWorkFlow)
 	);
 	$rsWF = CWorkflowStatus::GetDropDownList("Y");
 	while($arWF = $rsWF->GetNext())
-		$arWFStatus[$arWF["~REFERENCE_ID"]] = $arWF["~REFERENCE"];
+		$arWFStatusAll[$arWF["~REFERENCE_ID"]] = $arWF["~REFERENCE"];
+	$rsWF = CWorkflowStatus::GetDropDownList("N", "desc");
+	while($arWF = $rsWF->GetNext())
+		$arWFStatusPerm[$arWF["~REFERENCE_ID"]] = $arWF["~REFERENCE"];
 }
 
 foreach($arProps as $arFProps)
@@ -1202,6 +1218,27 @@ if($bCatalog)
 		"sort" => "CATALOG_WEIGHT",
 		"default" => false,
 	);
+	if ($USER->CanDoOperation('catalog_purchas_info'))
+	{
+		$arHeader[] = array(
+			"id" => "CATALOG_PURCHASING_PRICE",
+			"content" => GetMessage("IBLIST_A_CATALOG_PURCHASING_PRICE"),
+			"title" => "",
+			"align" => "right",
+			"sort" => "CATALOG_PURCHASING_PRICE",
+			"default" => false,
+		);
+	}
+	if (COption::GetOptionString("catalog", "default_use_store_control") == "Y")
+	{
+		$arHeader[] = array(
+			"id" => "CATALOG_BAR_CODE",
+			"content" => GetMessage("IBEL_CATALOG_BAR_CODE"),
+			"title" => "",
+			"align" => "right",
+			"default" => false,
+		);
+	}
 
 	$arCatGroup = array();
 	$dbCatalogGroups = CCatalogGroup::GetList(
@@ -1296,8 +1333,6 @@ if(in_array("PREVIEW_TEXT", $arSelectedFields))
 	$arSelectedFields[] = "PREVIEW_TEXT_TYPE";
 if(in_array("DETAIL_TEXT", $arSelectedFields))
 	$arSelectedFields[] = "DETAIL_TEXT_TYPE";
-if(in_array("CATALOG_QUANTITY_TRACE", $arSelectedFields))
-	$arSelectedFields[] = "CATALOG_QUANTITY_TRACE_ORIG";
 
 $arSelectedFields[] = "LOCK_STATUS";
 $arSelectedFields[] = "WF_NEW";
@@ -1307,15 +1342,22 @@ $arSelectedFields[] = "SITE_ID";
 $arSelectedFields[] = "CODE";
 $arSelectedFields[] = "EXTERNAL_ID";
 
-$arVisibleColumnsMap = array();
-foreach($arSelectedFields as $value)
-	$arVisibleColumnsMap[$value] = true;
-
 if ($bCatalog)
 {
+	if (in_array("CATALOG_QUANTITY_TRACE", $arSelectedFields))
+		$arSelectedFields[] = "CATALOG_QUANTITY_TRACE_ORIG";
+	$boolPriceInc = false;
+	if ($USER->CanDoOperation('catalog_purchas_info'))
+	{
+		if (in_array("CATALOG_PURCHASING_PRICE", $arSelectedFields))
+		{
+			$arSelectedFields[] = "CATALOG_PURCHASING_CURRENCY";
+			$boolPriceInc = true;
+		}
+	}
+
 	if (is_array($arCatGroup) && !empty($arCatGroup))
 	{
-		$boolPriceInc = false;
 		foreach($arCatGroup as &$CatalogGroups)
 		{
 			if(in_array("CATALOG_GROUP_".$CatalogGroups["ID"], $arSelectedFields))
@@ -1324,21 +1366,25 @@ if ($bCatalog)
 				$boolPriceInc = true;
 			}
 		}
-		if ($boolPriceInc)
+	}
+	if ($boolPriceInc)
+	{
+		$bCurrency = CModule::IncludeModule('currency');
+		if ($bCurrency)
 		{
-			$bCurrency = CModule::IncludeModule('currency');
-			if ($bCurrency)
+			$rsCurrencies = CCurrency::GetList(($by1="sort"), ($order1="asc"));
+			while ($arCurrency = $rsCurrencies->GetNext(true,true))
 			{
-				$rsCurrencies = CCurrency::GetList(($by1="sort"), ($order1="asc"));
-				while ($arCurrency = $rsCurrencies->GetNext(true,true))
-				{
-					$arCurrencyList[] = $arCurrency;
-				}
+				$arCurrencyList[] = $arCurrency;
 			}
 		}
-		unset($boolPriceInc);
 	}
+	unset($boolPriceInc);
 }
+
+$arVisibleColumnsMap = array();
+foreach($arSelectedFields as $value)
+	$arVisibleColumnsMap[$value] = true;
 
 // Getting list data
 if(array_key_exists("ELEMENT_CNT", $arVisibleColumnsMap))
@@ -1466,12 +1512,17 @@ while($arRes = $rsData->NavNext(true, "f_"))
 	}
 
 	if($f_TYPE=="S") // double click moves deeper
-		$row =& $lAdmin->AddRow($f_TYPE.$f_ID, $arRes, $sec_list_url, GetMessage("IBLIST_A_LIST"));
+	{
+		$arRes["PREVIEW_PICTURE"] = $arRes["PICTURE"];
+		$row = $lAdmin->AddRow($f_TYPE.$f_ID, $arRes, $sec_list_url, GetMessage("IBLIST_A_LIST"));
+	}
 	else // in case of element take his action
-		$row =& $lAdmin->AddRow($f_TYPE.$f_ID, $arRes);
+	{
+		$row = $lAdmin->AddRow($f_TYPE.$f_ID, $arRes);
+	}
 
 	if($f_TYPE=="S")
-		$row->AddViewField("NAME", '<table cellpadding="0" cellspacing="0" border="0"><tr><td align="left"><a href="'.$sec_list_url.'"><span class="fileman_icon_folder"></span></a></td><td align="left">&nbsp;<a href="'.$sec_list_url.'" title="'.GetMessage("IBLIST_A_LIST").'">'.$f_NAME.'</a></td></tr></table>');
+		$row->AddViewField("NAME", '<a href="'.$sec_list_url.'" class="adm-list-table-icon-link" title="'.GetMessage("IBLIST_A_LIST").'"><span class="adm-submenu-item-link-icon adm-list-table-icon iblock-section-icon"></span><span class="adm-list-table-link">'.$f_NAME.'</span></a>');
 	else
 		$row->AddViewField("NAME", '<a href="'.$el_edit_url.'" title="'.GetMessage("IBLIST_A_EDIT").'">'.$f_NAME.'</a>');
 	if($bReadOnly)
@@ -1516,6 +1567,72 @@ while($arRes = $rsData->NavNext(true, "f_"))
 			$row->AddViewField("CREATED_USER_NAME", '[<a href="user_edit.php?lang='.LANG.'&ID='.$f_CREATED_BY.'" title="'.GetMessage("IBLIST_A_USERINFO").'">'.$f_CREATED_BY."</a>]&nbsp;(".$arUser["LOGIN"].") ".$arUser["NAME"]." ".$arUser["LAST_NAME"]);
 	}
 
+	if (array_key_exists("PREVIEW_PICTURE", $arVisibleColumnsMap))
+	{
+		if ($bReadOnly)
+			$row->AddViewFileField("PREVIEW_PICTURE", array(
+				"IMAGE" => "Y",
+				"PATH" => "Y",
+				"FILE_SIZE" => "Y",
+				"DIMENSIONS" => "Y",
+				"IMAGE_POPUP" => "Y",
+				"MAX_SIZE" => $maxImageSize,
+				"MIN_SIZE" => $minImageSize,
+				)
+			);
+		else
+			$row->AddFileField("PREVIEW_PICTURE", array(
+				"IMAGE" => "Y",
+				"PATH" => "Y",
+				"FILE_SIZE" => "Y",
+				"DIMENSIONS" => "Y",
+				"IMAGE_POPUP" => "Y",
+				"MAX_SIZE" => $maxImageSize,
+				"MIN_SIZE" => $minImageSize,
+				), array(
+					'upload' => true,
+					'medialib' => false,
+					'file_dialog' => false,
+					'cloud' => true,
+					'del' => true,
+					'description' => false,
+				)
+			);
+	}
+
+	if (array_key_exists("DETAIL_PICTURE", $arVisibleColumnsMap))
+	{
+		if ($bReadOnly)
+			$row->AddViewFileField("DETAIL_PICTURE", array(
+				"IMAGE" => "Y",
+				"PATH" => "Y",
+				"FILE_SIZE" => "Y",
+				"DIMENSIONS" => "Y",
+				"IMAGE_POPUP" => "Y",
+				"MAX_SIZE" => $maxImageSize,
+				"MIN_SIZE" => $minImageSize,
+				)
+			);
+		else
+			$row->AddFileField("DETAIL_PICTURE", array(
+				"IMAGE" => "Y",
+				"PATH" => "Y",
+				"FILE_SIZE" => "Y",
+				"DIMENSIONS" => "Y",
+				"IMAGE_POPUP" => "Y",
+				"MAX_SIZE" => $maxImageSize,
+				"MIN_SIZE" => $minImageSize,
+				), array(
+					'upload' => true,
+					'medialib' => false,
+					'file_dialog' => false,
+					'cloud' => true,
+					'del' => true,
+					'description' => false,
+				)
+			);
+	}
+
 	if($f_TYPE=="S")
 	{
 		if(array_key_exists("ELEMENT_CNT", $arVisibleColumnsMap))
@@ -1528,159 +1645,12 @@ while($arRes = $rsData->NavNext(true, "f_"))
 			$arFilter = Array("IBLOCK_ID"=>$IBLOCK_ID, "SECTION_ID"=>$f_ID);
 			$row->AddViewField("SECTION_CNT", " ".IntVal(CIBlockSection::GetCount($arFilter)));
 		}
-
-		$row->AddViewField("PREVIEW_PICTURE", CFileInput::Show('NO_FIELDS['.$f_TYPE.$f_ID.'][PICTURE]', $arRes['PICTURE'], array(
-			"IMAGE" => "Y",
-			"PATH" => "Y",
-			"FILE_SIZE" => "Y",
-			"DIMENSIONS" => "Y",
-			"IMAGE_POPUP" => "Y",
-			"MAX_SIZE" => $maxImageSize,
-			"MIN_SIZE" => $minImageSize,
-			), array(
-				'upload' => false,
-				'medialib' => false,
-				'file_dialog' => false,
-				'cloud' => false,
-				'del' => false,
-				'description' => false,
-			)
-		));
-		if (!$bReadOnly)
-			$row->AddEditField("PREVIEW_PICTURE", CFileInput::Show('FIELDS['.$f_TYPE.$f_ID.'][PICTURE]', $arRes['PICTURE'], array(
-				"IMAGE" => "Y",
-				"PATH" => "Y",
-				"FILE_SIZE" => "Y",
-				"DIMENSIONS" => "Y",
-				"IMAGE_POPUP" => "Y",
-				"MAX_SIZE" => $maxImageSize,
-				"MIN_SIZE" => $minImageSize,
-				), array(
-					'upload' => true,
-					'medialib' => false,
-					'file_dialog' => false,
-					'cloud' => true,
-					'del' => true,
-					'description' => false,
-				)
-			));
-		$row->AddViewField("DETAIL_PICTURE", CFileInput::Show('NO_FIELDS['.$f_TYPE.$f_ID.'][DETAIL_PICTURE]', $arRes['DETAIL_PICTURE'], array(
-			"IMAGE" => "Y",
-			"PATH" => "Y",
-			"FILE_SIZE" => "Y",
-			"DIMENSIONS" => "Y",
-			"IMAGE_POPUP" => "Y",
-			"MAX_SIZE" => $maxImageSize,
-			"MIN_SIZE" => $minImageSize,
-			), array(
-				'upload' => false,
-				'medialib' => false,
-				'file_dialog' => false,
-				'cloud' => false,
-				'del' => false,
-				'description' => false,
-			)
-		));
-		if (!$bReadOnly)
-			$row->AddEditField("DETAIL_PICTURE", CFileInput::Show('FIELDS['.$f_TYPE.$f_ID.'][DETAIL_PICTURE]', $arRes['DETAIL_PICTURE'], array(
-				"IMAGE" => "Y",
-				"PATH" => "Y",
-				"FILE_SIZE" => "Y",
-				"DIMENSIONS" => "Y",
-				"IMAGE_POPUP" => "Y",
-				"MAX_SIZE" => $maxImageSize,
-				"MIN_SIZE" => $minImageSize,
-				), array(
-					'upload' => true,
-					'medialib' => false,
-					'file_dialog' => false,
-					'cloud' => true,
-					'del' => true,
-					'description' => false,
-				)
-			));
 	}
 
 	if($f_TYPE=="E")
 	{
-		if (array_key_exists("PREVIEW_PICTURE", $arVisibleColumnsMap))
-		{
-			$row->AddViewField("PREVIEW_PICTURE", CFileInput::Show('NO_FIELDS['.$f_TYPE.$f_ID.'][PREVIEW_PICTURE]', $arRes['PREVIEW_PICTURE'], array(
-				"IMAGE" => "Y",
-				"PATH" => "Y",
-				"FILE_SIZE" => "Y",
-				"DIMENSIONS" => "Y",
-				"IMAGE_POPUP" => "Y",
-				"MAX_SIZE" => $maxImageSize,
-				"MIN_SIZE" => $minImageSize,
-				), array(
-					'upload' => false,
-					'medialib' => false,
-					'file_dialog' => false,
-					'cloud' => false,
-					'del' => false,
-					'description' => true,
-				)
-			));
-			if (!$bReadOnly)
-				$row->AddEditField("PREVIEW_PICTURE", CFileInput::Show('FIELDS['.$f_TYPE.$f_ID.'][PREVIEW_PICTURE]', $arRes['PREVIEW_PICTURE'], array(
-					"IMAGE" => "Y",
-					"PATH" => "Y",
-					"FILE_SIZE" => "Y",
-					"DIMENSIONS" => "Y",
-					"IMAGE_POPUP" => "Y",
-					"MAX_SIZE" => $maxImageSize,
-					"MIN_SIZE" => $minImageSize,
-					), array(
-						'upload' => true,
-						'medialib' => false,
-						'file_dialog' => false,
-						'cloud' => true,
-						'del' => true,
-						'description' => true,
-					)
-				));
-		}
 		if (array_key_exists("PREVIEW_TEXT", $arVisibleColumnsMap))
 			$row->AddViewField("PREVIEW_TEXT", ($arRes["PREVIEW_TEXT_TYPE"]=="text" ? htmlspecialcharsex($arRes["PREVIEW_TEXT"]) : HTMLToTxt($arRes["PREVIEW_TEXT"])));
-		if (array_key_exists("DETAIL_PICTURE", $arVisibleColumnsMap))
-		{
-			$row->AddViewField("DETAIL_PICTURE", CFileInput::Show('NO_FIELDS['.$f_TYPE.$f_ID.'][DETAIL_PICTURE]', $arRes['DETAIL_PICTURE'], array(
-				"IMAGE" => "Y",
-				"PATH" => "Y",
-				"FILE_SIZE" => "Y",
-				"DIMENSIONS" => "Y",
-				"IMAGE_POPUP" => "Y",
-				"MAX_SIZE" => $maxImageSize,
-				"MIN_SIZE" => $minImageSize,
-				), array(
-					'upload' => false,
-					'medialib' => false,
-					'file_dialog' => false,
-					'cloud' => false,
-					'del' => false,
-					'description' => true,
-				)
-			));
-			if (!$bReadOnly)
-				$row->AddEditField("DETAIL_PICTURE", CFileInput::Show('FIELDS['.$f_TYPE.$f_ID.'][DETAIL_PICTURE]', $arRes['DETAIL_PICTURE'], array(
-					"IMAGE" => "Y",
-					"PATH" => "Y",
-					"FILE_SIZE" => "Y",
-					"DIMENSIONS" => "Y",
-					"IMAGE_POPUP" => "Y",
-					"MAX_SIZE" => $maxImageSize,
-					"MIN_SIZE" => $minImageSize,
-					), array(
-						'upload' => true,
-						'medialib' => false,
-						'file_dialog' => false,
-						'cloud' => true,
-						'del' => true,
-						'description' => true,
-					)
-				));
-		}
 		if (array_key_exists("DETAIL_TEXT", $arVisibleColumnsMap))
 			$row->AddViewField("DETAIL_TEXT", ($arRes["DETAIL_TEXT_TYPE"]=="text" ? htmlspecialcharsex($arRes["DETAIL_TEXT"]) : HTMLToTxt($arRes["DETAIL_TEXT"])));
 		if($bWorkFlow || $bBizproc)
@@ -1736,27 +1706,20 @@ while($arRes = $rsData->NavNext(true, "f_"))
 				}
 			}
 
-			if($arWFStatus)
-			{
-				$row->AddSelectField("WF_STATUS_ID", $arWFStatus);
-				if($arRes_orig['WF_NEW']=='Y' || $arRes['WF_STATUS_ID']=='1')
-					$row->AddViewField("WF_STATUS_ID", htmlspecialcharsex($arWFStatus[$arRes['WF_STATUS_ID']]));
-				else
-					$row->AddViewField("WF_STATUS_ID", '<a href="'.$el_edit_url.'" title="'.GetMessage("IBLIST_A_ED_TITLE").'">'.htmlspecialcharsex($arWFStatus[$arRes['WF_STATUS_ID']]).'</a> / <a href="'.'iblock_element_edit.php?ID='.$arRes_orig['ID'].$sThisSectionUrl.'" title="'.GetMessage("IBLIST_A_ED2_TITLE").'">'.htmlspecialcharsex($arWFStatus[$arRes_orig['WF_STATUS_ID']]).'</a>');
-			}
+			if(!empty($arWFStatusPerm))
+				$row->AddSelectField("WF_STATUS_ID", $arWFStatusPerm);
+			if($arRes_orig['WF_NEW']=='Y' || $arRes['WF_STATUS_ID']=='1')
+				$row->AddViewField("WF_STATUS_ID", htmlspecialcharsex($arWFStatusAll[$arRes['WF_STATUS_ID']]));
+			else
+				$row->AddViewField("WF_STATUS_ID", '<a href="'.$el_edit_url.'" title="'.GetMessage("IBLIST_A_ED_TITLE").'">'.htmlspecialcharsex($arWFStatusAll[$arRes['WF_STATUS_ID']]).'</a> / <a href="'.'iblock_element_edit.php?ID='.$arRes_orig['ID'].$sThisSectionUrl.'" title="'.GetMessage("IBLIST_A_ED2_TITLE").'">'.htmlspecialcharsex($arWFStatusAll[$arRes_orig['WF_STATUS_ID']]).'</a>');
 		}
 		else
 		{
 			$row->AddCalendarField("DATE_ACTIVE_FROM", false);
 			$row->AddCalendarField("DATE_ACTIVE_TO", false);
+			$row->AddViewField("WF_STATUS_ID", htmlspecialcharsex($arWFStatusAll[$arRes['WF_STATUS_ID']]));
 			if (array_key_exists("TAGS", $arVisibleColumnsMap))
-			{
 				$row->AddViewField("TAGS", $f_TAGS);
-			}
-			if ($arWFStatus)
-			{
-				$row->AddViewField("WF_STATUS_ID", htmlspecialcharsex($arWFStatus[$arRes['WF_STATUS_ID']]));
-			}
 		}
 	}
 
@@ -1878,6 +1841,7 @@ while($arRes = $rsData->NavNext(true, "f_"))
 							$arProperties[$prop["ID"]],
 							array(
 								"VALUE" => $VALUE_NAME,
+								"DESCRIPTION" => $VALUE_NAME,
 								"MODE"=>"iblock_element_admin",
 								"FORM_NAME"=>"form_".$sTableID,
 							)
@@ -1929,24 +1893,27 @@ while($arRes = $rsData->NavNext(true, "f_"))
 							$html = '<input type="hidden" name="'.$VALUE_NAME.'" value="">';
 							foreach($arSelect[$prop['ID']] as $value => $display)
 							{
-								$html .= '<input type="checkbox" name="'.$VALUE_NAME.'" id="'.$prop["PROPERTY_VALUE_ID"]."_".$value.'" value="'.$value.'"';
+								$html .= '<input type="checkbox" name="'.$VALUE_NAME.'" id="id'.$uniq_id.'" value="'.$value.'"';
 								if(array_key_exists($value, $arValues))
 									$html .= ' checked';
-								$html .= '>&nbsp;<label for="'.$prop["PROPERTY_VALUE_ID"]."_".$value.'">'.$display.'</label><br>';
+								$html .= '>&nbsp;<label for="id'.$uniq_id.'">'.$display.'</label><br>';
+								$uniq_id++;
 							}
 						}
 						else
 						{
-							$html = '<input type="radio" name="'.$VALUE_NAME.'" id="'.$prop["PROPERTY_VALUE_ID"].'_none" value=""';
+							$html = '<input type="radio" name="'.$VALUE_NAME.'" id="id'.$uniq_id.'" value=""';
 							if(count($arValues) < 1)
 								$html .= ' checked';
-							$html .= '>&nbsp;<label for="'.$prop["PROPERTY_VALUE_ID"].'_none">'.GetMessage("IBLIST_A_PROP_NOT_SET").'</label><br>';
+							$html .= '>&nbsp;<label for="id'.$uniq_id.'">'.GetMessage("IBLIST_A_PROP_NOT_SET").'</label><br>';
+							$uniq_id++;
 							foreach($arSelect[$prop['ID']] as $value => $display)
 							{
-								$html .= '<input type="radio" name="'.$VALUE_NAME.'" id="'.$prop["PROPERTY_VALUE_ID"]."_".$value.'" value="'.$value.'"';
+								$html .= '<input type="radio" name="'.$VALUE_NAME.'" id="id'.$uniq_id.'" value="'.$value.'"';
 								if(array_key_exists($value, $arValues))
 									$html .= ' checked';
-								$html .= '>&nbsp;<label for="'.$prop["PROPERTY_VALUE_ID"]."_".$value.'">'.$display.'</label><br>';
+								$html .= '>&nbsp;<label for="id'.$uniq_id.'">'.$display.'</label><br>';
+								$uniq_id++;
 							}
 						}
 					}
@@ -2125,15 +2092,52 @@ while($arRes = $rsData->NavNext(true, "f_"))
 		{
 			if ($boolEditPrice && $USER->CanDoOperation('catalog_price'))
 			{
-				$row->AddInputField("CATALOG_QUANTITY");
+				if (COption::GetOptionString("catalog", "default_use_store_control") == "Y")
+				{
+					$row->AddInputField("CATALOG_QUANTITY", false);
+				}
+				else
+				{
+					$row->AddInputField("CATALOG_QUANTITY");
+				}
 				$row->AddSelectField("CATALOG_QUANTITY_TRACE", $arQuantityTrace);
 				$row->AddInputField("CATALOG_WEIGHT");
+				if ($USER->CanDoOperation('catalog_purchas_info'))
+				{
+					if ($row->arRes["CATALOG_PURCHASING_PRICE"] != 0.0)
+					{
+						if ($bCurrency)
+						{
+							$price = CurrencyFormat($row->arRes["CATALOG_PURCHASING_PRICE"], $row->arRes["CATALOG_PURCHASING_CURRENCY"]);
+						}
+						else
+						{
+							$price = $row->arRes["CATALOG_PURCHASING_PRICE"]." ".$row->arRes["CATALOG_PURCHASING_CURRENCY"];
+						}
+						$row->AddViewField("CATALOG_PURCHASING_PRICE", htmlspecialcharsEx($price));
+					}
+				}
 			}
 			elseif ($USER->CanDoOperation('catalog_read'))
 			{
 				$row->AddInputField("CATALOG_QUANTITY", false);
-				$row->AddSelectField("CATALOG_QUANTITY_TRACE", $arQuantityTrace);
+				$row->AddSelectField("CATALOG_QUANTITY_TRACE", $arQuantityTrace, false);
 				$row->AddInputField("CATALOG_WEIGHT", false);
+				if ($USER->CanDoOperation('catalog_purchas_info'))
+				{
+					if ($row->arRes["CATALOG_PURCHASING_PRICE"] != 0.0)
+					{
+						if ($bCurrency)
+						{
+							$price = CurrencyFormat($row->arRes["CATALOG_PURCHASING_PRICE"], $row->arRes["CATALOG_PURCHASING_CURRENCY"]);
+						}
+						else
+						{
+							$price = $row->arRes["CATALOG_PURCHASING_PRICE"]." ".$row->arRes["CATALOG_PURCHASING_CURRENCY"];
+						}
+						$row->AddViewField("CATALOG_PURCHASING_PRICE", htmlspecialcharsEx($price));
+					}
+				}
 			}
 		}
 		else
@@ -2141,8 +2145,23 @@ while($arRes = $rsData->NavNext(true, "f_"))
 			if ($bCatalog)
 			{
 				$row->AddInputField("CATALOG_QUANTITY", false);
-				$row->AddSelectField("CATALOG_QUANTITY_TRACE", $arQuantityTrace);
+				$row->AddSelectField("CATALOG_QUANTITY_TRACE", $arQuantityTrace, false);
 				$row->AddInputField("CATALOG_WEIGHT", false);
+				if ($USER->CanDoOperation('catalog_purchas_info'))
+				{
+					if ($row->arRes["CATALOG_PURCHASING_PRICE"] != 0.0)
+					{
+						if ($bCurrency)
+						{
+							$price = CurrencyFormat($row->arRes["CATALOG_PURCHASING_PRICE"], $row->arRes["CATALOG_PURCHASING_CURRENCY"]);
+						}
+						else
+						{
+							$price = $row->arRes["CATALOG_PURCHASING_PRICE"]." ".$row->arRes["CATALOG_PURCHASING_CURRENCY"];
+						}
+						$row->AddViewField("CATALOG_PURCHASING_PRICE", htmlspecialcharsEx($price));
+					}
+				}
 			}
 		}
 	}
@@ -2185,7 +2204,7 @@ while($arRes = $rsData->NavNext(true, "f_"))
 							$price = $arRes["CATALOG_PRICE_".$CatGroup["ID"]]." ".$arRes["CATALOG_CURRENCY_".$CatGroup["ID"]];
 						}
 
-						$row->AddViewField("CATALOG_GROUP_".$CatGroup["ID"], $price);
+						$row->AddViewField("CATALOG_GROUP_".$CatGroup["ID"], htmlspecialcharsex($price));
 						if ($USER->CanDoOperation('catalog_price') && $boolEditPrice)
 						{
 							$sHTML = '<input type="text" size="5" id="CATALOG_PRICE['.$f_ID.']['.$CatGroup["ID"].']" name="CATALOG_PRICE['.$f_ID.']['.$CatGroup["ID"].']" value="'.$arRes["CATALOG_PRICE_".$CatGroup["ID"]].'"';
@@ -2238,7 +2257,7 @@ while($arRes = $rsData->NavNext(true, "f_"))
 					continue;
 
 				$arStr1[$vv["TEMPLATE_ID"]] = $vv["TEMPLATE_NAME"];
-				$arStr[$vv["TEMPLATE_ID"]] .= "<a href=\"bizproc_log.php?ID=".$kk."\">".(strlen($vv["STATE_TITLE"]) > 0 ? $vv["STATE_TITLE"] : $vv["STATE_NAME"])."</a><br />";
+				$arStr[$vv["TEMPLATE_ID"]] .= "<a href=\"/bitrix/admin/bizproc_log.php?ID=".$kk."\">".(strlen($vv["STATE_TITLE"]) > 0 ? $vv["STATE_TITLE"] : $vv["STATE_NAME"])."</a><br />";
 
 				if (strlen($vv["ID"]) > 0)
 				{
@@ -2295,7 +2314,7 @@ while($arRes = $rsData->NavNext(true, "f_"))
 			$arActions[] = array(
 				"ICON" => "delete",
 				"TEXT" => GetMessage("MAIN_DELETE"),
-				"ACTION" => "if(confirm('".GetMessage("IBLOCK_CONFIRM_DEL_MESSAGE")."')) ".$lAdmin->ActionDoGroup($f_TYPE.$f_ID, "delete", $sThisSectionUrl),
+				"ACTION" => "if(confirm('".GetMessageJS("IBLOCK_CONFIRM_DEL_MESSAGE")."')) ".$lAdmin->ActionDoGroup($f_TYPE.$f_ID, "delete", $sThisSectionUrl),
 			);
 	}
 	elseif($bWorkFlow)
@@ -2311,7 +2330,7 @@ while($arRes = $rsData->NavNext(true, "f_"))
 			"ICON" => "unlock",
 			"TEXT" => GetMessage("IBLIST_A_UNLOCK"),
 			"TITLE" => GetMessage("IBLIST_A_UNLOCK_ALT"),
-			"ACTION" => "if(confirm('".GetMessage("IBLIST_A_UNLOCK_CONFIRM")."')) ".$lAdmin->ActionDoGroup($f_TYPE.$arRes_orig['ID'], "unlock", $sThisSectionUrl),
+			"ACTION" => "if(confirm('".GetMessageJS("IBLIST_A_UNLOCK_CONFIRM")."')) ".$lAdmin->ActionDoGroup($f_TYPE.$arRes_orig['ID'], "unlock", $sThisSectionUrl),
 		);
 
 		if ($arRes_orig['LOCK_STATUS']=="red")
@@ -2451,7 +2470,7 @@ while($arRes = $rsData->NavNext(true, "f_"))
 						"ICON" => "delete",
 						"TEXT" => GetMessage('MAIN_DELETE'),
 						"TITLE" => GetMessage("IBLOCK_DELETE_ALT"),
-						"ACTION" => "if(confirm('".GetMessage('IBLOCK_CONFIRM_DEL_MESSAGE')."')) ".$lAdmin->ActionDoGroup($f_TYPE.$arRes_orig['ID'], "delete", $sThisSectionUrl),
+						"ACTION" => "if(confirm('".GetMessageJS('IBLOCK_CONFIRM_DEL_MESSAGE')."')) ".$lAdmin->ActionDoGroup($f_TYPE.$arRes_orig['ID'], "delete", $sThisSectionUrl),
 					);
 				}
 			}
@@ -2489,7 +2508,7 @@ while($arRes = $rsData->NavNext(true, "f_"))
 					"ICON" => "unlock",
 					"TEXT" => GetMessage("IBLIST_A_UNLOCK"),
 					"TITLE" => GetMessage("IBLIST_A_UNLOCK_ALT"),
-					"ACTION" => "if(confirm('".GetMessage("IBLIST_A_UNLOCK_CONFIRM")."')) ".$lAdmin->ActionDoGroup($f_TYPE.$f_ID, "unlock", $sThisSectionUrl),
+					"ACTION" => "if(confirm('".GetMessageJS("IBLIST_A_UNLOCK_CONFIRM")."')) ".$lAdmin->ActionDoGroup($f_TYPE.$f_ID, "unlock", $sThisSectionUrl),
 				);
 			}
 		}
@@ -2521,7 +2540,7 @@ while($arRes = $rsData->NavNext(true, "f_"))
 				"ICON" => "delete",
 				"TEXT" => GetMessage('MAIN_DELETE'),
 				"TITLE" => GetMessage("IBLOCK_DELETE_ALT"),
-				"ACTION" => "if(confirm('".GetMessage('IBLOCK_CONFIRM_DEL_MESSAGE')."')) ".$lAdmin->ActionDoGroup($f_TYPE.$f_ID, "delete", $sThisSectionUrl),
+				"ACTION" => "if(confirm('".GetMessageJS('IBLOCK_CONFIRM_DEL_MESSAGE')."')) ".$lAdmin->ActionDoGroup($f_TYPE.$f_ID, "delete", $sThisSectionUrl),
 			);
 		}
 	}
@@ -2566,7 +2585,7 @@ while($arRes = $rsData->NavNext(true, "f_"))
 				"ICON" => "delete",
 				"TEXT" => GetMessage('MAIN_DELETE'),
 				"TITLE" => GetMessage("IBLOCK_DELETE_ALT"),
-				"ACTION" => "if(confirm('".GetMessage('IBLOCK_CONFIRM_DEL_MESSAGE')."')) ".$lAdmin->ActionDoGroup($f_TYPE.$arRes_orig['ID'], "delete", $sThisSectionUrl),
+				"ACTION" => "if(confirm('".GetMessageJS('IBLOCK_CONFIRM_DEL_MESSAGE')."')) ".$lAdmin->ActionDoGroup($f_TYPE.$arRes_orig['ID'], "delete", $sThisSectionUrl),
 			);
 		}
 	}
@@ -2594,7 +2613,7 @@ if(true)
 
 	if($arIBTYPE["SECTIONS"] == "Y")
 	{
-		$sections = '<div id="section_to_move" style="display:none"><select name="section_to_move" size="1">';
+		$sections = '<div id="section_to_move" style="display:none"><select name="section_to_move">';
 		$sections .= '<option value="">'.GetMessage("MAIN_NO").'</option>';
 		$sections .= '<option value="0">'.GetMessage("IBLOCK_UPPER_LEVEL").'</option>';
 		$rsSections = CIBlockSection::GetTreeList(Array("IBLOCK_ID"=>$IBLOCK_ID));
@@ -2694,15 +2713,7 @@ if(CIBlockSectionRights::UserHasRightTo($IBLOCK_ID, $find_section_section, "sect
 }
 
 if(count($aContext) == 2)
-{
-	$aContext = array(
-		array(
-			"TEXT" => GetMessage("IBLIST_A_PROP_ADD"),
-			"ICON" => "btn_new",
-			"MENU" => $aContext,
-		),
-	);
-}
+	unset($aContext[1]["ICON"]);
 
 if(strlen($sLastFolder)>0)
 {
@@ -2740,7 +2751,7 @@ $APPLICATION->AddHeadScript('/bitrix/js/iblock/iblock_edit.js');
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_after.php");
 
 //We need javascript not in excel mode
-if((!isset($_REQUEST["mode"]) || $_REQUEST["mode"]=='list' || $_REQUEST["mode"]=='frame') && $bCatalog && $bCurrency)
+if((!$bExcel) && $bCatalog && $bCurrency)
 {
 	?><script type="text/javascript">
 		top.arCatalogShowedGroups = new Array();
@@ -2917,7 +2928,7 @@ $oFilter->Begin();
 	</tr>
 	<tr>
 		<td><?echo GetMessage("IBLOCK_FIELD_TIMESTAMP_X")?>:</td>
-		<td><?echo CalendarPeriod("find_timestamp_1", htmlspecialcharsbx($find_timestamp_1), "find_timestamp_2", htmlspecialcharsbx($find_timestamp_2), "find_form","Y","","",11)?></td>
+		<td><?echo CalendarPeriod("find_timestamp_1", htmlspecialcharsbx($find_timestamp_1), "find_timestamp_2", htmlspecialcharsbx($find_timestamp_2), "find_form", "Y")?></td>
 	</tr>
 	<tr>
 		<td><?echo GetMessage("IBLIST_A_CODE")?>:</td>
@@ -2946,7 +2957,7 @@ $oFilter->Begin();
 
 	<tr>
 		<td><?echo GetMessage("IBLIST_A_DATE_CREATE")?>:</td>
-		<td><?echo CalendarPeriod("find_created_from", htmlspecialcharsex($find_created_from), "find_created_to", htmlspecialcharsex($find_created_to), "find_element_form")?></td>
+		<td><?echo CalendarPeriod("find_created_from", htmlspecialcharsex($find_created_from), "find_created_to", htmlspecialcharsex($find_created_to), "find_element_form", "Y")?></td>
 	</tr>
 
 	<tr>

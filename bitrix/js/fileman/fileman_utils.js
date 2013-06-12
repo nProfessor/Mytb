@@ -445,8 +445,14 @@ BXFMSearch.prototype = {
 				_this.oSearchResIntCount = 0;
 
 				// Disable "Stop search" button cause it already finished
-				_this.oSearchResDialog.PARAMS.buttons[1].disable();
+				//_this.oSearchResDialog.PARAMS.buttons[1].disable();
+
+				var stopButton = BX("stop");
+				if(stopButton)
+					stopButton.disabled = true;
+
 				BX.removeClass(_this.pSearchResDiv, 'bxfm-wait');
+				_this.oSearchResDialog.PARAMS.buttons[0].enable();
 				_this.oSearchResDialog.SetTitle(FM_MESS.SearchEnded);
 			}
 
@@ -495,6 +501,7 @@ BXFMSearch.prototype = {
 								_this.xhr.abort();
 
 							BX.removeClass(_this.pSearchResDiv, 'bxfm-wait');
+							_this.oSearchResDialog.PARAMS.buttons[0].enable();
 							_this.oSearchResDialog.SetTitle(FM_MESS.SearchEnded);
 						}
 					}),
@@ -580,23 +587,17 @@ BXFMSearch.prototype = {
 		BX.addCustomEvent(this.oSearchResDialog, 'onWindowResizeExt', function(oSize)
 		{
 			var
-				w = oSize.width - 22,
-				h = oSize.height - 48;
+				w = oSize.width - 35;
+
+
 
 			if (BX.browser.IsIE())
 			{
 				w -= 5;
-				h -= 1;
 			}
-
-			if (_this.pSearchPhrase.value != "")
-				h -= 15;
 
 			if (w > 0)
 				_this.pSearchRes.style.width = w + "px";
-
-			if (h > 0)
-				_this.pSearchRes.style.height = h + "px";
 		});
 	},
 
@@ -682,8 +683,14 @@ BXFMSearch.prototype = {
 				_this.oReplResIntCount = 0;
 
 				// Disable "Stop replace" button cause it already finished
-				_this.oReplaceResDialog.PARAMS.buttons[1].disable();
+				//_this.oReplaceResDialog.PARAMS.buttons[1].disable();
+
+				var stopButton = BX("stop");
+				if(stopButton)
+					stopButton.disabled = true;
+
 				BX.removeClass(_this.pReplResDiv, 'bxfm-wait');
+				_this.oReplaceResDialog.PARAMS.buttons[0].enable();
 				_this.oReplaceResDialog.SetTitle(FM_MESS.ReplEnded);
 			}
 
@@ -732,6 +739,7 @@ BXFMSearch.prototype = {
 								_this.replace_xhr.abort();
 
 							BX.removeClass(_this.pReplResDiv, 'bxfm-wait');
+							_this.oReplaceResDialog.PARAMS.buttons[0].enable();
 							_this.oReplaceResDialog.SetTitle(FM_MESS.ReplEnded);
 						}
 					}),
@@ -812,10 +820,8 @@ BXFMSearch.prototype = {
 		BX.addCustomEvent(this.oReplaceResDialog, 'onWindowResizeExt', function(oSize)
 		{
 			var
-				w = oSize.width - 21,
-				h = oSize.height - 62;
+				w = oSize.width - 35;
 			_this.pReplRes.style.width = w + "px";
-			_this.pReplRes.style.height = h + "px";
 		});
 	},
 
@@ -1539,6 +1545,7 @@ BXFMCopy.prototype = {
 				{
 					title: FM_MESS.Replace,
 					name: 'replace',
+					id: 'ask_replace',
 					action: function(){_this.UserAnswer('replace');}
 				}),
 				new BX.CWindowButton(
@@ -1608,10 +1615,13 @@ BXFMCopy.prototype = {
 
 		this.oAskUserDialog.SetTitle(Params.fileNew.bDir ? FM_MESS.FolderExistTitle : FM_MESS.FileExistTitle);
 		// Copy to the same directory - disable "Replace" button
-		if (this.curPath.replace(/[\s\r\n\/]+$/g, '') == this.pCopyTo.value.replace(/[\s\r\n\/]+$/g, ''))
-			this.oAskUserDialog.PARAMS.buttons[0].disable();
+
+		var replaceButton = BX("ask_replace");
+
+		if (this.curPath.replace(/[\s\r\n\/]+$/g, '') == this.pCopyTo.value.replace(/[\s\r\n\/]+$/g, '') && replaceButton)
+			replaceButton.disabled = true;
 		else
-			this.oAskUserDialog.PARAMS.buttons[0].enable();
+			replaceButton.disabled = false;
 
 		if (this.arFiles.length <= 1) // Hide skip button
 			this.oAskUserDialog.PARAMS.buttons[1].btn.style.display = "none";

@@ -1,5 +1,5 @@
-﻿(function (window, undefined) {
-    var 
+(function (window, undefined) {
+    var
     // local variable for global namespace
     AU = window.Aurigma ? (window.Aurigma.ImageUploader || {}) : {};
 
@@ -294,7 +294,7 @@
         // Create Loading screen html for Java control if Loading Screen enabled.
         if (this.showDownloadingScreen() && uploader.javaControl().isJavaSupported()) {
 
-            //In IE "visibility:hidden" doesn't work, 
+            //In IE "visibility:hidden" doesn't work,
             // in FF3 "position:absolute;left:-10000px;" doesn't work properly
             if (AU.browser.isIE) {
                 args.resultHtml = "position:absolute;left:-10000px;";
@@ -345,7 +345,7 @@
         // Create Loading screen html for Java control if Loading Screen enabled.
         if (this.showDownloadingScreen() && uploader.flashControl().isFlashSupported()) {
 
-            //In IE "visibility:hidden" doesn't work, 
+            //In IE "visibility:hidden" doesn't work,
             // in FF3 "position:absolute;left:-10000px;" doesn't work properly
             if (AU.browser.isIE) {
                 args.resultHtml = "position:absolute;left:-10000px;";

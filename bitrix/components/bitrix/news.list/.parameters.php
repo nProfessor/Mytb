@@ -1,5 +1,6 @@
 <?
 if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true) die();
+/** @var array $arCurrentValues */
 
 if(!CModule::IncludeModule("iblock"))
 	return;
@@ -162,6 +163,12 @@ $arComponentParameters = array(
 			"NAME" => GetMessage("IBLOCK_SECTION_CODE"),
 			"TYPE" => "STRING",
 			"DEFAULT" => '',
+		),
+		"INCLUDE_SUBSECTIONS" => array(
+			"PARENT" => "ADDITIONAL_SETTINGS",
+			"NAME" => GetMessage("CP_BNL_INCLUDE_SUBSECTIONS"),
+			"TYPE" => "CHECKBOX",
+			"DEFAULT" => "Y",
 		),
 		"CACHE_TIME"  =>  Array("DEFAULT"=>36000000),
 		"CACHE_FILTER" => array(

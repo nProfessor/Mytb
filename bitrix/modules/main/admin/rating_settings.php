@@ -15,7 +15,7 @@ if(!$USER->CanDoOperation('edit_ratings'))
 
 IncludeModuleLangFile(__FILE__);
 
-if (isset($_POST["CLEAR_DATA"]) && $_POST["CLEAR_DATA"] == 'Y' && $USER->IsAdmin())
+if (isset($_POST["CLEAR_DATA"]) && $_POST["CLEAR_DATA"] == 'Y' && $USER->IsAdmin() && check_bitrix_sessid())
 {
 	$_SESSION["SESS_ADMIN"]["RATING_CONFIG_CLEAR_DATA"]=array("MESSAGE"=>GetMessage("RATING_SETTINGS_FRM_RATING_CLEAR_DATA_OK"), "TYPE"=>"OK");
 	CRatings::ClearData();
@@ -42,12 +42,25 @@ $ratingAssignRatingGroupDelete = isset($_POST["RATING_ASSIGN_RATING_GROUP_DELETE
 $ratingAssignAuthorityGroupAdd = isset($_POST["RATING_ASSIGN_AUTHORITY_GROUP_ADD"]) ? intval($_POST["RATING_ASSIGN_AUTHORITY_GROUP_ADD"]) : 2;
 $ratingAssignAuthorityGroupDelete = isset($_POST["RATING_ASSIGN_AUTHORITY_GROUP_DELETE"]) ? intval($_POST["RATING_ASSIGN_AUTHORITY_GROUP_DELETE"]) : 2;
 
-$sRatingVoteShow = isset($_POST["RATING_VOTE_SHOW"]) && $_POST["RATING_VOTE_SHOW"] == 'Y' ? 'Y' : 'N';
-$sRatingVoteType = isset($_POST["RATING_VOTE_TYPE"]) && $_POST["RATING_VOTE_TYPE"] == 'like' ? 'like' : 'standart';
-$sRatingVoteTemplate = isset($_POST["RATING_VOTE_TEMPLATE"]) && in_array($_POST["RATING_VOTE_TEMPLATE"], Array('like', 'like_graphic', 'standart', 'standart_text'))? $_POST["RATING_VOTE_TEMPLATE"] : ($sRatingVoteType == 'like'?'like': 'standart');
-$sRatingTextLikeY = isset($_POST["RATING_TEXT_LIKE_Y"]) ? $_POST["RATING_TEXT_LIKE_Y"] : GetMessage('RATING_SETTINGS_FRM_BUTTON_LIKE_Y_DEFAULT');
-$sRatingTextLikeN = isset($_POST["RATING_TEXT_LIKE_N"]) ? $_POST["RATING_TEXT_LIKE_N"] : GetMessage('RATING_SETTINGS_FRM_BUTTON_LIKE_N_DEFAULT');
-$sRatingTextLikeD = isset($_POST["RATING_TEXT_LIKE_D"]) ? $_POST["RATING_TEXT_LIKE_D"] : GetMessage('RATING_SETTINGS_FRM_BUTTON_LIKE_D_DEFAULT');
+$dbSites = CSite::GetList(($b = ""), ($o = ""), Array("ACTIVE" => "Y"));
+$arSites = array();
+$aSubTabs = array();
+while ($site = $dbSites->Fetch())
+{
+	$site["ID"] = htmlspecialcharsbx($site["ID"]);
+	$site["NAME"] = htmlspecialcharsbx($site["NAME"]);
+	$arSites[] = $site;
+	$aSubTabs[] = array("DIV" => "opt_site_".$site["ID"], "TAB" => "(".$site["ID"].") ".$site["NAME"], 'TITLE' => '');
+}
+foreach ($arSites as $site)
+{
+	$arRatingVoteShow[$site['ID']] = isset($_POST["RATING_VOTE_SHOW"][$site['ID']]) && $_POST["RATING_VOTE_SHOW"][$site['ID']] == 'Y' ? 'Y' : 'N';
+	$arRatingVoteType[$site['ID']] = isset($_POST["RATING_VOTE_TYPE"][$site['ID']]) && $_POST["RATING_VOTE_TYPE"][$site['ID']] == 'like' ? 'like' : 'standart';
+	$arRatingVoteTemplate[$site['ID']] = isset($_POST["RATING_VOTE_TEMPLATE"][$site['ID']]) && in_array($_POST["RATING_VOTE_TEMPLATE"][$site['ID']], Array('like', 'like_graphic', 'standart', 'standart_text'))? $_POST["RATING_VOTE_TEMPLATE"][$site['ID']] : ($arRatingVoteType == 'like'?'like': 'standart');
+	$arRatingTextLikeY[$site['ID']] = isset($_POST["RATING_TEXT_LIKE_Y"][$site['ID']]) ? $_POST["RATING_TEXT_LIKE_Y"][$site['ID']] : GetMessage('RATING_SETTINGS_FRM_BUTTON_LIKE_Y_DEFAULT');
+	$arRatingTextLikeN[$site['ID']] = isset($_POST["RATING_TEXT_LIKE_N"][$site['ID']]) ? $_POST["RATING_TEXT_LIKE_N"][$site['ID']] : GetMessage('RATING_SETTINGS_FRM_BUTTON_LIKE_N_DEFAULT');
+	$arRatingTextLikeD[$site['ID']] = isset($_POST["RATING_TEXT_LIKE_D"][$site['ID']]) ? $_POST["RATING_TEXT_LIKE_D"][$site['ID']] : GetMessage('RATING_SETTINGS_FRM_BUTTON_LIKE_D_DEFAULT');
+}
 
 if (isset($_POST["RATING_ASSIGN_RATING_GROUP"]))
 	$ratingAssignRatingGroup = intval($_POST["RATING_ASSIGN_RATING_GROUP"]);
@@ -111,16 +124,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $_POST['save']<>"" && check_bitrix_s
 
 	COption::SetOptionString("main", "rating_start_authority", $ratingStartValue);
 
-	COption::SetOptionString("main", "rating_vote_show", $sRatingVoteShow);
-	COption::SetOptionString("main", "rating_vote_template", $sRatingVoteTemplate);
-	COption::SetOptionString("main", "rating_vote_type", $sRatingVoteType);
-	if ($sRatingVoteType == 'like')
+	foreach ($arSites as $site)
 	{
-		COption::SetOptionString("main", "rating_text_like_y", $sRatingTextLikeY);
-		COption::SetOptionString("main", "rating_text_like_n", $sRatingTextLikeN);
-		COption::SetOptionString("main", "rating_text_like_d", $sRatingTextLikeD);
+		COption::SetOptionString("main", "rating_vote_show", $arRatingVoteShow[$site['ID']], false, $site['ID']);
+		COption::SetOptionString("main", "rating_vote_template", $arRatingVoteTemplate[$site['ID']], false, $site['ID']);
+		COption::SetOptionString("main", "rating_vote_type", $arRatingVoteType[$site['ID']], false, $site['ID']);
+		if ($arRatingVoteType[$site['ID']] == 'like')
+		{
+			COption::SetOptionString("main", "rating_text_like_y", $arRatingTextLikeY[$site['ID']], false, $site['ID']);
+			COption::SetOptionString("main", "rating_text_like_n", $arRatingTextLikeN[$site['ID']], false, $site['ID']);
+			COption::SetOptionString("main", "rating_text_like_d", $arRatingTextLikeD[$site['ID']], false, $site['ID']);
+		}
 	}
-
 	CRatings::SetAuthorityRating($ratingId);
 	CRatings::SetVoteGroup($_POST['RATING_VOTE_GROUP_ID'], 'R');
 	CRatings::SetVoteGroup($_POST['RATING_VOTE_AUTHORITY_GROUP_ID'], 'A');
@@ -152,9 +167,6 @@ if(!$bTypeChange)
 {
 	$ratingId = CRatings::GetAuthorityRating();
 	$sRatingWeightType = COption::GetOptionString("main", "rating_weight_type", "auto");
-	$sRatingVoteShow = COption::GetOptionString("main", "rating_vote_show", "N");
-	$sRatingVoteType = COption::GetOptionString("main", "rating_vote_type", "standart");
-	$sRatingVoteTemplate = COption::GetOptionString("main", "rating_vote_template", $sRatingVoteType == 'like'?'like': 'standart');
 	if ($sRatingWeightType == 'auto')
 	{
 		$sRatingNormalizationType = COption::GetOptionString("main", "rating_normalization_type", "auto");
@@ -174,9 +186,15 @@ if(!$bTypeChange)
 	$sRatingAssignType = COption::GetOptionString("main", "rating_assign_type", 'manual');
 	$sRatingSelfVote = COption::GetOptionString("main", "rating_self_vote", 'N');
 
-	$sRatingTextLikeY = COption::GetOptionString("main", "rating_text_like_y", GetMessage("RATING_SETTINGS_FRM_BUTTON_LIKE_Y_DEFAULT"));
-	$sRatingTextLikeN = COption::GetOptionString("main", "rating_text_like_n", GetMessage("RATING_SETTINGS_FRM_BUTTON_LIKE_N_DEFAULT"));
-	$sRatingTextLikeD = COption::GetOptionString("main", "rating_text_like_d", GetMessage("RATING_SETTINGS_FRM_BUTTON_LIKE_D_DEFAULT"));
+	foreach ($arSites as $site)
+	{
+		$arRatingVoteShow[$site['ID']] = COption::GetOptionString("main", "rating_vote_show", "N", $site['ID']);
+		$arRatingVoteType[$site['ID']] = COption::GetOptionString("main", "rating_vote_type", "standart", $site['ID']);
+		$arRatingVoteTemplate[$site['ID']] = COption::GetOptionString("main", "rating_vote_template", $arRatingVoteType[$site['ID']] == 'like'?'like': 'standart', $site['ID']);
+		$arRatingTextLikeY[$site['ID']] = COption::GetOptionString("main", "rating_text_like_y", GetMessage("RATING_SETTINGS_FRM_BUTTON_LIKE_Y_DEFAULT"), $site['ID']);
+		$arRatingTextLikeN[$site['ID']] = COption::GetOptionString("main", "rating_text_like_n", GetMessage("RATING_SETTINGS_FRM_BUTTON_LIKE_N_DEFAULT"), $site['ID']);
+		$arRatingTextLikeD[$site['ID']] = COption::GetOptionString("main", "rating_text_like_d", GetMessage("RATING_SETTINGS_FRM_BUTTON_LIKE_D_DEFAULT"), $site['ID']);
+	}
 }
 
 $APPLICATION->SetTitle(GetMessage("MAIN_RATING_SETTINGS"));
@@ -331,43 +349,60 @@ if ($sRatingWeightType == 'manual')
 		<td colspan="2"><?=GetMessage('RATING_SETTINGS_FRM_BUTTON_TYPE')?></td>
 	</tr>
 	<tr>
+		<td colspan="2">
+<?
+$subTabControl = new CAdminViewTabControl("subTabControl", $aSubTabs);
+$subTabControl->Begin();
+foreach ($arSites as $site):
+	$subLang = $site['ID'];
+	$subTabControl->BeginNextTab();
+?>
+	<table>
+	<tr>
 		<td width="50%"><?=GetMessage('RATING_SETTINGS_FRM_RATING_VOTE_SHOW')?>:</td>
 		<td>
-			<?=InputType("radio", 'RATING_VOTE_SHOW', 'Y', $sRatingVoteShow, false, GetMessage('MAIN_YES'));?>
-			<?=InputType("radio", 'RATING_VOTE_SHOW', 'N', $sRatingVoteShow, false, GetMessage('MAIN_NO'));?>
+			<?=InputType("radio", 'RATING_VOTE_SHOW['.$subLang.']', 'Y', $arRatingVoteShow[$subLang], false, GetMessage('MAIN_YES'));?>
+			<?=InputType("radio", 'RATING_VOTE_SHOW['.$subLang.']', 'N', $arRatingVoteShow[$subLang], false, GetMessage('MAIN_NO'));?>
 		</td>
 	</tr>
 	<tr>
 		<td width="50%"><?=GetMessage('RATING_SETTINGS_FRM_RATING_VOTE_TYPE')?>:</td>
 		<td>
-			<?=InputType("radio", 'RATING_VOTE_TYPE', 'like', $sRatingVoteType, false, GetMessage('RATING_SETTINGS_FRM_V_TYPE_LIKE'), "onclick=\"jsVoteTypeChanged('like')\"");?>
-			<?=InputType("radio", 'RATING_VOTE_TYPE', 'standart', $sRatingVoteType, false, GetMessage('RATING_SETTINGS_FRM_V_TYPE_STANDART'), "onclick=\"jsVoteTypeChanged('standart')\"");?>
+			<?=InputType("radio", 'RATING_VOTE_TYPE['.$subLang.']', 'like', $arRatingVoteType[$subLang], false, GetMessage('RATING_SETTINGS_FRM_V_TYPE_LIKE'), "onclick=\"jsVoteTypeChanged('like', '".$subLang."', '".($arRatingVoteTemplate[$subLang] == 'like'? 'like': 'like_graphic')."')\"");?>
+			<?=InputType("radio", 'RATING_VOTE_TYPE['.$subLang.']', 'standart', $arRatingVoteType[$subLang], false, GetMessage('RATING_SETTINGS_FRM_V_TYPE_STANDART'), "onclick=\"jsVoteTypeChanged('standart', '".$subLang."', '".($arRatingVoteTemplate[$subLang] == 'standart'? 'standart': 'standart_text')."')\"");?>
 		</td>
 	</tr>
 	<tr>
 		<td width="50%"><?=GetMessage('RATING_SETTINGS_FRM_RATING_VOTE_TEMPLATE')?>:</td>
 		<td>
-			<div id="rating_vote_type_like">
-			<?=InputType("radio", 'RATING_VOTE_TEMPLATE', 'like', $sRatingVoteTemplate, false, '<span style="display:inline-block;width: 120px;height: 16px"><img src="/bitrix/images/main/rating/'.LANGUAGE_ID.'/like.png" title="'.GetMessage('RATING_SETTINGS_FRM_V_TPL_TEXT').'" style="position: absolute;"/></span>', "", "rating_vote_template_like");?>
-			<?=InputType("radio", 'RATING_VOTE_TEMPLATE', 'like_graphic', $sRatingVoteTemplate, false, '<span style="display:inline-block;width: 118px;height: 16px"><img src="/bitrix/images/main/rating/'.LANGUAGE_ID.'/like_graphic.png" title="'.GetMessage('RATING_SETTINGS_FRM_V_TPL_GRAPHIC').'" style="position: absolute;"/></span>', "", "rating_vote_template_like_graphic");?>
+			<div id="rating_vote_type_like_<?=$subLang?>">
+			<?=InputType("radio", 'RATING_VOTE_TEMPLATE['.$subLang.']', 'like', $arRatingVoteTemplate[$subLang], false, '<span style="display:inline-block;width: 120px;height: 16px"><img src="/bitrix/images/main/rating/'.LANGUAGE_ID.'/like.png" title="'.GetMessage('RATING_SETTINGS_FRM_V_TPL_TEXT').'" style="position: absolute;"/></span>', "", "rating_vote_template_like_".$subLang);?>
+			<?=InputType("radio", 'RATING_VOTE_TEMPLATE['.$subLang.']', 'like_graphic', $arRatingVoteTemplate[$subLang], false, '<span style="display:inline-block;width: 118px;height: 16px"><img src="/bitrix/images/main/rating/'.LANGUAGE_ID.'/like_graphic.png" title="'.GetMessage('RATING_SETTINGS_FRM_V_TPL_GRAPHIC').'" style="position: absolute;"/></span>', "", "rating_vote_template_like_graphic_".$subLang);?>
 			</div>
-			<div id="rating_vote_type_standart">
-			<?=InputType("radio", 'RATING_VOTE_TEMPLATE', 'standart_text', $sRatingVoteTemplate, false, '<span style="display:inline-block;width: 172px;height: 16px"><img src="/bitrix/images/main/rating/'.LANGUAGE_ID.'/standart_text.png" title="'.GetMessage('RATING_SETTINGS_FRM_V_TPL_TEXT').'" style="position: absolute;"/></span>', "", "rating_vote_template_standart_text");?>
-			<?=InputType("radio", 'RATING_VOTE_TEMPLATE', 'standart', $sRatingVoteTemplate, false, '<span style="display:inline-block;width: 80px;height: 16px"><img src="/bitrix/images/main/rating/'.LANGUAGE_ID.'/standart.png" title="'.GetMessage('RATING_SETTINGS_FRM_V_TPL_GRAPHIC').'" style="position: absolute;"/></span>', "", "rating_vote_template_standart");?>
+			<div id="rating_vote_type_standart_<?=$subLang?>">
+			<?=InputType("radio", 'RATING_VOTE_TEMPLATE['.$subLang.']', 'standart_text', $arRatingVoteTemplate[$subLang], false, '<span style="display:inline-block;width: 172px;height: 16px"><img src="/bitrix/images/main/rating/'.LANGUAGE_ID.'/standart_text.png" title="'.GetMessage('RATING_SETTINGS_FRM_V_TPL_TEXT').'" style="position: absolute;"/></span>', "", "rating_vote_template_standart_text_".$subLang);?>
+			<?=InputType("radio", 'RATING_VOTE_TEMPLATE['.$subLang.']', 'standart', $arRatingVoteTemplate[$subLang], false, '<span style="display:inline-block;width: 80px;height: 16px"><img src="/bitrix/images/main/rating/'.LANGUAGE_ID.'/standart.png" title="'.GetMessage('RATING_SETTINGS_FRM_V_TPL_GRAPHIC').'" style="position: absolute;"/></span>', "", "rating_vote_template_standart_".$subLang);?>
 			</div>
 		</td>
 	</tr>
-	<tr id="rating_vote_type_like_text_1">
+	<tr id="rating_vote_type_like_text_1_<?=$subLang?>">
 		<td width="50%"><?=GetMessage('RATING_SETTINGS_FRM_BUTTON_LIKE_Y')?>:</td>
-		<td><input type="text" value="<?=$sRatingTextLikeY?>" name="RATING_TEXT_LIKE_Y"></td>
+		<td><input type="text" value="<?=htmlspecialcharsBx($arRatingTextLikeY[$subLang])?>" name="RATING_TEXT_LIKE_Y[<?=$subLang?>]"></td>
 	</tr>
-	<tr id="rating_vote_type_like_text_2">
+	<tr id="rating_vote_type_like_text_2_<?=$subLang?>">
 		<td width="50%"><?=GetMessage('RATING_SETTINGS_FRM_BUTTON_LIKE_N')?>:</td>
-		<td><input type="text" value="<?=$sRatingTextLikeN?>" name="RATING_TEXT_LIKE_N"></td>
+		<td><input type="text" value="<?=htmlspecialcharsBx($arRatingTextLikeN[$subLang])?>" name="RATING_TEXT_LIKE_N[<?=$subLang?>]"></td>
 	</tr>
-	<tr id="rating_vote_type_like_text_3">
+	<tr id="rating_vote_type_like_text_3_<?=$subLang?>">
 		<td width="50%"><?=GetMessage('RATING_SETTINGS_FRM_BUTTON_LIKE_D')?>:</td>
-		<td><input type="text" value="<?=$sRatingTextLikeD?>" name="RATING_TEXT_LIKE_D"></td>
+		<td><input type="text" value="<?=htmlspecialcharsBx($arRatingTextLikeD[$subLang])?>" name="RATING_TEXT_LIKE_D[<?=$subLang?>]"></td>
+	</tr>
+	</table>
+<?
+endforeach;
+$subTabControl->End();
+?>
+		</td>
 	</tr>
 	<tr id="rating_vote_type_like_text_3">
 		<td colspan="2">
@@ -417,43 +452,35 @@ $editTab->BeginNextTab();
 		$arRatingVoteGroupIdList2["REFERENCE"][] = $arGroup["NAME"];
 		$arRatingVoteGroupIdList2["REFERENCE_ID"][] = $arGroup["ID"];
 	}
+
+	$arRatingVoteGroupID = array();
+	$arRatingVoteAuthorityGroupID = array();
+	$arGroups = CRatings::GetVoteGroupEx();
+	foreach ($arGroups as $group)
+	{
+		if ($group['TYPE'] == 'R')
+			$arRatingVoteGroupID[] = $group["GROUP_ID"];
+		else if ($group['TYPE'] == 'A')
+			$arRatingVoteAuthorityGroupID[] = $group["GROUP_ID"];
+	}
 ?>
 	<tr class="heading">
 		<td colspan="2"><?=GetMessage('RATING_SETTINGS_FRM_RATING')?></td>
 	</tr>
-<?
-$arRatingVoteGroupID = array();
-$rsGroups = CRatings::GetVoteGroup('R');
-while($arGroup = $rsGroups->Fetch())
-	$arRatingVoteGroupID[] = $arGroup["GROUP_ID"];
-
-
-?>
 	<tr>
 		<td width="50%" valign="top"><?=GetMessage('RATING_SETTINGS_FRM_RATING_VOTE_GROUP_ID')?>:</td>
 		<td><?=SelectBoxMFromArray("RATING_VOTE_GROUP_ID[]", $arRatingVoteGroupIdList, $arRatingVoteGroupID, "", true, 5);?></td>
 	</tr>
-		<tr id="rating_settings_auto_assign_1_1">
-			<td width="50%"><?=GetMessage('RATING_SETTINGS_FRM_AUTO_ASSIGN')?>:</td>
-			<td><?=SelectBoxFromArray("RATING_ASSIGN_RATING_GROUP", $arRatingVoteGroupIdList2, $ratingAssignRatingGroup);?></td>
-		</tr>
-		<tr id="rating_settings_auto_assign_1_2">
-			<td width="50%"></td>
-			<td>
-				<?=(COption::GetOptionString("main", "rating_weight_type", "auto") == "auto"? GetMessage('RATING_SETTINGS_FRM_ASSIGN_VOTE_1') : GetMessage('RATING_SETTINGS_FRM_ASSIGN_AUTHORITY'))?>: <input name="RATING_ASSIGN_RATING_GROUP_ADD" value="<?=$ratingAssignRatingGroupAdd?>" style="width:45px;" type="text"><br> <?=GetMessage('RATING_SETTINGS_FRM_ASSIGN_VOTE_2')?>: <input name="RATING_ASSIGN_RATING_GROUP_DELETE" value="<?=$ratingAssignRatingGroupDelete?>" style="width:45px;" type="text">
-			</td>
-		</tr>
-
-	<?
-
-
-
-
-$arRatingVoteAuthorityGroupID = array();
-$rsGroups = CRatings::GetVoteGroup('A');
-while($arGroup = $rsGroups -> Fetch())
-	$arRatingVoteAuthorityGroupID[] = $arGroup["GROUP_ID"];
-?>
+	<tr id="rating_settings_auto_assign_1_1">
+		<td width="50%"><?=GetMessage('RATING_SETTINGS_FRM_AUTO_ASSIGN')?>:</td>
+		<td><?=SelectBoxFromArray("RATING_ASSIGN_RATING_GROUP", $arRatingVoteGroupIdList2, $ratingAssignRatingGroup);?></td>
+	</tr>
+	<tr id="rating_settings_auto_assign_1_2">
+		<td width="50%"></td>
+		<td>
+			<?=(COption::GetOptionString("main", "rating_weight_type", "auto") == "auto"? GetMessage('RATING_SETTINGS_FRM_ASSIGN_VOTE_1') : GetMessage('RATING_SETTINGS_FRM_ASSIGN_AUTHORITY'))?>: <input name="RATING_ASSIGN_RATING_GROUP_ADD" value="<?=$ratingAssignRatingGroupAdd?>" style="width:45px;" type="text"><br> <?=GetMessage('RATING_SETTINGS_FRM_ASSIGN_VOTE_2')?>: <input name="RATING_ASSIGN_RATING_GROUP_DELETE" value="<?=$ratingAssignRatingGroupDelete?>" style="width:45px;" type="text">
+		</td>
+	</tr>
 	<tr class="heading">
 		<td colspan="2"><?=GetMessage('RATING_SETTINGS_FRM_AUTHORITY')?></td>
 	</tr>
@@ -509,7 +536,10 @@ $editTab->End();
 ?>
 </form>
 <script type="text/javascript">
-jsVoteTypeChanged('<?=$sRatingVoteType?>');
+<?foreach ($arSites as $site):
+	$subLang = $site['ID'];?>
+	jsVoteTypeChanged('<?=$arRatingVoteType[$subLang]?>', '<?=$subLang?>', '<?=$arRatingVoteTemplate[$subLang]?>');
+<?endforeach;?>
 <?if($sRatingAssignType=="manual"):?>
 	jsAutoAssign('hide');
 <?endif;?>
@@ -654,31 +684,25 @@ jsVoteTypeChanged('<?=$sRatingVoteType?>');
 			BX('rating_settings_auto_assign_2_2').style.display="none";
 		}
 	}
-	function jsVoteTypeChanged(type)
+	function jsVoteTypeChanged(type, lang, template)
 	{
 		if (type == 'like')
 		{
-			BX('rating_vote_type_like').style.display="block";
-			BX('rating_vote_type_standart').style.display="none";
-			BX('rating_vote_type_like_text_1').style.display="table-row";
-			BX('rating_vote_type_like_text_2').style.display="table-row";
-			BX('rating_vote_type_like_text_3').style.display="table-row";
-			if ('<?=$sRatingVoteType?>' == 'like')
-				BX('rating_vote_template_<?=$sRatingVoteTemplate?>').checked = true;
-			else
-				BX('rating_vote_template_like').checked = true;
+			BX('rating_vote_type_like_'+lang).style.display="block";
+			BX('rating_vote_type_standart_'+lang).style.display="none";
+			BX('rating_vote_type_like_text_1_'+lang).style.display="table-row";
+			BX('rating_vote_type_like_text_2_'+lang).style.display="table-row";
+			BX('rating_vote_type_like_text_3_'+lang).style.display="table-row";
+			BX('rating_vote_template_'+template+'_'+lang).checked = true;
 		}
 		else
 		{
-			BX('rating_vote_type_like').style.display="none";
-			BX('rating_vote_type_standart').style.display="block";
-			BX('rating_vote_type_like_text_1').style.display="none";
-			BX('rating_vote_type_like_text_2').style.display="none";
-			BX('rating_vote_type_like_text_3').style.display="none";
-			if ('<?=$sRatingVoteType?>' == 'standart')
-				BX('rating_vote_template_<?=$sRatingVoteTemplate?>').checked = true;
-			else
-				BX('rating_vote_template_standart_text').checked = true;
+			BX('rating_vote_type_like_'+lang).style.display="none";
+			BX('rating_vote_type_standart_'+lang).style.display="block";
+			BX('rating_vote_type_like_text_1_'+lang).style.display="none";
+			BX('rating_vote_type_like_text_2_'+lang).style.display="none";
+			BX('rating_vote_type_like_text_3_'+lang).style.display="none";
+			BX('rating_vote_template_'+template+'_'+lang).checked = true;
 		}
 	}
 	function jsNormType(flag)

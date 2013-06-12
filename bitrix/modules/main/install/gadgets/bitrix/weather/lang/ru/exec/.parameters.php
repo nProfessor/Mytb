@@ -22,9 +22,9 @@ if($ob->result)
 	$node = $xml->SelectNodes('/info/region');
 	if(is_object($node))
 	{
-		$id = $node->getAttribute("id");
-		if($id > 0)
-			$defCity = "c".$id;
+		$attrId = $node->getAttribute("id");
+		if($attrId > 0)
+			$defCity = "c".$attrId;
 	}
 }
 
@@ -33,28 +33,26 @@ include(dirname(__FILE__).'/city.php');
 asort($arCity);
 
 $arParameters = Array(
-		"PARAMETERS"=> Array(
-			"CACHE_TIME" => array(
-				"NAME" => "Время кеширования, сек (0-не кешировать)",
-				"TYPE" => "STRING",
-				"DEFAULT" => "3600"
-				),
-			"SHOW_URL" => Array(
-					"NAME" => "Показывать ссылку на подробную информацию",
-					"TYPE" => "CHECKBOX",
-					"MULTIPLE" => "N",
-					"DEFAULT" => "N",
-				),
-		),
-		"USER_PARAMETERS"=> Array(
-			"CITY"=>Array(
-				"NAME" => "Город",
-				"TYPE" => "LIST",
-				"MULTIPLE" => "N",
-				"DEFAULT" => $defCity,
-				"VALUES"=>$arCity,
+	"PARAMETERS"=> Array(
+		"CACHE_TIME" => array(
+			"NAME" => "Время кеширования, сек (0-не кешировать)",
+			"TYPE" => "STRING",
+			"DEFAULT" => "3600"
 			),
+		"SHOW_URL" => Array(
+				"NAME" => "Показывать ссылку на подробную информацию",
+				"TYPE" => "CHECKBOX",
+				"MULTIPLE" => "N",
+				"DEFAULT" => "N",
+			),
+	),
+	"USER_PARAMETERS"=> Array(
+		"CITY"=>Array(
+			"NAME" => "Город",
+			"TYPE" => "LIST",
+			"MULTIPLE" => "N",
+			"DEFAULT" => $defCity,
+			"VALUES"=>$arCity,
 		),
-	);
-
-?>
+	),
+);

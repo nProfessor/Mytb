@@ -110,7 +110,7 @@ if(
 					"ACTIVE" => "Y",
 					"PROPERTY_TYPE" => "N",
 					"MULTIPLE" => "N",
-					"NAME" => "vote_count",
+					"NAME" => GetMessage("CC_BIV_VOTE_COUNT"),
 					"CODE" => "vote_count",
 				));
 				if($res)
@@ -123,7 +123,7 @@ if(
 					"ACTIVE" => "Y",
 					"PROPERTY_TYPE" => "N",
 					"MULTIPLE" => "N",
-					"NAME" => "vote_sum",
+					"NAME" => GetMessage("CC_BIV_VOTE_SUM"),
 					"CODE" => "vote_sum",
 				));
 				if($res)
@@ -136,7 +136,7 @@ if(
 					"ACTIVE" => "Y",
 					"PROPERTY_TYPE" => "N",
 					"MULTIPLE" => "N",
-					"NAME" => "rating",
+					"NAME" => GetMessage("CC_BIV_VOTE_RATING"),
 					"CODE" => "rating",
 				));
 				if($res)

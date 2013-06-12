@@ -40,14 +40,14 @@ $MESS ['USER_IMPORT_1C_USER_EMAIL'] = "E-mail";
 $MESS ['USER_IMPORT_CSV_NOT_FOUND'] = "Data file was not found.";
 $MESS ['USER_IMPORT_GROUP_PERM_NAME'] = "Import users from 1C";
 $MESS ['USER_IMPORT_1C_HELP'] = "Importing of users from 1C: Human Resources can be performed in two steps:<br />
-1. Bitrix Intranet settings<br />
+1. Bitrix24 settings<br />
 2. Import from 1C: Human Resources
 <br /><br />
-Bitrix Intranet settings can be managed at the <a target=\"_blank\" href=\"/bitrix/admin/settings.php?mid=intranet&lang=en&back_url_settings=&tabControl_active_tab=edit2\">Intranet module settings page</a>.
+Bitri24 settings can be managed at the <a target=\"_blank\" href=\"/bitrix/admin/settings.php?mid=intranet&lang=en&back_url_settings=&tabControl_active_tab=edit2\">Intranet module settings page</a>.
 <br /><br />
 Pay attention to the correct choice of the user groups that will be allowed to perform user importing from 1C: Human Resources. Choose correct site to link users after importing.
 <br /><br />
-You can continue with importing users from 1C: Human Resources after saving the settings in Bitrix Intranet.
+You can continue with importing users from 1C: Human Resources after saving the settings in Bitrix24.
 Please read the Administrator's Guide for more information on user importing. ";
 $MESS ['USER_IMPORT_ATTACH_TO_IBLOCK'] = "Bind users to information block sections";
 $MESS ['USER_IMPORT_SELECT_IBLOCK'] = "select information block";

@@ -14,14 +14,14 @@
 .google {background-position:0px -112px;}
 .odnoklassniki {background-position:0px -208px;}
 
-.bx-ss-button {display:inline-block; background-image:url('icons.png'); width:87px; height:21px; background-repeat:no-repeat; vertical-align:middle;}
-.liveid-button {background-position:0px -334px;}
-.facebook-button {background-position:0px -224px;}
-.twitter-button {background-position:0px -290px;}
-.vkontakte-button {background-position:0px -268px;}
-.mymailru-button {background-position:0px -246px;}
-.google-button {background-position:0px -312px;}
-.odnoklassniki-button {background-position:0px -356px;}
+.bx-ss-button {display:inline-block; background-image:url('icons.png') !important; width:87px !important; height:21px !important; background-repeat:no-repeat; vertical-align:middle !important;}
+.liveid-button {background-position:0px -334px !important;}
+.facebook-button {background-position:0px -224px !important;}
+.twitter-button {background-position:0px -290px !important;}
+.vkontakte-button {background-position:0px -268px !important;}
+.mymailru-button {background-position:0px -246px !important;}
+.google-button {background-position:0px -312px !important;}
+.odnoklassniki-button {background-position:0px -356px !important;}
 
 td.to_twitter {text-align:center !important;}
 div.bx-auth {max-width:600px; margin-top:12px; margin-bottom:10px;}
@@ -59,7 +59,6 @@ div.bx-sonet-profile-field-socserv {line-height: 15px !important;}
 
 div.bx-auth-form {width: 510px !important;}
 
-textarea.ss-text-for-message {width: 300px; height: 110px;}
 textarea.ss-text-for-message-default {width: 300px; height: 130px; color:grey;  font-weight:lighter;}
 td.bx-ss-soc-serv { font: bold 12px/15px "Helvetica Neue",Helvetica,Arial,sans-serif; }
 td.bx-ss-soc-serv i{ vertical-align:-35%;}
@@ -67,3 +66,6 @@ td.bx-ss-soc-serv i{ vertical-align:-35%;}
 div.bx-taimen-socserv-div {padding-bottom: 9px; padding-left: 50px; }
 a.ss-socserv-setup-link {padding-left: 10px; color: grey !important; text-decoration:underline; }
 .ss-text-without-border {padding-left:5px; border: none; background: #F8FAFB; color: #6286bb; font-style:italic; }
+
+td.bx-ss-soc-serv-setup {white-space: pre-line; width: 300px; font-size: 75%;}
+a.bx-ss-soc-serv-setup-link{text-decoration:underline !important;}

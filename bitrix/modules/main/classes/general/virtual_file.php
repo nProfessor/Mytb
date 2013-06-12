@@ -70,6 +70,9 @@ abstract class CBXVirtualDirectory
 		return true;
 	}
 
+	/**
+	 * @return CBXVirtualDirectoryFileSystem[] | CBXVirtualFileFileSystem[]
+	 */
 	public abstract function GetChildren();
 	public abstract function Create();
 }

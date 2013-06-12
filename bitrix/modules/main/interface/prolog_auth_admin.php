@@ -79,8 +79,8 @@ CJSCore::Init(array('admin_login'));
 <html<?=$direction?>>
 <head>
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="initial-scale=1.0, width=device-width">
 <?$APPLICATION->ShowHead();?>
-<script type="text/javascript">BX.browser.addGlobalClass()</script>
 <title><?echo COption::GetOptionString("main","site_name", $_SERVER["SERVER_NAME"])?> - <?echo htmlspecialcharsex($APPLICATION->GetTitle(false, true))?></title>
 </head>
 <body id="bx-admin-prefix">
@@ -91,20 +91,4 @@ CJSCore::Init(array('admin_login'));
 <div id="bx-panel-error">
 <?echo GetMessage("admin_panel_browser")?>
 </div><![endif]-->
-	<div style="height: 100%; width: 100%; position: absolute; z-index: 996;" id="login_wrapper" class="login-global-wrap">
-		<div class="login-header-footer-wrap">
-			<div class="login-header">
-				<a href="/" class="login-logo">
-					<span class="login-logo-img"></span><span class="login-logo-text"><?=$_SERVER["SERVER_NAME"]?></span>
-				</a>
-				<div class="login-language-btn-wrap"><div class="login-language-btn" id="login_lang_button"><?=$arLangButton['TEXT']?></div></div>
-			</div>
-
-			<div class="login-footer">
-				<div class="login-footer-left"><?=$sCopyright?></div>
-				<?=$sLinks?>
-			</div>
-		</div>
-		<div class="login-page login-main-wrapper">
-
-
+	<div id="login_wrapper" class="login-page login-page-bg login-main-wrapper">

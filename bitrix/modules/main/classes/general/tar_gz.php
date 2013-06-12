@@ -4,10 +4,10 @@ IncludeModuleLangFile($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/classes/g
 include_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/classes/general/archive.php");
 
 if (!defined("BX_DIR_PERMISSIONS"))
-	define("BX_DIR_PERMISSIONS", 0755);
+	define("BX_DIR_PERMISSIONS", 0700);
 
 if (!defined("BX_FILE_PERMISSIONS"))
-	define("BX_FILE_PERMISSIONS", 0644);
+	define("BX_FILE_PERMISSIONS", 0600);
 
 class CArchiver implements IBXArchive
 {
@@ -77,7 +77,7 @@ class CArchiver implements IBXArchive
 
 	/**
 	* Packs files and folders into archive
-	* @param array $arFileList containing files and folders to be packed into archive 
+	* @param array $arFileList containing files and folders to be packed into archive
 	* @param string $startFile - if specified then all files before it won't be packed during the traversing of $arFileList. Can be used for multi-step archivation
 	* @return mixed false or 0 if error, 1 if success, 2 if the next step should be performed. Errors can be seen using GetErrors() method
 	*/
@@ -221,7 +221,7 @@ class CArchiver implements IBXArchive
 		{
 			$strFilename = $arFileList[$j];
 
-			if ($strFilename == $this->_strArchiveName)
+			if ($this->_normalizePath($strFilename) == $this->_normalizePath($this->_strArchiveName))
 				continue;
 
 			if (strlen($strFilename)<=0)
@@ -341,7 +341,7 @@ class CArchiver implements IBXArchive
 
 		if (array_key_exists("ADD_PATH", $arOptions))
 			$this->add_path = $this->io->GetPhysicalName(str_replace("\\", "/", strval($arOptions["ADD_PATH"])));
-			
+
 		if (array_key_exists("REMOVE_PATH", $arOptions))
 			$this->remove_path = $this->io->GetPhysicalName(str_replace("\\", "/", strval($arOptions["REMOVE_PATH"])));
 
@@ -380,7 +380,7 @@ class CArchiver implements IBXArchive
 
 	/**
 	* Archives files and folders
-	* @param array $arFileList containing files and folders to be packed into archive 
+	* @param array $arFileList containing files and folders to be packed into archive
 	* @param string $strAddPath - if specified contains path to add to each packed file/folder
 	* @param string $strRemovePath - if specified contains path to remove from each packed file/folder
 	* @return mixed 0 or false if error, array with the list of packed files and folders if success. Errors can be seen using GetErrors() method
@@ -567,7 +567,8 @@ class CArchiver implements IBXArchive
 		if (!is_array($arFileList) || count($arFileList)<=0)
 			return true;
 
-		for ($j = 0; ($j<count($arFileList)) && ($v_result); $j++)
+		$fileListCount = count($arFileList);
+		for ($j = 0; ($j<$fileListCount) && ($v_result); $j++)
 		{
 
 			$strFilename = $arFileList[$j];
@@ -667,7 +668,7 @@ class CArchiver implements IBXArchive
 			}
 
 			$istime = ((getmicrotime() - $this->start_time) < round($this->max_exec_time)) || !$this->stepped;
-			
+
 			if ($istime)
 			{
 
@@ -715,7 +716,7 @@ class CArchiver implements IBXArchive
 
 	/**
 	* Returns the position of the file for the next step
-	* @return 
+	* @return
 	*/
 	public function getFilePos()
 	{
@@ -817,8 +818,8 @@ class CArchiver implements IBXArchive
 			{
 				// ----- By default no unzip if the file is not found
 				$v_extract_file = false;
-
-				for ($i = 0; $i < count($p_file_list); $i++)
+				$l = count($p_file_list);
+				for ($i = 0; $i < $l; $i++)
 				{
 					// ----- Look if it is a directory
 					if (substr($p_file_list[$i], -1) == '/')
@@ -889,10 +890,12 @@ class CArchiver implements IBXArchive
 
 				if ($v_extract_file)
 				{
+					$logicalFilename = $this->io->GetLogicalName($v_header['filename']);
+
 					if ((HasScriptExtension($v_header['filename'])
 						|| IsFileUnsafe($v_header['filename'])
-						|| !$this->io->ValidatePathString($v_header['filename'])
-						|| !$this->io->ValidateFilenameString(GetFileName($v_header['filename'])))
+						|| !$this->io->ValidatePathString($logicalFilename)
+						|| !$this->io->ValidateFilenameString(GetFileName($logicalFilename)))
 						&& $this->CheckBXPermissions == true)
 					{
 						$this->_jumpBlock(ceil(($v_header['size']/512)));

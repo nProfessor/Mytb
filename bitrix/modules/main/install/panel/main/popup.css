@@ -33,7 +33,7 @@
 }
 
 
-.bx-core-adm-dialog a { color:#2675d7; text-decoration: underline; background: none; font-size: inherit;}
+.bx-core-adm-dialog a { color:#2675d7; text-decoration: underline; font-size: inherit;}
 .bx-core-adm-dialog a:hover {color:#2675d7; text-decoration:underline; background: none; font-size: inherit;}
 
 .bx-core-adm-dialog select, .bx-core-adm-dialog input, .bx-core-adm-dialog textarea {outline:none; font-size:13px;}
@@ -70,7 +70,7 @@
 	-webkit-box-shadow: 0 1px 0 0 #e5e5e5, 0 -1px 0 0 #ecf1f3 inset, inset 0 1px 0 0 #fff, inset 0 0 0 1px #e9f0f2;
 	box-shadow: 0 1px 0 0 #e5e5e5, 0 -1px 0 0 #ecf1f3 inset, inset 0 1px 0 0 #fff, inset 0 0 0 1px #e9f0f2;
 	border-radius:4px 4px 0 0;
-	height: 52px;
+	height: 49px;
 	top: 0;
 	left: 0;
 	position: absolute;
@@ -81,7 +81,7 @@
 .bx-core-adm-dialog .bx-core-adm-dialog-head-inner {
 	display: inline-block;
 	margin: 12px 0 0 18px;
-	font-size: 22px;
+	font-size: 20px;
 	text-shadow:0 1px #fff;
 	white-space: nowrap;
 	color: #282a2c;
@@ -115,7 +115,7 @@
 .bx-core-adm-dialog .bx-core-adm-dialog-content-wrap
 {
 	margin-top: 54px;
-	padding: 16px 12px 14px;
+	padding: 12px 12px 14px;
 }
 
 .bx-core-adm-dialog .bx-core-adm-dialog-tabs {
@@ -124,7 +124,7 @@
 .bx-core-adm-dialog .bx-core-adm-dialog-tabs .adm-detail-tab {
 	display: inline-block !important;
 	cursor: pointer !important;
-	background: url("images/bx-admin-sprite-small.png") repeat-x scroll 0 -2728px transparent !important;
+	background: url("images/bx-admin-sprite-small-1.png") repeat-x scroll 0 -2728px transparent !important;
 	border-radius: 2px 2px 0 0 !important;
 	border: none !important;
 	color: #1C53A2 !important;
@@ -148,7 +148,7 @@
 	margin: 0 7px -2px 0 !important;
 	padding: 9px 24px 11px !important;
 	border-bottom:none !important;
-	height: auto !important !important;
+	height: auto !important;
 }
 
 .bx-core-adm-dialog .bx-core-adm-dialog-tabs .adm-detail-tab-active:first-child:before
@@ -165,12 +165,12 @@
 
 .bx-core-adm-admin-dialog .bx-core-adm-dialog-content
 {
-	padding:17px 22px 22px;
+	padding:15px 22px 22px;
 }
 
 .bx-core-adm-dialog .adm-detail-content-cell-l {
 	text-align:right;
-	padding:8px 4px 10px 0;
+	padding: 5px 4px 7px 0;
 	background: none;
 	text-indent:0;
 	text-transform: none;
@@ -188,7 +188,7 @@
 }
 
 .bx-core-adm-dialog .adm-detail-content-cell-r {
-	padding: 8px 0 10px 4px;
+	padding: 5px 0 7px 4px;
 	background: none;
 	text-indent:0;
 	text-transform: none;
@@ -205,11 +205,18 @@
 	color: inherit;
 }
 
-.bx-core-adm-dialog .adm-detail-content-cell {padding: 8px 4px 10px;}
+.bx-core-adm-dialog .adm-detail-content-cell {padding: 5px 0 7px;}
 
 .bx-core-adm-dialog .adm-detail-valign-top { vertical-align: top; }
 .bx-core-adm-dialog .adm-detail-valign-middle { vertical-align: middle; }
 .bx-core-adm-dialog .adm-detail-valign-bottom { vertical-align: bottom;}
+
+.adm-detail-file-row .adm-detail-content-cell-l { padding-top: 12px; vertical-align: top; }
+.adm-detail-file-image { padding-top: 7px; }
+.adm-detail-file-row .bx-input-file-desc { display:block; margin-top: -7px; }
+
+.adm-detail-iblock-types { width: 150px; }
+.adm-detail-iblock-list { width: 200px; }
 
 .bx-core-adm-dialog .adm-detail-content-table > tbody > .heading td {
 	padding:8px 70px 10px!important;
@@ -452,8 +459,10 @@
 	overflow-x: hidden;
 }
 
-.bx-ie .bx-core-popup-menu-item:hover,
-.bx-ie .bx-core-popup-menu-item-opened
+.bx-ie8 .bx-core-popup-menu-item:hover,
+.bx-ie8 .bx-core-popup-menu-item-opened,
+.bx-ie9 .bx-core-popup-menu-item:hover,
+.bx-ie9 .bx-core-popup-menu-item-opened
 {
 	background-color: #257fc4;
 }
@@ -666,13 +675,13 @@
 
 .bx-popup-label {
 	text-align: right !important;
-	padding: 0 2px 10px 0 !important;
+	padding: 6px 2px 10px 0 !important;
 	vertical-align: top !important;
 	background: transparent;
 	font-size: inherit;
 	color: #000;
 }
-.section td {
+.bx-core-adm-dialog .section td {
 	background-image:none !important;
 	background-color:#E0E8EA !important;
 	color: #4B6267;
@@ -680,7 +689,7 @@
 	font-weight: bold;
 }
 
-.section > td {
+.bx-core-adm-dialog .section > td {
 	padding: 5px 10px;
 }
 

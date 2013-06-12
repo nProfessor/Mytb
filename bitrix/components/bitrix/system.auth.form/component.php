@@ -1,4 +1,22 @@
-<?if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();?><?
+<?php
+/**
+ * Bitrix Framework
+ * @package bitrix
+ * @subpackage main
+ * @copyright 2001-2013 Bitrix
+ */
+
+/**
+ * Bitrix vars
+ * @global CUser $USER
+ * @global CMain $APPLICATION
+ * @param array $arParams
+ * @param array $arResult
+ * @param CBitrixComponent $this
+ */
+
+if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
+
 /*
 Authorization form (for prolog)
 Params:
@@ -122,7 +140,7 @@ if(!$USER->IsAuthorized())
 	else
 		$arResult["CAPTCHA_CODE"] = false;
 }
-else //if(!$USER->IsAuthorized())
+else
 {
 	$arResult["FORM_TYPE"] = "logout";
 
@@ -137,7 +155,7 @@ else //if(!$USER->IsAuthorized())
 	}
 	$arResult = $arRes;
 
-	$arResult["USER_NAME"] = htmlspecialcharsEx($USER->GetFormattedName(false),false);
+	$arResult["USER_NAME"] = htmlspecialcharsEx($USER->GetFormattedName(false, false));
 	$arResult["USER_LOGIN"] = htmlspecialcharsEx($USER->GetLogin());
 
 	$arResult["GET"] = array();
@@ -147,4 +165,3 @@ else //if(!$USER->IsAuthorized())
 }
 
 $this->IncludeComponentTemplate();
-?>

@@ -6,8 +6,7 @@ $MESS["IBLOCK_EL_ADMIN_WCREATE2"] = "Created by";
 $MESS["IBLOCK_EL_ADMIN_VIEW"] = "Preview";
 $MESS["IBLOCK_EL_ADMIN_VIEW_WF"] = "Workflow preview";
 $MESS["IBEL_A_UPDERR1"] = "Cannot update the record because it is locked";
-$MESS["IBEL_A_UPDERR2"] = "Error updating the record: insufficient permissions to move to this status";
-$MESS["IBEL_A_UPDERR3"] = "Error updating the record: access denied";
+$MESS["IBEL_A_UPDERR_ACCESS"] = "Error updating the record ##ID#: access denied.";
 $MESS["IBEL_A_UPDERR"] = "Error updating the record:";
 $MESS["IBEL_A_ACTFROM"] = "Active from";
 $MESS["IBEL_A_ACTTO"] = "Active till";
@@ -95,4 +94,7 @@ $MESS["IBEL_A_ACTIVATE"] = "Activate";
 $MESS["IBEL_DEFAULT_VALUE"] = "default";
 $MESS["IBEL_YES_VALUE"] = "yes";
 $MESS["IBEL_NO_VALUE"] = "no";
+$MESS["IBEL_CATALOG_PURCHASING_PRICE"] = "Purchasing price";
+$MESS["IBEL_CATALOG_BAR_CODE"] = "Bar code";
+$MESS["IBEL_CATALOG_BAR_CODE_MULTI"] = "multiple";
 ?>

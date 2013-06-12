@@ -1,7 +1,7 @@
 <?
 class CIBlockSectionPropertyLink
 {
-	function Add($SECTION_ID, $PROPERTY_ID, $arLink = array())
+	public static function Add($SECTION_ID, $PROPERTY_ID, $arLink = array())
 	{
 		global $DB;
 		$SECTION_ID = intval($SECTION_ID);
@@ -60,7 +60,7 @@ class CIBlockSectionPropertyLink
 		}
 	}
 
-	function Delete($SECTION_ID, $PROPERTY_ID)
+	public static function Delete($SECTION_ID, $PROPERTY_ID)
 	{
 		global $DB;
 		$SECTION_ID = intval($SECTION_ID);
@@ -68,7 +68,7 @@ class CIBlockSectionPropertyLink
 		$DB->Query("DELETE FROM b_iblock_section_property WHERE SECTION_ID = ".$SECTION_ID." AND PROPERTY_ID = ".$PROPERTY_ID);
 	}
 
-	function DeleteByIBlock($IBLOCK_ID)
+	public static function DeleteByIBlock($IBLOCK_ID)
 	{
 		global $DB;
 		$IBLOCK_ID = intval($IBLOCK_ID);
@@ -77,21 +77,21 @@ class CIBlockSectionPropertyLink
 		CIBlock::CleanCache($IBLOCK_ID);
 	}
 
-	function DeleteBySection($SECTION_ID)
+	public static function DeleteBySection($SECTION_ID)
 	{
 		global $DB;
 		$SECTION_ID = intval($SECTION_ID);
 		$DB->Query("DELETE FROM b_iblock_section_property WHERE SECTION_ID = ".$SECTION_ID);
 	}
 
-	function DeleteByProperty($PROPERTY_ID)
+	public static function DeleteByProperty($PROPERTY_ID)
 	{
 		global $DB;
 		$PROPERTY_ID = intval($PROPERTY_ID);
 		$DB->Query("DELETE FROM b_iblock_section_property WHERE PROPERTY_ID = ".$PROPERTY_ID);
 	}
 
-	function HasIBlockLinks($IBLOCK_ID)
+	public static function HasIBlockLinks($IBLOCK_ID)
 	{
 		global $DB;
 		$IBLOCK_ID = intval($IBLOCK_ID);
@@ -113,7 +113,7 @@ class CIBlockSectionPropertyLink
 		return is_array($rs->Fetch());
 	}
 
-	function GetArray($IBLOCK_ID, $SECTION_ID = 0, $bNewSection = false)
+	public static function GetArray($IBLOCK_ID, $SECTION_ID = 0, $bNewSection = false)
 	{
 		global $DB;
 		$IBLOCK_ID = intval($IBLOCK_ID);
@@ -199,7 +199,7 @@ class CIBlockSectionPropertyLink
 		return $result;
 	}
 
-	function _sort($a, $b)
+	public static function _sort($a, $b)
 	{
 		if($a["SORT"] > $b["SORT"])
 			return 1;

@@ -191,7 +191,12 @@ BX.CTimer.prototype.formatValueHandlers = {
 			h = h - 12;
 			mt = 'pm';
 		}
-		else if (h == 12 && (m > 0 || s > 0))
+		else if (h == 0)
+		{
+			h = 12;
+			mt = 'am';
+		}
+		else if (h == 12)
 		{
 			mt = 'pm';
 		}
@@ -231,7 +236,12 @@ BX.CTimer.prototype.formatValueHandlers = {
 			h = h - 12;
 			mt = 'pm';
 		}
-		else if (h == 12 && (m > 0 || s > 0))
+		else if (h == 0)
+		{
+			h = 12;
+			mt = 'am';
+		}
+		else if (h == 12)
 		{
 			mt = 'pm';
 		}

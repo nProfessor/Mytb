@@ -1,7 +1,7 @@
 <?
 $MESS["MAIN_UL_LOGIN"] = "Login";
 $MESS["MAIN_UL_NAME"] = "First Name";
-$MESS["MAIN_UL_SECOND_NAME"] = "Second Name";
+$MESS["MAIN_UL_SECOND_NAME"] = "Middle Name";
 $MESS["MAIN_UL_LAST_NAME"] = "Last Name";
 $MESS["MAIN_UL_EMAIL"] = "E-mail";
 $MESS["MAIN_UL_LAST_LOGIN"] = "Last Logged In";

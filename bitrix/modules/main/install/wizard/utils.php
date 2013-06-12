@@ -27,6 +27,7 @@ if (!function_exists("file_put_contents"))
 			return false;
 
 		fclose($handler);
+		return true;
 	}
 }
 
@@ -132,8 +133,8 @@ class BXInstallServices
 					$path."/".$arWizardDescription["IMAGE"],
 					$_SERVER["DOCUMENT_ROOT"]."/bitrix/tmp/".$ar[1]."/".$ar[2]."/".$arWizardDescription["IMAGE"],
 					true,
-					(defined("BX_DIR_PERMISSIONS") ? (BX_DIR_PERMISSIONS) : 0755),
-					(defined("BX_FILE_PERMISSIONS") ? (BX_FILE_PERMISSIONS) : 0644)
+					(defined("BX_DIR_PERMISSIONS") ? (BX_DIR_PERMISSIONS) : 0700),
+					(defined("BX_FILE_PERMISSIONS") ? (BX_FILE_PERMISSIONS) : 0600)
 				);
 				$arWizardDescription["IMAGE"] = "/bitrix/tmp/".$ar[1]."/".$ar[2]."/".$arWizardDescription["IMAGE"];
 			}
@@ -253,12 +254,12 @@ class BXInstallServices
 		return array_values($arWizardsList);
 	}
 
-	function CopyDirFiles($path_from, $path_to, $rewrite = true, $dirPermission = 0755, $filePermission = 0644)
+	function CopyDirFiles($path_from, $path_to, $rewrite = true, $dirPermission = 0700, $filePermission = 0600)
 	{
 		if (strlen($dirPermission) <= 0)
-			$dirPermission = 0755;
+			$dirPermission = 0700;
 		if (strlen($filePermission) <= 0)
-			$filePermission = 0644;
+			$filePermission = 0600;
 
 		if (strpos($path_to."/", $path_from."/")===0)
 			return false;
@@ -321,19 +322,16 @@ class BXInstallServices
 		if (file_exists($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/classes/oracle/database.php"))
 			$arTypes["oracle"] = function_exists("OCILogon");
 
-		if (file_exists($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/classes/mssql/database.php"))
-			$arTypes["mssql"] = function_exists("odbc_connect");
-
 		if (file_exists($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/classes/mssql/database_ms.php"))
 			$arTypes["mssql_native"] = function_exists("sqlsrv_connect");
 
 		return $arTypes;
 	}
 
-	function CheckDirPath($path, $permission = 0755)
+	function CheckDirPath($path, $permission = 0700)
 	{
 		if ($permission <= 0)
-			$permission = 0755;
+			$permission = 0700;
 
 		$badDirs = Array();
 		$path = str_replace("\\", "/", $path);
@@ -634,15 +632,14 @@ class BXInstallServices
 		//Database check
 		if ($DBType == "mysql")
 		{
-			$mysqlVersion = false;
 			$dbResult = $DB->Query("select VERSION() as ver", true);
 			if ($dbResult && ($arVersion = $dbResult->Fetch()))
 			{
 				$mysqlVersion = trim($arVersion["ver"]);
-				if (!BXInstallServices::VersionCompare($mysqlVersion, "4.1.11"))
+				if (!BXInstallServices::VersionCompare($mysqlVersion, "5.0.0"))
 					BXInstallServices::ShowStepErrors(InstallGetMessage("SC_DB_VERS_MYSQL_ER"));
 
-				$databaseStep->needCodePage = true; //BXInstallServices::VersionCompare($mysqlVersion, "4.1");
+				$databaseStep->needCodePage = true;
 
 				if (!$databaseStep->needCodePage && defined("BX_UTF"))
 					BXInstallServices::ShowStepErrors(InstallGetMessage("INS_CREATE_DB_CHAR_NOTE"));
@@ -923,4 +920,3 @@ class BXInstallServices
 
 
 }
-?>

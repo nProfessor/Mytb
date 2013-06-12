@@ -1,6 +1,6 @@
 <?
-$MESS["GD_PERFMON"] = "Монитор производительности";
-$MESS["GD_PERFMON_NO_RES"] = "Оценка не проводилась. Протести&shy;руйте текущий уровень в #STARTLINK#Панели производитель&shy;ности#ENDLINK# модуля.";
+$MESS["GD_PERFMON"] = "Монитор<br>производительности";
+$MESS["GD_PERFMON_NO_RES"] = "Оценка не проводилась. #STARTLINK#Протести&shy;руйте производитель&shy;ность#ENDLINK#.";
 $MESS["GD_PERFMON_CUR"] = "Текущая<br>оценка";
 $MESS["GD_PERFMON_ON"] = "Установить";
 $MESS["GD_PERFMON_OFF"] = "Выключен";

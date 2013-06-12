@@ -7,7 +7,7 @@
 class CHTMLPagesCache
 {
 /*. void .*/
-	function startCaching()
+	public static function startCaching()
 	{
 		$HTML_PAGES_ROOT = $_SERVER["DOCUMENT_ROOT"].BX_PERSONAL_ROOT."/html_pages";
 		if(
@@ -187,7 +187,7 @@ class CHTMLPagesCache
 
 	//Deletes all above html_pages
 /*. float .*/
-	function deleteRecursive(/*. string .*/$path = "")
+	public static function deleteRecursive(/*. string .*/$path = "")
 	{
 		$base_bir = $_SERVER["DOCUMENT_ROOT"].BX_PERSONAL_ROOT."/html_pages";
 		//Estimate for freed space
@@ -217,7 +217,7 @@ class CHTMLPagesCache
 				if(is_dir($file_path))
 				{
 					$bytes += CHTMLPagesCache::deleteRecursive($path.$file."/");
-					rmdir($file_path);
+					@rmdir($file_path);
 				}
 				elseif(is_file($file_path))
 				{
@@ -230,7 +230,7 @@ class CHTMLPagesCache
 		return doubleval($bytes);
 	}
 
-	function OnEpilog()
+	public static function OnEpilog()
 	{
 		global $USER;
 
@@ -307,7 +307,7 @@ class CHTMLPagesCache
 		}
 	}
 
-	function CleanAll()
+	public static function CleanAll()
 	{
 		$bytes = CHTMLPagesCache::deleteRecursive("/");
 		if($bytes > 0.0 && class_exists("cdiskquota"))
@@ -316,7 +316,7 @@ class CHTMLPagesCache
 		}
 	}
 
-	function writeFile($file_name, $content)
+	public static function writeFile($file_name, $content)
 	{
 		global $USER;
 		if(is_object($USER) && $USER->IsAuthorized())
@@ -362,7 +362,7 @@ class CHTMLPagesCache
 			CheckDirPath($file_name);
 			$written = 0;
 			$tmp_filename = $file_name.md5(mt_rand()).".tmp";
-			$file = fopen($tmp_filename, "wb");
+			$file = @fopen($tmp_filename, "wb");
 			if($file !== false)
 			{
 				$written = fwrite($file, $content);
@@ -404,12 +404,12 @@ class CHTMLPagesCache
 		}
 	}
 
-	function IsOn()
+	public static function IsOn()
 	{
 		return file_exists($_SERVER["DOCUMENT_ROOT"].BX_PERSONAL_ROOT."/html_pages/.enabled");
 	}
 
-	function SetEnabled($status)
+	public static function SetEnabled($status)
 	{
 		$file_name  = $_SERVER["DOCUMENT_ROOT"].BX_PERSONAL_ROOT."/html_pages/.enabled";
 		if($status)
@@ -529,7 +529,7 @@ class CHTMLPagesCache
 		return $arHTMLPagesOptions;
 	}
 
-	function CompileOptions(&$arOptions)
+	public static function CompileOptions(&$arOptions)
 	{
 		$arOptions["~INCLUDE_MASK"] = array();
 		$inc = str_replace(
@@ -570,7 +570,7 @@ class CHTMLPagesCache
 		$arOptions["COOKIE_PASS"]  = $cookie_prefix.'_UIDH';
 	}
 
-	function readStatistic()
+	public static function readStatistic()
 	{
 		$arResult = false;
 		$file_name = $_SERVER["DOCUMENT_ROOT"].BX_PERSONAL_ROOT."/html_pages/.enabled";
@@ -593,7 +593,7 @@ class CHTMLPagesCache
 		return $arResult;
 	}
 
-	function writeStatistic($hit = 0, $miss = 0, $quota = 0, $posts = 0, $files = 0.0)
+	public static function writeStatistic($hit = 0, $miss = 0, $quota = 0, $posts = 0, $files = 0.0)
 	{
 		$file_name = $_SERVER["DOCUMENT_ROOT"].BX_PERSONAL_ROOT."/html_pages/.enabled";
 
@@ -622,7 +622,7 @@ class CHTMLPagesCache
 			fclose($fp);
 	}
 
-	function SetStatus($status)
+	public static function SetStatus($status)
 	{
 		$bCgi = (stristr(php_sapi_name(), "cgi") !== false);
 		$bFastCgi = ($bCgi && (array_key_exists('FCGI_ROLE', $_SERVER) || array_key_exists('FCGI_ROLE', $_ENV)));

@@ -184,7 +184,7 @@ while($arRes = $rsData->NavNext(true, "f_"))
 		$arActions[] = array(
 			"ICON"=>"delete",
 			"TEXT"=>GetMessage("MAIN_ADMIN_MENU_DELETE"),
-			"ACTION"=>"if(confirm('".GetMessage("IBLOCK_TYPE_ADMIN_DEL_CONF")."')) ".$lAdmin->ActionDoGroup($f_ID, "delete"),
+			"ACTION"=>"if(confirm('".GetMessageJS("IBLOCK_TYPE_ADMIN_DEL_CONF")."')) ".$lAdmin->ActionDoGroup($f_ID, "delete"),
 		);
 	}
 	$row->AddActions($arActions);

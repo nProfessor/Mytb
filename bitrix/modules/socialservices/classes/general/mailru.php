@@ -23,7 +23,7 @@ class CSocServMyMailRu extends CSocServAuth
 		$gAuth = new CMailRuOAuthInterface($appID, $appSecret);
 
 		$redirect_uri = CSocServUtil::GetCurUrl('auth_service_id='.self::ID);
-		$state = 'site_id='.SITE_ID.'&backurl='.urlencode($GLOBALS["APPLICATION"]->GetCurPageParam('check_key='.$_SESSION["UNIQUE_KEY"], array("logout", "auth_service_error", "auth_service_id")));
+		$state = 'site_id='.SITE_ID.'&backurl='.($GLOBALS["APPLICATION"]->GetCurPageParam('check_key='.$_SESSION["UNIQUE_KEY"], array("logout", "auth_service_error", "auth_service_id", "backurl")));
 
 		$url = $gAuth->GetAuthUrl($redirect_uri, $state);
 		if($arParams["FOR_INTRANET"])
@@ -87,7 +87,8 @@ class CSocServMyMailRu extends CSocServAuth
 						if ($arPic = CFile::MakeFileArray($arMRUser['0']['pic_190'].'?name=/'.md5($arMRUser['0']['pic_190']).'.jpg'))
 							$arFields["PERSONAL_PHOTO"] = $arPic;
 					$arFields["PERSONAL_WWW"] = $arMRUser['0']['link'];
-
+					if(strlen(SITE_ID) > 0)
+						$arFields["SITE_ID"] = SITE_ID;
 					$bSuccess = $this->AuthorizeUser($arFields);
 				}
 			}
@@ -131,6 +132,7 @@ class CMailRuOAuthInterface
 
 	public function __construct($appID, $appSecret, $code=false)
 	{
+		$this->httpTimeout =10;
 		$this->appID = $appID;
 		$this->appSecret = $appSecret;
 		$this->code = $code;
@@ -150,13 +152,13 @@ class CMailRuOAuthInterface
 		if($this->code === false)
 			return false;
 
-		$result = CHTTP::sPost(self::TOKEN_URL, array(
+		$result = CHTTP::sPostHeader(self::TOKEN_URL, array(
 			"client_id"=>$this->appID,
 			"client_secret"=>$this->appSecret,
 			"code"=>$this->code,
 			"redirect_uri"=>$redirect_uri,
 			"grant_type"=>"authorization_code",
-		));
+		), array(), $this->httpTimeout);
 
 		$arResult = CUtil::JsObjectToPhp($result);
 
@@ -176,7 +178,7 @@ class CMailRuOAuthInterface
 		if($this->access_token === false)
 			return false;
 		$sign=md5("app_id=".$this->appID."method=users.getInfosecure=1session_key=".$this->access_token.$this->appSecret);
-		$result = CHTTP::sGet(self::CONTACTS_URL.'?method=users.getInfo&secure=1&app_id='.$this->appID.'&session_key='.urlencode($this->access_token).'&sig='.$sign);
+		$result = CHTTP::sGetHeader(self::CONTACTS_URL.'?method=users.getInfo&secure=1&app_id='.$this->appID.'&session_key='.urlencode($this->access_token).'&sig='.$sign, array(), $this->httpTimeout);
 		if(!defined("BX_UTF"))
 			$result = CharsetConverter::ConvertCharset($result, "utf-8", LANG_CHARSET);
 

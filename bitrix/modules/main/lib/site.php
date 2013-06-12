@@ -9,18 +9,21 @@ namespace Bitrix\Main;
 
 use Bitrix\Main\Entity;
 
-class SiteEntity extends Entity\Base
+class SiteTable extends Entity\DataManager
 {
-	protected function __construct() {}
-
-	public function initialize()
+	public static function getFilePath()
 	{
-		$this->className = __CLASS__;
-		$this->filePath = __FILE__;
+		return __FILE__;
+	}
 
-		$this->dbTableName = 'b_lang';
+	public static function getTableName()
+	{
+		return 'b_lang';
+	}
 
-		$this->fieldsMap = array(
+	public static function getMap()
+	{
+		return array(
 			'LID' => array(
 				'data_type' => 'string',
 				'primary' => true
@@ -70,8 +73,33 @@ class SiteEntity extends Entity\Base
 			),
 		);
 	}
-}
 
-class Site extends Entity\DataManager
-{
+	public static function getByDomainAndPath($domain, $path)
+	{
+		$connection = Application::getDbConnection();
+		$helper = $connection->getSqlHelper();
+
+		$domainForSql = $helper->forSql($domain, 255);
+		$pathForSql = $helper->forSql($path);
+
+		$sql = "
+			SELECT L.*, L.LID as ID
+			FROM b_lang L
+				LEFT JOIN b_lang_domain LD ON L.LID = LD.LID AND '".$domainForSql."' LIKE CONCAT('%', LD.DOMAIN)
+			WHERE ('".$pathForSql."' LIKE CONCAT(L.DIR, '%') OR LD.LID IS NOT NULL)
+				AND L.ACTIVE = 'Y'
+			ORDER BY
+				IF((L.DOMAIN_LIMITED = 'Y' AND LD.LID IS NOT NULL) OR L.DOMAIN_LIMITED <> 'Y',
+					IF('".$pathForSql."' LIKE CONCAT(L.DIR, '%'), 3, 1),
+					IF('".$pathForSql."' LIKE CONCAT(L.DIR, '%'), 2, 0)
+				) DESC,
+				LENGTH(L.DIR) DESC,
+				L.DOMAIN_LIMITED DESC,
+				SORT,
+				LENGTH(LD.DOMAIN) DESC
+		";
+
+		$siteList = $connection->query($sql);
+		return $siteList->fetch();
+	}
 }

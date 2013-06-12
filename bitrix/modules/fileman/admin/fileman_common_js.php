@@ -57,7 +57,7 @@ if (!isset($_SERVER['HTTP_IF_NONE_MATCH']) || $_SERVER['HTTP_IF_NONE_MATCH'] != 
 		$script_filename = $arr[$i];
 		$script_content = GetFileContent($_SERVER['DOCUMENT_ROOT'].'/bitrix/admin/htmleditor2/'.$script_filename);
 		$script_content = preg_replace("/\t/", '', $script_content);
-		$script_content = preg_replace("/(.*)\/\/.*/", "\$1", $script_content);
+		//$script_content = preg_replace("/(.*)\/\/.*/", "\$1", $script_content);
 		$script_content = preg_replace("/\r\n/", "\n", $script_content);
 
 		echo "\n/*:::: $script_filename ::::*/\n";

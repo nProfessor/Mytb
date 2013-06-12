@@ -252,8 +252,8 @@ if(strlen($strWarning)<=0)
 						$strWarning = $err;
 
 					$bVarsFromForm = true;
-					$path = $io->CombinePath("/", $arParsedPath["PREV"]);
 					$arParsedPath = CFileMan::ParsePath($path, true, false, "", $logical == "Y");
+					$path = $originalPath = $io->CombinePath("/", $arParsedPath["PREV"]);
 					$abs_path = $DOC_ROOT.$path;
 				}
 
@@ -760,6 +760,7 @@ BX.ready(function() {
 							</td>
 						</tr>
 					</table>
+					<br>
 				</td>
 			</tr>
 			<!-- END FILE PROPS -->

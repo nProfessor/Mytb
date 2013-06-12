@@ -21,22 +21,31 @@ class CIBlockPropertyFileMan
 		if($strHTMLControlName["MODE"]=="FORM_FILL" && CModule::IncludeModule('fileman'))
 		{
 			$inputName = array();
+			$description = array();
 			foreach ($arValues as $intPropertyValueID => $arOneValue)
-				$inputName[$strHTMLControlName["VALUE"]."[".$intPropertyValueID."]"] = $arOneValue["VALUE"];
+			{
+				$key = $strHTMLControlName["VALUE"]."[".$intPropertyValueID."]";
+				$inputName[$key."[VALUE]"] = $arOneValue["VALUE"];
+				$description[$key."[DESCRIPTION]"] = $arOneValue["DESCRIPTION"];
+			}
 
-			return CFileInput::ShowMultiple($inputName, $strHTMLControlName["VALUE"]."[n#IND#]", array(
+			return CFileInput::ShowMultiple($inputName, $strHTMLControlName["VALUE"]."[n#IND#][VALUE]", array(
 				"PATH" => "Y",
 				"IMAGE" => "N",
+				"MAX_SIZE" => array(
+					"W" => COption::GetOptionString("iblock", "detail_image_size"),
+					"H" => COption::GetOptionString("iblock", "detail_image_size"),
+				),
 			), false, array(
 				'upload' => false,
 				'medialib' => true,
 				'file_dialog' => true,
 				'cloud' => true,
 				'del' => true,
-				'description' => false,/*($bHasDescription? array(
-					"NAME" => $strHTMLControlName["DESCRIPTION"],
-					"VALUE" => $value["DESCRIPTION"],
-				): false),*/
+				'description' => $arProperty["WITH_DESCRIPTION"]=="Y"? array(
+					"VALUES" => $description,
+					'NAME_TEMPLATE' => $strHTMLControlName["VALUE"]."[n#IND#][DESCRIPTION]",
+				): false,
 			));
 		}
 		else
@@ -54,6 +63,13 @@ class CIBlockPropertyFileMan
 
 				$return .= '</td></tr>';
 			}
+
+			$return .= '<tr><td>';
+			$return .= '<input type="text" name="'.htmlspecialcharsbx($strHTMLControlName["VALUE"]."[n0][VALUE]").'" size="'.$arProperty["COL_COUNT"].'" value="">';
+			if (($arProperty["WITH_DESCRIPTION"]=="Y") && ('' != trim($strHTMLControlName["DESCRIPTION"])))
+				$return .= ' <span title="'.GetMessage("IBLOCK_PROP_FILEMAN_DESCRIPTION_TITLE").'">'.GetMessage("IBLOCK_PROP_FILEMAN_DESCRIPTION_LABEL").':<input name="'.htmlspecialcharsEx($strHTMLControlName["DESCRIPTION"]."[n0][DESCRIPTION]").'" value="" size="18" type="text"></span>';
+			$return .= '</td></tr>';
+
 			$return .= '<tr><td><input type="button" value="'.GetMessage("IBLOCK_PROP_FILEMAN_ADD").'" onClick="addNewRow(\'tb'.$table_id.'\')"></td></tr>';
 			return $return.'</table>';
 		}
@@ -75,21 +91,24 @@ class CIBlockPropertyFileMan
 
 		if($strHTMLControlName["MODE"]=="FORM_FILL" && CModule::IncludeModule('fileman'))
 		{
-			$bHasDescription = ($arProperty["WITH_DESCRIPTION"]=="Y") && ('' != trim($strHTMLControlName["DESCRIPTION"]));
 			return CFileInput::Show($strHTMLControlName["VALUE"], $value["VALUE"],
 				array(
 					"PATH" => "Y",
 					"IMAGE" => "N",
+					"MAX_SIZE" => array(
+						"W" => COption::GetOptionString("iblock", "detail_image_size"),
+						"H" => COption::GetOptionString("iblock", "detail_image_size"),
+					),
 				), array(
 					'upload' => false,
 					'medialib' => true,
 					'file_dialog' => true,
 					'cloud' => true,
 					'del' => true,
-					'description' => false,/*($bHasDescription? array(
-						"NAME" => $strHTMLControlName["DESCRIPTION"],
+					'description' => $arProperty["WITH_DESCRIPTION"]=="Y"? array(
 						"VALUE" => $value["DESCRIPTION"],
-					): false),*/
+						"NAME" => $strHTMLControlName["DESCRIPTION"],
+					): false,
 				)
 			);
 		}

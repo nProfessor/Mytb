@@ -4,7 +4,7 @@ if (window.BlogBFileDialog)
 window.BlogBFileDialogUniqueID = [];
 window.BlogBFileDialog = function(arParams)
 {
-	this.dialogName = 'AttachFileDialog';
+	this.dialogName = 'AttachmentsDialog';
 	this.agent = false;
 	this.uploadFileUrl = arParams.upload_path; // from file.input php
 
@@ -178,7 +178,7 @@ window.BlogBFileDialog.prototype.StopUpload = function(agent, parent)
 	}
 
 	if (this.controller && this.controller.parentNode)
-		BX.onCustomEvent(this.controller.parentNode, 'OnFileUploadRemove', [id]);
+		BX.onCustomEvent(this.controller.parentNode, 'OnFileUploadRemove', [id, this]);
 
 	var data = {
 		fileID : id,

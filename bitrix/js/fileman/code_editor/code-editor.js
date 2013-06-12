@@ -43,9 +43,14 @@
 		};
 
 		if (this.arConfig.forceSyntax && {'php': 1, 'js': 1, 'css': 1, 'sql': 1}[this.arConfig.forceSyntax])
+		{
 			this.syntaxName = this.arConfig.forceSyntax;
+		}
 		else
+		{
 			this.syntaxName = 'php'; // php | js | css | sql
+			this.arConfig.forceSyntax = false;
+		}
 
 		this.InitKeyEngine();
 		this.BuildSceleton();
@@ -164,33 +169,38 @@
 
 		// Autosave handlers
 		var pForm = this.pTA.form;
-		if (pForm && pForm.BXAUTOSAVE)
+		if (pForm)
 		{
-			try{
-				BX.addCustomEvent(this, 'OnAfterActionSelectionChanged', function(){
-					pForm.BXAUTOSAVE.Init();
-				});
-
-				BX.addCustomEvent(pForm, 'onAutoSave', function (ob, data)
+			BX.addCustomEvent(pForm, 'onAutoSavePrepare', function(){
+				if (pForm && pForm.BXAUTOSAVE)
 				{
-					if (_this.highlightMode)
-						_this.Save();
-					data[_this.pTA.name] = _this.GetTAValue();
-				});
+					try{
+						BX.addCustomEvent(this, 'OnAfterActionSelectionChanged', function(){
+							pForm.BXAUTOSAVE.Init();
+						});
 
-				BX.addCustomEvent(pForm, 'onAutoSaveRestore', function (ob, data)
-				{
-					if (_this.highlightMode)
-					{
-						_this.Action(_this.SetValue, _this)(data[_this.pTA.name]);
-					}
-					else
-					{
-						_this.pTA.value = data[_this.pTA.name];
-						_this.CheckLineSelection();
-					}
-				});
-			}catch(e){}
+						BX.addCustomEvent(pForm, 'onAutoSave', function (ob, data)
+						{
+							if (_this.highlightMode)
+								_this.Save();
+							data[_this.pTA.name] = _this.GetTAValue();
+						});
+
+						BX.addCustomEvent(pForm, 'onAutoSaveRestore', function (ob, data)
+						{
+							if (_this.highlightMode)
+							{
+								_this.Action(_this.SetValue, _this)(data[_this.pTA.name]);
+							}
+							else
+							{
+								_this.pTA.value = data[_this.pTA.name];
+								_this.CheckLineSelection();
+							}
+						});
+					}catch(e){}
+				}
+			});
 		}
 	};
 
@@ -792,6 +802,12 @@
 			h = parseInt(h);
 			this.AdjustSceletonSize(w, h);
 			this.UpdateDisplay(true);
+
+			if (BX.browser.IsChrome())
+			{
+				var _this = this;
+				setTimeout(function(){_this.UpdateDisplay(true);}, 300);
+			}
 		},
 
 		HasSelection: (window.getSelection ?
@@ -1015,7 +1031,7 @@
 
 		LoadSyntax: function()
 		{
-			this.oSyntax = Syntaxes[this.syntaxName]();
+			this.oSyntax = Syntaxes[this.syntaxName](!!this.arConfig.forceSyntax);
 			this.oDoc.Iteration(0, this.oDoc.size, function (line){line.statusAfter = null;});
 			this.work = [0];
 			this.StartWorker();
@@ -1080,8 +1096,8 @@
 					if (compare)
 					{
 						var same = hadState && compare(hadState, status);
-						if (same != Pass)
-							done = !!same;
+						//if (same != Pass)
+						done = !!same;
 					}
 
 					if (done == null)
@@ -1294,12 +1310,12 @@
 			return this._cachedHeight;
 		},
 
-
 		UpdateLinesNoUndo: function(from, to, newText, selFrom, selTo)
 		{
 			if (this.suppressEdits)
 				return;
 			var
+				added,
 				_this = this,
 				recomputeMaxLength = false,
 				maxLineLength = this.maxLine.text.length;
@@ -1324,9 +1340,8 @@
 
 			if (from.ch == 0 && to.ch == 0 && newText[newText.length - 1] == "")
 			{
-				var
-					added = [],
-					prevLine = null;
+				added = [];
+				var prevLine = null;
 
 				if (from.line)
 				{
@@ -1357,7 +1372,7 @@
 					lastLine = firstLine.split(to.ch, newText[newText.length - 1]);
 					firstLine.Replace(from.ch, null, newText[0]);
 					firstLine.fixMarkEnds(lastLine);
-					var added = [];
+					added = [];
 					for (var i = 1, e = newText.length - 1; i < e; ++i)
 						added.push(JCLine.inheritMarks(newText[i], firstLine));
 					added.push(lastLine);
@@ -1373,7 +1388,7 @@
 			}
 			else
 			{
-				var added = [];
+				added = [];
 				firstLine.Replace(from.ch, null, newText[0]);
 				lastLine.Replace(null, to.ch, newText[newText.length - 1]);
 				firstLine.fixMarkEnds(lastLine);
@@ -2499,7 +2514,7 @@
 			}
 			catch (e)
 			{
-				if (e != Pass)
+				//if (e != Pass)
 					throw e;
 				return false;
 			}
@@ -2942,8 +2957,8 @@
 			if (how == "smart")
 			{
 				indentation = this.oSyntax.Indent(status, line.text.slice(curSpaceString.length), line.text);
-				if (indentation == Pass)
-					how = "prev";
+				//if (indentation == Pass)
+				//	how = "prev";
 			}
 
 			if (how == "prev")
@@ -4019,7 +4034,8 @@
 				}
 				else if (substr)
 				{
-					if (!changed && (st[pos + 1] != style || (pos && st[pos - 2] != prevWord))) changed = true;
+					if (!changed && (st[pos + 1] != style || (pos && st[pos - 2] != prevWord)))
+						changed = true;
 					st[pos++] = substr;
 					st[pos++] = style;
 					prevWord = curWord;
@@ -4078,7 +4094,8 @@
 				if (!text)
 					return;
 				// Work around a bug where, in some compat syntaxs, IE ignores leading spaces
-				if (first && BX.browser.IsIE() && text.charAt(0) == " ") text = "\u00a0" + text.slice(1);
+				if (first && BX.browser.IsIE() && text.charAt(0) == " ")
+					text = "\u00a0" + text.slice(1);
 				first = false;
 				if (!specials.test(text))
 				{
@@ -6349,7 +6366,7 @@
 			};
 		};
 
-		Syntaxes.php = function ()
+		Syntaxes.php = function(bForceSyntax)
 		{
 			var
 				parserConfig = {},
@@ -6363,6 +6380,14 @@
 				var
 					style,
 					isPHP = status.syntax == "php";
+
+				if (!isPHP && bForceSyntax)
+				{
+					status.curSyntax = syntPhp;
+					status.curState = status.php;
+					//status.curClose = "?>";
+					status.syntax = "php";
+				}
 
 				if (stream.sol() && status.pending != '"')
 					status.pending = null;

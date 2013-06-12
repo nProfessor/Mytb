@@ -660,6 +660,49 @@ BX.date.convertToUTC = function(date)
 	return new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), date.getHours(), date.getMinutes(), date.getSeconds(), date.getMilliseconds()));
 };
 
+/*
+ function creates and returns Javascript Date() object from server timestamp regardless of local browser (system) timezone.
+ For example can be used to convert timestamp from some exact date on server to the JS Date object with the same value.
+
+ params: {
+ timestamp: timestamp in seconds
+ }
+ */
+BX.date.getNewDate = function(timestamp)
+{
+	return new Date(BX.date.getBrowserTimestamp(timestamp));
+};
+
+/*
+ function transforms server timestamp (in sec) to javascript timestamp (calculated depend on local browser timezone offset). Returns timestamp in milliseconds.
+ Also see BX.date.getNewDate description.
+
+ params: {
+ timestamp: timestamp in seconds
+ }
+ */
+BX.date.getBrowserTimestamp = function(timestamp)
+{
+	if (this._browserOffset == undefined)
+		this._browserOffset = new Date().getTimezoneOffset() * 60;
+	return (parseInt(timestamp, 10) + parseInt(BX.message('SERVER_TZ_OFFSET')) + this._browserOffset) * 1000;
+};
+
+/*
+ function transforms local browser timestamp (in ms) to server timestamp (calculated depend on local browser timezone offset). Returns timestamp in seconds.
+
+ params: {
+ timestamp: timestamp in milliseconds
+ }
+ */
+BX.date.getServerTimestamp = function(timestamp)
+{
+	if (this._browserOffset == undefined)
+		this._browserOffset = new Date().getTimezoneOffset() * 60;
+
+	return Math.round(timestamp / 1000 - (parseInt(BX.message('SERVER_TZ_OFFSET'), 10) + parseInt(this._browserOffset, 10)));
+}
+
 /************************************** calendar class **********************************/
 
 var obCalendarSingleton = null;
@@ -707,7 +750,7 @@ BX.calendar.InsertDaysBack = function(input, days)
 			d.setTime(d.valueOf() - days*86400000);
 		}
 
-		input.value = BX.date.format(BX.date.convertBitrixFormat(BX.message('FORMAT_DATE')), d, null, true);
+		input.value = BX.date.format(BX.date.convertBitrixFormat(BX.message('FORMAT_DATE')), d, null);
 	}
 	else
 	{
@@ -1142,13 +1185,13 @@ BX.JCCalendar = function()
 
 	this._check_time = function(params, value, direction)
 	{
-		var h = parseInt(this.PARTS.TIME_INPUT_H.value, 10),
-			m = parseInt(this.PARTS.TIME_INPUT_M.value, 10),
+		var h = parseInt(this.PARTS.TIME_INPUT_H.value.substring(0,5),10)||0,
+			m = parseInt(this.PARTS.TIME_INPUT_M.value.substring(0,5),10)||0,
 			bChanged = false;
 
 		if (!!params && !params.bSaveValue)
 		{
-			this.value.setUTCHours(this.value.getUTCHours() + direction);
+			this.value.setHours(this.value.getHours() + direction);
 		}
 		else if (!isNaN(h))
 		{
@@ -1161,13 +1204,13 @@ BX.JCCalendar = function()
 			}
 
 			bChanged = true;
-			this.value.setUTCHours(h);
+			this.value.setHours(h);
 		}
 
 		if (!isNaN(m))
 		{
 			bChanged = true;
-			this.value.setUTCMinutes(m);
+			this.value.setMinutes(m);
 		}
 
 		if (bChanged)
@@ -1178,7 +1221,7 @@ BX.JCCalendar = function()
 
 	this._set_layer = function()
 	{
-		var layerId = parseInt(this.value.getUTCFullYear() + '' + BX.util.str_pad_left(this.value.getUTCMonth()+'', 2, "0"));
+		var layerId = parseInt(this.value.getFullYear() + '' + BX.util.str_pad_left(this.value.getMonth()+'', 2, "0"));
 
 		if (!this._layers[layerId])
 		{
@@ -1189,7 +1232,7 @@ BX.JCCalendar = function()
 		if (this._current_layer)
 		{
 			var v = new Date(this.value.valueOf());
-			v.setUTCHours(0); v.setUTCMinutes(0);
+			v.setHours(0); v.setMinutes(0);
 
 			var cur_value = BX.findChild(this._layers[layerId], {
 					tag: 'A',
@@ -1282,20 +1325,20 @@ BX.JCCalendar = function()
 		});
 
 		var month_start = new Date(this.value);
-		month_start.setUTCHours(0);
-		month_start.setUTCMinutes(0);
+		month_start.setHours(0);
+		month_start.setMinutes(0);
 
-		month_start.setUTCDate(1);
+		month_start.setDate(1);
 
-		if (month_start.getUTCDay() != this.weekStart)
+		if (month_start.getDay() != this.weekStart)
 		{
-			var d = month_start.getUTCDay() - this.weekStart;
+			var d = month_start.getDay() - this.weekStart;
 			d += d < 0 ? 7 : 0;
 			month_start = new Date(month_start.valueOf()-86400000*d);
 		}
 
-		var cur_month = this.value.getUTCMonth(),
-			cur_day = this.value.getUTCDate(),
+		var cur_month = this.value.getMonth(),
+			cur_day = this.value.getDate(),
 			s = '';
 		for (var i = 0; i < this.numRows; i++)
 		{
@@ -1305,13 +1348,14 @@ BX.JCCalendar = function()
 
 			for (var j = 0; j < 7; j++)
 			{
-				var d = month_start.getUTCDate(),
-					wd = month_start.getUTCDay(),
+				var d = month_start.getDate(),
+					wd = month_start.getDay(),
 					className = 'bx-calendar-cell';
-				if (cur_month != month_start.getUTCMonth())
+				if (cur_month != month_start.getMonth())
 					className += ' bx-calendar-date-hidden';
 				else if (cur_day == d)
 					className += ' bx-calendar-active';
+
 
 				if (wd == 0 || wd == 6)
 					className += ' bx-calendar-weekend';
@@ -1329,23 +1373,23 @@ BX.JCCalendar = function()
 
 	this._prev = function()
 	{
-		this.SetMonth(this.value.getUTCMonth()-1);
+		this.SetMonth(this.value.getMonth()-1);
 	};
 
 	this._next = function()
 	{
-		this.SetMonth(this.value.getUTCMonth()+1);
+		this.SetMonth(this.value.getMonth()+1);
 	};
 
 	this._menu_month_content = function()
 	{
-		var months = '', cur_month = this.value.getUTCMonth(), i;
+		var months = '', cur_month = this.value.getMonth(), i;
 		for (i=0; i<12; i++)
 		{
 			months += '<a href="javascript:void(0)" class="bx-calendar-month'+(i == cur_month ? ' bx-calendar-month-active' : '')+'" onclick="BX.calendar.get().SetMonth('+i+')">'+BX.message('MONTH_' + (i+1))+'</a>';
 		}
 
-		return '<div class="bx-calendar-month-popup"><div class="bx-calendar-month-title" onclick="BX.calendar.get().popup_month.close();">'+BX.message('MONTH_' + (this.value.getUTCMonth()+1))+'</div><div class="bx-calendar-month-content">'+months+'</div></div>';
+		return '<div class="bx-calendar-month-popup"><div class="bx-calendar-month-title" onclick="BX.calendar.get().popup_month.close();">'+BX.message('MONTH_' + (this.value.getMonth()+1))+'</div><div class="bx-calendar-month-content">'+months+'</div></div>';
 	};
 
 	this._menu_month = function()
@@ -1364,12 +1408,12 @@ BX.JCCalendar = function()
 				}
 			);
 
-			this.popup_month.BXMONTH = this.value.getUTCMonth();
+			this.popup_month.BXMONTH = this.value.getMonth();
 		}
-		else if (this.popup_month.BXMONTH != this.value.getUTCMonth())
+		else if (this.popup_month.BXMONTH != this.value.getMonth())
 		{
 			this.popup_month.setContent(this._menu_month_content());
-			this.popup_month.BXMONTH = this.value.getUTCMonth();
+			this.popup_month.BXMONTH = this.value.getMonth();
 		}
 
 		this.popup_month.show();
@@ -1377,11 +1421,11 @@ BX.JCCalendar = function()
 
 	this._menu_year_content = function()
 	{
-		var s = '<div class="bx-calendar-year-popup"><div class="bx-calendar-year-title" onclick="BX.calendar.get().popup_year.close();">'+this.value.getUTCFullYear()+'</div><div class="bx-calendar-year-content" id="bx-calendar-year-content">'
+		var s = '<div class="bx-calendar-year-popup"><div class="bx-calendar-year-title" onclick="BX.calendar.get().popup_year.close();">'+this.value.getFullYear()+'</div><div class="bx-calendar-year-content" id="bx-calendar-year-content">'
 
 			for (var i=-3; i <= 3; i++)
 			{
-				s += '<a href="javascript:void(0)" class="bx-calendar-year-number'+(i==0?' bx-calendar-year-active':'')+'" onclick="BX.calendar.get().SetYear('+(this.value.getUTCFullYear()-i)+')">'+(this.value.getUTCFullYear()-i)+'</a>'
+				s += '<a href="javascript:void(0)" class="bx-calendar-year-number'+(i==0?' bx-calendar-year-active':'')+'" onclick="BX.calendar.get().SetYear('+(this.value.getFullYear()-i)+')">'+(this.value.getFullYear()-i)+'</a>'
 			}
 
 			s += '</div><input type="text" class="bx-calendar-year-input" onkeyup="if(this.value>=1900&&this.value<=2100)BX.calendar.get().SetYear(this.value);" maxlength="4" /></div>';
@@ -1405,12 +1449,12 @@ BX.JCCalendar = function()
 				}
 			);
 
-			this.popup_year.BXYEAR = this.value.getUTCFullYear();
+			this.popup_year.BXYEAR = this.value.getFullYear();
 		}
-		else if (this.popup_year.BXYEAR != this.value.getUTCFullYear())
+		else if (this.popup_year.BXYEAR != this.value.getFullYear())
 		{
 			this.popup_year.setContent(this._menu_year_content());
-			this.popup_year.BXYEAR = this.value.getUTCFullYear();
+			this.popup_year.BXYEAR = this.value.getFullYear();
 		}
 
 		this.popup_year.show();
@@ -1431,9 +1475,9 @@ BX.JCCalendar = function()
 			}
 		}
 
-		v = BX.date.convertToUTC(v);
-		v.setUTCMilliseconds(0);
-		v.setUTCSeconds(0);
+		//v = BX.date.convertToUTC(v);
+		v.setMilliseconds(0);
+		v.setSeconds(0);
 
 		v.BXCHECKED = true;
 
@@ -1533,12 +1577,12 @@ BX.JCCalendar.prototype.Show = function(params)
 	if (this.params.value)
 	{
 		this.SetValue(this.params.value);
-		bHideTime = this.value.getUTCHours() <= 0 && this.value.getUTCMinutes() <= 0;
+		bHideTime = this.value.getHours() <= 0 && this.value.getMinutes() <= 0;
 	}
 	else if (this.params.field)
 	{
 		this.SetValue(this.params.field.value);
-		bHideTime = this.value.getUTCHours() <= 0 && this.value.getUTCMinutes() <= 0;
+		bHideTime = this.value.getHours() <= 0 && this.value.getMinutes() <= 0;
 	}
 	else if (!!this.params.currentTime)
 	{
@@ -1573,7 +1617,7 @@ BX.JCCalendar.prototype.Show = function(params)
 
 BX.JCCalendar.prototype.SetDay = function(d)
 {
-	this.value.setUTCDate(d);
+	this.value.setDate(d);
 	return this.SetValue(this.value);
 };
 
@@ -1581,7 +1625,7 @@ BX.JCCalendar.prototype.SetMonth = function(m)
 {
 	if (this.popup_month)
 		this.popup_month.close();
-	this.value.setUTCMonth(m);
+	this.value.setMonth(m);
 	return this.SetValue(this.value);
 };
 
@@ -1589,16 +1633,16 @@ BX.JCCalendar.prototype.SetYear = function(y)
 {
 	if (this.popup_year)
 		this.popup_year.close();
-	this.value.setUTCFullYear(y);
+	this.value.setFullYear(y);
 	return this.SetValue(this.value);
 };
 
 BX.JCCalendar.prototype.SetDate = function(v, bSet)
 {
 	v = this._check_date(v);
-	v.setUTCHours(this.value.getUTCHours());
-	v.setUTCMinutes(this.value.getUTCMinutes());
-	v.setUTCSeconds(this.value.getUTCSeconds());
+	v.setHours(this.value.getHours());
+	v.setMinutes(this.value.getMinutes());
+	v.setSeconds(this.value.getSeconds());
 
 	if (this.params.bTime && !bSet)
 	{
@@ -1615,12 +1659,12 @@ BX.JCCalendar.prototype.SetValue = function(v)
 {
 	this.value = (v && v.BXCHECKED) ? v : this._check_date(v);
 
-	this.PARTS.MONTH.innerHTML = BX.message('MONTH_' + (this.value.getUTCMonth()+1));
-	this.PARTS.YEAR.innerHTML = this.value.getUTCFullYear();
+	this.PARTS.MONTH.innerHTML = BX.message('MONTH_' + (this.value.getMonth()+1));
+	this.PARTS.YEAR.innerHTML = this.value.getFullYear();
 
 	if (!!this.params.bTime)
 	{
-		var h = this.value.getUTCHours();
+		var h = this.value.getHours();
 		if (this.bAmPm)
 		{
 			if (h >= 12)
@@ -1640,7 +1684,7 @@ BX.JCCalendar.prototype.SetValue = function(v)
 		}
 
 		this.PARTS.TIME_INPUT_H.value = BX.util.str_pad_left(h.toString(), 2, "0");
-		this.PARTS.TIME_INPUT_M.value = BX.util.str_pad_left(this.value.getUTCMinutes().toString(), 2, "0");
+		this.PARTS.TIME_INPUT_M.value = BX.util.str_pad_left(this.value.getMinutes().toString(), 2, "0");
 	}
 
 	this._set_layer();
@@ -1668,7 +1712,7 @@ BX.JCCalendar.prototype.SaveValue = function()
 		if (this.params.field)
 		{
 			var bTime = !!this.params.bTime && BX.hasClass(this.PARTS.TIME, 'bx-calendar-set-time-opened');
-			this.params.field.value = BX.calendar.ValueToString(this.value, bTime, true);
+			this.params.field.value = BX.calendar.ValueToString(this.value, bTime);
 			BX.fireEvent(this.params.field, 'change');
 		}
 
@@ -1781,5 +1825,136 @@ window.jsCalendar = {
 
 	ValueToString: BX.calendar.ValueToString
 }
+
+
+/************ clock popup transferred from timeman **************/
+
+BX.CClockSelector = function(params)
+{
+	this.params = params;
+
+	this.params.popup_buttons = this.params.popup_buttons || [
+		new BX.PopupWindowButton({
+			text : BX.message('CAL_BUTTON'),
+			className : "popup-window-button-create",
+			events : {click : BX.proxy(this.setValue, this)}
+		})
+	];
+
+	this.isReady = false;
+
+	this.WND = new BX.PopupWindow(
+		this.params.popup_id || 'clock_selector_popup',
+		this.params.node,
+		this.params.popup_config || {
+			titleBar: {content: BX.create('SPAN', {text: BX.message('CAL_TIME')})},
+			offsetLeft: -45,
+			offsetTop: -135,
+			autoHide: true,
+			closeIcon: true,
+			closeByEsc: true,
+			zIndex: this.params.zIndex
+		}
+	);
+
+	this.SHOW = false;
+	BX.addCustomEvent(this.WND, "onPopupClose", BX.delegate(this.onPopupClose, this));
+
+	this.obClocks = {};
+	this.CLOCK_ID = this.params.clock_id || 'clock_selector';
+};
+
+BX.CClockSelector.prototype.Show = function()
+{
+	if (!this.isReady)
+	{
+		//BX.timeman.showWait(this.parent.DIV);
+
+		BX.addCustomEvent('onClockRegister', BX.proxy(this.onClockRegister, this));
+		return BX.ajax.get('/bitrix/tools/clock_selector.php', {start_time: this.params.start_time, clock_id: this.CLOCK_ID, sessid: BX.bitrix_sessid()}, BX.delegate(this.Ready, this));
+	}
+
+	this.WND.setButtons(this.params.popup_buttons);
+	this.WND.show();
+
+	this.SHOW = true;
+
+	if (window['bxClock_' + this.obClocks[this.CLOCK_ID]])
+	{
+		setTimeout("window['bxClock_" + this.obClocks[this.CLOCK_ID] + "'].CalculateCoordinates()", 40);
+	}
+
+	return true;
+};
+
+BX.CClockSelector.prototype.onClockRegister = function(obClocks)
+{
+	if (obClocks[this.CLOCK_ID])
+	{
+		this.obClocks[this.CLOCK_ID] = obClocks[this.CLOCK_ID];
+		BX.removeCustomEvent('onClockRegister', BX.proxy(this.onClockRegister, this));
+	}
+};
+
+BX.CClockSelector.prototype.Ready = function(data)
+{
+	this.content = this.CreateContent(data);
+	this.WND.setContent(this.content);
+
+	this.isReady = true;
+	//BX.timeman.closeWait();
+
+	setTimeout(BX.proxy(this.Show, this), 30);
+};
+
+BX.CClockSelector.prototype.CreateContent = function(data)
+{
+	return BX.create('DIV', {
+		events: {click: BX.PreventDefault},
+		html:
+			'<div class="bx-tm-popup-clock">' + data + '</div>'
+	});
+};
+
+BX.CClockSelector.prototype.setValue = function(e)
+{
+	if (this.params.callback)
+	{
+		var input = BX.findChild(this.content, {tagName: 'INPUT'}, true);
+		this.params.callback.apply(this.params.node, [input.value]);
+	}
+
+	return BX.PreventDefault(e);
+};
+
+BX.CClockSelector.prototype.closeWnd = function(e)
+{
+	this.WND.close();
+	return (e || window.event) ? BX.PreventDefault(e) : true;
+};
+
+BX.CClockSelector.prototype.setNode = function(node)
+{
+	this.WND.setBindElement(node);
+};
+
+BX.CClockSelector.prototype.setTime = function(timestamp)
+{
+	this.params.start_time = timestamp;
+	if (window['bxClock_' + this.obClocks[this.CLOCK_ID]])
+	{
+		window['bxClock_' +  this.obClocks[this.CLOCK_ID]].SetTime(parseInt(timestamp/3600), parseInt((timestamp%3600)/60));
+	}
+};
+
+BX.CClockSelector.prototype.setCallback = function(cb)
+{
+	this.params.callback = cb;
+};
+
+BX.CClockSelector.prototype.onPopupClose = function()
+{
+	this.SHOW = false;
+};
 
 })();

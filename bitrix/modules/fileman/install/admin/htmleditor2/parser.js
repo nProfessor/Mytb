@@ -90,7 +90,8 @@ GetHTML: function(bFormatted)
 
 						return res;
 					case 'php':
-						if (this.pParser.pMainObj.bDotNet || this.pParser.pMainObj.limit_php_access)
+						var pMainObj = this.pParser.pMainObj;
+						if (pMainObj.bDotNet || (pMainObj.limit_php_access && pMainObj.pComponent2Taskbar))
 							break;
 						return bxTag.params.value;
 					case 'noscript':
@@ -116,6 +117,8 @@ GetHTML: function(bFormatted)
 								res += i + '="' + bxTag.params[i] + '" ';
 						res += '></embed>';
 						return res;
+					case 'cursor':
+						return '#BXCURSOR#';
 					default:
 						var customRes = this.CustomUnParse();
 
@@ -326,7 +329,7 @@ _RecursiveParse: function (oParentNode, oBXNode)
 	var arChilds = oParentNode.childNodes;
 	var oNode, oBXChildNode;
 
-	for(var i=0; i<arChilds.length; i++)
+	for(var i = 0; i < arChilds.length; i++)
 	{
 		oNode = arChilds[i];
 		oBXChildNode = new BXNode(oBXNode);
@@ -355,8 +358,6 @@ GetHTML: function (bFormatted)
 {
 	return this.pNode.GetHTML(bFormatted);
 },
-
-Optimize: function (){},
 
 SystemParse: function(sContent)
 {
@@ -458,6 +459,7 @@ SystemParse: function(sContent)
 
 	if (!this.pMainObj.bDotNet)
 		sContent = this.pMainObj.SystemParse_ex(sContent);
+
 	sContent = sContent.replace(/<break \/>/ig, "<img src=\"" + image_path + "/break_tag.gif\" id=\"" + this.pMainObj.SetBxTag(false, {tag: 'break'}) + "\"/>");
 
 	// Flash parsing
@@ -491,6 +493,8 @@ SystemParse: function(sContent)
 
 	if (this.strStyleNodes.length > 0)
 		setTimeout(function(){_this.AppendCSS(_this.strStyleNodes);}, 300);
+
+	sContent = sContent.replace(/#BXCURSOR#/ig, '<a href="#" id="' + this.pMainObj.lastCursorId + '">|</a>');
 
 	return sContent;
 },

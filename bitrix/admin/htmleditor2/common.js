@@ -872,7 +872,7 @@ BXPreloader.prototype.RemoveStep = function(ind)
 // CONTEXT MENU
 function BXContextMenu() {}
 
-BXContextMenu.prototype.Create = function(zIndex, dxShadow, oPos, pElement, arParams)
+BXContextMenu.prototype.Create = function()
 {
 	this.pref = this.pMainObj.name.toUpperCase()+'_';
 	this.oDiv = document.body.appendChild(BXCreateElement('DIV', {className: 'bx_ed_context_menu', id: this.pref + '_BXContextMenu'}, {position: 'absolute', zIndex: 1500, left: '-1000px', top: '-1000px', visibility: 'hidden'}, document));
@@ -910,13 +910,16 @@ BXContextMenu.prototype.FetchAndBuildItems = function(pElement, arParams)
 {
 	var pElementTemp, i, k, arMenuItems = [], el, el_params, arUsed = [], strPath, strPath1, bxTag = false, bxtagname = false, id;
 
+	if (!arParams)
+		arParams = {};
+
 	// Handling and creation menu elements array
 	// Single custom element
 	if (arParams && arParams.bxtagname)
 	{
 		bxtagname = arParams.bxtagname;
 	}
-	else if (pElement && pElement.getAttribute && (id = pElement.arAttributes["id"]))
+	else if (pElement && pElement.arAttributes && (id = pElement.arAttributes["id"]))
 	{
 		bxTag = this.pMainObj.GetBxTag(id);
 		if (bxTag && bxTag.tag)
@@ -932,7 +935,11 @@ BXContextMenu.prototype.FetchAndBuildItems = function(pElement, arParams)
 	}
 	else // Elements in editor iframe
 	{
-		var pElement = this.pMainObj.GetSelectionObject();
+		if (!pElement)
+			pElement = this.pMainObj.GetSelectionObject();
+
+		arParams.pElement = pElement;
+
 		//Adding to default list
 		for(i = 0; i < arCMButtons["DEFAULT"].length; i++)
 			arMenuItems.push(arCMButtons["DEFAULT"][i]);
@@ -961,7 +968,7 @@ BXContextMenu.prototype.FetchAndBuildItems = function(pElement, arParams)
 			else
 			{
 				pElement = pElementTemp;
-				continue;
+					continue;
 			}
 		}
 	}

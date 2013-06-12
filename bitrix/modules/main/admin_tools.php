@@ -67,25 +67,28 @@ class CTemplates
 		{
 			$folder = _normalizePath($folder);
 			$arTemplates[$folder] = Array();
-			$arPath = Array(
-					"/bitrix/modules/".$folder."/install/templates/",
-					BX_PERSONAL_ROOT."/templates/.default/"
-				);
+			$arPath = array(
+				"/bitrix/modules/".$folder."/install/templates/",
+				BX_PERSONAL_ROOT."/templates/.default/",
+			);
+
 			if(is_array($template_id))
 			{
 				foreach($template_id as $v)
 					$arPath[] = BX_PERSONAL_ROOT."/templates/"._normalizePath($v)."/";
 			}
 			elseif(strlen($template_id)>0)
-				$arPath[] = BX_PERSONAL_ROOT."/templates/"._normalizePath($template_id)."/";
-
-			for($i=0; $i<count($arPath); $i++)
 			{
-				$path = $arPath[$i];
-				CTemplates::__FindTemplates($path, $arTemplates[$folder], $arCurrentValues, $folder);
+				$arPath[] = BX_PERSONAL_ROOT."/templates/"._normalizePath($template_id)."/";
 			}
+
+			foreach($arPath as $path)
+				CTemplates::__FindTemplates($path, $arTemplates[$folder], $arCurrentValues, $folder);
+
 			if(count($arTemplates[$folder])<=0)
+			{
 				unset($arTemplates[$folder]);
+			}
 			else
 			{
 				$arTemplate = $arTemplates[$folder];
@@ -223,7 +226,7 @@ class CTemplates
 									if($sSectionName)
 									{
 										$arTemplateFolders[$module_name] = $sSectionName;
-										$arTemplateFoldersSort[] = Array($iSort, $module_name);
+										$arTemplateFoldersSort[$module_name] = $iSort;
 									}
 								}
 							}
@@ -239,9 +242,8 @@ class CTemplates
 		if($template_id)
 			$arPath[] = BX_PERSONAL_ROOT."/templates/".$template_id;
 
-		for($i=0; $i<count($arPath); $i++)
+		foreach($arPath as $path)
 		{
-			$path = $arPath[$i];
 			if($handle = @opendir($_SERVER["DOCUMENT_ROOT"].$path))
 			{
 				while(($folder_name = readdir($handle)) !== false)
@@ -257,28 +259,16 @@ class CTemplates
 						if($sSectionName)
 						{
 							$arTemplateFolders[$folder_name] = $sSectionName;
-							$arTemplateFoldersSort[] = Array($iSort, $folder_name);
+							$arTemplateFoldersSort[$folder_name] = $iSort;
 						}
 					}
 				}
 				@closedir($handle);
 			}
 		}
+		array_multisort($arTemplateFoldersSort, $arTemplateFolders);
 
-		for($i=0; $i<count($arTemplateFoldersSort)-1; $i++)
-			for($j=$i+1; $j<count($arTemplateFoldersSort); $j++)
-				if($arTemplateFoldersSort[$i][0]>$arTemplateFoldersSort[$j][0])
-				{
-					$x = $arTemplateFoldersSort[$i];
-					$arTemplateFoldersSort[$i] = $arTemplateFoldersSort[$j];
-					$arTemplateFoldersSort[$j] = $x;
-				}
-
-		$arTemplateFoldersRes = Array();
-		for($i=0; $i<count($arTemplateFoldersSort); $i++)
-			$arTemplateFoldersRes[$arTemplateFoldersSort[$i][1]] = $arTemplateFolders[$arTemplateFoldersSort[$i][1]];
-
-		return $arTemplateFoldersRes;
+		return $arTemplateFolders;
 	}
 }
 
@@ -428,75 +418,64 @@ function GetTemplateContent($filename, $lang=LANG, $arTemplates=Array())
 
 function GetFileTemplates($lang = LANG, $arTemplates = Array())
 {
-	global $DOCUMENT_ROOT, $APPLICATION;
+	global $APPLICATION;
 
-	$arDirs = Array();
-	$arDirs[] = "/php_interface/".$lang."/templates";
-	$arDirs[] = "/templates/.default/page_templates";
-	$arDirs[] = "/php_interface/templates";
+	$arDirs = array(
+		"/php_interface/".$lang."/templates",
+		"/templates/.default/page_templates",
+		"/php_interface/templates",
+	);
 	foreach($arTemplates as $val)
 		$arDirs[] = "/templates/".$val."/page_templates";
 
-	$res = Array();
-
-	for($i=0, $n=count($arDirs); $i<$n; $i++)
+	$res = array();
+	foreach($arDirs as $dir)
 	{
-		$dir = $arDirs[$i];
-		$TEMPLATE = Array();
-		if(file_exists($_SERVER["DOCUMENT_ROOT"].BX_PERSONAL_ROOT.$dir))
+		$dirPath = $_SERVER["DOCUMENT_ROOT"].BX_PERSONAL_ROOT.$dir;
+		if(file_exists($dirPath))
 		{
-			$sDescFile = $_SERVER["DOCUMENT_ROOT"].BX_PERSONAL_ROOT.$dir."/.content.php";
+			$sDescFile = $dirPath."/.content.php";
+			$TEMPLATE = array();
 			if(file_exists($sDescFile))
 				include($sDescFile);
 
-			if($handle = @opendir($DOCUMENT_ROOT.BX_PERSONAL_ROOT.$dir))
+			if($handle = @opendir($dirPath))
 			{
 				while(($file = readdir($handle)) !== false)
 				{
-					if(is_dir($DOCUMENT_ROOT.BX_PERSONAL_ROOT.$dir."/".$file))
+					if(is_dir($dirPath."/".$file))
 						continue;
 					if($file[0] == ".")
 						continue;
-					if($APPLICATION->GetFileAccessPermission(BX_PERSONAL_ROOT.$dir."/".$file) < "R")
+
+					$path = BX_PERSONAL_ROOT.$dir."/".$file;
+					if($APPLICATION->GetFileAccessPermission($path) < "R")
 						continue;
 
-					$restmp = Array("name"=>substr($file, 0, bxstrrpos($file, ".")), "file"=>$file, "sort"=>150, "path"=>BX_PERSONAL_ROOT.$dir."/".$file);
-					if(is_set($TEMPLATE, $file))
+					$restmp = array(
+						"name" => substr($file, 0, bxstrrpos($file, ".")),
+						"file" => $file,
+						"sort" => 150,
+						"path" => $path,
+					);
+
+					if(array_key_exists($file, $TEMPLATE))
 					{
-						$TEMPtmp = $TEMPLATE[$file];
-						if(is_set($TEMPtmp, "name")) $restmp["name"] = $TEMPtmp["name"];
-						if(is_set($TEMPtmp, "sort")) $restmp["sort"] = $TEMPtmp["sort"];
+						if(array_key_exists("name", $TEMPLATE[$file]))
+							$restmp["name"] = $TEMPLATE[$file]["name"];
+						if(array_key_exists("sort", $TEMPLATE[$file]))
+							$restmp["sort"] = $TEMPLATE[$file]["sort"];
 					}
 
-					$bExists = false;
-					for($j=0, $nj=count($res); $j<$nj; $j++)
-					{
-						if($res[$j]["file"] == $file)
-						{
-							$res[$j] = $restmp;
-							$bExists = true;
-							break;
-						}
-					}
-
-					if(!$bExists)
-						$res[] = $restmp;
+					$res[$file] = $restmp;
 				}
 				closedir($handle);
 			}
 		}
 	}
+	sortByColumn($res, "sort");
 
-	for($i=0; $i<count($res)-1; $i++)
-		for($j=$i+1; $j<count($res); $j++)
-			if($res[$i]["sort"]>$res[$j]["sort"])
-			{
-				$restmp = $res[$i];
-				$res[$i] = $res[$j];
-				$res[$j] = $restmp;
-			}
-
-	return $res;
+	return array_values($res);
 }
 
 function ParsePath($path, $bLast=false, $url=false, $param="", $bLogical = false)
@@ -517,11 +496,11 @@ function ParsePath($path, $bLast=false, $url=false, $param="", $bLogical = false
 
 	$addUrl = ($bLogical?"logical=Y":"");
 
-	$arDirPath = explode("/",$path);
+	$arDirPath = explode("/", $path);
 	$full_path = "";
 	$prev_path = "";
 	$arPath = array();
-	if(strlen($path)>0 || strlen($site)>0 || $bLast)
+	if($bLast || strlen($path)>0 || strlen($site)>0)
 	{
 		$html_path = '<a href="'.$url.'?lang='.LANG.'&'.$addUrl.'">'.GetMessage("MAIN_ROOT_FOLDER").'</a>/';
 		/*
@@ -544,7 +523,7 @@ function ParsePath($path, $bLast=false, $url=false, $param="", $bLogical = false
 
 	if($site!==false)
 	{
-		if(strlen($path)>0 || $bLast)
+		if($bLast || strlen($path)>0)
 		{
 			$html_path .= '<a href="'.$url.'?lang='.LANG.'&'.$addUrl.'&amp;site='.$site.'">'.$arSite["NAME"].'</a>/';
 			/*
@@ -567,17 +546,17 @@ function ParsePath($path, $bLast=false, $url=false, $param="", $bLogical = false
 	}
 
 	$io = CBXVirtualIo::GetInstance();
-
-	for($i=0; $i<count($arDirPath); $i++)
+	$pathLast = count($arDirPath)-1;
+	foreach($arDirPath as $i => $pathPart)
 	{
-		if(strlen($arDirPath[$i])<=0)
+		if(strlen($pathPart)<=0)
 			continue;
-		$prev_path = $full_path;
-		$full_path .= "/".$arDirPath[$i];
-		if($i==count($arDirPath)-1)
-			$last = $arDirPath[$i];
 
-		$sSectionName = $arDirPath[$i];
+		$prev_path = $full_path;
+		$full_path .= "/".$pathPart;
+		$last = $pathPart;
+
+		$sSectionName = $pathPart;
 		if($bLogical && $io->DirectoryExists($DOC_ROOT.$full_path))
 		{
 			if(!$io->FileExists($DOC_ROOT.$full_path."/.section.php"))
@@ -588,7 +567,7 @@ function ParsePath($path, $bLast=false, $url=false, $param="", $bLogical = false
 				$sSectionName = GetMessage("admin_tools_no_name");
 		}
 
-		if($i==count($arDirPath)-1 && (!$bLast || !$io->DirectoryExists($DOC_ROOT.$full_path)))
+		if($i==$pathLast && (!$bLast || !$io->DirectoryExists($DOC_ROOT.$full_path)))
 		{
 			$html_path .= $sSectionName;
 			$arPath[] = array(
@@ -607,7 +586,13 @@ function ParsePath($path, $bLast=false, $url=false, $param="", $bLogical = false
 		}
 	}
 
-	return Array("PREV"=>$prev_path, "FULL"=>$full_path, "HTML"=>$html_path, "LAST"=>$last, "AR_PATH" => $arPath);
+	return array(
+		"PREV" => $prev_path,
+		"FULL" => $full_path,
+		"HTML" => $html_path,
+		"LAST" => $last,
+		"AR_PATH" => $arPath,
+	);
 }
 
 function CompareFiles($f1, $f2, $sort=Array())
@@ -691,10 +676,10 @@ function GetDirList($path, &$arDirs, &$arFiles, $arFilter=Array(), $sort=Array()
 					$f = $io->GetFile($abs_path."/".$file);
 					$filesrc = $f->GetContents();
 
-					$arContent = ParseFileContent($filesrc);
-					if($arContent["TITLE"]===false)
+					$title = PHPParser::getPageTitle($filesrc);
+					if($title===false)
 						continue;
-					$arFile["LOGIC_NAME"] = $arContent["TITLE"];
+					$arFile["LOGIC_NAME"] = $title;
 				}
 			}
 		}

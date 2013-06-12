@@ -34,7 +34,7 @@ else
 
 var cookie_prefix = '<?=$arResult["COOKIE_PREFIX"]?>';
 </script>
-<form method="post" name="form1" action="<?=$arResult["FORM_TARGET"]?>?" enctype="multipart/form-data">
+<form method="post" name="form1" action="<?=$arResult["FORM_TARGET"]?>" enctype="multipart/form-data">
 <?=$arResult["BX_SESSION_CHECK"]?>
 <input type="hidden" name="lang" value="<?=LANG?>" />
 <input type="hidden" name="ID" value=<?=$arResult["ID"]?> />

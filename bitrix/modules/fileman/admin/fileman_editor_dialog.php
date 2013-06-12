@@ -86,18 +86,21 @@ function OnSave()
 <?elseif($name == "editlink"):?>
 <script>
 var pElement = null;
+var pImage = false;
 var curLinkType = 't1';
 function OnLoad()
 {
 	var bWasSelectedElement = false, bxTag = false;
-
 	pElement = pObj.pMainObj.GetSelectionObject();
 
 	if (pElement && pElement.nodeName && pElement.nodeName.toUpperCase() != 'A')
 	{
 		var nodeName = pElement.nodeName.toUpperCase();
 		if (nodeName == 'IMG')
+		{
+			pImage = pElement;
 			bWasSelectedElement = true;
+		}
 		pElement = BXFindParentByTagName(pElement, 'A');
 	}
 
@@ -135,7 +138,7 @@ function OnLoad()
 	// Fetch anchors
 	var
 		pAnchorSelect = BX('bx_url_3'),
-		i, l, anc, ancName, anchorBxTag
+		i, l, anc, ancName, anchorBxTag,
 		arImgs = pObj.pMainObj.pEditorDocument.getElementsByTagName('IMG');
 
 	for(i = 0, l = arImgs.length; i < l; i++)
@@ -283,7 +286,8 @@ function OnSave()
 	var
 		href='',
 		target='',
-		bText = BX('bx_link_text_tr').style.display != "none";
+		bText = (BX('bx_link_text_tr').style.display !== 'none');
+
 	switch(BX('bx_link_type').value)
 	{
 		case 't1':
@@ -315,7 +319,14 @@ function OnSave()
 		var arlinks = [];
 		if (window.pElement)
 		{
-			arlinks[0] = pElement;
+			arlinks.push(pElement);
+		}
+		else if(window.pImage && window.pImage.parentNode) // Link around image
+		{
+			var plink = BX.create("A", {}, pObj.pMainObj.pEditorDocument);
+			window.pImage.parentNode.insertBefore(plink, window.pImage);
+			plink.appendChild(window.pImage);
+			arlinks.push(plink);
 		}
 		else
 		{
@@ -426,11 +437,16 @@ function ChangeFixStat()
 
 function SetUrl(filename, path, site)
 {
-	var url, pInput = BX("bx_url_1"), pText = BX("bx_link_text"), pTitle = BX("BXEditorDialog_title");
+	var
+		url,
+		pInput = BX("bx_url_1"),
+		pText = BX("bx_link_text"),
+		pTitle = BX("BXEditorDialog_title");
 	if (typeof filename == 'object') // Using medialibrary
 	{
 		url = filename.src;
-		pText.value = filename.description || filename.name;
+		if (pText.value == '')
+			pText.value = filename.description || filename.name;
 		pTitle.value = filename.description || filename.name;
 	}
 	else // Using file dialog
@@ -787,7 +803,9 @@ function SetUrl(filename, path, site)
 	if (typeof filename == 'object') // Using medialibrary
 	{
 		url = filename.src;
-		BX("bx_img_title").value = filename.description || filename.name;
+		var pTitle = BX("bx_img_title");
+		if (pTitle.value == '')
+			pTitle.value = filename.description || filename.name;
 		BX("bx_alt").value = filename.description || filename.name;
 	}
 	else // Using file dialog
@@ -985,7 +1003,7 @@ function OnSave()
 	if(!pElement)
 	{
 		var tmpid = Math.random().toString().substring(2);
-		var str = '<table id="'+tmpid+'"/>';
+		var str = '<table id="'+tmpid+'"/><br/>';
 		BXSelectRange(oPrevRange, pObj.pMainObj.pEditorDocument,pObj.pMainObj.pEditorWindow);
 		pObj.pMainObj.insertHTML(str);
 
@@ -2001,6 +2019,8 @@ function OnLoad()
 	pObj.bx_swf_source = BX("bx_flash_html_code");
 	pObj.bx_swf_source.onblur = function()
 	{
+
+
 		var s = this.value;
 		if (s.length <= 0)
 			return;
@@ -2086,54 +2106,58 @@ function SetUrl(filename, path, site)
 
 function OnSave()
 {
-	if (!pObj.bx_swf_arParams.src.p.value)
-		return;
-
 	pObj.pMainObj.bSkipChanges = true;
 	BXSelectRange(oPrevRange,pObj.pMainObj.pEditorDocument, pObj.pMainObj.pEditorWindow);
 	var html, i, p;
 
-	if (pObj.bxTag)
-	{
-		for(i in pObj.bx_swf_arParams)
-		{
-			p = pObj.bx_swf_arParams[i].p;
-			if (p)
-			{
-				if (p.type.toLowerCase() == 'checkbox' && p.checked)
-					pObj.bxTag.params[i] = p.checked || null;
-				else if(p.type.toLowerCase() != 'checkbox' && p.value.length > 0)
-					pObj.bxTag.params[i] = p.value;
-			}
-		}
-
-		pElement.style.width = (parseInt(pObj.bxTag.params.width) || 50) + 'px';
-		pElement.style.height = (parseInt(pObj.bxTag.params.height) || 25) + 'px';
-		pObj.pMainObj.bSkipChanges = false;
-		pObj.pMainObj.SetBxTag(pElement, pObj.bxTag);
-		return;
-	}
-
-	if (pObj.bx_swf_source.value.length > 0)
+	if (!pObj.bx_swf_arParams.src.p.value && pObj.bx_swf_source.value !== '')
 	{
 		html = pObj.bx_swf_source.value;
 	}
 	else
 	{
-		html = '<EMBED ';
-		for(var i in pObj.bx_swf_arParams)
+		if (pObj.bxTag)
 		{
-			_p = pObj.bx_swf_arParams[i].p;
-			if (!_p) continue;
+			for(i in pObj.bx_swf_arParams)
+			{
+				p = pObj.bx_swf_arParams[i].p;
+				if (p)
+				{
+					if (p.type.toLowerCase() == 'checkbox' && p.checked)
+						pObj.bxTag.params[i] = p.checked || null;
+					else if(p.type.toLowerCase() != 'checkbox' && p.value.length > 0)
+						pObj.bxTag.params[i] = p.value;
+				}
+			}
 
-			if (_p.type.toLowerCase() == 'checkbox' && _p.checked)
-				html += i + '="true" ';
-			else if(_p.type.toLowerCase() != 'checkbox' && _p.value.length > 0)
-				html += i + '="' + _p.value + '" ';
+			pElement.style.width = (parseInt(pObj.bxTag.params.width) || 50) + 'px';
+			pElement.style.height = (parseInt(pObj.bxTag.params.height) || 25) + 'px';
+			pObj.pMainObj.bSkipChanges = false;
+			pObj.pMainObj.SetBxTag(pElement, pObj.bxTag);
+			return;
 		}
-		html += 'type = "application/x-shockwave-flash" '+
-		'pluginspage = "http://www.macromedia.com/go/getflashplayer" '+
-		'></EMBED>';
+
+		if (pObj.bx_swf_source.value.length > 0)
+		{
+			html = pObj.bx_swf_source.value;
+		}
+		else
+		{
+			html = '<EMBED ';
+			for(var i in pObj.bx_swf_arParams)
+			{
+				_p = pObj.bx_swf_arParams[i].p;
+				if (!_p) continue;
+
+				if (_p.type.toLowerCase() == 'checkbox' && _p.checked)
+					html += i + '="true" ';
+				else if(_p.type.toLowerCase() != 'checkbox' && _p.value.length > 0)
+					html += i + '="' + _p.value + '" ';
+			}
+			html += 'type = "application/x-shockwave-flash" '+
+			'pluginspage = "http://www.macromedia.com/go/getflashplayer" '+
+			'></EMBED>';
+		}
 	}
 
 	var html = pObj.pMainObj.pParser.SystemParse(html);
@@ -2675,7 +2699,7 @@ $tabControlDialog->BeginNextTab();?>
 	<tr>
 		<td align="right" valign="middle"><?=GetMessage("FILEMAN_ED_FILE_LOCATION")?>:</td>
 		<td valign="top">
-			<select id="__snippet_group" size="6" style="width: 160px;"></select>
+			<select id="__snippet_group" size="6" style="width: 160px;height: 120px!important;"></select>
 		</td>
 	</tr>
 	<tr id='_new_group_chck_row'>

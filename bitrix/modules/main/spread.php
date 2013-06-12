@@ -32,7 +32,7 @@ if(isset($_GET["k"]) && isset($_GET["s"]) && is_string($_GET["k"]) && is_string(
 						session_start();
 						$_SESSION["SESS_AUTH"] = Array();
 						unset($_SESSION["SESS_AUTH"]);
-						unset($_SESSION["OPERATIONS"]);
+						unset($_SESSION["SESS_OPERATIONS"]);
 						unset($_SESSION["SESS_PWD_HASH_TESTED"]);
 					}
 				}

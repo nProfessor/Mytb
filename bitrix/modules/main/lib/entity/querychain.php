@@ -176,7 +176,7 @@ class QueryChain
 				if ($ufield->isMultiple())
 				{
 					// add utm entity  user.utm:source_object (1:N)
-					$utm_entity = Base::getInstance('Utm'.$prev_entity->getName());
+					$utm_entity = Base::getInstance($prev_entity->getNamespace().'Utm'.$prev_entity->getName());
 					$u_entity = $utm_entity;
 
 					$chain->addElement(new QueryChainElement(
@@ -207,7 +207,7 @@ class QueryChain
 				{
 					// uts table - single value
 					// add uts entity user.uts (1:1)
-					$uts_entity = Base::getInstance('Uts'.$prev_entity->getName());
+					$uts_entity = Base::getInstance($prev_entity->getNamespace().'Uts'.$prev_entity->getName());
 					$u_entity = $uts_entity;
 
 					$chain->addElement(new QueryChainElement(
@@ -242,7 +242,7 @@ class QueryChain
 				if (strpos($ref_entity_name, '\\') === false)
 				{
 					// if reference has no namespace, then it'is in the namespace of previous entity
-					$ref_entity_name = $prev_entity->getNamespace().'\\'.$ref_entity_name;
+					$ref_entity_name = $prev_entity->getNamespace().$ref_entity_name;
 				}
 
 				if (
@@ -294,6 +294,7 @@ class QueryChain
 		$def = array();
 
 		// add members of chain except of init entity
+		/** @var $elements QueryChainElement[] */
 		$elements = array_slice($chain->getAllElements(), 1);
 
 		foreach ($elements  as $element)
@@ -301,7 +302,7 @@ class QueryChain
 			if ($element->getValue() instanceof ExpressionField && $element !== end($elements))
 			{
 				// skip non-last expressions
-				continue;
+				//continue;
 			}
 
 			$def[] = $element->getDefinitionFragment();
@@ -321,7 +322,7 @@ class QueryChain
 		{
 			if ($element->getValue() instanceof ExpressionField && $element !== end($elements))
 			{
-				unset($elements[$k]);
+				//unset($elements[$k]);
 			}
 		}
 

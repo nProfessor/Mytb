@@ -2,7 +2,7 @@
 /*********************************************************************
 						Caching
 *********************************************************************/
-class CPHPCacheFiles implements ICacheBackend
+class CPHPCacheFiles
 {
 	var $filename;
 	var $folder;
@@ -329,9 +329,18 @@ class CPHPCacheFiles implements ICacheBackend
 		//try to adjust cache cleanup speed to cache cleanups
 		$rs = $DB->Query("SELECT * from b_cache_tag WHERE TAG='**'");
 		if($ar = $rs->Fetch())
+		{
 			$last_count = intval($ar["RELATIVE_PATH"]);
+			if(preg_match("/:(\\d+)$/", $ar["RELATIVE_PATH"], $m))
+				$last_time = intval($m[1]);
+			else
+				$last_time = 0;
+		}
 		else
+		{
+			$last_time = 0;
 			$last_count = 0;
+		}
 		$bWasStatRecFound = is_array($ar);
 
 		$rs = $DB->Query("SELECT count(1) CNT from b_cache_tag WHERE TAG='*'");
@@ -342,18 +351,26 @@ class CPHPCacheFiles implements ICacheBackend
 
 		$delta = $this_count - $last_count;
 		if($delta > 0)
-			$count = intval($this_count/3600)+1; //Rest of the queue in an hour
+		{
+			if($last_time > 0)
+				$time_step = time()-$last_time;
+			if($time_step <= 0)
+				$time_step = 1;
+			$count = intval($this_count*$time_step/3600)+1; //Rest of the queue in an hour
+		}
 		elseif($count < 1)
+		{
 			$count = 1;
+		}
 
 		if($bWasStatRecFound)
 		{
 			if($last_count != $this_count)
-				$DB->Query("UPDATE b_cache_tag SET RELATIVE_PATH='".$this_count."' WHERE TAG='**'");
+				$DB->Query("UPDATE b_cache_tag SET RELATIVE_PATH='".$this_count.":".time()."' WHERE TAG='**'");
 		}
 		else
 		{
-			$DB->Query("INSERT INTO b_cache_tag (TAG, RELATIVE_PATH) VALUES ('**', '".$this_count."')");
+			$DB->Query("INSERT INTO b_cache_tag (TAG, RELATIVE_PATH) VALUES ('**', '".$this_count.":".time()."')");
 		}
 
 		if($this_count > 0)

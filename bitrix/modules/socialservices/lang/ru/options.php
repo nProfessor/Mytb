@@ -9,5 +9,6 @@ $MESS["socserv_sett_common"] = "Общие";
 $MESS["socserv_sett_common_title"] = "Общие настройки для всех сайтов";
 $MESS["socserv_sett_site"] = "Настройки для сайта";
 $MESS["socserv_sett_site_apply"] = "Применить индивидуальные настройки для этого сайта:";
-$MESS["socserv_twit_to_buzz"] = "Транслировать твиты пользовователей с хештегом #hash# в живую ленту";
+$MESS["socserv_twit_to_buzz"] = "Транслировать твиты пользователей с хештегом #hash# в живую ленту";
+$MESS["soc_serv_send_activity"] = "Разрешить отправку активностей пользователей в социальные сети";
 ?>

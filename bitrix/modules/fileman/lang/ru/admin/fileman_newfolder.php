@@ -10,9 +10,9 @@ $MESS ['FILEMAN_NEWFOLDER_SAVE'] = "Создать папку";
 $MESS ['FILEMAN_NEWFOLDER_ADDMENU'] = "Создать пункт меню:";
 $MESS ['FILEMAN_NEWFOLDER_MENU'] = "Меню:";
 $MESS ['FILEMAN_NEWFOLDER_MENUITEM'] = "Название пункта:";
-$MESS ['FILEMAN_BACK'] = "Каталог";
-$MESS ['FILEMAN_TAB1'] = "Новый каталог";
-$MESS ['FILEMAN_TAB1_ALT'] = "Создание нового каталога";
+$MESS ['FILEMAN_BACK'] = "Папка";
+$MESS ['FILEMAN_TAB1'] = "Новая папка";
+$MESS ['FILEMAN_TAB1_ALT'] = "Создание новой папки";
 $MESS ['FILEMAN_TRANS_LINKED'] = "Генерация имени папки из названия раздела: Включено";
 $MESS ['FILEMAN_TRANS_UNLINKED'] = "Генерация имени папки из названия раздела: Выключено";
 ?>

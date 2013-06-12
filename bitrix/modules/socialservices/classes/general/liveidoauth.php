@@ -19,8 +19,8 @@ class CSocServLiveIDOAuth extends CSocServAuth
 		$appID = trim(self::GetOption("liveid_appid"));
 		$appSecret = trim(self::GetOption("liveid_appsecret"));
 		$gAuth = new CLiveIDOAuthInterface($appID, $appSecret);
-		$redirect_uri = CSocServUtil::GetCurUrl('auth_service_id='.self::ID.'&check_key='.$_SESSION["UNIQUE_KEY"]);
-		$state = 'site_id='.SITE_ID.'&backurl='.urlencode($GLOBALS["APPLICATION"]->GetCurPageParam('check_key='.$_SESSION["UNIQUE_KEY"], array("logout", "auth_service_error", "auth_service_id")));
+		$redirect_uri = CSocServUtil::GetCurUrl('auth_service_id='.self::ID, array("current_fieldset"));
+		$state = 'site_id='.SITE_ID.'&backurl='.($GLOBALS["APPLICATION"]->GetCurPageParam('check_key='.$_SESSION["UNIQUE_KEY"], array("logout", "auth_service_error", "auth_service_id", "backurl")));
 		$url = $gAuth->GetAuthUrl($redirect_uri, $state);
 		if($arParams["FOR_INTRANET"])
 			return array("ON_CLICK" => 'onclick="BX.util.popup(\''.htmlspecialcharsbx(CUtil::JSEscape($url)).'\', 580, 400)"');
@@ -30,10 +30,10 @@ class CSocServLiveIDOAuth extends CSocServAuth
 	public function Authorize()
 	{
 		$GLOBALS["APPLICATION"]->RestartBuffer();
-		$bSuccess = false;
-			if((isset($_REQUEST["code"]) && $_REQUEST["code"] <> '') && CSocServAuthManager::CheckUniqueKey())
+		$bSuccess = 1;
+			if(isset($_REQUEST["code"]) && $_REQUEST["code"] != '' && CSocServAuthManager::CheckUniqueKey())
 			{
-				$redirect_uri= CSocServUtil::GetCurUrl('auth_service_id='.self::ID, array("code"));
+				$redirect_uri= CSocServUtil::GetCurUrl('auth_service_id='.self::ID, array("code", "state", "backurl", "check_key"));
 				$appID = trim(self::GetOption("liveid_appid"));
 				$appSecret = trim(self::GetOption("liveid_appsecret"));
 
@@ -67,7 +67,8 @@ class CSocServLiveIDOAuth extends CSocServAuth
 							'LAST_NAME'=> $last_name,
 						);
 						$arFields["PERSONAL_WWW"] = $arLiveIDUser["link"];
-
+						if(strlen(SITE_ID) > 0)
+							$arFields["SITE_ID"] = SITE_ID;
 						$bSuccess = $this->AuthorizeUser($arFields);
 
 					}
@@ -75,6 +76,7 @@ class CSocServLiveIDOAuth extends CSocServAuth
 			}
 
 		$url = ($GLOBALS["APPLICATION"]->GetCurDir() == "/login/") ? "/auth/" : $GLOBALS["APPLICATION"]->GetCurDir();
+
 		if(isset($_REQUEST["state"]))
 		{
 			$arState = array();
@@ -83,8 +85,17 @@ class CSocServLiveIDOAuth extends CSocServAuth
 			if(isset($arState['backurl']))
 				$url = parse_url($arState['backurl'], PHP_URL_PATH);
 		}
-		if($bSuccess !== true)
-			$url .= (strpos($url, '?') === false? '?':'&').'auth_service_id='.self::ID.'&auth_service_error='.$bSuccess;
+
+		$aRemove = array("logout", "auth_service_error", "auth_service_id", "code", "error_reason", "error", "error_description", "check_key", "current_fieldset", "backurl", "state");
+		if($bSuccess === 2)
+		{
+			$url = (preg_match("/\?/", $url)) ? $url.'&' : $url.'?';
+			$url .= 'auth_service_id='.self::ID.'&auth_service_error='.$bSuccess;
+		}
+		elseif($bSuccess !== true)
+			$url = (isset($parseUrl)) ? $parseUrl.'?auth_service_id='.self::ID.'&auth_service_error='.$bSuccess : $GLOBALS['APPLICATION']->GetCurPageParam(('auth_service_id='.self::ID.'&auth_service_error='.$bSuccess), $aRemove);
+		if(CModule::IncludeModule("socialnetwork"))
+			$url = (preg_match("/\?/", $url)) ? $url."&current_fieldset=SOCSERV" : $url."?current_fieldset=SOCSERV";
 	
 		echo '
 <script type="text/javascript">
@@ -110,6 +121,7 @@ class CLiveIDOAuthInterface
 	
 	public function __construct($appID, $appSecret, $code=false)
 	{
+		$this->httpTimeout = 10;
 		$this->appID = $appID;
 		$this->appSecret = $appSecret;
 		$this->code = $code;
@@ -130,13 +142,13 @@ class CLiveIDOAuthInterface
 		if($this->code === false)
 			return false;
 
-		$result = CHTTP::sPost(self::TOKEN_URL, array(
+		$result = CHTTP::sPostHeader(self::TOKEN_URL, array(
 			"code"=>$this->code,
 			"client_id"=>$this->appID,
 			"client_secret"=>$this->appSecret,
 			"redirect_uri"=>$redirect_uri,
 			"grant_type"=>"authorization_code",
-		));
+		), array(), $this->httpTimeout);
 
 		$arResult = CUtil::JsObjectToPhp($result);
 
@@ -154,7 +166,7 @@ class CLiveIDOAuthInterface
 		if($this->access_token === false)
 			return false;
 
-		$result = CHTTP::sGet(self::CONTACTS_URL."?access_token=".urlencode($this->access_token));
+		$result = CHTTP::sGetHeader(self::CONTACTS_URL."?access_token=".urlencode($this->access_token), array(), $this->httpTimeout);
 		if(!defined("BX_UTF"))
 			$result = CharsetConverter::ConvertCharset($result, "utf-8", LANG_CHARSET);
 

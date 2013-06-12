@@ -113,7 +113,7 @@ foreach($arFields as $FIELD_NAME=>$FIELD_TYPE)
 		"sort" => $FIELD_NAME,
 		"default" => true,
 	);
-	if($FIELD_TYPE=="int" || $FIELD_TYPE=="datetime" || $FIELD_TYPE=="double")
+	if($FIELD_TYPE=="int" || $FIELD_TYPE=="datetime" || $FIELD_TYPE=="date" || $FIELD_TYPE=="double")
 		$arHeaders[$FIELD_NAME]["align"] = "right";
 }
 
@@ -184,6 +184,10 @@ while($arRes = $rsData->Fetch()):
 			{
 				$val = str_replace(" ", "&nbsp;", $arRes["FULL_".$FIELD_NAME]);
 			}
+			elseif($FIELD_TYPE=="date")
+			{
+				$val = str_replace(" ", "&nbsp;", $arRes["SHORT_".$FIELD_NAME]);
+			}
 			else
 			{
 				$val = htmlspecialcharsbx($arRes[$FIELD_NAME]);
@@ -193,13 +197,11 @@ while($arRes = $rsData->Fetch()):
 				$val = '<a onmouseover="addTimer(this)" onmouseout="removeTimer(this)" href="perfmon_table.php?set_filter=Y&table_name='.$arParents[$FIELD_NAME]["PARENT_TABLE"].'&find='.urlencode($arRes[$FIELD_NAME]).'&find_type='.$arParents[$FIELD_NAME]["PARENT_COLUMN"].'">'.$val.'</a>';
 
 			$row->AddViewField($FIELD_NAME, $val);
+		}
 
-
-			if($bDelete && in_array($FIELD_NAME, $arPKColumns))
-			{
-				$arRowPK[] = urlencode("pk[".$FIELD_NAME."]")."=".urlencode($arRes[$FIELD_NAME]);
-			}
-
+		if($bDelete && in_array($FIELD_NAME, $arPKColumns))
+		{
+			$arRowPK[] = urlencode("pk[".$FIELD_NAME."]")."=".urlencode($arRes[$FIELD_NAME]);
 		}
 	}
 

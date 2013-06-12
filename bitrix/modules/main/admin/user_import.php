@@ -141,7 +141,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $tabStep > 2 && check_bitrix_sessid(
 		$dbLdap = CLdapServer::GetByID($ldapServer);
 		if ($arLdap = $dbLdap->Fetch())
 		{
-			// this is a test connection, thus any parameters other than related to establishing a connection, have no effect here 
+			// this is a test connection, thus any parameters other than related to establishing a connection, have no effect here
 			$ldp = CLDAP::Connect(
 				Array(
 					"SERVER"		=>	$arLdap['SERVER'],
@@ -273,16 +273,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $tabStep > 2 && check_bitrix_sessid(
 				return false;
 			}
 
-
 			// selecting all users from LDAP
 			$arLdapUsers = Array();
 			$ldapLoginAttr = strtolower($ldp->arFields["~USER_ID_ATTR"]);
 			$dbLdapUsers = $ldp->GetUserList();
-			
+
 			while($arLdapUser = $dbLdapUsers->Fetch())
 				$arLdapUsers[strtolower($arLdapUser[$ldapLoginAttr])] = $arLdapUser;
 			unset($dbLdapUsers);
-			
+
 			// selecting all users from Bitrix CMS for this LDAP
 			CTimeZone::Disable();
 			$dbUsers = CUser::GetList($o, $b, Array("EXTERNAL_AUTH_ID"=>"LDAP#".$ldapServer));
@@ -292,9 +291,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $tabStep > 2 && check_bitrix_sessid(
 			while($arUser = $dbUsers->Fetch())
 				$arUsers[strtolower($arUser["LOGIN"])] = $arUser;
 			unset($dbUsers);
-			
+
 			$arDelLdapUsers = array_diff(array_keys($arUsers), array_keys($arLdapUsers));
-			
+
 			if(strlen($ldp->arFields["SYNC_LAST"])>0)
 				$syncTime = MakeTimeStamp($ldp->arFields["SYNC_LAST"]);
 			else
@@ -308,26 +307,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $tabStep > 2 && check_bitrix_sessid(
 			$dbGroups = CLdapServer::GetGroupBan($ldapServer);
 			while($arGroup = $dbGroups->Fetch())
 				$noImportGroups[md5($arGroup['LDAP_GROUP_ID'])] = $arGroup['LDAP_GROUP_ID'];
-			
-			// department ids are cached here, thus each user never queried more than once 
+
+			// department ids are cached here, thus each user never queried more than once
 			// if no intranet installed it is simply not used
 			$departmentCache = array();
-			$strUserImportError = '';			
+			$strUserImportError = '';
 
 			foreach($arLdapUsers as $userLogin=>$arLdapUserFields)
 			{
 				if(!is_array($arUsers[$userLogin]))
 				{
 					// if user is not found among already existing ones, then import him
-					
+
 					// в $arLdapUserFields - поля текущего user'а, взятые из ldap
+
 					$arUserFields = $ldp->GetUserFields($arLdapUserFields, $departmentCache);
-					
+
 					// $arUserFields here contains LDAP user fields for a LDAP user
-					
+
 					// make a check, whether this user belongs to those groups only, from which import will not be made...
 					$allUserGroups = $arUserFields['LDAP_GROUPS'];
-					
+
 					$userImportIsBanned = true;
 					foreach ($allUserGroups as $groupId)
 					{
@@ -336,7 +336,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $tabStep > 2 && check_bitrix_sessid(
 						{
 							$userImportIsBanned = false;
 							break;
-						}						
+						}
 					}
 
 					// ...if he does not, then import him
@@ -364,17 +364,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $tabStep > 2 && check_bitrix_sessid(
 					if($syncTime<$ldapTime || $syncTime<$userTime)
 					{
 						// update
-						$arUserFields = $ldp->GetUserFields($arLdapUserFields, $departmentCache);						
+						$arUserFields = $ldp->GetUserFields($arLdapUserFields, $departmentCache);
 						$arUserFields["ID"] = $arUsers[$userLogin]["ID"];
 
 						//echo $arUserFields["LOGIN"]." - updated<br>";
-						$ID = $ldp->SetUser($arUserFields);	
+						$ID = $ldp->SetUser($arUserFields);
 						if($ID > 0)
 							$cntUsersImport++;
 					}
 				}
 				if($USER->LAST_ERROR!='')
-					$strUserImportError .= $arUserFields["LOGIN"].': '.$USER->LAST_ERROR;				
+					$strUserImportError .= $arUserFields["LOGIN"].': '.$USER->LAST_ERROR;
 			}
 
 			foreach ($arDelLdapUsers as $userLogin)
@@ -382,14 +382,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $tabStep > 2 && check_bitrix_sessid(
 				$USER = new CUser();
 				if (isset($arUsers[$userLogin]) && $arUsers[$userLogin]['ACTIVE'] == 'Y') {
 					$ID = intval($arUsers[$userLogin]["ID"]);
-					$USER->Update($ID, array('ACTIVE' => 'N'));				
+					$USER->Update($ID, array('ACTIVE' => 'N'));
 				}
 			}
 
 			$ldp->Disconnect();
 			CLdapServer::Update($ldapServer, Array("~SYNC_LAST"=>$DB->CurrentTimeFunction()));
 			if (!empty($strUserImportError)) {
-				echo "<script type=\"text/javascript\">parent.window.ShowError('".CUtil::JSEscape($strUserImportError)."');</script>";		 	
+				echo "<script type=\"text/javascript\">parent.window.ShowError('".CUtil::JSEscape($strUserImportError)."');</script>";
 			}
 			die("<script type=\"text/javascript\">parent.window.End($cntUsersImport);</script>");
 		}
@@ -611,7 +611,7 @@ if(CModule::IncludeModule("iblock")):
 				<option value="0"><?=GetMessage("USER_IMPORT_SELECT_FROM_LIST")?></option>
 			<?
 			$arAllFields = CLDAPUtil::GetSynFields(); // all user fields that are currently set up in the system
-			
+
 			$arFieldMaps = Array();
 			$indSelected = -1;
 			$i=-1;
@@ -634,7 +634,7 @@ if(CModule::IncludeModule("iblock")):
 			<script type="text/javascript">
 				<?
 				$arMapFields = Array();
-				
+
 				foreach($arAllFields as $field=>$arFieldParams)
 					if($arFieldParams['AD'])
 						$arMapFields[$field] = Array('NAME'=>$arFieldParams['NAME'], 'MAP'=>$arFieldParams['AD']);
@@ -839,7 +839,7 @@ $tabControl->Buttons();
 	<?endforeach?>
 <?endif?>
 
-<?if(is_array($_REQUEST["LDAPMAP"])):?>
+<?if(is_array($_REQUEST["LDAPMAP"]) &&  $tabStep != 2):?>
 	<?foreach($_REQUEST["LDAPMAP"] as $map=>$y):?>
 		<input type="hidden" name="LDAPMAP[<?=htmlspecialcharsbx($map)?>]" value="<?=htmlspecialcharsbx($y)?>" />
 	<?endforeach?>

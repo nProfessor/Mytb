@@ -3,7 +3,6 @@
  * @global CMain $APPLICATION
  */
 define("STOP_STATISTICS", true);
-define("NOT_CHECK_PERMISSIONS", true);
 define("BX_PUBLIC_TOOLS", true);
 define("PUBLIC_AJAX_MODE", true);
 

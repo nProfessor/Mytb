@@ -7,8 +7,10 @@ if($this->bPostNavigation)
 else
 	$nav_func_name = 'GetAdminList';
 
-$sQueryString = CUtil::JSUrlEscape($strNavQueryString);
-$sJSUrlPath = CUtil::JSUrlEscape($sUrlPath);
+$sQueryString = CUtil::JSEscape($strNavQueryString);
+$sJSUrlPath = htmlspecialcharsbx(CUtil::JSEscape($sUrlPath));
+
+$showWait = "BX.addClass(this,'adm-nav-page-active');setTimeout(BX.delegate(function(){BX.addClass(this,'adm-nav-page-loading');this.innerHTML='';},this),500);";
 
 if($this->NavRecordCount>0)
 {
@@ -19,7 +21,7 @@ if($this->NavRecordCount>0)
 	if($this->NavPageNomer > 1)
 	{
 ?>
-		<a class="adm-nav-page adm-nav-page-prev" href="javascript:<?echo $this->table_id?>.<?=$nav_func_name?>('<?echo $sJSUrlPath.'?PAGEN_'.$this->NavNum.'='.($this->NavPageNomer-1).'&amp;SIZEN_'.$this->NavNum.'='.$this->NavPageSize.$sQueryString;?>');"></a>
+		<a class="adm-nav-page adm-nav-page-prev" href="javascript:void(0)" onclick="<?echo $this->table_id?>.<?=$nav_func_name?>('<?echo $sJSUrlPath.'?PAGEN_'.$this->NavNum.'='.($this->NavPageNomer-1).'&amp;SIZEN_'.$this->NavNum.'='.$this->NavPageSize.$sQueryString;?>');<?=$showWait?>"></a>
 <?
 	}
 	else //$this->NavPageNomer > 1
@@ -42,7 +44,7 @@ if($this->NavRecordCount>0)
 		else // ($NavRecordGroup == $this->NavPageNomer):
 		{
 ?>
-		<a href="javascript:<?=$this->table_id?>.<?=$nav_func_name?>('<?=$sJSUrlPath.'?PAGEN_'.$this->NavNum.'='.$NavRecordGroup.'&amp;SIZEN_'.$this->NavNum.'='.$this->NavPageSize.$sQueryString?>');" class="adm-nav-page"><?=$NavRecordGroup?></a>
+		<a href="javascript:void(0)" onclick="<?=$this->table_id?>.<?=$nav_func_name?>('<?=$sJSUrlPath.'?PAGEN_'.$this->NavNum.'='.$NavRecordGroup.'&amp;SIZEN_'.$this->NavNum.'='.$this->NavPageSize.$sQueryString?>');<?=$showWait?>" class="adm-nav-page"><?=$NavRecordGroup?></a>
 <?
 		} //endif($NavRecordGroup == $this->NavPageNomer):
 
@@ -52,7 +54,7 @@ if($this->NavRecordCount>0)
 			{
 				$middlePage = ceil(($this->nStartPage + $NavRecordGroup)/2);
 ?>
-		<a href="javascript:<?=$this->table_id?>.<?=$nav_func_name?>('<?=$sJSUrlPath.'?PAGEN_'.$this->NavNum.'='.$middlePage.'&amp;SIZEN_'.$this->NavNum.'='.$this->NavPageSize.$sQueryString?>');" class="adm-nav-page-separator"><?=$middlePage?></a>
+		<a href="javascript:void(0)" onclick="<?=$this->table_id?>.<?=$nav_func_name?>('<?=$sJSUrlPath.'?PAGEN_'.$this->NavNum.'='.$middlePage.'&amp;SIZEN_'.$this->NavNum.'='.$this->NavPageSize.$sQueryString?>');<?=$showWait?>" class="adm-nav-page-separator"><?=$middlePage?></a>
 <?
 			}
 			$NavRecordGroup = $this->nStartPage;
@@ -63,7 +65,7 @@ if($this->NavRecordCount>0)
 			{
 				$middlePage = floor(($this->NavPageCount + $this->nEndPage - 1)/2);
 ?>
-		<a href="javascript:<?=$this->table_id?>.<?=$nav_func_name?>('<?=$sJSUrlPath.'?PAGEN_'.$this->NavNum.'='.$middlePage.'&amp;SIZEN_'.$this->NavNum.'='.$this->NavPageSize.$sQueryString?>');" class="adm-nav-page-separator"><?=$middlePage?></a>
+		<a href="javascript:void(0)" onclick="<?=$this->table_id?>.<?=$nav_func_name?>('<?=$sJSUrlPath.'?PAGEN_'.$this->NavNum.'='.$middlePage.'&amp;SIZEN_'.$this->NavNum.'='.$this->NavPageSize.$sQueryString?>');<?=$showWait?>" class="adm-nav-page-separator"><?=$middlePage?></a>
 <?
 			}
 
@@ -79,7 +81,7 @@ if($this->NavRecordCount>0)
 	if($this->NavPageNomer < $this->NavPageCount)
 	{
 ?>
-		<a class="adm-nav-page adm-nav-page-next" href="javascript:<?echo $this->table_id?>.<?=$nav_func_name?>('<?echo $sJSUrlPath.'?PAGEN_'.$this->NavNum.'='.($this->NavPageNomer+1).'&amp;SIZEN_'.$this->NavNum.'='.$this->NavPageSize.$sQueryString;?>');"></a>
+		<a class="adm-nav-page adm-nav-page-next" href="javascript:void(0)" onclick="<?echo $this->table_id?>.<?=$nav_func_name?>('<?echo $sJSUrlPath.'?PAGEN_'.$this->NavNum.'='.($this->NavPageNomer+1).'&amp;SIZEN_'.$this->NavNum.'='.$this->NavPageSize.$sQueryString;?>');<?=$showWait?>"></a>
 <?
 	}
 	else //($this->NavPageNomer < $this->NavPageCount):

@@ -592,16 +592,9 @@ function JCTreeSelectControl(arParams)
 
 				if (_this.multiple)
 				{
-					if (jsUtils.IsIE())
-						var obCheckbox = document.createElement('<input type="checkbox" />');
-					else
-					{
-						var obCheckbox = document.createElement('INPUT');
-						obCheckbox.type = 'checkbox';
-					}
-
+					var obCheckbox = document.createElement('INPUT');
+					obCheckbox.type = 'checkbox';
 					obCheckbox.id = 'mts_check_' + arElements[i].ID;
-
 					obCheckbox.defaultChecked = false;
 
 					for (var j = 0; j < current_selected.length; j++)

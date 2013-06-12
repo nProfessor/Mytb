@@ -102,4 +102,15 @@ $MESS["MAIN_MENU_SHORT_URLS_ALT"] = "Short URL parameters";
 $MESS["MAIN_MENU_HOTKEYS"] = "Keyboard shortcuts";
 $MESS["MAIN_MENU_HOTKEYS_ALT"] = "Customize keyboard shortcuts";
 $MESS["MAIN_MENU_MP_CATEGORY"] = "Solutions in category";
+$MESS["MAIN_MENU_DUMP_NEW"] = "Create Backup";
+$MESS["MAIN_MENU_DUMP_LIST"] = "View Existing Backups";
+$MESS["MAIN_MENU_DUMP_AUTO"] = "Configure Schedule";
+$MESS["MAIN_MENU_DUMP_LOG"] = "Backup log";
+$MESS["MAIN_MENU_SMILE"] = "Smileys";
+$MESS["MAIN_MENU_SMILE_LIST"] = "Smileys";
+$MESS["MAIN_MENU_SMILE_LIST_ALT"] = "Manage smileys";
+$MESS["MAIN_MENU_SMILE_SET_LIST"] = "Smiley sets";
+$MESS["MAIN_MENU_SMILE_SET_LIST_ALT"] = "Manage smiley sets";
+$MESS["MAIN_MENU_SMILE_IMPORT_LIST"] = "Import smileys";
+$MESS["MAIN_MENU_SMILE_IMPORT_LIST_ALT"] = "Import smileys from external files";
 ?>

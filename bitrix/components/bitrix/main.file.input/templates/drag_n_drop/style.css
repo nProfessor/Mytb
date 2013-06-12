@@ -110,27 +110,27 @@ html* .file-placeholder .files-list {
 	position:relative;
 }
 .file-placeholder .files-text {
-	color:#2067b0;
-	display:block;
-	font-weight:bold;
-	position:relative;
+	-moz-box-sizing: border-box;
+	color: #2067B0;
+	display: inline-block;
+	font-weight: bold;
+	max-width: 100%;
+	padding-right: 20px;
+	position: relative;
 	zoom:1;
 }
 .file-placeholder .error-load .files-text {
 	color:#bb0000;
 }
 .file-placeholder .f-wrap {
-	display:inline-block;
-	max-width:175px;
-	height:15px;
-	overflow:hidden;
-	white-space:nowrap;
-	text-overflow: ellipsis;
-	position:relative;
+	display: inline-block;
+	overflow: hidden;
+	width: 100%;
+	word-wrap: break-word;
 	zoom:1;
 }
 .file-placeholder .del-but {
-    background: url("images/live_feed_sprite.png") no-repeat scroll 0 0 transparent;
+	background: url("images/live_feed_sprite.png") no-repeat scroll 0 0 transparent;
     cursor: pointer;
     height: 20px;
     position: absolute;

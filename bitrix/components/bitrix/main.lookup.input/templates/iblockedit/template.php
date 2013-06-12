@@ -1,20 +1,22 @@
-<?if(!Defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
+<?
+/**
+ * Bitrix vars
+ * @global CMain $APPLICATION
+ * @param array $arParams
+ * @param array $arResult
+ * @param CBitrixComponentTemplate $this
+ */
+if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
 
 if ((defined('BX_PUBLIC_MODE')) && (1 == BX_PUBLIC_MODE))
 {
-?>
-<link rel="stylesheet" type="text/css" href="<?php echo $this->GetFolder().'/style.css'; ?>">
-<script type="text/javascript" src="/bitrix/js/main/ajax.js"></script>
-<script type="text/javascript" src="/bitrix/js/main/utils.js"></script>
-<script type="text/javascript" src="/bitrix/js/main/public_tools.js"></script>
-<script type="text/javascript" src="<?php echo $this->__component->GetPath().'/script.js'; ?>"></script>
-<script type="text/javascript" src="<?php echo $this->GetFolder().'/script2.js'; ?>"></script>
-<?php
+	$APPLICATION->SetAdditionalCSS($this->GetFolder().'/style.css');
+	$APPLICATION->AddHeadScript("/bitrix/js/main/ajax.js");
+	$APPLICATION->AddHeadScript("/bitrix/js/main/utils.js");
+	$APPLICATION->AddHeadScript("/bitrix/js/main/public_tools.js");
+	$APPLICATION->AddHeadScript($this->__component->GetPath().'/script.js');
 }
-else
-{
-	?><script type="text/javascript" src="<?php echo $this->GetFolder().'/script2.js'; ?>"></script><?
-}
+$APPLICATION->AddHeadScript($this->GetFolder().'/script2.js');
 
 $control_id = $arParams['CONTROL_ID'];
 $textarea_id = $arParams['INPUT_NAME_STRING'] ? $arParams['INPUT_NAME_STRING'] : 'visual_'.$control_id;
@@ -52,7 +54,7 @@ if(isset($arParams['INPUT_VALUE_STRING']) && strlen($arParams['INPUT_VALUE_STRIN
 	<input autocomplete="off" type="text" name="<?=$textarea_id?>" id="<?=$textarea_id?>" value="<?if (isset($arParams['INPUT_VALUE_STRING'])) echo htmlspecialcharsbx($arParams['INPUT_VALUE_STRING']);?>" class="mli-field">
 	<?endif?>
 </div>
-<?php
+<?
 $arAjaxParams = array(
 	"IBLOCK_ID" => $arParams["IBLOCK_ID"],
 );
@@ -61,43 +63,47 @@ if ('' != $arParams['BAN_SYM'])
 	$arAjaxParams['BAN_SYM'] = $arParams['BAN_SYM'];
 	$arAjaxParams['REP_SYM'] = $arParams['REP_SYM'];
 }
+
+$arSelectorParams = array(
+	'AJAX_PAGE' => $this->GetFolder()."/ajax.php",
+	'AJAX_PARAMS' => $arAjaxParams,
+	'CONTROL_ID' => $control_id,
+	'LAYOUT_ID' => 'layout_'.$control_id,
+	'INPUT_NAME' => $arParams['~INPUT_NAME'],
+	'PROACTIVE' => 'MESSAGE',
+	'VALUE' => $INPUT_VALUE,
+	'VISUAL' => array(
+		'ID' => $textarea_id,
+		'MAX_HEIGHT' => $arParams['MAX_HEIGHT'],
+		'MIN_HEIGHT' => $arParams['MIN_HEIGHT'],
+		'START_TEXT' => $arParams['START_TEXT'],
+		'SEARCH_POSITION' => ('Y' == $arParams['FILTER'] ? 'absolute' : ''),
+		'SEARCH_ZINDEX' => 4000,
+	),
+);
+
+if($arParams['INPUT_NAME_SUSPICIOUS'])
+{
+	$arSelectorParams['INPUT_NAME_SUSPICIOUS'] = $arParams['INPUT_NAME_SUSPICIOUS'];
+}
+if (0 < $arParams['MAX_WIDTH'])
+{
+	$arSelectorParams['VISUAL']['MAX_WIDTH'] = $arParams['MAX_WIDTH'];
+}
+
 ?>
 <script type="text/javascript">
-var jsMLI_<?=$control_id?> = new JCMainLookupAdminSelector({
-	'AJAX_PAGE' : '<?echo CUtil::JSEscape($this->GetFolder()."/ajax.php")?>',
-	'AJAX_PARAMS' : <?echo CUtil::PhpToJsObject($arAjaxParams)?>,
-	'CONTROL_ID': '<?echo CUtil::JSEscape($control_id)?>',
-	'LAYOUT_ID': 'layout_<?echo CUtil::JSEscape($control_id)?>',
-	'INPUT_NAME': '<?echo CUtil::JSEscape($arParams['~INPUT_NAME'])?>',
-	<?if($arParams['INPUT_NAME_SUSPICIOUS']):?>
-		'INPUT_NAME_SUSPICIOUS': '<?echo CUtil::JSEscape($arParams['INPUT_NAME_SUSPICIOUS'])?>',
-	<?endif;?>
-	'PROACTIVE': 'MESSAGE',
-	'VALUE': <?echo CUtil::PhpToJsObject($INPUT_VALUE)?>,
-	'VISUAL': {
-		'ID': '<?=$textarea_id?>',
-		'MAX_HEIGHT': <?php echo $arParams['MAX_HEIGHT']; ?>,
-		'MIN_HEIGHT': <?php echo $arParams['MIN_HEIGHT']; ?>,
-		<?php
-		if (0 < $arParams['MAX_WIDTH'])
-		{
-		?>
-		'MAX_WIDTH': <?php echo $arParams['MAX_WIDTH']?>,
-		<?php
-		}
-		?>
-		'START_TEXT': '<?echo CUtil::JSEscape($arParams['START_TEXT'])?>'
-	}
-});
-<?php if ((defined('BX_PUBLIC_MODE')) && (1 == BX_PUBLIC_MODE))
+var jsMLI_<?=$control_id?> = new JCMainLookupAdminSelector(<? echo CUtil::PhpToJSObject($arSelectorParams); ?>);
+<? if ((defined('BX_PUBLIC_MODE')) && (1 == BX_PUBLIC_MODE))
 { ?>
 jsMLI_<?=$control_id?>.Init();
-<?php
+<?
 }
-?><?php 
+?><?
 if ('Y' == $arParams['RESET'])
 {
-?>jsMLI_<?=$control_id?>.Reset(true,false);<?php 
+?>jsMLI_<?=$control_id?>.Reset(true,false);<?
 }
 ?>
+BX.addCustomEvent(BX.WindowManager.Get(), 'onWindowClose', BX.delegate(jsMLI_<?=$control_id?>.Clear, jsMLI_<?=$control_id?>));
 </script>

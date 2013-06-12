@@ -76,8 +76,8 @@ BX.PopupWindow = function(uniquePopupId, bindElement, params)
 	this.params.zIndex = parseInt(this.params.zIndex);
 	this.params.zIndex = isNaN(this.params.zIndex) ? 0 : this.params.zIndex;
 	this.buttons = this.params.buttons && BX.type.isArray(this.params.buttons) ? this.params.buttons : [];
-	this.offsetTop = BX.PopupWindow.getOption("offsetTop", 0);
-	this.offsetLeft = BX.PopupWindow.getOption("offsetLeft", 0);
+	this.offsetTop = BX.PopupWindow.getOption("offsetTop");
+	this.offsetLeft = BX.PopupWindow.getOption("offsetLeft");
 	this.firstShow = false;
 	this.bordersWidth = 20;
 	this.bindElementPos = null;
@@ -90,9 +90,9 @@ BX.PopupWindow = function(uniquePopupId, bindElement, params)
 	this.closeByEsc = !!this.params.closeByEsc;
 	this.isCloseByEscBinded = false;
 
-    this.dragged = false;
-    this.dragPageX = 0;
-    this.dragPageY = 0;
+	this.dragged = false;
+	this.dragPageX = 0;
+	this.dragPageY = 0;
 
 	if (this.params.events)
 	{
@@ -147,7 +147,7 @@ BX.PopupWindow = function(uniquePopupId, bindElement, params)
 	{
 		this.popupContainer.appendChild(
 			(this.closeIcon = BX.create("a", {
-				props : { className: "popup-window-close-icon", href : ""},
+				props : { className: "popup-window-close-icon" + (params.titleBar ? " popup-window-titlebar-close-icon" : ""), href : ""},
 				style : (typeof(params.closeIcon) == "object" ? params.closeIcon : {} ),
 				events : { click : BX.proxy(this._onCloseIconClick, this) } } )
 			)
@@ -174,7 +174,9 @@ BX.PopupWindow = function(uniquePopupId, bindElement, params)
 	this.setButtons(this.params.buttons);
 
 	if (this.params.bindOnResize !== false)
+	{
 		BX.bind(window, "resize", BX.proxy(this._onResizeWindow, this));
+	}
 };
 
 BX.PopupWindow.prototype.setContent = function(content)
@@ -184,7 +186,7 @@ BX.PopupWindow.prototype.setContent = function(content)
 
 	if (BX.type.isElementNode(content))
 	{
-        BX.cleanNode(this.contentContainer);
+		BX.cleanNode(this.contentContainer);
 		this.contentContainer.appendChild(content.parentNode ? content.parentNode.removeChild(content) : content );
 		content.style.display = "block";
 	}
@@ -237,8 +239,8 @@ BX.PopupWindow.prototype.setButtons = function(buttons)
 
 BX.PopupWindow.prototype.setBindElement = function(bindElement)
 {
-    if (!bindElement || typeof(bindElement) != "object")
-        return;
+	if (!bindElement || typeof(bindElement) != "object")
+		return;
 
 	if (BX.type.isDomNode(bindElement) || (BX.type.isNumber(bindElement.top) && BX.type.isNumber(bindElement.left)))
 		this.bindElement = bindElement;
@@ -251,33 +253,35 @@ BX.PopupWindow.prototype.setBindElement = function(bindElement)
 
 BX.PopupWindow.prototype.getBindElementPos = function(bindElement)
 {
-    if (BX.type.isDomNode(bindElement))
-        return BX.pos(bindElement, false);
-    else if (bindElement && typeof(bindElement) == "object")
-    {
-        if (!BX.type.isNumber(bindElement.bottom))
-            bindElement.bottom = bindElement.top;
-        return bindElement;
-    }
-    else
-    {
-        var windowSize =  BX.GetWindowInnerSize();
-       	var windowScroll = BX.GetWindowScrollPos();
-       	var popupWidth = this.popupContainer.offsetWidth;
-       	var popupHeight = this.popupContainer.offsetHeight;
+	if (BX.type.isDomNode(bindElement))
+	{
+		return BX.pos(bindElement, false);
+	}
+	else if (bindElement && typeof(bindElement) == "object")
+	{
+		if (!BX.type.isNumber(bindElement.bottom))
+			bindElement.bottom = bindElement.top;
+		return bindElement;
+	}
+	else
+	{
+		var windowSize =  BX.GetWindowInnerSize();
+		var windowScroll = BX.GetWindowScrollPos();
+		var popupWidth = this.popupContainer.offsetWidth;
+		var popupHeight = this.popupContainer.offsetHeight;
 
-        return {
-            left : windowSize.innerWidth/2 - popupWidth/2 + windowScroll.scrollLeft,
-            top : windowSize.innerHeight/2 - popupHeight/2 + windowScroll.scrollTop,
-            bottom : windowSize.innerHeight/2 - popupHeight/2 + windowScroll.scrollTop,
+		return {
+			left : windowSize.innerWidth/2 - popupWidth/2 + windowScroll.scrollLeft,
+			top : windowSize.innerHeight/2 - popupHeight/2 + windowScroll.scrollTop,
+			bottom : windowSize.innerHeight/2 - popupHeight/2 + windowScroll.scrollTop,
 
-            //for optimisation purposes
-            windowSize : windowSize,
-            windowScroll : windowScroll,
-            popupWidth : popupWidth,
-            popupHeight : popupHeight
-        };
-    }
+			//for optimisation purposes
+			windowSize : windowSize,
+			windowScroll : windowScroll,
+			popupWidth : popupWidth,
+			popupHeight : popupHeight
+		};
+	}
 };
 
 BX.PopupWindow.prototype.setAngle = function(params)
@@ -285,13 +289,20 @@ BX.PopupWindow.prototype.setAngle = function(params)
 	var className = this.params.lightShadow ? "popup-window-light-angly" : "popup-window-angly";
 	if (this.angle == null)
 	{
-        var position = this.bindOptions.position && this.bindOptions.position == "top" ? "bottom" : "top";
-		var angleMinLeft = BX.PopupWindow.getOption(position == "top" ? "angleMinTop" : "angleMinBottom", 7);
+		var position = this.bindOptions.position && this.bindOptions.position == "top" ? "bottom" : "top";
+		var angleMinLeft = BX.PopupWindow.getOption(position == "top" ? "angleMinTop" : "angleMinBottom");
+		var defaultOffset = BX.type.isNumber(params.offset) ? params.offset : 0;
+
+		var angleLeftOffset = BX.PopupWindow.getOption("angleLeftOffset", null);
+		if (defaultOffset > 0 && BX.type.isNumber(angleLeftOffset))
+			defaultOffset += angleLeftOffset - BX.PopupWindow.defaultOptions.angleLeftOffset;
+
 		this.angle = {
 			element : BX.create("div", { props : { className: className + " " + className +"-" + position }}),
 			position : position,
 			offset : 0,
-			defaultOffset :  Math.max(BX.type.isNumber(params.offset) ? params.offset : 0, angleMinLeft)
+			defaultOffset : Math.max(defaultOffset, angleMinLeft)
+			//Math.max(BX.type.isNumber(params.offset) ? params.offset : 0, angleMinLeft)
 		};
 		this.popupContainer.appendChild(this.angle.element);
 	}
@@ -306,21 +317,66 @@ BX.PopupWindow.prototype.setAngle = function(params)
 	if (typeof(params) == "object" && BX.type.isNumber(params.offset))
 	{
 		var offset = params.offset;
+		var minOffset, maxOffset;
 		if (this.angle.position == "top")
 		{
-			this.angle.element.style.left = (this.angle.offset = Math.max(BX.PopupWindow.getOption("angleMinTop", 7), offset)) + "px";
+			minOffset = BX.PopupWindow.getOption("angleMinTop");
+			maxOffset = this.popupContainer.offsetWidth - BX.PopupWindow.getOption("angleMaxTop");
+			maxOffset = maxOffset < minOffset ? Math.max(minOffset, offset) : maxOffset;
+
+			this.angle.offset = Math.min(Math.max(minOffset, offset), maxOffset);
+			this.angle.element.style.left = this.angle.offset + "px";
 			this.angle.element.style.marginLeft = "auto";
 		}
-		else if (this.angle.position == "right")
-			this.angle.element.style.top = (this.angle.offset = Math.max(BX.PopupWindow.getOption("angleMinRight", 2), offset)) + "px";
 		else if (this.angle.position == "bottom")
 		{
-			this.angle.element.style.marginLeft = (this.angle.offset = Math.max(BX.PopupWindow.getOption("angleMinBottom", 7), offset)) + "px";
+			minOffset = BX.PopupWindow.getOption("angleMinBottom");
+			maxOffset = this.popupContainer.offsetWidth - BX.PopupWindow.getOption("angleMaxBottom");
+			maxOffset = maxOffset < minOffset ? Math.max(minOffset, offset) : maxOffset;
+
+			this.angle.offset = Math.min(Math.max(minOffset, offset), maxOffset);
+			this.angle.element.style.marginLeft = this.angle.offset + "px";
 			this.angle.element.style.left = "auto";
 		}
+		else if (this.angle.position == "right")
+		{
+			minOffset = BX.PopupWindow.getOption("angleMinRight");
+			maxOffset = this.popupContainer.offsetHeight - BX.PopupWindow.getOption("angleMaxRight");
+			maxOffset = maxOffset < minOffset ? Math.max(minOffset, offset) : maxOffset;
+
+			this.angle.offset = Math.min(Math.max(minOffset, offset), maxOffset);
+			this.angle.element.style.top = this.angle.offset + "px";
+		}
 		else if (this.angle.position == "left")
-			this.angle.element.style.top = (this.angle.offset = Math.max(BX.PopupWindow.getOption("angleMinLeft", 2), offset)) + "px";
+		{
+			minOffset = BX.PopupWindow.getOption("angleMinLeft");
+			maxOffset = this.popupContainer.offsetHeight - BX.PopupWindow.getOption("angleMaxLeft");
+			maxOffset = maxOffset < minOffset ? Math.max(minOffset, offset) : maxOffset;
+
+			this.angle.offset = Math.min(Math.max(minOffset, offset), maxOffset);
+			this.angle.element.style.top = this.angle.offset + "px";
+		}
 	}
+};
+
+BX.PopupWindow.prototype.isTopAngle = function()
+{
+	return this.angle != null && this.angle.position == "top";
+};
+
+BX.PopupWindow.prototype.isBottomAngle = function()
+{
+	return this.angle != null && this.angle.position == "bottom";
+};
+
+BX.PopupWindow.prototype.isTopOrBottomAngle = function()
+{
+	return this.angle != null && BX.util.in_array(this.angle.position, ["top", "bottom"]);
+};
+
+BX.PopupWindow.prototype.getAngleHeight = function()
+{
+	return (this.isTopOrBottomAngle() ? BX.PopupWindow.getOption("angleTopOffset") : 0);
 };
 
 BX.PopupWindow.prototype.setOffset = function(params)
@@ -329,10 +385,10 @@ BX.PopupWindow.prototype.setOffset = function(params)
 		return;
 
 	if (params.offsetLeft && BX.type.isNumber(params.offsetLeft))
-		this.offsetLeft = params.offsetLeft + BX.PopupWindow.getOption("offsetLeft", 0);
+		this.offsetLeft = params.offsetLeft + BX.PopupWindow.getOption("offsetLeft");
 
 	if (params.offsetTop && BX.type.isNumber(params.offsetTop))
-		this.offsetTop = params.offsetTop + BX.PopupWindow.getOption("offsetTop", 0);
+		this.offsetTop = params.offsetTop + BX.PopupWindow.getOption("offsetTop");
 };
 
 BX.PopupWindow.prototype.setTitleBar = function(params)
@@ -434,9 +490,9 @@ BX.PopupWindow.prototype.resizeOverlay = function()
 BX.PopupWindow.prototype.getZindex = function()
 {
 	if (this.overlay != null)
-		return BX.PopupWindow.getOption("popupOverlayZindex", 1100) + this.params.zIndex;
+		return BX.PopupWindow.getOption("popupOverlayZindex") + this.params.zIndex;
 	else
-		return BX.PopupWindow.getOption("popupZindex", 1000) + this.params.zIndex;
+		return BX.PopupWindow.getOption("popupZindex") + this.params.zIndex;
 };
 
 
@@ -475,7 +531,7 @@ BX.PopupWindow.prototype.show = function()
 	{
 		setTimeout(
 			BX.proxy(function() {
-                this.isAutoHideBinded = true;
+				this.isAutoHideBinded = true;
 				BX.bind(this.popupContainer, "click", this.cancelBubble);
 				BX.bind(document, "click", BX.proxy(this.close, this));
 			}, this), 0
@@ -501,8 +557,11 @@ BX.PopupWindow.prototype.cancelBubble = function(event)
 
 BX.PopupWindow.prototype.close = function(event)
 {
-    if (!this.isShown())
-        return;
+	if (!this.isShown())
+		return;
+
+	if (event && !(BX.getEventButton(event)&BX.MSLEFT))
+		return true;
 
 	BX.onCustomEvent(this, "onPopupClose", [this, event]);
 
@@ -522,7 +581,7 @@ BX.PopupWindow.prototype._close = function()
 {
 	if (this.params.autoHide && this.isAutoHideBinded)
 	{
-        this.isAutoHideBinded = false;
+		this.isAutoHideBinded = false;
 		BX.unbind(this.popupContainer, "click", this.cancelBubble);
 		BX.unbind(document, "click", BX.proxy(this.close, this));
 	}
@@ -546,6 +605,11 @@ BX.PopupWindow.prototype.destroy = function()
 {
 	BX.onCustomEvent(this, "onPopupDestroy", [this]);
 	BX.unbindAll(this);
+	BX.unbind(document, "keyup", BX.proxy(this._onKeyUp, this));
+	BX.unbind(document, "click", BX.proxy(this.close, this));
+	BX.unbind(document, "mousemove", BX.proxy(this._moveDrag, this));
+	BX.unbind(document, "mouseup", BX.proxy(this._stopDrag, this));
+	BX.unbind(window, "resize", BX.proxy(this._onResizeWindow, this));
 	BX.remove(this.popupContainer);
 	this.removeOverlay();
 };
@@ -558,9 +622,9 @@ BX.PopupWindow.prototype.adjustPosition = function(bindOptions)
 	var bindElementPos = this.getBindElementPos(this.bindElement);
 
 	if (!this.bindOptions.forceBindPosition && this.bindElementPos != null &&
-         bindElementPos.top == this.bindElementPos.top &&
-         bindElementPos.left == this.bindElementPos.left
-    )
+		 bindElementPos.top == this.bindElementPos.top &&
+		 bindElementPos.left == this.bindElementPos.left
+	)
 		return;
 
 	this.bindElementPos = bindElementPos;
@@ -570,11 +634,10 @@ BX.PopupWindow.prototype.adjustPosition = function(bindOptions)
 	var popupWidth = bindElementPos.popupWidth ? bindElementPos.popupWidth : this.popupContainer.offsetWidth;
 	var popupHeight = bindElementPos.popupHeight ? bindElementPos.popupHeight : this.popupContainer.offsetHeight;
 
-	var angleTopOffset = BX.PopupWindow.getOption("angleTopOffset", 5);
-	var angleLeftOffset = BX.PopupWindow.getOption("angleLeftOffset", 15);
+	var angleTopOffset = BX.PopupWindow.getOption("angleTopOffset");
 
-    var left = this.bindElementPos.left + this.offsetLeft - (this.angle != null && BX.util.in_array(this.angle.position, ["top", "bottom"]) ? angleLeftOffset  : 0);
-
+	var left = this.bindElementPos.left + this.offsetLeft -
+				(this.isTopOrBottomAngle() ? BX.PopupWindow.getOption("angleLeftOffset") : 0);
 
 	if ( !this.bindOptions.forceLeft &&
 		(left + popupWidth + this.bordersWidth) >= (windowSize.innerWidth + windowScroll.scrollLeft) &&
@@ -582,68 +645,75 @@ BX.PopupWindow.prototype.adjustPosition = function(bindOptions)
 	{
 			var bindLeft = left;
 			left = windowSize.innerWidth + windowScroll.scrollLeft - popupWidth - this.bordersWidth;
-			if (this.angle != null && BX.util.in_array(this.angle.position, ["top", "bottom"]))
+			if (this.isTopOrBottomAngle())
 			{
 				this.setAngle({ offset : bindLeft - left + this.angle.defaultOffset});
 			}
 	}
-	else if (this.angle != null && BX.util.in_array(this.angle.position, ["top", "bottom"]))
+	else if (this.isTopOrBottomAngle())
 	{
-		this.setAngle({ offset :  this.angle.defaultOffset + (left < 0 ? left : 0) });
+		this.setAngle({ offset : this.angle.defaultOffset + (left < 0 ? left : 0) });
 	}
 
 	if (left < 0)
 		left = 0;
 
-    var top = 0;
-    if (this.bindOptions.position && this.bindOptions.position == "top")
-    {
-        top = this.bindElementPos.top - popupHeight - this.offsetTop - (this.angle != null && this.angle.position == "bottom" ? angleTopOffset : 0);
-        if (top < 0 || (!this.bindOptions.forceTop && top < windowScroll.scrollTop))
-        {
-            top = this.bindElementPos.bottom + this.offsetTop;
-            if (this.angle != null)
-            {
-                top += angleTopOffset;
-                this.setAngle({ position: "top"});
-            }
-        }
-        else if (this.angle != null && this.angle.position == "top")
-        {
-            top = top - angleTopOffset + BX.PopupWindow.getOption("positionTopXOffset", 0);
-            this.setAngle({ position: "bottom"});
-        }
-		else
-			top += BX.PopupWindow.getOption("positionTopXOffset", 0);
-    }
-    else
-    {
-        top = this.bindElementPos.bottom + this.offsetTop + (this.angle != null && this.angle.position == "top" ? angleTopOffset : 0);
-    	if ( !this.bindOptions.forceTop && (top + popupHeight) > (windowSize.innerHeight + windowScroll.scrollTop) && (this.bindElementPos.top - popupHeight) >= 0)
-    	{
-    		top =  this.bindElementPos.top - popupHeight;
-    		if (this.angle != null)
-    		{
-    			top -= angleTopOffset;
-    			this.setAngle({ position: "bottom"});
-    		}
+	var top = 0;
 
-			top += BX.PopupWindow.getOption("positionTopXOffset", 0)
-    	}
-    	else if (this.angle != null && this.angle.position == "bottom")
-    	{
-    		top += angleTopOffset;
-    		this.setAngle({ position: "top"});
-    	}
-    }
+	if (this.bindOptions.position && this.bindOptions.position == "top")
+	{
+		top = this.bindElementPos.top - popupHeight - this.offsetTop - (this.isBottomAngle() ? angleTopOffset : 0);
+		if (top < 0 || (!this.bindOptions.forceTop && top < windowScroll.scrollTop))
+		{
+			top = this.bindElementPos.bottom + this.offsetTop;
+			if (this.angle != null)
+			{
+				top += angleTopOffset;
+				this.setAngle({ position: "top"});
+			}
+		}
+		else if (this.isTopAngle())
+		{
+			top = top - angleTopOffset + BX.PopupWindow.getOption("positionTopXOffset");
+			this.setAngle({ position: "bottom"});
+		}
+		else
+		{
+			top += BX.PopupWindow.getOption("positionTopXOffset");
+		}
+	}
+	else
+	{
+		top = this.bindElementPos.bottom + this.offsetTop + this.getAngleHeight();
+
+		if ( !this.bindOptions.forceTop &&
+			(top + popupHeight) > (windowSize.innerHeight + windowScroll.scrollTop) &&
+			(this.bindElementPos.top - popupHeight - this.getAngleHeight()) >= 0) //Can we place the PopupWindow above the bindElement?
+		{
+			//The PopupWindow doesn't place below the bindElement. We should place it above.
+			top = this.bindElementPos.top - popupHeight;
+			if (this.isTopOrBottomAngle())
+			{
+				top -= angleTopOffset;
+				this.setAngle({ position: "bottom"});
+			}
+
+			top += BX.PopupWindow.getOption("positionTopXOffset");
+		}
+		else if (this.isBottomAngle())
+		{
+			top += angleTopOffset;
+			this.setAngle({ position: "top"});
+		}
+	}
 
 	if (top < 0)
 		top = 0;
 
 	BX.adjust(this.popupContainer, { style: {
-        top: top + "px",
-        left: left + "px",
-        zIndex: this.getZindex()
+		top: top + "px",
+		left: left + "px",
+		zIndex: this.getZindex()
 	}});
 
 	this.adjustOverlayZindex();
@@ -651,7 +721,7 @@ BX.PopupWindow.prototype.adjustPosition = function(bindOptions)
 
 BX.PopupWindow.prototype._onResizeWindow = function(event)
 {
-    if (this.isShown())
+	if (this.isShown())
 	{
 		this.adjustPosition();
 		if (this.overlay != null)
@@ -673,7 +743,7 @@ BX.PopupWindow.prototype.move = function(offsetX, offsetY)
 		//Right side
 		var scrollSize = BX.GetWindowScrollSize();
 		var floatWidth = this.popupContainer.offsetWidth;
-        var floatHeight = this.popupContainer.offsetHeight;
+		var floatHeight = this.popupContainer.offsetHeight;
 
 		if (left > (scrollSize.scrollWidth - floatWidth))
 			left = scrollSize.scrollWidth - floatWidth;
@@ -693,7 +763,7 @@ BX.PopupWindow.prototype.move = function(offsetX, offsetY)
 BX.PopupWindow.prototype._startDrag = function(event)
 {
 	event = event || window.event;
-    BX.fixEventPageXY(event);
+	BX.fixEventPageXY(event);
 
 	this.dragPageX = event.pageX;
 	this.dragPageY = event.pageY;
@@ -708,9 +778,9 @@ BX.PopupWindow.prototype._startDrag = function(event)
 	//document.onmousedown = BX.False;
 	document.body.ondrag = BX.False;
 	document.body.onselectstart = BX.False;
-    document.body.style.cursor = "move";
-    document.body.style.MozUserSelect = "none";
-    this.popupContainer.style.MozUserSelect = "none";
+	document.body.style.cursor = "move";
+	document.body.style.MozUserSelect = "none";
+	this.popupContainer.style.MozUserSelect = "none";
 
 	return BX.PreventDefault(event);
 };
@@ -745,11 +815,11 @@ BX.PopupWindow.prototype._stopDrag = function(event)
 	BX.unbind(document, "mouseup", BX.proxy(this._stopDrag, this));
 
 	//document.onmousedown = null;
-    document.body.ondrag = null;
-    document.body.onselectstart = null;
-    document.body.style.cursor = "";
-    document.body.style.MozUserSelect = "";
-    this.popupContainer.style.MozUserSelect = "";
+	document.body.ondrag = null;
+	document.body.onselectstart = null;
+	document.body.style.cursor = "";
+	document.body.style.MozUserSelect = "";
+	this.popupContainer.style.MozUserSelect = "";
 
 	BX.onCustomEvent(this, "onPopupDragEnd");
 	this.dragged = false;
@@ -758,6 +828,31 @@ BX.PopupWindow.prototype._stopDrag = function(event)
 };
 
 BX.PopupWindow.options = {};
+BX.PopupWindow.defaultOptions = {
+
+	angleLeftOffset : 15,
+
+	positionTopXOffset : 0,
+	angleTopOffset : 8,
+
+	popupZindex : 1000,
+	popupOverlayZindex : 1100,
+
+	angleMinLeft : 10,
+	angleMaxLeft : 10,
+
+	angleMinRight : 10,
+	angleMaxRight : 10,
+
+	angleMinBottom : 7,
+	angleMaxBottom : 25,
+
+	angleMinTop : 7,
+	angleMaxTop : 25,
+
+	offsetLeft : 0,
+	offsetTop: 0
+};
 BX.PopupWindow.setOptions = function(options)
 {
 	if (!options || typeof(options) != "object")
@@ -771,10 +866,11 @@ BX.PopupWindow.getOption = function(option, defaultValue)
 {
 	if (typeof(BX.PopupWindow.options[option]) != "undefined")
 		return BX.PopupWindow.options[option];
-	else
+	else if (typeof(defaultValue) != "undefined")
 		return defaultValue;
+	else
+		return BX.PopupWindow.defaultOptions[option];
 };
-
 
 
 /*========================================Buttons===========================================*/
@@ -828,7 +924,9 @@ BX.PopupWindowButton.prototype.setClassName = function(className)
 {
 	if (this.buttonNode)
 	{
-		BX.removeClass(this.buttonNode, this.className);
+		if (BX.type.isString(this.className) && (this.className != ''))
+			BX.removeClass(this.buttonNode, this.className);
+
 		BX.addClass(this.buttonNode, className)
 	}
 
@@ -1156,5 +1254,6 @@ Deactivate: function(bDeactivate)
 	this.pInput.disabled = bDeactivate;
 }
 };
+
 
 })(window);

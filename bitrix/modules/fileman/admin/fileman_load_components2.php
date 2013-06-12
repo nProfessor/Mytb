@@ -77,7 +77,7 @@ function handleChildren($arEls, $path)
 				$thirdLevelName = '__bx_thirdLevel_'.$GLOBALS["thirdLevelId"];
 				$GLOBALS["thirdLevelId"]++;
 				foreach ($arEl['*'] as $cN => $arC)
-					pushElement($path, $cN, $arC['TITLE'], false, $arC['ICON'], $arC['COMPLEX'], '{DESCRIPTION : \''.CUtil::JSEscape($arC['DESCRIPTION']).'\'}',$thirdLevelName,$arC['SCREENSHOT']);
+					pushElement($path, $cN, $arC['TITLE'], false, $arC['ICON'], $arC['COMPLEX'], '{DESCRIPTION : \''.CUtil::JSEscape($arC['DESCRIPTION']).'\'}', $thirdLevelName, $arC['SCREENSHOT']);
 			}
 			continue;
 		}
@@ -87,17 +87,15 @@ function handleChildren($arEls, $path)
 		if (isset($arEl['#']))
 			handleChildren($arEl['#'],$realPath);
 
-		if (isset($arEl['*']))
-			pushComponents($arEl['*'],$realPath);
+		if (is_array($arEl['*']) && !empty($arEl['*']))
+		{
+			foreach ($arEl['*'] as $compName => $arC)
+			{
+				pushElement($realPath, $compName, $arC['TITLE'], false, $arC['ICON'], $arC['COMPLEX'],'{DESCRIPTION : \''.CUtil::JSEscape($arC['DESCRIPTION']).'\'}',false, $arC['SCREENSHOT']);
+			}
+		}
 	}
 }
-
-function pushComponents($arComponents, $path)
-{
-	foreach ($arComponents as $compName => $arComponent)
-		pushElement($path,$compName,$arComponent['TITLE'],false,$arComponent['ICON'],$arComponent['COMPLEX'],'{DESCRIPTION : \''.CUtil::JSEscape($arComponent['DESCRIPTION']).'\'}',false,$arComponent['SCREENSHOT']);
-}
-
 
 function pushElement($path, $name, $title, $isGroup, $icon, $complex, $params = false, $thirdLevelName = false, $screenshots = array())
 {
@@ -117,11 +115,11 @@ function pushElement($path, $name, $title, $isGroup, $icon, $complex, $params = 
 	}
 ?>
 a.push({
-	path: '<?=$path;?>',
+	path: '<?= $path;?>',
 	name: '<?= CUtil::JSEscape($name);?>',
 	title: '<?= CUtil::JSEscape($title);?>',
 	isGroup: <?=(($isGroup) ? 'true' : 'false');?>,
-	icon: '<?=$icon;?>',
+	icon: '<?= $icon;?>',
 	complex: '<?=$complex;?>',
 	params: <?=(($params===false) ? '[]' : $params);?>,
 <?if($sScreenshots !== false):?>	screenshots: <?= $sScreenshots.","?><?endif;?>

@@ -6,7 +6,7 @@ class CAdminInformer
 	private static $items=array();
 	public static $alertCounter = 0;
 
-   /**
+	/**
 	 * Adds items to admin informer
 	 * @param array (
 	 *			string TITLE  - item title (mandatory),
@@ -29,13 +29,13 @@ class CAdminInformer
 			return false;
 
 		$item = array(
-									"TITLE" => $arParams["TITLE"],
-									"HTML" => $arParams["HTML"],
-									"FOOTER" => isset($arParams["FOOTER"]) ? $arParams["FOOTER"] : false,
-									"LINK" => isset($arParams["LINK"]) ? $arParams["LINK"] : false,
-									"ALERT" => isset($arParams["ALERT"]) ? $arParams["ALERT"] : false,
-									"COLOR" => isset($arParams["COLOR"]) ? $arParams["COLOR"] : "green",
-									);
+			"TITLE" => $arParams["TITLE"],
+			"HTML" => $arParams["HTML"],
+			"FOOTER" => isset($arParams["FOOTER"]) ? $arParams["FOOTER"] : false,
+			"LINK" => isset($arParams["LINK"]) ? $arParams["LINK"] : false,
+			"ALERT" => isset($arParams["ALERT"]) ? $arParams["ALERT"] : false,
+			"COLOR" => isset($arParams["COLOR"]) ? $arParams["COLOR"] : "green",
+		);
 		if($arParams["ALERT"])
 		{
 			$item["SORT"] = 10;
@@ -77,17 +77,17 @@ class CAdminInformer
 		return $itemHtml;
 	}
 
-	private static function Cmp($a, $b)
+	public static function PrintHtmlPublic($visCountParam = 3)
 	{
-    	if ($a["SORT"] == $b["SORT"])
-        	return 1;
+		if(!$GLOBALS["APPLICATION"]->PanelShowed)
+			return "";
 
-    	return ($a["SORT"] < $b["SORT"]) ? -1 : 1;
+		return self::PrintHtml($visCountParam);
 	}
 
 	public static function PrintHtml($visCountParam = 3)
 	{
-		uasort(self::$items, "CAdminInformer::Cmp");
+		sortByColumn(self::$items, "SORT");
 
 		$itemsCount = 0;
 		$visibleCount = 0;
@@ -123,6 +123,15 @@ class CAdminInformer
 	return $div;
 	}
 
+	private static function CutErrorId($sError)
+	{
+		return preg_replace('/\[.*\]/', '', $sError);
+	}
+
+	private static function IsUpdateSystemNeedUpdate($sError)
+	{
+		return strpos($sError, 'NEW_UPDATE_SYSTEM');
+	}
 
 	public static function InsertMainItems()
 	{
@@ -155,8 +164,8 @@ class CAdminInformer
 			else if ($update_res['error'] <> '') // update error
 			{
 				$updAIParams["TITLE"] .= " - ".GetMessage("top_panel_ai_title_err");
-				$updAIParams["HTML"] = $update_res['error'];
-				$updAIParams["FOOTER"] = '<a href="/bitrix/admin/settings.php?mid=main&tabControl_active_tab=edit5&?lang='.LANGUAGE_ID.'">'.GetMessage("top_panel_ai_upd_stp").'</a>';
+				$updAIParams["HTML"] = trim(self::CutErrorId($update_res['error']));
+				$updAIParams["FOOTER"] = '<a href="/bitrix/admin/update_system.php?refresh=Y&lang='.LANGUAGE_ID.'">'.GetMessage("top_panel_ai_upd_chk").'</a>';
 				$updAIParams["ALERT"] = true;
 			}
 			else // update_autocheck == false
@@ -204,9 +213,7 @@ class CAdminInformer
 			self::AddItem($qAIParams);
 		}
 
-		$rsHandlers = GetModuleEvents("main", "OnAdminInformerInsertItems");
-
-		while($arHandler = $rsHandlers->Fetch())
+		foreach(GetModuleEvents("main", "OnAdminInformerInsertItems", true) as $arHandler)
 			ExecuteModuleEventEx($arHandler);
 
 		return count(self::$items);

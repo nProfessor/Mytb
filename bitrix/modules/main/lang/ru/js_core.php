@@ -13,4 +13,5 @@ $MESS["JSADM_AI_HIDE_EXTRA"] = "Скрыть лишние";
 $MESS["JSADM_AI_ALL_NOTIF"] = "Показать все";
 $MESS["JSADM_AUTH_REQ"] = "Требуется авторизация!";
 $MESS["JS_CORE_WINDOW_AUTH"] = "Войти";
+$MESS["JS_CORE_IMAGE_FULL"] = "Полный размер";
 ?>

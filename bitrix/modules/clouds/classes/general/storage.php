@@ -1,12 +1,4 @@
 <?
-/*.
-	require_module 'standard';
-	require_module 'pcre';
-	require_module 'hash';
-	require_module 'bitrix_main';
-	require_module 'bitrix_clouds_classes_storage_bucket';
-	require_module 'bitrix_clouds_classes_storage_service';
-.*/
 IncludeModuleLangFile(__FILE__);
 
 class CCloudStorage
@@ -20,7 +12,6 @@ class CCloudStorage
 	public static $part_count = 0;
 
 	private static $_services = /*.(array[string]CCloudStorageService).*/null;
-
 	/**
 	 * @return void
 	*/
@@ -38,7 +29,6 @@ class CCloudStorage
 			}
 		}
 	}
-
 	/**
 	 * @param string $ID
 	 * @return CCloudStorageService
@@ -51,16 +41,14 @@ class CCloudStorage
 		else
 			return null;
 	}
-
 	/**
 	 * @return array[string]CCloudStorageService
 	*/
-	function GetServiceList()
+	public static function GetServiceList()
 	{
 		self::_init();
 		return self::$_services;
 	}
-
 	/**
 	 * @param string $ID
 	 * @return array[string]string
@@ -73,7 +61,6 @@ class CCloudStorage
 		else
 			return /*.(array[string]string).*/array();
 	}
-
 	/**
 	 * @param string $ID
 	 * @return string
@@ -86,7 +73,6 @@ class CCloudStorage
 		else
 			return "";
 	}
-
 	/**
 	 * @param array[string]string $arFile
 	 * @param string $strFileName
@@ -105,12 +91,12 @@ class CCloudStorage
 			{
 				foreach($bucket["FILE_RULES_COMPILED"] as $rule)
 				{
-					if(strlen($rule["MODULE_MASK"]))
+					if($rule["MODULE_MASK"] != "")
 						$bMatch = preg_match($rule["MODULE_MASK"], $arFile["MODULE_ID"]) > 0;
 					else
 						$bMatch = true;
 
-					if(strlen($rule["EXTENTION_MASK"]))
+					if($rule["EXTENTION_MASK"] != "")
 						$bMatch = $bMatch && (preg_match($rule["EXTENTION_MASK"], $strFileName) > 0);
 
 					if(empty($rule["SIZE_ARRAY"]))
@@ -123,8 +109,8 @@ class CCloudStorage
 						foreach($rule["SIZE_ARRAY"] as $size)
 						{
 							if(
-								($size[0] === false || $file_size >= $size[0])
-								&&  ($size[1] === false || $file_size <= $size[1])
+								($file_size >= $size[0])
+								&&  ($size[1] === 0.0 || $file_size <= $size[1])
 							)
 								$bMatchSize = true;
 						}
@@ -139,7 +125,6 @@ class CCloudStorage
 		}
 		return null;
 	}
-
 	/**
 	 * @param array[string]string $arFile
 	 * @param array[string]string $arResizeParams
@@ -178,39 +163,66 @@ class CCloudStorage
 			}
 		}
 
+		$bImmediate = $arResizeParams[5];
 		$callbackData["cacheID"] = $arFile["ID"]."/".md5(serialize($arResizeParams));
 		$callbackData["cacheOBJ"] = new CPHPCache;
 		$callbackData["fileDIR"] = "/"."resize_cache/".$callbackData["cacheID"]."/".$arFile["SUBDIR"];
 		$callbackData["fileNAME"] = $arFile["FILE_NAME"];
 		$callbackData["fileURL"] = $callbackData["fileDIR"]."/".$callbackData["fileNAME"];
 
-		if($callbackData["cacheOBJ"]->StartDataCache(3600, $callbackData["cacheID"], "clouds"))
+		$result = true;
+		if($callbackData["cacheOBJ"]->StartDataCache(CACHED_clouds_file_resize, $callbackData["cacheID"], "clouds"))
 		{
 			//Check if it is cache file was deleted, but not the file in the cloud
-			if($obTargetBucket->FileExists($callbackData["fileURL"]))
+			if($fs = $obTargetBucket->FileExists($callbackData["fileURL"]))
 			{
 				$callbackData["cacheSTARTED"] = true;
+				if ($fs > 1)
+					$callbackData["fileSize"] = $fs;
 				$bNeedResize = false;
-				return true;
+				$result = true;
 			}
 			else
 			{
 				$callbackData["tmpFile"] = CFile::GetTempName('', $arFile["FILE_NAME"]);
 				$callbackData["tmpFile"] = preg_replace("#[\\\\\\/]+#", "/", $callbackData["tmpFile"]);
-				if($obSourceBucket->DownloadToFile($arFile, $callbackData["tmpFile"]))
+				$cacheImageFile = $callbackData["obTargetBucket"]->GetFileSRC($callbackData["fileURL"]);
+
+				if (
+					!$bImmediate
+					&& COption::GetOptionString("clouds", "delayed_resize") === "Y"
+					&& CCloudStorage::ResizeImageFileDelay(
+						$arDestinationSize,
+						$arFile,
+						$cacheImageFile,
+						$arResizeParams
+					)
+				)
+				{
+					$callbackData["cacheSTARTED"] = false;
+					$bNeedResize = false;
+					$callbackData["cacheOBJ"]->AbortDataCache();
+					$callbackData["cacheVARS"] = array(
+						"cacheImageFile" => $cacheImageFile,
+						"width" => $arDestinationSize["width"],
+						"height" => $arDestinationSize["height"],
+					);
+					$result = true;
+				}
+				elseif($obSourceBucket->DownloadToFile($arFile, $callbackData["tmpFile"]))
 				{
 					$callbackData["cacheSTARTED"] = true;
 					$bNeedResize = true;
 					$sourceImageFile = $callbackData["tmpFile"];
 					$cacheImageFileTmp = CFile::GetTempName('', $arFile["FILE_NAME"]);
-					return true;
+					$result = true;
 				}
 				else
 				{
 					$callbackData["cacheSTARTED"] = false;
 					$bNeedResize = false;
 					$callbackData["cacheOBJ"]->AbortDataCache();
-					return false;
+					$result = false;
 				}
 			}
 		}
@@ -219,13 +231,16 @@ class CCloudStorage
 			$callbackData["cacheSTARTED"] = false;
 			$callbackData["cacheVARS"] = $callbackData["cacheOBJ"]->GetVars();
 			$bNeedResize = false;
-			return true;
+			$result = true;
 		}
+
+		return $result;
 	}
 
 	function OnAfterResizeImage($arFile, $arResizeParams, &$callbackData, &$cacheImageFile, &$cacheImageFileTmp, &$arImageSize)
 	{
 		global $arCloudImageSizeCache;
+		$io = CBXVirtualIo::GetInstance();
 
 		if(!is_array($callbackData))
 			return false;
@@ -234,13 +249,13 @@ class CCloudStorage
 		{
 			if(isset($callbackData["tmpFile"])) //have to upload to the cloud
 			{
-				$arFileToStore = CFile::MakeFileArray($cacheImageFileTmp);
+				$arFileToStore = CFile::MakeFileArray($io->GetPhysicalName($cacheImageFileTmp));
 				if($callbackData["obTargetBucket"]->SaveFile($callbackData["fileURL"], $arFileToStore))
 				{
 					$cacheImageFile = $callbackData["obTargetBucket"]->GetFileSRC($callbackData["fileURL"]);
 
 					$arImageSize = CFile::GetImageSize($cacheImageFileTmp);
-					$arImageSize[2] = filesize($cacheImageFileTmp);
+					$arImageSize[2] = filesize($io->GetPhysicalName($cacheImageFileTmp));
 					$iFileSize = filesize($arFileToStore["tmp_name"]);
 
 					if(!is_array($arImageSize))
@@ -252,8 +267,9 @@ class CCloudStorage
 						"size"=>$arImageSize[2],
 					));
 
-					unlink($callbackData["tmpFile"]);
-					@rmdir(substr($callbackData["tmpFile"], 0, -strlen(bx_basename($callbackData["tmpFile"]))));
+					$tmpFile = $io->GetPhysicalName($callbackData["tmpFile"]);
+					unlink($tmpFile);
+					@rmdir(substr($tmpFile, 0, -strlen(bx_basename($tmpFile))));
 
 					$arCloudImageSizeCache[$cacheImageFile] = $arImageSize;
 
@@ -265,8 +281,9 @@ class CCloudStorage
 				{
 					$callbackData["cacheOBJ"]->AbortDataCache();
 
-					unlink($callbackData["tmpFile"]);
-					@rmdir(substr($callbackData["tmpFile"], 0, -strlen(bx_basename($callbackData["tmpFile"]))));
+					$tmpFile = $io->GetPhysicalName($callbackData["tmpFile"]);
+					unlink($tmpFile);
+					@rmdir(substr($tmpFile, 0, -strlen(bx_basename($tmpFile))));
 
 					unlink($cacheImageFileTmp);
 					@rmdir(substr($cacheImageFileTmp, 0, -strlen(bx_basename($cacheImageFileTmp))));
@@ -277,13 +294,16 @@ class CCloudStorage
 			}
 			else //the file is already in the cloud
 			{
+				$bNeedCreatePicture = false;
+				$arSourceSize = array("x" => 0, "y" => 0, "width" => 0, "height" => 0);
+				$arDestinationSize = array("x" => 0, "y" => 0, "width" => 0, "height" => 0);
 				CFile::ScaleImage($arFile["WIDTH"], $arFile["HEIGHT"], $arResizeParams[0], $arResizeParams[1], $bNeedCreatePicture, $arSourceSize, $arDestinationSize);
 
 				$cacheImageFile = $callbackData["obTargetBucket"]->GetFileSRC($callbackData["fileURL"]);
 				$arImageSize = array(
 					$arDestinationSize["width"],
 					$arDestinationSize["height"],
-					$callbackData["obTargetBucket"]->GetFileSize($callbackData["fileURL"]),
+					isset($callbackData["fileSize"])? $callbackData["fileSize"]: $callbackData["obTargetBucket"]->GetFileSize($callbackData["fileURL"]),
 				);
 				$callbackData["cacheOBJ"]->EndDataCache(array(
 					"cacheImageFile"=>$cacheImageFile,
@@ -310,6 +330,177 @@ class CCloudStorage
 		}
 
 		return false;
+	}
+
+	function ResizeImageFileDelay(&$arDestinationSize, $sourceFile, $destinationFile, $arResizeParams)
+	{
+		global $DB;
+		$destinationFile = preg_replace("/^https?:/i", "", $destinationFile);
+		$q = $DB->Query("
+			select
+				ID
+				,ERROR_CODE
+				,PARAMS
+				,".$DB->DateToCharFunction("TIMESTAMP_X", "FULL")." TIMESTAMP_X
+			from b_clouds_file_resize
+			where TO_PATH = '".$DB->ForSql($destinationFile)."'
+		");
+		if ($resize = $q->Fetch())
+		{
+			if ($resize["ERROR_CODE"] === "0")
+			{
+				$arResizeParams = unserialize($resize["PARAMS"]);
+				$id = $resize["ID"];
+			} //Give it a try
+			elseif ((MakeTimeStamp($resize["TIMESTAMP_X"]) + 300/*5min*/) < (time() + CTimeZone::GetOffset()))
+			{
+				$DB->Query("
+					UPDATE b_clouds_file_resize
+					SET ERROR_CODE='0'
+					WHERE ID=".$resize["ID"]."
+				");
+				$arResizeParams = unserialize($resize["PARAMS"]);
+				$id = $resize["ID"];
+			}
+			else
+			{
+				return false;
+			}
+		}
+		else
+		{
+			$id = 0;
+		}
+
+		$sourceImageWidth = $sourceFile["WIDTH"];
+		$sourceImageHeight = $sourceFile["HEIGHT"];
+		$arSize = $arResizeParams[0];
+		$resizeType = $arResizeParams[1];
+		$arWaterMark = $arResizeParams[2];
+		$jpgQuality = $arResizeParams[3];
+		$arFilters = $arResizeParams[4];
+		$bNeedCreatePicture = false;
+		$arSourceSize = array("x" => 0, "y" => 0, "width" => 0, "height" => 0);
+		$arDestinationSize = array("x" => 0, "y" => 0, "width" => 0, "height" => 0);
+
+		CFile::ScaleImage(
+			$sourceImageWidth,
+			$sourceImageHeight,
+			$arSize,
+			$resizeType,
+			$bNeedCreatePicture,
+			$arSourceSize,
+			$arDestinationSize
+		);
+		$bNeedCreatePicture |= is_array($arWaterMark) && !empty($arWaterMark);
+		$bNeedCreatePicture |= is_array($arFilters) && !empty($arFilters);
+
+		if ($bNeedCreatePicture)
+		{
+			if ($id <= 0)
+			{
+				$id = $DB->Add("b_clouds_file_resize", array(
+					"~TIMESTAMP_X" => $DB->CurrentTimeFunction(),
+					"ERROR_CODE" => "0",
+					"PARAMS" => serialize($arResizeParams),
+					"FROM_PATH" => $sourceFile["SRC"],
+					"TO_PATH" => $destinationFile,
+					"FILE_ID" => $sourceFile["ID"],
+				));
+			}
+
+			return $id > 0;
+		}
+		else
+		{
+			return false;
+		}
+	}
+
+	function ResizeImageFileCheck($obBucket, $path)
+	{
+		global $DB, $APPLICATION;
+		$path = preg_replace("/^https?:/i", "", $path);
+		$q = $DB->Query("
+			select
+				ID
+				,ERROR_CODE
+				,TO_PATH
+				,FROM_PATH
+				,PARAMS
+				,".$DB->DateToCharFunction("TIMESTAMP_X", "FULL")." TIMESTAMP_X
+			from b_clouds_file_resize
+			where TO_PATH = '".$DB->ForSql($path)."'
+		");
+		$task = $q->Fetch();
+		if (!$task)
+			return false;
+
+		if ($task["ERROR_CODE"] !== "0")
+		{
+			if ((MakeTimeStamp($resize["TIMESTAMP_X"]) + 300/*5min*/) > (time() + CTimeZone::GetOffset()))
+				return false;
+		}
+
+		$tmpFile = CFile::MakeFileArray($task["FROM_PATH"]);
+		if (!is_array($tmpFile) || !file_exists($tmpFile["tmp_name"]))
+		{
+			$DB->Query("
+				UPDATE b_clouds_file_resize
+				SET ERROR_CODE = '1'
+				WHERE ID = ".$task["ID"]."
+			");
+			return false;
+		}
+
+		$arResizeParams = unserialize($task["PARAMS"]);
+		if (!is_array($arResizeParams))
+		{
+			$DB->Query("
+				UPDATE b_clouds_file_resize
+				SET ERROR_CODE = '2'
+				WHERE ID = ".$task["ID"]."
+			");
+			return false;
+		}
+
+		$arSize = $arResizeParams[0];
+		$resizeType = $arResizeParams[1];
+		$arWaterMark = $arResizeParams[2];
+		$jpgQuality = $arResizeParams[3];
+		$arFilters = $arResizeParams[4];
+
+		$to_path = CFile::GetTempName('', bx_basename($task["TO_PATH"]));
+
+		if (!CFile::ResizeImageFile($tmpFile["tmp_name"], $to_path, $arSize, $resizeType, $arWaterMark, $jpgQuality, $arFilters))
+		{
+			$DB->Query("
+				UPDATE b_clouds_file_resize
+				SET ERROR_CODE = '3'
+				WHERE ID = ".$task["ID"]."
+			");
+			return false;
+		}
+
+		$fileToStore = CFile::MakeFileArray($to_path);
+		$baseURL = preg_replace("/^https?:/i", "", $obBucket->GetFileSRC("/"));
+		$pathToStore = substr($task["TO_PATH"], strlen($baseURL)-1);
+		if (!$obBucket->SaveFile($pathToStore, $fileToStore))
+		{
+			$DB->Query("
+				UPDATE b_clouds_file_resize
+				SET ERROR_CODE = '4'
+				WHERE ID = ".$task["ID"]."
+			");
+			return false;
+		}
+
+		$DB->Query("
+			UPDATE b_clouds_file_resize
+			SET ERROR_CODE = '0'
+			WHERE ID = ".$task["ID"]."
+		");
+		return true;
 	}
 
 	function OnMakeFileArray($arSourceFile, &$arDestination)
@@ -367,6 +558,8 @@ class CCloudStorage
 
 	function OnFileDelete($arFile)
 	{
+		global $DB;
+
 		if($arFile["HANDLER_ID"] <= 0)
 			return false;
 
@@ -389,6 +582,11 @@ class CCloudStorage
 					$bucket->DecFileCounter($arCloudFiles["file_size"][$i]);
 			}
 		}
+
+		$DB->Query("
+			DELETE FROM b_clouds_file_resize
+			WHERE FILE_ID = ".intval($arFile["ID"])."
+		", true);
 
 		return $result;
 	}
@@ -620,7 +818,7 @@ class CCloudStorage
 
 	function OnFileSave(&$arFile, $strFileName, $strSavePath, $bForceMD5 = false, $bSkipExt = false)
 	{
-		if(!$arFile["tmp_name"])
+		if(!$arFile["tmp_name"] && !$arFile["content"])
 			return false;
 
 		if(array_key_exists("bucket", $arFile))
@@ -878,6 +1076,8 @@ class CCloudStorage
 		if(defined("BX_CHECK_SHORT_URI") && BX_CHECK_SHORT_URI)
 		{
 			$upload_dir = "/".trim(COption::GetOptionString("main", "upload_dir", "upload"), "/")."/";
+			$request_uri = urldecode($_SERVER["REQUEST_URI"]);
+			$request_uri = CCloudUtil::URLEncode($request_uri, LANG_CHARSET);
 			foreach(CCloudStorageBucket::GetAllBuckets() as $arBucket)
 			{
 				if($arBucket["ACTIVE"] == "Y")
@@ -885,20 +1085,31 @@ class CCloudStorage
 					$obBucket = new CCloudStorageBucket($arBucket["ID"]);
 					if($obBucket->Init())
 					{
-						if($obBucket->FileExists($_SERVER["REQUEST_URI"]))
+						if($obBucket->FileExists($request_uri))
 						{
 							if(COption::GetOptionString("clouds", "log_404_errors") === "Y")
 								CEventLog::Log("WARNING", "CLOUDS_404", "clouds", $_SERVER["REQUEST_URI"], $_SERVER["HTTP_REFERER"]);
-							LocalRedirect($obBucket->GetFileSRC($_SERVER["REQUEST_URI"]), true);
+							LocalRedirect($obBucket->GetFileSRC($request_uri), true);
 						}
-						elseif(strpos($_SERVER["REQUEST_URI"], $upload_dir) === 0)
+						elseif(strpos($request_uri, $upload_dir) === 0)
 						{
-							$check_url = substr($_SERVER["REQUEST_URI"], strlen($upload_dir)-1);
+							$check_url = substr($request_uri, strlen($upload_dir)-1);
 							if($obBucket->FileExists($check_url))
 							{
 								if(COption::GetOptionString("clouds", "log_404_errors") === "Y")
 									CEventLog::Log("WARNING", "CLOUDS_404", "clouds", $_SERVER["REQUEST_URI"], $_SERVER["HTTP_REFERER"]);
 								LocalRedirect($obBucket->GetFileSRC($check_url), true);
+							}
+						}
+						elseif(
+							COption::GetOptionString("clouds", "delayed_resize") === "Y"
+							&& preg_match("#^(/".$obBucket->PREFIX."|)(/resize_cache/.*\$)#", $request_uri, $match)
+						)
+						{
+							$to_file = $obBucket->GetFileSRC($match[2]);
+							if (CCloudStorage::ResizeImageFileCheck($obBucket, $to_file))
+							{
+								LocalRedirect($to_file, true);
 							}
 						}
 					}
@@ -914,15 +1125,18 @@ class CCloudStorage
 		);
 	}
 
-	function translit($file_name)
+	function translit($file_name, $safe_chars = '')
 	{
 		return CUtil::translit($file_name, LANGUAGE_ID, array(
-			"safe_chars"=>". ",
+			"safe_chars"=>". ".$safe_chars,
 			"change_case"=>false,
 			"max_len"=>255,
 		));
 	}
-
+	/**
+	 * @param array[string]string $arFile
+	 * @return void
+	*/
 	function FixFileContentType(&$arFile)
 	{
 		global $DB;

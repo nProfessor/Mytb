@@ -385,6 +385,7 @@ class CSearch extends CAllSearch
 			($this->flagsUseRatingSort & 0x01)
 			&& COption::GetOptionString("search", "use_social_rating") == "Y"
 			&& BX_SEARCH_VERSION == 2
+			&& COption::GetOptionString("search", "dbnode_id") <= 0
 		)
 		{
 			$rsMinMax = $DB->Query("select max(TOTAL_VALUE) RATING_MAX, min(TOTAL_VALUE) RATING_MIN from b_rating_voting");
@@ -655,23 +656,22 @@ class CSearch extends CAllSearch
 			".$strFilter."
 		";
 
-		$arEvents = array();
-		$db_events = GetModuleEvents("search", "OnBeforeIndexDelete");
-		while($arEvent = $db_events->Fetch())
-			$arEvents[] = $arEvent;
+		$arEvents = GetModuleEvents("search", "OnBeforeIndexDelete", true);
 
 		$rs = $DB->Query($strSql, false, "File: ".__FILE__."<br>Line: ".__LINE__);
 		while($ar = $rs->Fetch())
 		{
 			foreach($arEvents as $arEvent)
 				ExecuteModuleEventEx($arEvent, array("SEARCH_CONTENT_ID = ".$ar["ID"]));
-			if(BX_SEARCH_VERSION > 1)
-				$DB->Query("DELETE FROM b_search_content_text WHERE SEARCH_CONTENT_ID = ".$ar["ID"], false, "File: ".__FILE__."<br>Line: ".__LINE__);
+
 			$DB->Query("DELETE FROM b_search_content_param WHERE SEARCH_CONTENT_ID = ".$ar["ID"], false, "File: ".__FILE__."<br>Line: ".__LINE__);
 			$DB->Query("DELETE FROM b_search_content_right WHERE SEARCH_CONTENT_ID = ".$ar["ID"], false, "File: ".__FILE__."<br>Line: ".__LINE__);
-			$DB->Query("DELETE FROM b_search_content_stem WHERE SEARCH_CONTENT_ID = ".$ar["ID"], false, "File: ".__FILE__."<br>Line: ".__LINE__);
-			$DB->Query("DELETE FROM b_search_tags WHERE SEARCH_CONTENT_ID = ".$ar["ID"], false, "File: ".__FILE__."<br>Line: ".__LINE__);
 			$DB->Query("DELETE FROM b_search_content_site WHERE SEARCH_CONTENT_ID = ".$ar["ID"], false, "File: ".__FILE__."<br>Line: ".__LINE__);
+			$DB->Query("DELETE FROM b_search_content_title WHERE SEARCH_CONTENT_ID = ".$ar["ID"], false, "File: ".__FILE__."<br>Line: ".__LINE__);
+			$DB->Query("DELETE FROM b_search_content_stem WHERE SEARCH_CONTENT_ID = ".$ar["ID"], false, "File: ".__FILE__."<br>Line: ".__LINE__);
+			if(BX_SEARCH_VERSION > 1)
+				$DB->Query("DELETE FROM b_search_content_text WHERE SEARCH_CONTENT_ID = ".$ar["ID"], false, "File: ".__FILE__."<br>Line: ".__LINE__);
+			$DB->Query("DELETE FROM b_search_tags WHERE SEARCH_CONTENT_ID = ".$ar["ID"], false, "File: ".__FILE__."<br>Line: ".__LINE__);
 			$DB->Query("DELETE FROM b_search_content WHERE ID = ".$ar["ID"], false, "File: ".__FILE__."<br>Line: ".__LINE__);
 		}
 
@@ -685,24 +685,22 @@ class CSearch extends CAllSearch
 		$MODULE_ID = $DB->ForSql($MODULE_ID);
 		$strSql = "SELECT ID FROM b_search_content WHERE MODULE_ID = '".$MODULE_ID."'";
 
-		$arEvents = array();
-		$db_events = GetModuleEvents("search", "OnBeforeIndexDelete");
-		while($arEvent = $db_events->Fetch())
-			$arEvents[] = $arEvent;
+		$arEvents = GetModuleEvents("search", "OnBeforeIndexDelete", true);
 
 		$rs = $DB->Query($strSql, false, "File: ".__FILE__."<br>Line: ".__LINE__);
 		while($ar = $rs->Fetch())
 		{
 			foreach($arEvents as $arEvent)
 				ExecuteModuleEventEx($arEvent, array("SEARCH_CONTENT_ID = ".$ar["ID"]));
-			if(BX_SEARCH_VERSION > 1)
-				$DB->Query("DELETE FROM b_search_content_text WHERE SEARCH_CONTENT_ID = ".$ar["ID"], false, "File: ".__FILE__."<br>Line: ".__LINE__);
+
 			$DB->Query("DELETE FROM b_search_content_param WHERE SEARCH_CONTENT_ID = ".$ar["ID"], false, "File: ".__FILE__."<br>Line: ".__LINE__);
 			$DB->Query("DELETE FROM b_search_content_right WHERE SEARCH_CONTENT_ID = ".$ar["ID"], false, "File: ".__FILE__."<br>Line: ".__LINE__);
-			$DB->Query("DELETE FROM b_search_content_stem WHERE SEARCH_CONTENT_ID = ".$ar["ID"], false, "File: ".__FILE__."<br>Line: ".__LINE__);
-			$DB->Query("DELETE FROM b_search_content_title WHERE SEARCH_CONTENT_ID = ".$ar["ID"], false, "File: ".__FILE__."<br>Line: ".__LINE__);
-			$DB->Query("DELETE FROM b_search_tags WHERE SEARCH_CONTENT_ID = ".$ar["ID"], false, "File: ".__FILE__."<br>Line: ".__LINE__);
 			$DB->Query("DELETE FROM b_search_content_site WHERE SEARCH_CONTENT_ID = ".$ar["ID"], false, "File: ".__FILE__."<br>Line: ".__LINE__);
+			$DB->Query("DELETE FROM b_search_content_title WHERE SEARCH_CONTENT_ID = ".$ar["ID"], false, "File: ".__FILE__."<br>Line: ".__LINE__);
+			$DB->Query("DELETE FROM b_search_content_stem WHERE SEARCH_CONTENT_ID = ".$ar["ID"], false, "File: ".__FILE__."<br>Line: ".__LINE__);
+			if(BX_SEARCH_VERSION > 1)
+				$DB->Query("DELETE FROM b_search_content_text WHERE SEARCH_CONTENT_ID = ".$ar["ID"], false, "File: ".__FILE__."<br>Line: ".__LINE__);
+			$DB->Query("DELETE FROM b_search_tags WHERE SEARCH_CONTENT_ID = ".$ar["ID"], false, "File: ".__FILE__."<br>Line: ".__LINE__);
 			$DB->Query("DELETE FROM b_search_content WHERE ID = ".$ar["ID"], false, "File: ".__FILE__."<br>Line: ".__LINE__);
 		}
 
@@ -851,24 +849,22 @@ class CSearch extends CAllSearch
 			".$strSqlWhere."
 		";
 
-		$arEvents = array();
-		$db_events = GetModuleEvents("search", "OnBeforeIndexDelete");
-		while($arEvent = $db_events->Fetch())
-			$arEvents[] = $arEvent;
+		$arEvents = GetModuleEvents("search", "OnBeforeIndexDelete", true);
 
 		$rs = $DB->Query($strSql, false, "File: ".__FILE__."<br>Line: ".__LINE__);
 		while($ar = $rs->Fetch())
 		{
 			foreach($arEvents as $arEvent)
 				ExecuteModuleEventEx($arEvent, array("SEARCH_CONTENT_ID = ".$ar["ID"]));
-			if(BX_SEARCH_VERSION > 1)
-				$DB->Query("DELETE FROM b_search_content_text WHERE SEARCH_CONTENT_ID = ".$ar["ID"], false, "File: ".__FILE__."<br>Line: ".__LINE__);
+
 			$DB->Query("DELETE FROM b_search_content_param WHERE SEARCH_CONTENT_ID = ".$ar["ID"], false, "File: ".__FILE__."<br>Line: ".__LINE__);
 			$DB->Query("DELETE FROM b_search_content_right WHERE SEARCH_CONTENT_ID = ".$ar["ID"], false, "File: ".__FILE__."<br>Line: ".__LINE__);
-			$DB->Query("DELETE FROM b_search_content_stem WHERE SEARCH_CONTENT_ID = ".$ar["ID"], false, "File: ".__FILE__."<br>Line: ".__LINE__);
-			$DB->Query("DELETE FROM b_search_content_title WHERE SEARCH_CONTENT_ID = ".$ar["ID"], false, "File: ".__FILE__."<br>Line: ".__LINE__);
-			$DB->Query("DELETE FROM b_search_tags WHERE SEARCH_CONTENT_ID = ".$ar["ID"], false, "File: ".__FILE__."<br>Line: ".__LINE__);
 			$DB->Query("DELETE FROM b_search_content_site WHERE SEARCH_CONTENT_ID = ".$ar["ID"], false, "File: ".__FILE__."<br>Line: ".__LINE__);
+			$DB->Query("DELETE FROM b_search_content_title WHERE SEARCH_CONTENT_ID = ".$ar["ID"], false, "File: ".__FILE__."<br>Line: ".__LINE__);
+			$DB->Query("DELETE FROM b_search_content_stem WHERE SEARCH_CONTENT_ID = ".$ar["ID"], false, "File: ".__FILE__."<br>Line: ".__LINE__);
+			if(BX_SEARCH_VERSION > 1)
+				$DB->Query("DELETE FROM b_search_content_text WHERE SEARCH_CONTENT_ID = ".$ar["ID"], false, "File: ".__FILE__."<br>Line: ".__LINE__);
+			$DB->Query("DELETE FROM b_search_tags WHERE SEARCH_CONTENT_ID = ".$ar["ID"], false, "File: ".__FILE__."<br>Line: ".__LINE__);
 			$DB->Query("DELETE FROM b_search_content WHERE ID = ".$ar["ID"], false, "File: ".__FILE__."<br>Line: ".__LINE__);
 		}
 

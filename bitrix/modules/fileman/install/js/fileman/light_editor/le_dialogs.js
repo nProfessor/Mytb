@@ -3,10 +3,10 @@ window.LHEDailogs = {};
 window.LHEDailogs['Anchor'] = function(pObj)
 {
 	return {
-		title: LHE_MESS.AnchorProps,
+		title: BX.message.AnchorProps,
 		innerHTML : '<table>' +
 			'<tr>' +
-				'<td class="lhe-dialog-label lhe-label-imp">' + LHE_MESS.AnchorName + ':</td>' +
+				'<td class="lhe-dialog-label lhe-label-imp">' + BX.message.AnchorName + ':</td>' +
 				'<td class="lhe-dialog-param"><input type="text" size="20" value="" id="lhed_anchor_name"></td>' +
 			'</tr></table>',
 		width: 300,
@@ -52,11 +52,11 @@ window.LHEDailogs['Link'] = function(pObj)
 
 	var str = '<table width="100%">' +
 	'<tr>' +
-		'<td class="lhe-dialog-label lhe-label-imp">' + LHE_MESS.LinkText + ':</td>' +
+		'<td class="lhe-dialog-label lhe-label-imp">' + BX.message.LinkText + ':</td>' +
 		'<td class="lhe-dialog-param"><input type="text" size="30" value="" id="lhed_link_text"></td>' +
 	'</tr>' +
 	'<tr>' +
-		'<td class="lhe-dialog-label lhe-label-imp">' + LHE_MESS.LinkHref + ':</td>' +
+		'<td class="lhe-dialog-label lhe-label-imp">' + BX.message.LinkHref + ':</td>' +
 		'<td class="lhe-dialog-param">' + strHref + '</td>' +
 	'</tr>';
 
@@ -64,18 +64,18 @@ window.LHEDailogs['Link'] = function(pObj)
 	{
 		str +=
 	'<tr>' +
-		'<td class="lhe-dialog-label">' + LHE_MESS.LinkTitle + ':</td>' +
+		'<td class="lhe-dialog-label">' + BX.message.LinkTitle + ':</td>' +
 		'<td class="lhe-dialog-param"><input type="text" size="30" value="" id="lhed_link_title"></td>' +
 	'</tr>' +
 	'<tr>' +
-		'<td class="lhe-dialog-label">' + LHE_MESS.LinkTarget + '</td>' +
+		'<td class="lhe-dialog-label">' + BX.message.LinkTarget + '</td>' +
 		'<td class="lhe-dialog-param">' +
 			'<select id="lhed_link_target">' +
-				'<option value="">' + LHE_MESS.LinkTarget_def + '</option>' +
-				'<option value="_blank">' + LHE_MESS.LinkTarget_blank + '</option>' +
-				'<option value="_parent">' + LHE_MESS.LinkTarget_parent + '</option>' +
-				'<option value="_self">' + LHE_MESS.LinkTarget_self + '</option>' +
-				'<option value="_top">' + LHE_MESS.LinkTarget_top + '</option>' +
+				'<option value="">' + BX.message.LinkTarget_def + '</option>' +
+				'<option value="_blank">' + BX.message.LinkTarget_blank + '</option>' +
+				'<option value="_parent">' + BX.message.LinkTarget_parent + '</option>' +
+				'<option value="_self">' + BX.message.LinkTarget_self + '</option>' +
+				'<option value="_top">' + BX.message.LinkTarget_top + '</option>' +
 			'</select>' +
 		'</td>' +
 	'</tr>';
@@ -83,7 +83,7 @@ window.LHEDailogs['Link'] = function(pObj)
 	str += '</table>';
 
 	return {
-		title: LHE_MESS.LinkProps,
+		title: BX.message.LinkProps,
 		innerHTML : str,
 		width: 420,
 		OnLoad: function()
@@ -170,6 +170,20 @@ window.LHEDailogs['Link'] = function(pObj)
 					var bxTag = pObj.pLEditor.GetBxTag(pObj.pSel);
 					if (pObj.pText !== false)
 						pObj.pText.value = pObj.pSel.innerHTML;
+
+					if (pObj.pSel && pObj.pSel.childNodes && pObj.pSel.childNodes.length > 0)
+					{
+						for (var i = 0; i < pObj.pSel.childNodes.length; i++)
+						{
+							if (pObj.pSel.childNodes[i] && pObj.pSel.childNodes[i].nodeType != 3)
+							{
+								var textRow = BX.findParent(pObj.pText, {tagName: 'TR'});
+								textRow.parentNode.removeChild(textRow);
+								pObj.pText = false;
+								break;
+							}
+						}
+					}
 
 					if (bxTag.tag == 'a')
 					{
@@ -304,36 +318,36 @@ window.LHEDailogs['Image'] = function(pObj)
 
 	var str = '<table width="100%">' +
 	'<tr>' +
-		'<td class="lhe-dialog-label lhe-label-imp">' + LHE_MESS.ImageSrc + ':</td>' +
+		'<td class="lhe-dialog-label lhe-label-imp">' + BX.message.ImageSrc + ':</td>' +
 		'<td class="lhe-dialog-param">' + strSrc + '</td>' +
 	'</tr>';
 	if (!pObj.pLEditor.arConfig.bBBCode)
 	{
 		str +=
 	'<tr>' +
-		'<td class="lhe-dialog-label">' + LHE_MESS.ImageTitle + ':</td>' +
+		'<td class="lhe-dialog-label">' + BX.message.ImageTitle + ':</td>' +
 		'<td class="lhe-dialog-param"><input type="text" size="33" value="" id="lhed_img_title"></td>' +
 	'</tr>' +
 	'<tr>' +
-		'<td class="lhe-dialog-label">' + LHE_MESS.ImgAlign + ':</td>' +
+		'<td class="lhe-dialog-label">' + BX.message.ImgAlign + ':</td>' +
 		'<td class="lhe-dialog-param">' +
 			'<select id="lhed_img_align">' +
-				'<option value="">' + LHE_MESS.LinkTarget_def + '</option>' +
-				'<option value="top">' + LHE_MESS.ImgAlignTop + '</option>' +
-				'<option value="right">' + LHE_MESS.ImgAlignRight + '</option>' +
-				'<option value="bottom">' + LHE_MESS.ImgAlignBottom + '</option>' +
-				'<option value="left">' + LHE_MESS.ImgAlignLeft + '</option>' +
-				'<option value="middle">' + LHE_MESS.ImgAlignMiddle + '</option>' +
+				'<option value="">' + BX.message.LinkTarget_def + '</option>' +
+				'<option value="top">' + BX.message.ImgAlignTop + '</option>' +
+				'<option value="right">' + BX.message.ImgAlignRight + '</option>' +
+				'<option value="bottom">' + BX.message.ImgAlignBottom + '</option>' +
+				'<option value="left">' + BX.message.ImgAlignLeft + '</option>' +
+				'<option value="middle">' + BX.message.ImgAlignMiddle + '</option>' +
 			'</select>' +
 		'</td>' +
 	'</tr>' +
 	'<tr>' +
-		'<td colSpan="2" class="lhe-dialog-param"><span class="lhed-img-preview-label">' + LHE_MESS.ImageSizing + ':</span>' +
-		'<div class="lhed-img-size-cont"><input type="text" size="4" value="" id="lhed_img_width"> x <input type="text" size="4" value="" id="lhed_img_height"> <input type="checkbox" id="lhed_img_save_prop" checked><label for="lhed_img_save_prop">' + LHE_MESS.ImageSaveProp + '</label></div></td>' +
+		'<td colSpan="2" class="lhe-dialog-param"><span class="lhed-img-preview-label">' + BX.message.ImageSizing + ':</span>' +
+		'<div class="lhed-img-size-cont"><input type="text" size="4" value="" id="lhed_img_width"> x <input type="text" size="4" value="" id="lhed_img_height"> <input type="checkbox" id="lhed_img_save_prop" checked><label for="lhed_img_save_prop">' + BX.message.ImageSaveProp + '</label></div></td>' +
 	'</tr>';
 	str +=
 	'<tr>' +
-		'<td colSpan="2" class="lhe-dialog-param"><span class="lhed-img-preview-label">' + LHE_MESS.ImagePreview + ':</span>' +
+		'<td colSpan="2" class="lhe-dialog-param"><span class="lhed-img-preview-label">' + BX.message.ImagePreview + ':</span>' +
 			'<div class="lhed-img-preview-cont"><img id="lhed_img_preview" style="display:none" />' + sText + '</div>' +
 		'</td>' +
 	'</tr>';
@@ -402,7 +416,7 @@ window.LHEDailogs['Image'] = function(pObj)
 	}
 
 	return {
-		title: LHE_MESS.ImageProps,
+		title: BX.message.ImageProps,
 		innerHTML : str,
 		width: 500,
 		OnLoad: function()
@@ -579,20 +593,20 @@ window.LHEDailogs['Video'] = function(pObj)
 
 	var str = '<table width="100%">' +
 	'<tr>' +
-		'<td class="lhe-dialog-label lhe-label-imp">' + LHE_MESS.VideoPath + ':</td>' +
+		'<td class="lhe-dialog-label lhe-label-imp">' + BX.message.VideoPath + ':</td>' +
 		'<td class="lhe-dialog-param">' + strPath + '</td>' +
 	'</tr>';
 	if (!pObj.pLEditor.arConfig.bBBCode)
 	{
 		str +=
 	'<tr>' +
-		'<td class="lhe-dialog-label">' + LHE_MESS.VideoPreviewPath + ':</td>' +
+		'<td class="lhe-dialog-label">' + BX.message.VideoPreviewPath + ':</td>' +
 		'<td class="lhe-dialog-param">' + strPreview + '</td>' +
 	'</tr>';
 	}
 	str +=
 	'<tr>' +
-		'<td class="lhe-dialog-label lhe-label-imp">' + LHE_MESS.ImageSizing + ':</td>' +
+		'<td class="lhe-dialog-label lhe-label-imp">' + BX.message.ImageSizing + ':</td>' +
 		'<td class="lhe-dialog-param">' +
 		'<div class="lhed-img-size-cont"><input type="text" size="4" value="" id="lhed_video_width"> x <input type="text" size="4" value="" id="lhed_video_height"></div></td>' +
 	'</tr>';
@@ -601,10 +615,10 @@ window.LHEDailogs['Video'] = function(pObj)
 		str +=
 	'<tr>' +
 		'<td class="lhe-dialog-label"></td>' +
-		'<td class="lhe-dialog-param"><input type="checkbox" id="lhed_video_autoplay"><label for="lhed_video_autoplay">' + LHE_MESS.VideoAutoplay + '</label></td>' +
+		'<td class="lhe-dialog-param"><input type="checkbox" id="lhed_video_autoplay"><label for="lhed_video_autoplay">' + BX.message.VideoAutoplay + '</label></td>' +
 	'</tr>' +
 	'<tr>' +
-		'<td class="lhe-dialog-label">' + LHE_MESS.VideoVolume + ':</td>' +
+		'<td class="lhe-dialog-label">' + BX.message.VideoVolume + ':</td>' +
 		'<td class="lhe-dialog-param">' +
 			'<select id="lhed_video_volume">' +
 				'<option value="10">10</option><option value="20">20</option>' +
@@ -633,7 +647,7 @@ window.LHEDailogs['Video'] = function(pObj)
 	};
 
 	return {
-		title: LHE_MESS.VideoProps,
+		title: BX.message.VideoProps,
 		innerHTML : str,
 		width: 500,
 		OnLoad: function()
@@ -765,7 +779,7 @@ window.LHEDailogs['Video'] = function(pObj)
 					}
 				}
 
-				pVid.title= LHE_MESS.Video + ': ' + path;
+				pVid.title= BX.message.Video + ': ' + path;
 				pVid.style.width = w + 'px';
 				pVid.style.height = h + 'px';
 				if (pObj.pPrevPath && pObj.pPrevPath.value.length > 0)
@@ -786,17 +800,17 @@ window.LHEDailogs['Video'] = function(pObj)
 window.LHEDailogs['Table'] = function(pObj)
 {
 	return {
-		title: LHE_MESS.InsertTable,
+		title: BX.message.InsertTable,
 		innerHTML : '<table>' +
 			'<tr>' +
-				'<td class="lhe-dialog-label lhe-label-imp"><label for="' + pObj.pLEditor.id + 'lhed_table_cols">' + LHE_MESS.TableCols + ':</label></td>' +
+				'<td class="lhe-dialog-label lhe-label-imp"><label for="' + pObj.pLEditor.id + 'lhed_table_cols">' + BX.message.TableCols + ':</label></td>' +
 				'<td class="lhe-dialog-param"><input type="text" size="4" value="3" id="' + pObj.pLEditor.id + 'lhed_table_cols"></td>' +
-				'<td class="lhe-dialog-label lhe-label-imp"><label for="' + pObj.pLEditor.id + 'lhed_table_rows">' + LHE_MESS.TableRows + ':</label></td>' +
+				'<td class="lhe-dialog-label lhe-label-imp"><label for="' + pObj.pLEditor.id + 'lhed_table_rows">' + BX.message.TableRows + ':</label></td>' +
 				'<td class="lhe-dialog-param"><input type="text" size="4" value="3" id="' + pObj.pLEditor.id + 'lhed_table_rows"></td>' +
 			'</tr>' +
 			'<tr>' +
 				'<td colSpan="4">' +
-					'<span>' + LHE_MESS.TableModel + ': </span>' +
+					'<span>' + BX.message.TableModel + ': </span>' +
 					'<div class="lhed-model-cont" id="' + pObj.pLEditor.id + 'lhed_table_model" ><div>' +
 				'</td>' +
 			'</tr></table>',
@@ -893,13 +907,13 @@ window.LHEDailogs['Table'] = function(pObj)
 window.LHEDailogs['List'] = function(pObj)
 {
 	return {
-		title: pObj.arParams.bOrdered ? LHE_MESS.OrderedList : LHE_MESS.UnorderedList,
+		title: pObj.arParams.bOrdered ? BX.message.OrderedList : BX.message.UnorderedList,
 		innerHTML : '<table class="lhe-dialog-list-table"><tr>' +
-				'<td>' + LHE_MESS.ListItems + ':</td>' +
+				'<td>' + BX.message.ListItems + ':</td>' +
 			'</tr><tr>' +
 				'<td class="lhe-dialog-list-items"><div id="' + pObj.pLEditor.id + 'lhed_list_items"></div></td>' +
 			'</tr><tr>' +
-				'<td align="right"><a href="javascript:void(0);" title="' + LHE_MESS.AddLITitle + '" id="' + pObj.pLEditor.id + 'lhed_list_more">' + LHE_MESS.AddLI + '</a>' +
+				'<td align="right"><a href="javascript:void(0);" title="' + BX.message.AddLITitle + '" id="' + pObj.pLEditor.id + 'lhed_list_more">' + BX.message.AddLI + '</a>' +
 			'</tr><table>',
 		width: 350,
 		OnLoad: function(oDialog)
@@ -942,7 +956,7 @@ window.LHEDailogs['List'] = function(pObj)
 					}
 				}
 
-				pLi.appendChild(BX.create("IMG", {props: {src: pObj.pLEditor.oneGif, className: "lhe-dialog-list-del", title: LHE_MESS.DelListItem}})).onclick = function()
+				pLi.appendChild(BX.create("IMG", {props: {src: pObj.pLEditor.oneGif, className: "lhe-dialog-list-del", title: BX.message.DelListItem}})).onclick = function()
 				{
 					// del list item
 					var pLi = BX.findParent(this, {tagName: 'LI'});

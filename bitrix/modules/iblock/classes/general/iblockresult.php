@@ -13,6 +13,7 @@ class CIBlockResult extends CDBResult
 	var $strSectionUrl = false;
 	var $strListUrl = false;
 	var $arSectionContext = false;
+	var $nameTemplate = "";
 
 	var $_LAST_IBLOCK_ID = "";
 	var $_FILTER_IBLOCK_ID = array();
@@ -36,6 +37,7 @@ class CIBlockResult extends CDBResult
 			$this->arSectionContext = array(
 				"ID" => intval($arSection["ID"]) > 0? intval($arSection["ID"]): "",
 				"CODE" => urlencode(isset($arSection["~CODE"])? $arSection["~CODE"]: $arSection["CODE"]),
+				"IBLOCK_ID" => intval($arSection["IBLOCK_ID"]),
 			);
 		}
 		else
@@ -66,8 +68,16 @@ class CIBlockResult extends CDBResult
 		}
 	}
 
+	function SetNameTemplate($nameTemplate)
+	{
+		$this->nameTemplate = $nameTemplate;
+	}
+
 	function Fetch()
 	{
+		/** @global CCacheManager $CACHE_MANAGER */
+		global $CACHE_MANAGER;
+		/** @global CDatabase $DB */
 		global $DB;
 		$res = parent::Fetch();
 
@@ -81,7 +91,7 @@ class CIBlockResult extends CDBResult
 			{
 				foreach($res as $k=>$v)
 				{
-					if(preg_match("#^ALIAS_(\d+)_(.*)$#", $k, $match))
+					if(preg_match("#^ALIAS_(\\d+)_(.*)$#", $k, $match))
 					{
 						$res[$this->arIBlockLongProps[$match[1]].$match[2]] = $v;
 						unset($res[$k]);
@@ -95,7 +105,7 @@ class CIBlockResult extends CDBResult
 				&& $res["IBLOCK_ID"] != $this->_LAST_IBLOCK_ID
 			)
 			{
-				$GLOBALS["CACHE_MANAGER"]->RegisterTag("iblock_id_".$res["IBLOCK_ID"]);
+				$CACHE_MANAGER->RegisterTag("iblock_id_".$res["IBLOCK_ID"]);
 				$this->_LAST_IBLOCK_ID = $res["IBLOCK_ID"];
 			}
 
@@ -191,6 +201,23 @@ class CIBlockResult extends CDBResult
 						$res[$field_name] = htmlspecialcharsex(CIBlock::NumberFormat($res[$field_name]));
 				}
 			}
+			if (isset($res["UC_ID"]))
+			{
+				$res["CREATED_BY_FORMATTED"] = CUser::FormatName($this->nameTemplate, array(
+					"NAME" => $res["UC_NAME"],
+					"LAST_NAME" => $res["UC_LAST_NAME"],
+					"SECOND_NAME" => $res["UC_SECOND_NAME"],
+					"EMAIL" => $res["UC_EMAIL"],
+					"ID" => $res["UC_ID"],
+					"LOGIN" => $res["UC_LOGIN"],
+				), true, false);
+				unset($res["UC_NAME"]);
+				unset($res["UC_LAST_NAME"]);
+				unset($res["UC_SECOND_NAME"]);
+				unset($res["UC_EMAIL"]);
+				unset($res["UC_ID"]);
+				unset($res["UC_LOGIN"]);
+			}
 		}
 		elseif(
 			defined("BX_COMP_MANAGED_CACHE")
@@ -199,7 +226,7 @@ class CIBlockResult extends CDBResult
 		)
 		{
 			foreach($this->_FILTER_IBLOCK_ID as $iblock_id => $t)
-				$GLOBALS["CACHE_MANAGER"]->RegisterTag("iblock_id_".$iblock_id);
+				$CACHE_MANAGER->RegisterTag("iblock_id_".$iblock_id);
 		}
 
 		return $res;
@@ -207,6 +234,8 @@ class CIBlockResult extends CDBResult
 
 	function GetNext($bTextHtmlAuto=true, $use_tilda=true)
 	{
+		static $arSectionPathCache = array();
+
 		$res = parent::GetNext($bTextHtmlAuto, $use_tilda);
 		if($res)
 		{
@@ -271,6 +300,25 @@ class CIBlockResult extends CDBResult
 					{
 						$TEMPLATE = str_replace("#SECTION_ID#", $this->arSectionContext["ID"], $TEMPLATE);
 						$TEMPLATE = str_replace("#SECTION_CODE#", $this->arSectionContext["CODE"], $TEMPLATE);
+						if(
+							$this->arSectionContext["ID"] > 0
+							&& $this->arSectionContext["IBLOCK_ID"] > 0
+							&& strpos($TEMPLATE, "#SECTION_CODE_PATH#") !== false
+						)
+						{
+							if(!array_key_exists($this->arSectionContext["ID"], $arSectionPathCache))
+							{
+								$rs = CIBlockSection::GetNavChain($this->arSectionContext["IBLOCK_ID"], $this->arSectionContext["ID"], array("ID", "IBLOCK_SECTION_ID", "CODE"));
+								while ($a = $rs->Fetch())
+									$arSectionPathCache[$this->arSectionContext["ID"]] .= urlencode($a["CODE"])."/";
+
+							}
+							if(isset($arSectionPathCache[$this->arSectionContext["ID"]]))
+								$SECTION_CODE_PATH = rtrim($arSectionPathCache[$this->arSectionContext["ID"]], "/");
+							else
+								$SECTION_CODE_PATH = "";
+							$TEMPLATE = str_replace("#SECTION_CODE_PATH#", $SECTION_CODE_PATH, $TEMPLATE);
+						}
 					}
 
 					if($use_tilda)

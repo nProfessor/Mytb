@@ -13,6 +13,20 @@ while($arr=$rsIBlock->Fetch())
 	$arIBlock[$arr["ID"]] = "[".$arr["ID"]."] ".$arr["NAME"];
 }
 
+$arListSections = array();
+if(isset($arCurrentValues["IBLOCK_ID"]) && intval($arCurrentValues["IBLOCK_ID"])>0)
+{
+	$arFilter = Array(
+		'IBLOCK_ID' => intval($arCurrentValues["IBLOCK_ID"]),
+		'GLOBAL_ACTIVE'=>'Y',
+		'IBLOCK_ACTIVE'=>'Y',
+	);
+
+	$arSec = CIBlockSection::GetList(Array('LEFT_MARGIN'=>'ASC'), $arFilter, false, array("ID", "DEPTH_LEVEL", "NAME"));
+	while($arRes = $arSec->Fetch())
+		$arListSections[$arRes['ID']] = str_repeat(".", $arRes['DEPTH_LEVEL']).$arRes['NAME'];
+}
+
 $arSorts = Array(
 	"ASC" => GetMessage("CP_BRO_SORT_ASC"),
 	"DESC" => GetMessage("CP_BRO_SORT_DESC"),
@@ -53,7 +67,10 @@ $arComponentParameters = array(
 		"SECTION_ID" => array(
 			"PARENT" => "BASE",
 			"NAME" => GetMessage("CP_BRO_SECTION_ID"),
-			"TYPE" => "STRING",
+			"TYPE" => "LIST",
+			"ADDITIONAL_VALUES" => "Y",
+			"VALUES" => $arListSections,
+			"REFRESH" => "Y",
 			"DEFAULT" => "",
 		),
 		"SECTION_CODE" => array(

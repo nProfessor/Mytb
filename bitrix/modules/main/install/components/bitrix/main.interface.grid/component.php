@@ -1,4 +1,21 @@
-<?
+<?php
+/**
+ * Bitrix Framework
+ * @package bitrix
+ * @subpackage main
+ * @copyright 2001-2013 Bitrix
+ */
+
+/**
+ * Bitrix vars
+ *
+ * @var array $arParams
+ * @var array $arResult
+ * @var CBitrixComponent $this
+ * @global CMain $APPLICATION
+ * @global CUser $USER
+ */
+
 if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== true)
 	die();
 
@@ -21,7 +38,7 @@ if(!isset($arParams["SORT_VARS"]["by"]))
 if(!isset($arParams["SORT_VARS"]["order"]))
 	$arParams["SORT_VARS"]["order"] = "order";
 
-if($arParams["SHOW_FORM_TAG"] <> 'N' && $arParams["SHOW_FORM_TAG"] !== false)
+if($arParams["SHOW_FORM_TAG"] !== 'N' && $arParams["SHOW_FORM_TAG"] !== false)
 	$arParams["SHOW_FORM_TAG"] = true;
 else
 	$arParams["SHOW_FORM_TAG"] = false;	
@@ -35,6 +52,11 @@ if($arParams["EDITABLE"] === "N" || $arParams["EDITABLE"] === false)
 	$arParams["EDITABLE"] = false;
 else
 	$arParams["EDITABLE"] = true;
+
+if($arParams["USE_THEMES"] !== 'N' && $arParams["USE_THEMES"] !== false && CPageOption::GetOptionString("main.interface", "use_themes", "Y") !== "N")
+	$arParams["USE_THEMES"] = true;
+else
+	$arParams["USE_THEMES"] = false;
 
 $arParams["GRID_ID"] = preg_replace("/[^a-z0-9_]/i", "", $arParams["GRID_ID"]);
 
@@ -69,11 +91,20 @@ uasort($aOptions["views"], $func);
 $arResult["OPTIONS"] = $aOptions;
 $arResult["GLOBAL_OPTIONS"] = CUserOptions::GetOption("main.interface", "global", array(), 0);
 
-if($arResult["GLOBAL_OPTIONS"]["theme_template"][SITE_TEMPLATE_ID] <> '')
-	$arResult["GLOBAL_OPTIONS"]["theme"] = $arResult["GLOBAL_OPTIONS"]["theme_template"][SITE_TEMPLATE_ID];
+if($arParams["USE_THEMES"])
+{
+	if($arResult["GLOBAL_OPTIONS"]["theme_template"][SITE_TEMPLATE_ID] <> '')
+		$arResult["GLOBAL_OPTIONS"]["theme"] = $arResult["GLOBAL_OPTIONS"]["theme_template"][SITE_TEMPLATE_ID];
 
-if($arResult["OPTIONS"]["theme"] == '')
-	$arResult["OPTIONS"]["theme"] = $arResult["GLOBAL_OPTIONS"]["theme"];
+	if($arResult["OPTIONS"]["theme"] == '')
+		$arResult["OPTIONS"]["theme"] = $arResult["GLOBAL_OPTIONS"]["theme"];
+
+	$arResult["OPTIONS"]["theme"] = preg_replace("/[^a-z0-9_.-]/i", "", $arResult["OPTIONS"]["theme"]);
+}
+else
+{
+	$arResult["OPTIONS"]["theme"] = '';
+}
 
 //*********************
 // Filter
@@ -262,11 +293,13 @@ if($arParams["NAV_STRING"] <> '')
 }
 elseif(is_object($arParams["NAV_OBJECT"]))
 {
-	$arParams["NAV_OBJECT"]->nPageWindow = 5;
+	/** @var CDBResult $nav */
+	$nav = $arParams["NAV_OBJECT"];
+	$nav->nPageWindow = 5;
 	//dirty hack
 	if($arParams["FORM_ID"] <> '' && $arParams["TAB_ID"] <> '')
 		$_GET[$arParams["FORM_ID"].'_active_tab'] = $arParams["TAB_ID"];
-	$arResult["NAV_STRING"] = $arParams["NAV_OBJECT"]->GetPageNavString("", "modern", true);
+	$arResult["NAV_STRING"] = $nav->GetPageNavString("", "modern", true);
 }
 
 //*********************
@@ -274,4 +307,3 @@ elseif(is_object($arParams["NAV_OBJECT"]))
 //*********************
 
 $this->IncludeComponentTemplate();
-?>

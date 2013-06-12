@@ -13,4 +13,5 @@ $MESS["JSADM_AI_HIDE_EXTRA"] = "Hide extra items";
 $MESS["JSADM_AI_ALL_NOTIF"] = "All notifications";
 $MESS["JSADM_AUTH_REQ"] = "Authentication is required!";
 $MESS["JS_CORE_WINDOW_AUTH"] = "Log In";
+$MESS["JS_CORE_IMAGE_FULL"] = "Full size";
 ?>

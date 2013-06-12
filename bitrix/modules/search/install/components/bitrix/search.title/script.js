@@ -279,6 +279,9 @@ function JCTitleSearch(arParams)
 						this.className = '';
 						_this.currentRow = -1;
 					};
+					tbl.rows[i].onclick = function (e) {
+						_this.onKeyPress(13);
+					};
 				}
 		}
 	}

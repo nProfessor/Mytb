@@ -24,7 +24,7 @@ function _ShowStringPropertyField($name, $property_fields, $values, $bInitDef = 
 			$key = "n".$start;
 			$start++;
 		}
-		echo '<tr><td>';
+		echo "<tr><td>";
 		$val_description = "";
 		if(is_array($val) && is_set($val, "VALUE"))
 		{
@@ -40,7 +40,7 @@ function _ShowStringPropertyField($name, $property_fields, $values, $bInitDef = 
 			echo ' <span title="'.GetMessage("IBLOCK_AT_PROP_DESC").'">'.GetMessage("IBLOCK_AT_PROP_DESC_1").'<input name="'.$name.'['.$key.'][DESCRIPTION]" value="'.htmlspecialcharsex($val_description).'" size="18" type="text" id="'.$name.'['.$key.'][DESCRIPTION]"></span>';
 
 		echo "<br>";
-		echo '</td></tr>';
+		echo "</td></tr>";
 
 		if($property_fields["MULTIPLE"]!="Y")
 		{
@@ -56,7 +56,7 @@ function _ShowStringPropertyField($name, $property_fields, $values, $bInitDef = 
 		$cnt = ($property_fields["MULTIPLE"]=="Y"? ($MULTIPLE_CNT>0 && $MULTIPLE_CNT<=30 ? $MULTIPLE_CNT : 5) + ($bInitDef && strlen($property_fields["DEFAULT_VALUE"])>0?1:0) : 1);
 		for($i=0; $i<$cnt;$i++)
 		{
-			echo '<tr><td>';
+			echo "<tr><td>";
 			if($i==0 && $bInitDef && strlen($property_fields["DEFAULT_VALUE"])>0)
 				$val = $property_fields["DEFAULT_VALUE"];
 			else
@@ -71,7 +71,7 @@ function _ShowStringPropertyField($name, $property_fields, $values, $bInitDef = 
 				echo ' <span title="'.GetMessage("IBLOCK_AT_PROP_DESC").'">'.GetMessage("IBLOCK_AT_PROP_DESC_1").'<input name="'.$name.'[n'.($start + $i).'][DESCRIPTION]" value="'.htmlspecialcharsex($val_description).'" size="18" type="text"></span>';
 
 			echo "<br>";
-			echo '</td></tr>';
+			echo "</td></tr>";
 		}
 	}
 	if($property_fields["MULTIPLE"]=="Y")
@@ -80,7 +80,7 @@ function _ShowStringPropertyField($name, $property_fields, $values, $bInitDef = 
 		echo "<script type=\"text/javascript\">BX.addCustomEvent('onAutoSaveRestore', function(ob, data) {for (var i in data){if (i.substring(0,".(strlen($name)+1).")=='".CUtil::JSEscape($name)."['){addNewRow('tb".md5($name)."')}}})</script>";
 	}
 
-	echo '</table>';
+	echo "</table>";
 }
 
 function _ShowGroupPropertyField($name, $property_fields, $values)
@@ -198,7 +198,7 @@ function _ShowFilePropertyField($name, $property_fields, $values, $max_file_size
 {
 	global $bCopy, $historyId;
 
-	$bFileman = CModule::IncludeModule('fileman');
+	CModule::IncludeModule('fileman');
 	$bVarsFromForm = false;
 
 	if(!is_array($values) || $bCopy || empty($values))
@@ -222,7 +222,10 @@ function _ShowFilePropertyField($name, $property_fields, $values, $max_file_size
 					"FILE_SIZE" => "Y",
 					"DIMENSIONS" => "Y",
 					"IMAGE_POPUP" => "Y",
-					"MAX_SIZE" => array("W" => 200, "H"=>200),
+					"MAX_SIZE" => array(
+						"W" => COption::GetOptionString("iblock", "detail_image_size"),
+						"H" => COption::GetOptionString("iblock", "detail_image_size"),
+					),
 				));
 			else
 				echo CFileInput::Show($name."[".$key."]", $file_id, array(
@@ -231,7 +234,10 @@ function _ShowFilePropertyField($name, $property_fields, $values, $max_file_size
 					"FILE_SIZE" => "Y",
 					"DIMENSIONS" => "Y",
 					"IMAGE_POPUP" => "Y",
-					"MAX_SIZE" => array("W" => 200, "H"=>200),
+					"MAX_SIZE" => array(
+						"W" => COption::GetOptionString("iblock", "detail_image_size"),
+						"H" => COption::GetOptionString("iblock", "detail_image_size"),
+					),
 				), array(
 					'upload' => true,
 					'medialib' => true,
@@ -261,7 +267,10 @@ function _ShowFilePropertyField($name, $property_fields, $values, $max_file_size
 				"FILE_SIZE" => "Y",
 				"DIMENSIONS" => "Y",
 				"IMAGE_POPUP" => "Y",
-				"MAX_SIZE" => array("W" => 200, "H"=>200),
+				"MAX_SIZE" => array(
+					"W" => COption::GetOptionString("iblock", "detail_image_size"),
+					"H" => COption::GetOptionString("iblock", "detail_image_size"),
+				),
 			), false);
 		else
 			echo CFileInput::ShowMultiple($inputName, $name."[n#IND#]", array(
@@ -270,7 +279,10 @@ function _ShowFilePropertyField($name, $property_fields, $values, $max_file_size
 				"FILE_SIZE" => "Y",
 				"DIMENSIONS" => "Y",
 				"IMAGE_POPUP" => "Y",
-				"MAX_SIZE" => array("W" => 200, "H"=>200),
+				"MAX_SIZE" => array(
+					"W" => COption::GetOptionString("iblock", "detail_image_size"),
+					"H" => COption::GetOptionString("iblock", "detail_image_size"),
+				),
 			), false, array(
 				'upload' => true,
 				'medialib' => true,

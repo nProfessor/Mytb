@@ -1,10 +1,23 @@
 <?
+/**
+ * Bitrix Framework
+ * @package bitrix
+ * @subpackage main
+ * @copyright 2001-2013 Bitrix
+ */
+
+/**
+ * Bitrix vars
+ * @global CUser $USER
+ * @global CMain $APPLICATION
+ */
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_js.php");
 
 $io = CBXVirtualIo::GetInstance();
 $src_path = $io->CombinePath("/", $_GET["src_path"]);
 $src_line = intval($_GET["src_line"]);
+$template_site_template = $_GET["template_site_template"];
 
 if(!$USER->CanDoOperation('edit_php') && !$USER->CanDoFileOperation('fm_lpa', array($_GET["src_site"], $src_path)))
 	die(GetMessage("ACCESS_DENIED"));
@@ -13,7 +26,7 @@ IncludeModuleLangFile(__FILE__);
 
 CUtil::JSPostUnescape();
 
-$obJSPopup = new CJSPopup('', 
+$obJSPopup = new CJSPopup('',
 	array(
 		'TITLE' => GetMessage("template_copy_title"),
 		'ARGS' => 'component_name='.urlencode($_GET["component_name"]).
@@ -33,13 +46,16 @@ $obJSPopup = new CJSPopup('',
 $strWarning = "";
 $arTemplate = false;
 $aComponent = false;
-
+$filesrc = "";
+$abs_path = "";
 
 // try to read parameters from script file
 
 /* Try to open script containing the component call */
 if(!$src_path || $src_line <= 0)
+{
 	$strWarning .= GetMessage("comp_prop_err_param")."<br>";
+}
 else
 {
 	$abs_path = $io->RelativeToAbsolutePath($src_path);
@@ -50,13 +66,13 @@ else
 		$strWarning .= GetMessage("comp_prop_err_open")."<br>";
 }
 
+$arComponent = false;
 if($strWarning == "")
 {
 	/* parse source file for PHP code */
 	$arComponents = PHPParser::ParseScript($filesrc);
 
 	/* identify the component by line number */
-	$arComponent = False;
 	for ($i = 0, $cnt = count($arComponents); $i < $cnt; $i++)
 	{
 		$nLineFrom = substr_count(substr($filesrc, 0, $arComponents[$i]["START"]), "\n") + 1;
@@ -78,6 +94,10 @@ if($strWarning == "")
 if ($arComponent === false)
 	$strWarning .= GetMessage("comp_prop_err_comp")."<br>";
 
+$arComponentDescription = array();
+$arTemplatesList = array();
+$templateSiteTemplate = "";
+
 if($strWarning == "")
 {
 	$arComponentDescription = CComponentUtil::GetComponentDescr($_GET["component_name"]);
@@ -97,7 +117,6 @@ if($strWarning == "")
 	if (isset($arTemplateParameters) && is_array($arTemplateParameters))
 		$arParameters = $arParameters + $arTemplateParameters;
 
-	$templateSiteTemplate = "";
 	$arTemplatesList = CComponentUtil::GetTemplatesList($_GET["component_name"], $_GET["template_id"]);
 	for ($i = 0, $cnt = count($arTemplatesList); $i < $cnt; $i++)
 	{
@@ -120,7 +139,7 @@ if($strWarning == "")
 		if ($_POST["SITE_TEMPLATE"] != $_GET["template_id"] && $_POST["SITE_TEMPLATE"] != ".default")
 			$_POST["USE_TEMPLATE"] = "N";
 
-		if (CComponentUtil::CopyTemplate($arComponent["DATA"]["COMPONENT_NAME"], $arComponent["DATA"]["TEMPLATE_NAME"], ((StrLen($templateSiteTemplate) > 0) ? $templateSiteTemplate : False), $_POST["SITE_TEMPLATE"], $sTemplateName, False))
+		if (CComponentUtil::CopyTemplate($arComponent["DATA"]["COMPONENT_NAME"], $arComponent["DATA"]["TEMPLATE_NAME"], ((strlen($templateSiteTemplate) > 0) ? $templateSiteTemplate : false), $_POST["SITE_TEMPLATE"], $sTemplateName, false))
 		{
 			if ($_POST["USE_TEMPLATE"] == "Y")
 			{
@@ -155,7 +174,7 @@ if($strWarning == "")
 								$strJSText = $APPLICATION->GetPopupLink(
 									array(
 										'URL' => '/bitrix/admin/public_file_edit_src.php?lang='.LANGUAGE_ID.'&site='.SITE_ID.'&back_url='.urlencode($_REQUEST["back_path"]).'&path='.urlencode($template->GetFile()),
-										"PARAMS" => Array("width"=>770, "height" => 570, "resize" => true),
+										"PARAMS" => Array("width" => 770, "height" => 570,"resize" => true,"dialog_type" => 'EDITOR'),
 									)
 								);
 							}
@@ -175,7 +194,7 @@ if($strWarning == "")
 		}
 		else
 		{
-			if ($ex = $GLOBALS["APPLICATION"]->GetException())
+			if ($ex = $APPLICATION->GetException())
 				$strWarning .= $ex->GetString()."<br>";
 			else
 				$strWarning .= GetMessage("comp_templ_error_copy")."<br>";
@@ -184,10 +203,12 @@ if($strWarning == "")
 }
 
 $componentPath = CComponentEngine::MakeComponentPath($_GET["component_name"]);
-if($arComponentDescription["ICON"] <> "" && is_file($_SERVER["DOCUMENT_ROOT"]."/bitrix/components".$componentPath.$arComponentDescription["ICON"]))
-	$sIcon = "/bitrix/components".$componentPath.$arComponentDescription["ICON"];
+$arComponentDescription["ICON"] = ltrim($arComponentDescription["ICON"], "/");
+$localPath = getLocalPath("components".$componentPath);
+if($localPath !== false && $arComponentDescription["ICON"] <> "" && $io->FileExists($io->RelativeToAbsolutePath($localPath."/".$arComponentDescription["ICON"])))
+	$sIcon = $localPath."/".$arComponentDescription["ICON"];
 else
-	$sIcon = "/bitrix/images/fileman/htmledit/component.gif";
+	$sIcon = "/bitrix/images/fileman/htmledit2/component.gif";
 
 $sCurrentTemplateName = ($arComponent["DATA"]["TEMPLATE_NAME"] <> ""? htmlspecialcharsbx($arComponent["DATA"]["TEMPLATE_NAME"]) : ".default");
 
@@ -200,7 +221,7 @@ $obJSPopup->StartDescription($sIcon);
 <?if($arComponentDescription["DESCRIPTION"] <> ""):?>
 <p title="<?echo GetMessage("comp_prop_desc")?>"><?echo htmlspecialcharsbx($arComponentDescription["DESCRIPTION"])?></p>
 <?endif;?>
-<p class="note" title="<?echo GetMessage("comp_prop_path")?>"><a href="/bitrix/admin/fileman_admin.php?lang=<?echo LANGUAGE_ID?>&amp;path=<?echo urlencode("/bitrix/components".$componentPath)?>"><?echo htmlspecialcharsbx($_GET["component_name"])?></a></p>
+<p class="note" title="<?echo GetMessage("comp_prop_path")?>"><a href="/bitrix/admin/fileman_admin.php?lang=<?echo LANGUAGE_ID?>&amp;path=<?echo urlencode($localPath)?>"><?echo htmlspecialcharsbx($_GET["component_name"])?></a></p>
 <?
 if($_GET['system_template'] == 'Y')
 	ShowNote(GetMessage("copy_comp_sys_templ"));
@@ -290,7 +311,7 @@ $bList = ($_REQUEST["SITE_TEMPLATE"] <> "" && $_REQUEST["SITE_TEMPLATE"] <> $_GE
 					if($templ_id == ".default" || $templ_id == $_GET["template_id"])
 						continue;
 				?>
-				<option value="<?= htmlspecialcharsbx($templ_id) ?>"<?if ((StrLen($_REQUEST["SITE_TEMPLATE"]) > 0 && $_REQUEST["SITE_TEMPLATE"] == $templ_id) || (StrLen($_REQUEST["SITE_TEMPLATE"]) <= 0 && $templ_id == $template_site_template)) echo " selected";?>><?= htmlspecialcharsbx($templ_id." (".$templ_name.")") ?></option>
+				<option value="<?= htmlspecialcharsbx($templ_id) ?>"<?if ((strlen($_REQUEST["SITE_TEMPLATE"]) > 0 && $_REQUEST["SITE_TEMPLATE"] == $templ_id) || (strlen($_REQUEST["SITE_TEMPLATE"]) <= 0 && $templ_id == $template_site_template)) echo " selected";?>><?= htmlspecialcharsbx($templ_id." (".$templ_name.")") ?></option>
 				<?endforeach;?>
 			</select>
 		</td>
