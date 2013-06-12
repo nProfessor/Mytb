@@ -7,6 +7,7 @@ IncludeTemplateLangFile(__FILE__);
         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ru" lang="ru">
 <head>
+    <?$APPLICATION->SetPageProperty("keywords", "");?>
     <title><?$APPLICATION->ShowTitle()?></title>
     <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico"/>
 
@@ -14,6 +15,7 @@ IncludeTemplateLangFile(__FILE__);
     <link rel="stylesheet" type="text/css" href="/css/styles.css"/>
     <link rel="stylesheet" type="text/css" href="/css/colors.css"/>
     <?
+
     $APPLICATION->AddHeadScript("/jslibs/jquery/jquery-1.7.2.min.js");
     $APPLICATION->AddHeadScript("/jslibs/bootstrap/js/bootstrap.min.js");
     $APPLICATION->SetAdditionalCSS("/jslibs/bootstrap/css/bootstrap.min.css");

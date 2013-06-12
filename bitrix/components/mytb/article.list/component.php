@@ -16,7 +16,9 @@ $arResult["ARTICLE"]=$article;
 $this->IncludeComponentTemplate();
 
 
-$APPLICATION->SetTitle(html_entity_decode($arResult["ARTICLE"]['NAME']));
+$APPLICATION->SetTitle("Список интересных статей от проекта MyTb.ru");
+
+$APPLICATION->SetPageProperty("description", "Список статей от проекта MyTb.ru");
 
 
 
