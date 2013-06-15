@@ -13,7 +13,7 @@
     </div>
 </div>
 
-
-<input id="redirect" type="hidden" value="/club/<?=$clubInfo["ID"]?>/stock/?subscribe=ok">
+<?$url=formUrl($clubInfo["ID"],implode("-",$clubInfo["PROPERTY_TYPE_FACILITY_VALUE"])." ".$clubInfo['NAME']);?>
+<input id="redirect" type="hidden" value="/club/<?=$url?>//stock/?subscribe=ok">
 <? $APPLICATION->IncludeComponent("mytb:auth", "",  array("AUTH_URL"=>"/stock/?subscribe=ok&login=yes"),false); ?>
 

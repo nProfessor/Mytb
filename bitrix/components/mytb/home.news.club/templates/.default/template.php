@@ -3,7 +3,7 @@
 <ul>
         <?foreach ($arResult['clubList'] as $val=> $var): ?>
 
-       <li><a href="/club/<?=$var['ID']?>/#news">
+       <li><a href="/club/<?=formUrl($var["ID"],implode("-",$var['PROPERTY_TYPE_FACILITY_VALUE'])." ".$var['NAME'])?>/#news">
            <?if(count($var['PROPERTY_TYPE_FACILITY_VALUE'])>0):?>
            <?=implode("/",$var['PROPERTY_TYPE_FACILITY_VALUE']);?>
         <?else:?>

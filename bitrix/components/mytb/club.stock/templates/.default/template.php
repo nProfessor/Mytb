@@ -21,7 +21,7 @@ $partner = Kupon::getDataServise($arResult['stockInfo']['TAGS']);
     <table class="table">
         <tr>
             <th>Заведение</th>
-            <td>«<a href="/club/<?=$arResult['club']['ID']?>/" title="<?=$type?> <?=$arResult['club']['NAME']?>"><?=$type?> <?=$arResult['club']['NAME']?></a>»</td>
+            <td>«<a href="/club/<?=formUrl($arResult['club']["ID"],implode("-",$arResult['club']['PROPERTY_TYPE_FACILITY_VALUE'])." ".$arResult['club']['NAME'])?>/" title="<?=$type?> <?=$arResult['club']['NAME']?>"><?=$type?> <?=$arResult['club']['NAME']?></a>»</td>
         </tr>
         <tr>
             <th>Даты проведения</th>

@@ -10,7 +10,7 @@ $APPLICATION->AddHeadScript("/jslibs/jquery/eTextTimer.js");
    } else {
        echo "no";
    }?>">Подписаться на акции «<?=$arResult['club']['NAME']?>»</a>
-<a href="/club/<?=$arResult['club']['ID']?>">На страницу «<?=$arResult['club']['NAME']?>»</a>
+<a href="/club/<?=formUrl($arResult['club']["ID"],implode("-",$arResult['club']['PROPERTY_TYPE_FACILITY_VALUE'])." ".$arResult['club']['NAME'])?>">На страницу «<?=$arResult['club']['NAME']?>»</a>
 <br/>
 <br/>
 <br/>
