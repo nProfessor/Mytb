@@ -32,18 +32,6 @@ $arUrlRewrite = array(
         "PATH"	=>	"/kabinet-menedzhera/club_stocks_edite/edite/index.php",
     ),
 	array(
-		"CONDITION"	=>	"#^/club/([0-9]+)/booking/([0-9]+)/payment/#",
-		"RULE"	=>	"CLUB_ID=$1&TABLE_ID=$2",
-		"ID"	=>	"bitrix:news",
-		"PATH"	=>	"/club/booking/payment/index.php",
-	),
-	array(
-		"CONDITION"	=>	"#^/club/([0-9]+)/subscribe/#",
-		"RULE"	=>	"ID=$1",
-		"ID"	=>	"bitrix:news",
-		"PATH"	=>	"/club/subscribe/index.php",
-	),
-	array(
 		"CONDITION"	=>	"#^/club/booking/([0-9]+)#",
 		"RULE"	=>	"ID=$1",
 		"ID"	=>	"bitrix:news",
@@ -51,8 +39,8 @@ $arUrlRewrite = array(
 	),
 
     array(
-        "CONDITION"	=>	"#^/club/stock/([0-9]+)#",
-        "RULE"	=>	"ID=$1",
+        "CONDITION"	=>	"#^/club/stock/([0-9]+)(-([0-9a-z_-])+)*#",
+        "RULE"	=>	"ID=$1&URL=$2",
         "ID"	=>	"bitrix:news",
         "PATH"	=>	"/club/stock/index.php",
     ),
@@ -76,8 +64,8 @@ $arUrlRewrite = array(
 		"PATH"	=>	"/club/events/index.php",
 	),
 	array(
-		"CONDITION"	=>	"#^/club/([0-9]+)/?.*#",
-		"RULE"	=>	"ID=$1",
+		"CONDITION"	=>	"#^/club/([0-9]+)(-([0-9a-z_-])+)*/?.*?#i",
+		"RULE"	=>	"ID=$1&URL=$2",
 		"ID"	=>	"mytb:club",
 		"PATH"	=>	"/club/index.php",
 	),
@@ -112,8 +100,8 @@ $arUrlRewrite = array(
         "PATH"	=>	"/personal/club/photo/index.php",
     ),
     array(
-        "CONDITION"	=>	"#^/article/([a-z_-]+)/([0-9]+)#i",
-        "RULE"	=>	"ARTICLE_ID=$2",
+        "CONDITION"	=>	"#^/article/([a-z_-]+)/([0-9]+)(-([0-9a-z_-])+)*#i",
+        "RULE"	=>	"ARTICLE_ID=$2&URL=$3",
         "ID"	=>	"bitrix:news",
         "PATH"	=>	"/article/detail/index.php",
     ),

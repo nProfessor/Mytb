@@ -10,10 +10,12 @@
 </div>
 <ul class="article_items">
     <?foreach ($arResult["ARTICLE"] as $article): ?>
+    <?$url = formUrl($article['ID'],$article['NAME']);?>
+
     <li class="article_item">
         <?$arFile = CFile::GetFileArray($article["PREVIEW_PICTURE"]);?>
-        <a href="/article/<?=$article['SECTION']['CODE']?>/<?=$article['ID']?>" title="<?=$article['NAME']?>"><?=$article['NAME']?></a>
-        <a href="/article/<?=$article['SECTION']['CODE']?>/<?=$article['ID']?>" title="<?=$article['NAME']?>"><img src="<?=imgurl($arFile['SRC'], array("w" => 300))?>" alt="<?=$article['NAME']?>"></a>
+        <a href="/article/<?=$article['SECTION']['CODE']?>/<?=$url?>" title="<?=$article['NAME']?>"><?=$article['NAME']?></a>
+        <a href="/article/<?=$article['SECTION']['CODE']?>/<?=$url?>" title="<?=$article['NAME']?>"><img src="<?=imgurl($arFile['SRC'], array("w" => 300))?>" alt="<?=$article['NAME']?>"></a>
         <p><?=$article['PREVIEW_TEXT']?></p>
     </li>
     <? endforeach;?>

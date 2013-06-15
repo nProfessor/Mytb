@@ -5,6 +5,7 @@
     <div class="carousel-inner">
 
         <?foreach ($arResult['stockList'] as $val=> $var): ?>
+        <?$url=formUrl($var["ID"],implode("-",$var["PROPERTY_TYPE_FACILITY_VALUE"])." ".$var['NAME']);?>
         <div class="item <?if ($val == 0): ?>active<? endif;?>">
             <div style="display:block;float:left;width:400px">
                 <?
@@ -21,8 +22,8 @@
 
 
                             <h2>Скидка <?=$var["PROPERTY_DISCOUNT_VALUE"]?>%</h2>
-
-                            <a href="/club/<?=$var["PROPERTY_CLUB_ID_VALUE"]?>" title="<?=$arResult['clubList'][$var["PROPERTY_CLUB_ID_VALUE"]]['NAME']?>">«<?=$arResult['clubList'][$var["PROPERTY_CLUB_ID_VALUE"]]['NAME']?>»</a>
+                            <?$url=formUrl($var["PROPERTY_CLUB_ID_VALUE"],implode("-",$arResult['clubList'][$var["PROPERTY_CLUB_ID_VALUE"]]['PROPERTY_TYPE_FACILITY_VALUE'])." ".$arResult['clubList'][$var["PROPERTY_CLUB_ID_VALUE"]]['NAME'])?>
+                            <a href="/club/<?=$url?>/" title="<?=$arResult['clubList'][$var["PROPERTY_CLUB_ID_VALUE"]]['NAME']?>">«<?=$arResult['clubList'][$var["PROPERTY_CLUB_ID_VALUE"]]['NAME']?>»</a>
                         <div class="time_stok">
                             <div>
                                 до конца акции:<br/>

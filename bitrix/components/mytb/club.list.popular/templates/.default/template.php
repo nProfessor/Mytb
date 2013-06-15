@@ -14,7 +14,7 @@
 <div class="club_popular_list_item img-polaroid">
         <div>
             <div class="img-polaroid-club">
-                <a href='/club/<?=$var["ID"]?>' title="<?=html_entity_decode($var["NAME"])?>"
+                <a href='/club/<?=formUrl($var["ID"],implode("-",$var['PROPERTY_TYPE_FACILITY_VALUE'])." ".$var['NAME'])?>' title="<?=html_entity_decode($var["NAME"])?>"
                    style="background: #fff url(<?=$var["PREVIEW_PICTURE"]?>) no-repeat center center">
                 </a>
             </div>
@@ -23,7 +23,7 @@
 
             <div class="info-popular-club">
                 <strong>
-                    <a href='/club/<?=$var["ID"]?>'><?=html_entity_decode($var["NAME"])?></a>
+                    <a href='/club/<?=formUrl($var["ID"],implode("-",$var['PROPERTY_TYPE_FACILITY_VALUE'])." ".$var['NAME'])?>'><?=html_entity_decode($var["NAME"])?></a>
                 </strong>
                 <table>
                     <tr>

@@ -110,7 +110,7 @@ function declOfNum($number, $titles)
 /**
  * транслит для файлов
  */
-function translate($text)
+function translate($text,$type="norm")
 {
     $rus  = array("а", "б", "в",
         "г", "ґ", "д", "е", "ё", "ж",
@@ -124,8 +124,8 @@ function translate($text)
         "М", "Н", "О", "П", "Р", "С",
         "Т", "У", "Ф", "Х", "Ц", "Ч",
         "Ш", "Щ", "Ы", "Э", "Ю", "Я",
-        "Ь", "Ъ", "І", "Ї", "Є", " ", "'", '"');
-    $lat  = array("a", "b", "v",
+        "Ь", "Ъ", "І", "Ї", "Є", " ", "'", '"',".");
+    $lat["norm"]  = array("a", "b", "v",
         "g", "g", "d", "e", "e", "zh", "z", "i",
         "j", "k", "l", "m", "n", "o", "p", "r",
         "s", "t", "u", "f", "h", "c", "ch", "sh",
@@ -134,11 +134,30 @@ function translate($text)
         "E", "E", "ZH", "Z", "I", "J", "K", "L",
         "M", "N", "O", "P", "R", "S", "T", "U",
         "F", "H", "C", "CH", "SH", "SH'", "Y", "E",
-        "YU", "YA", "_", "_", "I", "I", "E", "_", "", "");
-    $text = str_replace($rus, $lat, $text);
+        "YU", "YA", "_", "_", "I", "I", "E", "_", "", "",".");
+
+    $lat["url"]  = array("a", "b", "v",
+        "g", "g", "d", "e", "e", "zh", "z", "i",
+        "j", "k", "l", "m", "n", "o", "p", "r",
+        "s", "t", "u", "f", "h", "c", "ch", "sh",
+        "sh'", "y", "e", "yu", "ya", "-", "-", "i",
+        "i", "e", "a", "b", "v", "g", "g", "d",
+        "e", "e", "zh", "z", "i", "j", "k", "l",
+        "m", "n", "o", "p", "r", "s", "t", "u",
+        "f", "h", "c", "ch", "sh", "sh'", "y", "e",
+        "yu", "ya", "-", "-", "i", "i", "e", "-", "", "","-");
+
+    $text = str_replace($rus, $lat[$type], $text);
     return (preg_replace("#[^a-z0-9._-]#i", "", $text));
 }
 
+function formUrl($id,$name){
+    $url=translate(trim($name),"url");
+    $url=preg_replace("#-{2,}#","-",$url);
+    $url=preg_replace("#-^#","",$url);
+    $url=strtolower($url);
+    return "{$id}-{$url}";
+}
 /**
  * сли картинки нет то создаем ее с таким размером нет
  * @param $path

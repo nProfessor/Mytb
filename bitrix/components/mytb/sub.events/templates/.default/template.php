@@ -4,13 +4,15 @@
     <?foreach($arResult["CLUB_LIST"] as $var):?>
     <?
     $rating=intval($var["PROPERTY_RATING_VALUE"]);
+    $url=formUrl($var["ID"],implode("-",$var["PROPERTY_TYPE_FACILITY_VALUE"])." ".$var['NAME']);
     ?>
     <div class="club_list_item">
         <table width="100%" class="table-list-club">
             <tr>
                 <td width="200px" valign="middle">
                     <div class="img-polaroid">
-                    <a href='/club/<?=$var["ID"]?>' title="<?=html_entity_decode($var["NAME"])?>" style="background: #fff url(<?=$var["PREVIEW_PICTURE"]?>) no-repeat center center">
+
+                        <a href='/club/<?=$url?>/' title="<?=html_entity_decode($var["NAME"])?>" style="background: #fff url(<?=$var["PREVIEW_PICTURE"]?>) no-repeat center center">
                     </a>
                     </div>
                 </td>
@@ -22,11 +24,11 @@
                         </span>
 
 
-                        <a href='/club/<?=$var["ID"]?>'><?=html_entity_decode($var["NAME"])?></a>
+                        <a href='/club/<?=$url?>'><?=html_entity_decode($var["NAME"])?></a>
                     </strong>
                     <?if(intval($arResult["stocksCount"][$var["ID"]])>0):?>
                     <div class="pull-right akcia_count">
-                        <a href="/club/<?=$var["ID"]?>/#stock"><?=$arResult["stocksCount"][$var["ID"]]?> <span><?=declOfNum($arResult["stocksCount"][$var["ID"]],array("акция","акции","акций"))?></span></a>
+                        <a href="/club/<?=$url?>/#stock"><?=$arResult["stocksCount"][$var["ID"]]?> <span><?=declOfNum($arResult["stocksCount"][$var["ID"]],array("акция","акции","акций"))?></span></a>
                     </div>
                     <?endif;?>
                     <table class="club_info_shot">
