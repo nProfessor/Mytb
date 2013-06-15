@@ -72,8 +72,8 @@ $this->IncludeComponentTemplate();
 
 
 
-$APPLICATION->SetTitle(html_entity_decode($arResult['arFields']['PROPERTY_TYPE_FACILITY_VALUE'])." ".html_entity_decode($arResult['arFields']['NAME']));
-
+$APPLICATION->SetTitle(implode("/",$arResult['arFields']['PROPERTY_TYPE_FACILITY_VALUE'])." ".html_entity_decode($arResult['arFields']['NAME']));
+$APPLICATION->SetPageProperty("description","Описание заведения: ". implode("/",$arResult['arFields']['PROPERTY_TYPE_FACILITY_VALUE'])." ".$arResult['arFields']['NAME']);
 
 
 

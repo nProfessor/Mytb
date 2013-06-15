@@ -1,6 +1,6 @@
 <?$type=is_array($arResult['club']['PROPERTY_TYPE_FACILITY_VALUE'])?implode("/",$arResult['club']['PROPERTY_TYPE_FACILITY_VALUE']):$arResult['club']['PROPERTY_TYPE_FACILITY_VALUE'];
 
-
+$APPLICATION->SetPageProperty("description", substr(str_replace("\n"," ",strip_tags($arResult['stockInfo']['~PREVIEW_TEXT'])),0,100));
 $arFile = CFile::GetFileArray($arResult['stockInfo']["DETAIL_PICTURE"]);
 $partner = Kupon::getDataServise($arResult['stockInfo']['TAGS']);
 ?>

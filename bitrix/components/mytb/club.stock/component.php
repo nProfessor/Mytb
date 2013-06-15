@@ -20,7 +20,7 @@ $club=new Club($stockInfo['PROPERTY_CLUB_ID_VALUE']);
 $arResult['club']  = $club->getInfo(array("arSelect"=> array("NAME","ID","PROPERTY_TYPE_FACILITY")));
 
 $APPLICATION->SetTitle($stockInfo['NAME']);
-$APPLICATION->SetPageProperty("description", substr(str_replace("\n"," ",strip_tags($arResult['stockInfo']['~PREVIEW_TEXT'])),0,100));
+
 $this->IncludeComponentTemplate();
 
 
