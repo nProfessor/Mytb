@@ -7,7 +7,7 @@
             <tr>
                 <td>
                     <div class="pull-left" style="margin:0px 10px 10px 0px">
-                        <a href="/club/event/<?=$var["ID"]?>/" class="stock_title" title="<?=$arResult['club']['NAME']?>: <?=$var['NAME']?>">
+                        <a itemprop="event" href="/club/event/<?=$var["ID"]?>/" class="stock_title" title="<?=$arResult['club']['NAME']?>: <?=$var['NAME']?>">
                         <img class="thumbnail" alt="Событие в <?=$arResult['club']['NAME']?>" title="<?=$var["NAME"]?>" src="<?=imgurl($arFile["SRC"], array("w" => 300))?>"/>
                         </a>
                     </div>

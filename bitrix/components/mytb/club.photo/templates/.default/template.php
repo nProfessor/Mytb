@@ -10,11 +10,11 @@ $clubName = $arResult['clubName'];
 ?>
 
 <? if (count($arResult['photo']) > 0): ?>
-<ul class="gallery_100x100">
+<ul class="gallery_100x100" itemprop="photos">
     <?$i=1;?>
     <?foreach ($arResult['photo'] as $var): ?>
     <li>
-        <a  class="gallery" rel="group"  title="Фото <?=$clubName?> №<?=$i?>" href="<?=imgurl($var["PATH"], array("w" => 800, "h" => 600))?>">
+        <a  class="gallery" rel="group"   itemprop="photo"  title="Фото <?=$clubName?> №<?=$i?>" href="<?=imgurl($var["PATH"], array("w" => 800, "h" => 600))?>">
         <img src="<?=imgurl($var["PATH"], array("w" => 100, "h" => 100))?>" alt="Фотография <?=$clubName?> №<?=$i?>" title="фото <?=$clubName?>  №<?=$i?>"/>
         </a>
     </li>

@@ -7,7 +7,7 @@
  * To change this template use File | Settings | File Templates.
  */
 $APPLICATION->AddHeadScript("/jslibs/jquery/jquery-1.7.2.min.js");
-$APPLICATION->AddHeadScript("/jslibs/tiny_mce/tiny_mce.js");
+$APPLICATION->AddHeadScript(DOMAIN."/jslibs/tiny_mce/tiny_mce.js");
 $APPLICATION->AddHeadScript("/jslibs/script/ajaxupload.js");
 $clubInfo=$arResult['arFields'];
 

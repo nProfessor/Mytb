@@ -44,6 +44,6 @@
 </div>
 <div id="rating" data-placement="left">
     <a id="rating-a" class="button gray m_tooltip" data-animation="Ты можешь проголосовать за это заведение" title="Ты можешь проголосовать за это заведение" href="#"><i class="icon-star"></i>
-        <?=$arResult["RATING"]?> <?=declOfNum($arResult["RATING"], array("голос", "голосов", "голоса"))?>
+        <span  itemprop="interactionCount"><?=intval($arResult["RATING"])?> <?=declOfNum(intval($arResult["RATING"]), array("голос", "голосов", "голоса"))?></span>
     </a>
 </div>

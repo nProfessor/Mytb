@@ -2,7 +2,7 @@
 <div class="modal hide" id="auth_stocks">
     <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-        <h6>Авторизация на сайте www.MyTB.ru</h6>
+        <span class="h6">Авторизация на сайте www.MyTB.ru</span>
     </div>
     <div class="modal-body">
         <div>

@@ -5,7 +5,7 @@
 <div class="modal hide fade" id="modal_auth_subscribe">
     <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-        <h6>Авторизация на сайте www.MyTB.ru</h6>
+        <span class="h6">Авторизация на сайте www.MyTB.ru</span>
     </div>
     <div class="modal-body">
         <div style="padding:0px 24px 20px 24px;    color: gray;

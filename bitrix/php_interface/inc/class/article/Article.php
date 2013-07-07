@@ -44,8 +44,11 @@ class Article
         $result=array();
         $section=array();
 
-        $db_list = CIBlockSection::GetList(Array(),  Array('IBLOCK_ID'=>IB_ARTICLE), true);
+        $db_list = CIBlockSection::GetList(Array(),  Array('IBLOCK_ID'=>IB_ARTICLE));
+
+//        printAr($db_list);
         while($row=$db_list->Fetch()){
+
             $section[$row["ID"]]=$row;
         }
 

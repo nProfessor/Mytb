@@ -17,7 +17,7 @@
                 </div>
 
 
-                <a href="/club/stock/<?=$url?>" class="stock_title"  title="<?=$partner['name']?>: <?=$var["NAME"]?>"><?=$var["NAME"]?></a>
+                <a href="/club/stock/<?=$url?>" itemprop="event" class="stock_title"  title="<?=$partner['name']?>: <?=$var["NAME"]?>"><?=$var["NAME"]?></a>
 <div class="stock_info">
     <?if(!empty($partner['name'])):?>
     <strong>Скидка представлена на сайте <?=$partner['name']?></strong><br/>

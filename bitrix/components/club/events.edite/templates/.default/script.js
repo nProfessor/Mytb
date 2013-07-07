@@ -8,6 +8,7 @@
 $(document).ready(function(){
 
     tinyMCE.init({
+        document_base_url : "http://mytb.ru/",
         mode : "textareas",
         theme : "simple"
         });

@@ -17,7 +17,10 @@ IncludeTemplateLangFile(__FILE__);
     $APPLICATION->AddHeadScript("/jslibs/jquery/jquery-1.7.2.min.js");
     $APPLICATION->AddHeadScript("/jslibs/bootstrap/js/bootstrap.min.js");
     $APPLICATION->SetAdditionalCSS("/jslibs/bootstrap/css/bootstrap.min.css");
+
     ?>
+    <META HTTP-EQUIV="Expires" content="<?=date("r",strtotime("+5 day"))?>">
+
     <?$APPLICATION->ShowHead();?>
 
     <script type="text/javascript">
@@ -67,13 +70,14 @@ IncludeTemplateLangFile(__FILE__);
                 );?>
             </div>
         <div class="clear_both"></div>
-        <div class="instruction">
-            <span>Инструкция:</span>
-            <ul>
-                <li>Найди любимые заведения;</li>
-                <li>Подпишись на акции;</li>
-                <li>Получай уведомления о скидках;</li>
-            </ul>
+        <div class="baner_map">
+            <object width="231" height="256" data="/i/home/f_72551c81248e51eb.swf" type="application/x-shockwave-flash">
+                <param name="src" value="/i/home/f_72551c81248e51eb.swf" />
+                <param name="pluginspage" value="http://www.macromedia.com/go/getflashplayer" />
+                <param name="quality" value="best" />
+                <param name="wmode" value="opaque" />
+                <param name="flashvars" value="clickTAG=http://mytb.ru/page/map/" /></object>
+            <a href="/page/map/" title="Все заведения с акциями на карте" alt="Все заведения с акциями на карте"></a>
         </div>
         <div class="clear_both"></div>
 

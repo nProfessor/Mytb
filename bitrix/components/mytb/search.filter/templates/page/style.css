@@ -3,10 +3,18 @@
     padding:0px;
     width:240px;
     float:right;
+   background: #fff;;
 }
 .home_search.page .filter{
     padding: 10px;
     color:#fff;
-    position: fixed;
     background: #232427;
+}
+.home_search.page .fixed{
+    position: fixed;
+}
+
+.home_search.page .baner_map{
+    margin-top: 20px;
+    margin-left: 0px;
 }

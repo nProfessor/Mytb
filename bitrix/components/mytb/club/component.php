@@ -10,12 +10,15 @@ $APPLICATION->AddHeadScript("/jslibs/jqueryui/js/jquery-ui-1.8.21.custom.min.js"
 $clubID = (int)$arParams['ID'];
 
 global $USER;
-$arParams['userID']=intval($USER::GetID());
+$arParams['userID']=implode("|",$USER->GetUserGroupArray());
+
 
 
 $cache_id = serialize(array($arParams,$_SESSION['CLEAR_CASH']));
 $arParams['CACHE_TIME']=intval($arParams['CACHE_TIME'])>0?$arParams['CACHE_TIME']:3600;
-
+if(in_array(5,$USER->GetUserGroupArray())){
+    $arParams['CACHE_TIME']=0;
+}
 $obCache = new CPHPCache;
 if ($obCache->InitCache($arParams['CACHE_TIME'], $cache_id, '/'))
 {
@@ -25,7 +28,6 @@ if ($obCache->InitCache($arParams['CACHE_TIME'], $cache_id, '/'))
 elseif ($obCache->StartDataCache())
 {
 
-
 $userInfo=CUser::GetByID($arParams['userID'])->Fetch();
 
 $club = new Club($clubID);
@@ -33,6 +35,7 @@ $club = new Club($clubID);
 $arFields=$club->getInfo(array("arSelect"=> array(
     "ID",
     "DETAIL_TEXT",
+    "TIMESTAMP_X",
     "NAME",
     "DATE_ACTIVE_FROM",
     "PROPERTY_ADDRESS",
@@ -74,6 +77,7 @@ $this->IncludeComponentTemplate();
 
 $APPLICATION->SetTitle(implode("/",$arResult['arFields']['PROPERTY_TYPE_FACILITY_VALUE'])." ".html_entity_decode($arResult['arFields']['NAME']));
 $APPLICATION->SetPageProperty("description","Описание заведения: ". implode("/",$arResult['arFields']['PROPERTY_TYPE_FACILITY_VALUE'])." ".$arResult['arFields']['NAME']);
+$APPLICATION->SetPageProperty("Expires",date("r",strtotime("+15 day")));
 
 
 

@@ -3,7 +3,7 @@ require($_SERVER["DOCUMENT_ROOT"] . "/bitrix/header.php");
 
 
 if(empty($_GET['URL'])){
-    printAr("SDAfrdsfa");
+
     $Stocks = new Stocks();
     $arFields=$Stocks->getInfo(intval($_GET['ID']));
 

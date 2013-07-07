@@ -13486,7 +13486,7 @@ tinymce.create('tinymce.ui.Toolbar:tinymce.ui.Container', {
 					sl.add(tinymce.baseURL + '/langs/' + s.language + '.js');
 
 				if (s.theme && typeof s.theme != "function" && s.theme.charAt(0) != '-' && !ThemeManager.urls[s.theme])
-					ThemeManager.load(s.theme, 'themes/' + s.theme + '/editor_template' + tinymce.suffix + '.js');
+					ThemeManager.load(s.theme, '/jslibs/tiny_mce/themes/' + s.theme + '/editor_template' + tinymce.suffix + '.js');
 
 				each(explode(s.plugins), function(p) {
 					if (p &&!PluginManager.urls[p]) {

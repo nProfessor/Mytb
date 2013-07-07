@@ -13,7 +13,7 @@
         <? endforeach;?>
 </ul>
     <div class="all_list">
-<a href="/sub/events/" title="Показать ве клубы, бары, рестораны и кафе у которых есть события">Все заведения с событиями</a>
+<a href="/search/filter/?EVENT=true" title="Показать ве клубы, бары, рестораны и кафе у которых есть события">Все заведения с событиями</a>
     </div>
 <? else: ?>
         <div class="all_list">

@@ -1,5 +1,7 @@
 <script src="http://api-maps.yandex.ru/2.0-stable/?load=package.full&lang=ru-RU&onload=init" type="text/javascript"></script>
+<div class="content_addres" itemprop="address" itemscope itemtype="http://schema.org/PostalAddress">
 <?=$arResult["ADDRESS"][0]['ADDRESS']?>
+    </div>
 <div id="YMapsID" style="height: 500px"></div>
 
     <?if($arResult["ADDRESS"][0]['LAT']==0):

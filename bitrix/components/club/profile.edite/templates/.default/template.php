@@ -1,7 +1,7 @@
 <?
 $APPLICATION->AddHeadScript("/jslibs/jquery/jquery-1.7.2.min.js");
 $APPLICATION->AddHeadScript("/jslibs/jqueryui/js/jquery-ui-1.8.21.custom.min.js");
-$APPLICATION->AddHeadScript("/jslibs/tiny_mce/tiny_mce.js");
+$APPLICATION->AddHeadScript(DOMAIN."/jslibs/tiny_mce/tiny_mce.js");
 $clubInfo = $arResult['arFields'];
 $rating = intval($arResult['arFields']['PROPERTY_RATING_VALUE']);
 $subStocs = $arResult['subs']['stock'];

@@ -5,7 +5,7 @@
 <div class="modal hide fade" id="modal_auth">
     <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-        <h6>Авторизация на сайте www.MyTB.ru</h6>
+        <span class="h6">Авторизация на сайте www.MyTB.ru</span>
     </div>
     <div class="modal-body">
         <table width="100%" class="auth_table">
@@ -53,7 +53,7 @@
                             <td>
                                 <div class="alert hide" id="errors_auth" style="float: left; width: 110px">
                                 <div id="error_text"></div>
-                            </div><button type="button" class="btn btn-primary right btn-large" id="login_all">Войти</button></td>
+                            </div><button type="button" class="btn btn-primary right btn-large" id="login">Войти</button></td>
                         </tr>
                     </table>
 

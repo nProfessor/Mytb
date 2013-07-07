@@ -3,7 +3,7 @@
 <div class="modal hide" id="auth_block_top">
     <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-        <h6>Авторизация на сайте www.MyTB.ru</h6>
+        <span class="h6">Авторизация на сайте www.MyTB.ru</span>
     </div>
     <div class="modal-body">
 
@@ -49,12 +49,11 @@
                         <td>Зарегистрировать меня <input type="checkbox" value="1" name="AUTH[REG]"></td>
                     </tr>
                     <tr>
-                        <td><br/>
-                            <button type="button" class="button right login">Войти</button>
-                            <div class="hide errors_auth"  style="color: red;float: left;font-size: 12px; text-align: right; width: 135px;">
+                        <td>
+                            <div class="alert hide errors_auth"  style="float: left; width: 110px">
                                 <div class="error_text"></div>
                             </div>
-                        </td>
+                            <button type="button" class="btn btn-primary right btn-large login">Войти</button></td>
                     </tr>
                 </table>
             </td>

@@ -1,13 +1,13 @@
 <?
 $APPLICATION->AddHeadScript("/jslibs/jquery/jquery-1.7.2.min.js");
-$APPLICATION->AddHeadScript("/jslibs/tiny_mce/tiny_mce.js");
+$APPLICATION->AddHeadScript(DOMAIN."/jslibs/tiny_mce/tiny_mce.js");
 $APPLICATION->AddHeadScript("/jslibs/script/ajaxupload.js");
 $clubInfo=$arResult['arFields'];
 $news=$arResult['NEWS'];
 ?>
 <h2>Редактируем новость  «<?=$news['NAME']?>» </h2>
     <br/>
-<a href="/personal/kabinet-menedzhera/club_news_edite/">Все новости</a>
+<a href="/kabinet-menedzhera/club_news_edite/">Все новости</a>
 <br/>
 <br/>
 <form action="" method="post">

@@ -8,10 +8,11 @@
 );?>
 
 </div>
+
 <ul class="article_items">
     <?foreach ($arResult["ARTICLE"] as $article): ?>
     <?$url = formUrl($article['ID'],$article['NAME']);?>
-
+    <?$article['SECTION']['CODE']="party"?>
     <li class="article_item">
         <?$arFile = CFile::GetFileArray($article["PREVIEW_PICTURE"]);?>
         <a href="/article/<?=$article['SECTION']['CODE']?>/<?=$url?>" title="<?=$article['NAME']?>"><?=$article['NAME']?></a>

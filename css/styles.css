@@ -1897,3 +1897,17 @@ ul.gallery_100x100 li{
 .news-item img{
     width: 200px;
 }
+
+.baner_map{
+    margin-left: 25px;
+    margin-top: 40px;
+    position: relative;
+}
+.baner_map a{
+    top:0px;
+    position: absolute;
+    display: block;
+    width: 231px;
+    height: 256px;
+    /*background: url(/i/home/map.jpg) no-repeat ;*/
+}

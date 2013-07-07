@@ -1,4 +1,7 @@
 <?php
+define("DOMAIN", "http://mytb.ru/");
+
+
 define("IB_CLUB_ID", 6); // ID клубов
 define("IB_CLUB_USER_ID", 11); // ID связи клуба с пользователем
 define("IB_TABLE_ID", 12); // ID столиков

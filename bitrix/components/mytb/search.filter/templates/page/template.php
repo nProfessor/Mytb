@@ -1,5 +1,6 @@
 <div class="home_search page">
-    <div class="filter">
+    <div class="fixed">
+        <div class="filter">
         <div class="clear_left"></div>
         <form action="/search/filter/">
             <div class="filter_block">
@@ -59,4 +60,16 @@
             <input type="submit" value="Подобрать" class="button"/>
         </form>
     </div>
+        <div class="baner_map">
+            <object width="231" height="256" data="/i/home/f_72551c81248e51eb.swf" type="application/x-shockwave-flash">
+                <param name="src" value="/i/home/f_72551c81248e51eb.swf" />
+                <param name="pluginspage" value="http://www.macromedia.com/go/getflashplayer" />
+                <param name="quality" value="best" />
+                <param name="wmode" value="opaque" />
+                <param name="flashvars" value="clickTAG=http://mytb.ru/page/map/" /></object>
+            <a href="/page/map/" title="Все заведения с акциями на карте" alt="Все заведения с акциями на карте"></a>
+        </div>
+
+    </div>
+
 </div>
